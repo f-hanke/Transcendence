@@ -1,0 +1,243 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36" version="26.0.16" pages="2">
+  <diagram name="system-design" id="zaZNFOS4U32jYt1MQlEu">
+    <mxGraphModel dx="3241" dy="2084" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="1P63tTyjyVGezwdHRlno-10" value="&lt;b&gt;System monitoring&lt;/b&gt; - track &lt;span style=&quot;&quot; data-end=&quot;286&quot; data-start=&quot;229&quot;&gt;performance, resource usage, errors, and availability&lt;/span&gt; of your application" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" parent="1" vertex="1">
+          <mxGeometry x="-20" y="510" width="310" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-9" value="&lt;b&gt;Logging&lt;/b&gt; - c&lt;span style=&quot;&quot; data-end=&quot;151&quot; data-start=&quot;92&quot;&gt;entralized logging, monitoring, and data visualization&lt;/span&gt; in a microservices architecture" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" parent="1" vertex="1">
+          <mxGeometry x="950" y="124.5" width="440" height="231" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-2" value="API-Gateway" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="-80" y="49" width="1100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-3" value="webserver" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="-85" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-4" value="Frontend" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="-85" y="270" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-5" value="User-Service" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-6" value="AI-Oponent" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="340" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-7" value="(Server-Side-Pong)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="340" y="270" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-8" value="Lobby, Tournament" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="480" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-9" value="Chat" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="620" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-12" value="Event Bus" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="-80" y="370" width="1110" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-13" value="Client - Mozilla-Firefox" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="205" y="-30" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-15" value="Client - Mozilla-Firefox" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="315" y="-30" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-16" value="Client - Mozilla-Firefox" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="425" y="-30" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-17" value="Client - Mozilla-Firefox" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="535" y="-30" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-18" value="Client - Mozilla-Firefox" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="645" y="-30" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-22" value="Prometheus" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="15" y="554" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-23" value="Grafana" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="135" y="554" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-24" value="Logstash" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="990" y="178.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-25" value="Elasticsearch" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1110" y="178.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-26" value="Kibana" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1230" y="178.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-27" value="template of node backend container&lt;div&gt;node js&lt;/div&gt;&lt;div&gt;fastify&lt;/div&gt;&lt;div&gt;sqllite&lt;/div&gt;&lt;div&gt;prometheus&lt;/div&gt;&lt;div&gt;grafana&lt;/div&gt;&lt;div&gt;logstash&lt;/div&gt;&lt;div&gt;elasticsearch&lt;/div&gt;&lt;div&gt;Kibana&lt;/div&gt;&lt;div&gt;Event Bus stuff&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="-560" y="95" width="280" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-28" value="REST-API" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="-85" y="180" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-30" value="REST-API" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="180" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-31" value="Websocket" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="340" y="180" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-32" value="REST-API" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="620" y="180" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="H-XrrfW1sB1Lg_BYZBwX-33" value="REST-API" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="480" y="180" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-1" value="Login-Service" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="60" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-2" value="REST-API" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="60" y="180" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-4" value="notification" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="775" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-5" value="collect, process, transform log data from various sources, sent to logstash" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1110" y="238.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-6" value="store and index log data for all Services" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="990" y="238.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-7" value="log visualization, ui, dashboard, charts, alerts&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1230" y="238.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-11" value="collect metrics, monitor health and performance of services" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="15" y="614" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-12" value="visualization, dashboards, generating insights" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="135" y="614" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-15" value="Checks Authorisation (JWT)" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;spacingLeft=0;labelPosition=center;verticalLabelPosition=middle;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="-170" y="38.5" width="150" height="81" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-17" value="Multiple Languages" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;spacingLeft=0;labelPosition=center;verticalLabelPosition=middle;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="-200" y="270" width="150" height="81" as="geometry" />
+        </mxCell>
+        <mxCell id="1P63tTyjyVGezwdHRlno-20" value="Websocket" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="775" y="180" width="70" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="4eSen89TctAq36NG50eX" name="frontend">
+    <mxGraphModel dx="2899" dy="984" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-2" value="registered" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="570" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-3" value="not registered" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="230" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-4" value="human vs human" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="290" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-5" value="human vs ai" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="350" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-6" value="human vs. human" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="290" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-7" value="human vs ai" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="350" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-8" value="match always on same pc, same tab" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="390" y="270" width="140" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-9" value="stats are tracked" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="200" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-10" value="both log in" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="280" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-11" value="invite accept system" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="360" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-12" value="play in tab of p1" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="440" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-13" value="tournament" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="560" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-14" value="choose number of players" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="550" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-15" value="invite players" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="630" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-16" value="players accept" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="710" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-17" value="players accept individual match before it starts" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="790" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-18" value="choose number of ai" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="550" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-19" value="match is played in tab of home player" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="870" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-20" value="(crud) profile details" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="550" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-21" value="nick name" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="670" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-22" value="name" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="610" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-23" value="email" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="730" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-24" value="password" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="790" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-25" value="match history" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="850" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-26" value="stats" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="910" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-27" value="avatar" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="610" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-28" value="live chat" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="-200" y="290" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-29" value="overlay" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-200" y="350" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-30" value="invite to play" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-200" y="410" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-31" value="player online status" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-200" y="470" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-32" value="user game stats dashboard" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="-320" y="600" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-36" value="charts" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-320" y="660" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-37" value="login service" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="330" y="710" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-38" value="email" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="770" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-39" value="password" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="830" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-40" value="2FA" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="890" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6LHiPA6HU75Grc2pVAcg-41" value="Remote-Auth" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="950" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
