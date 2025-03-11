@@ -8,11 +8,19 @@ export class Game {
 	player2: Player;
 	ball: Ball;
 	isGameOver: boolean;
+	screenWidth: number;
+	screenHeight: number;
 
-	constructor() {
-		this.player1 = new Player();
-		this.player2 = new Player();
+	constructor(screenWidth: number, screenHeight: number) {
+		this.player1 = new Player(10);
+		this.player2 = new Player(screenWidth - 20);
 		this.ball = new Ball();
 		this.isGameOver = false;
+		this.screenWidth = screenWidth;
+		this.screenHeight = screenHeight;
+	}
+
+	update() {
+		this.ball.move(this.screenWidth, this.screenHeight);
 	}
 }

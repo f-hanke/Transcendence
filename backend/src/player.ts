@@ -10,28 +10,41 @@ export class Player {
 	x: number;
 	y: number;
 	score : number;
+	paddleWidth: number;
+	paddleHeight: number;
+	paddleSpeed: number;
 
 	//paddle width and height??
 
-	constructor() {
-		this.x = 10;
-		this.y = 50;
+	constructor(x:number) {
+		this.x = x;
+		this.y = 250;
 		this.score = 0;
+		this.paddleWidth = 10;
+		this.paddleHeight = 100;
+		this.paddleSpeed = 5;
+
 	}
 
 	moveUp() {
-		//const speed = 5;
-		//if (this.y > 0) this.y -= 5;
+
+		const borderUp = 600;
+
+		if (this.y + this.paddleSpeed < borderUp) {
+			this.y += this.paddleSpeed;
+		}
 	}
 
 	moveDown() {
-		//const speed = 5;
-
+		const borderDown = 0;
+		if (this.y > borderDown) {
+			this.y -= this.paddleSpeed;
+		}
 	}
+
 
 	reset()
 	{
-		this.x = 10;
 		this.y = 50;
 	}
 }

@@ -1,29 +1,34 @@
 export class Ball {
 	x: number;
 	y: number;
-	speedx: number;
-	speedy: number;
-	//radius?
+	speedX: number;
+	speedY: number;
+	radius : number;
 
 
 	constructor() {
-		this.x = 0;
-		this.y = 0;
-		this.speedx = 0;
-		this.speedy = 0;
+		this.x = 400;
+		this.y = 300;
+		this.speedX = 4;
+		this.speedY = 3;
+		this.radius = 10;
 	}
 
 
-	//carefull about the borders
-	move() {
+	move(screenWidth: number, screenHeight: number) {
+		this.x += this.speedX;
+		this.y += this.speedY;
 
+		if (this.y - this.radius <= 0 || this.y + this.radius >= screenHeight) {
+			this.speedY *= -1; // Inverser la direction verticale
+		}
 
 	}
 
 	reset() {
-		this.x = 0;
-		this.y = 0;
-		this.speedx = 0;
-		this.speedy = 0;
+		this.x = 400;
+		this.y = 300;
+		this.speedX = 4;
+		this.speedY = 3;
 	}
 }
