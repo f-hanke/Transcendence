@@ -1,3 +1,4 @@
+
 export class Ball {
 	x: number;
 	y: number;
@@ -19,9 +20,10 @@ export class Ball {
 		this.x += this.speedX;
 		this.y += this.speedY;
 
-		if (this.y - this.radius <= 0 || this.y + this.radius >= screenHeight) {
-			this.speedY *= -1; // Inverser la direction verticale
-		}
+		// if (this.y - this.radius <= 0 || this.y + this.radius >= screenHeight) {
+		// 	this.speedY *= -1; // Inverser la direction verticale
+		// }
+
 
 	}
 

@@ -7,9 +7,9 @@ Moving up and down along the y axis, in the accorded limits (careful to include 
 */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Player = void 0;
-var Player = /** @class */ (function () {
+class Player {
     //paddle width and height??
-    function Player(x) {
+    constructor(x) {
         this.x = x;
         this.y = 250;
         this.score = 0;
@@ -17,21 +17,20 @@ var Player = /** @class */ (function () {
         this.paddleHeight = 100;
         this.paddleSpeed = 5;
     }
-    Player.prototype.moveUp = function () {
-        var borderUp = 600;
+    moveUp() {
+        const borderUp = 600;
         if (this.y + this.paddleSpeed < borderUp) {
             this.y += this.paddleSpeed;
         }
-    };
-    Player.prototype.moveDown = function () {
-        var borderDown = 0;
+    }
+    moveDown() {
+        const borderDown = 0;
         if (this.y > borderDown) {
             this.y -= this.paddleSpeed;
         }
-    };
-    Player.prototype.reset = function () {
+    }
+    reset() {
         this.y = 50;
-    };
-    return Player;
-}());
+    }
+}
 exports.Player = Player;
