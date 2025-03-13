@@ -31,16 +31,14 @@ class Game {
             this.ball.speedX *= -1;
         }
         if (this.ball.x <= 0) {
-            // Le joueur 2 marque un point
             this.player2.score += 1;
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
-            this.ball.reset(); // Réinitialiser la balle au centre
+            this.ball.reset();
         }
         if (this.ball.x >= this.screenWidth) {
-            // Le joueur 1 marque un point
             this.player1.score += 1;
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
-            this.ball.reset(); // Réinitialiser la balle au centre
+            this.ball.reset();
         }
         //10 points to win
         if (this.player1.score >= 10 || this.player2.score >= 10) {

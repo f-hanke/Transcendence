@@ -20,6 +20,7 @@ export class Player {
 
 	moveUp() {
 
+		//will need to change this if we want the rescaling
 		const borderUp = 600;
 
 		if (this.y + this.paddleSpeed < borderUp) {

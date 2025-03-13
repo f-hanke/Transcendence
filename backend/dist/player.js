@@ -12,6 +12,7 @@ class Player {
         this.paddleSpeed = 5;
     }
     moveUp() {
+        //will need to change this if we want the rescaling
         const borderUp = 600;
         if (this.y + this.paddleSpeed < borderUp) {
             this.y += this.paddleSpeed;

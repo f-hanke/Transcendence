@@ -13,38 +13,49 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fastify_1 = __importDefault(require("fastify"));
-const path_1 = __importDefault(require("path")); // Nécessaire pour la gestion des chemins
-const static_1 = __importDefault(require("@fastify/static")); // Plugin pour servir des fichiers statiques
+const path_1 = __importDefault(require("path"));
+const static_1 = __importDefault(require("@fastify/static"));
 const cors_1 = __importDefault(require("@fastify/cors"));
 const websocket_1 = __importDefault(require("@fastify/websocket"));
+const chalk_1 = __importDefault(require("chalk")); //colors
 const fastify = (0, fastify_1.default)({ logger: true });
 // To allow requests from other domains (CORS)
-fastify.register(cors_1.default);
+fastify.register(cors_1.default, {
+    origin: "*",
+});
 // For real-time communication via WebSockets
 fastify.register(websocket_1.default);
-// Serve static files like index.html, client.js, etc.
 fastify.register(static_1.default, {
-    root: path_1.default.join(__dirname, '..', 'public'), // Dossier où tes fichiers HTML, CSS et JS sont stockés
-    prefix: '/', // Les fichiers seront accessibles à partir de la racine (ex: http://localhost:3000/index.html)
+    root: path_1.default.join(__dirname, '..', 'public'),
+    prefix: '/',
 });
 // fastify.get('/', async (request, reply) => {
 // 	return { message: 'Welcome to your Pong game!' };
 //   });
-fastify.get("/", (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
-    reply.sendFile("index.html"); // This will send the index.html file from the public folder
-}));
 // fastify.get('/game', async (request, reply) => {
 //   return reply.sendFile('index.html'); // Sends the index.html located in 'public'
 // });
-// Route to handle favicon.ico requests
 fastify.get('/favicon.ico', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
-    reply.status(204).send(); // Retourne un statut 204 (pas de contenu) pour les requêtes favicon
+    reply.status(204).send();
 }));
+// WebSocket route for real-time communication
+fastify.get('/ws', { websocket: true }, (connection, req) => {
+    console.log(chalk_1.default.green("A client connected via WebSocket"));
+    connection.send(JSON.stringify({ message: "Welcome to WebSocket!" }));
+    // Handle incoming messages from the client
+    connection.on('message', (message) => {
+        console.log(chalk_1.default.blue("Message received:", message.toString()));
+        connection.send(JSON.stringify({ message: "Server received: " + message.toString() }));
+    });
+    connection.on('close', () => {
+        console.log(chalk_1.default.red("A client disconnected"));
+    });
+});
 // Starting the server
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield fastify.listen({ port: 3000, host: "0.0.0.0" });
-        console.log("🚀 Server running on http://localhost:3000");
+        console.log(chalk_1.default.cyan.bold("Server running on http://localhost:3000"));
     }
     catch (err) {
         fastify.log.error(err);

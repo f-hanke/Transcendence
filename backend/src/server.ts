@@ -1,46 +1,66 @@
 import Fastify from "fastify";
-import path from "path"; // Nécessaire pour la gestion des chemins
-import fastifyStatic from '@fastify/static'; // Plugin pour servir des fichiers statiques
+import path from "path";
+import fastifyStatic from '@fastify/static';
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
+import chalk from "chalk"; //colors
 
 const fastify = Fastify({ logger: true });
 
 // To allow requests from other domains (CORS)
-fastify.register(cors);
+fastify.register(cors, {
+  origin: "*",
+});
+
 
 // For real-time communication via WebSockets
 fastify.register(websocket);
 
-// Serve static files like index.html, client.js, etc.
 fastify.register(fastifyStatic, {
-  root: path.join(__dirname, '..', 'public'), // Dossier où tes fichiers HTML, CSS et JS sont stockés
-  prefix: '/', // Les fichiers seront accessibles à partir de la racine (ex: http://localhost:3000/index.html)
+  root: path.join(__dirname, '..', 'public'),
+  prefix: '/',
 });
 
 // fastify.get('/', async (request, reply) => {
 // 	return { message: 'Welcome to your Pong game!' };
 //   });
 
-fastify.get("/", async (request, reply) => {
-	reply.sendFile("index.html"); // This will send the index.html file from the public folder
-  });
 
 // fastify.get('/game', async (request, reply) => {
 //   return reply.sendFile('index.html'); // Sends the index.html located in 'public'
 // });
 
 
-// Route to handle favicon.ico requests
 fastify.get('/favicon.ico', async (request, reply) => {
-  reply.status(204).send(); // Retourne un statut 204 (pas de contenu) pour les requêtes favicon
+  reply.status(204).send();
 });
+
+
+// WebSocket route for real-time communication
+fastify.get('/ws', { websocket: true }, (connection, req) => {
+  console.log(chalk.green("A client connected via WebSocket"));
+
+  connection.send(JSON.stringify({ message: "Welcome to WebSocket!" }));
+
+  // Handle incoming messages from the client
+  connection.on('message', (message) => {
+    console.log(chalk.blue("Message received:", message.toString()));
+
+    connection.send(JSON.stringify({ message: "Server received: " + message.toString() }));
+  });
+
+  connection.on('close', () => {
+    console.log(chalk.red("A client disconnected"));
+  });
+});
+
+
 
 // Starting the server
 const start = async () => {
   try {
     await fastify.listen({ port: 3000, host: "0.0.0.0" });
-    console.log("🚀 Server running on http://localhost:3000");
+    console.log(chalk.cyan.bold("Server running on http://localhost:3000"));
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
