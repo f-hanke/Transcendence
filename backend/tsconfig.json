@@ -6,10 +6,11 @@
     "rootDir": "./src",                           /* Dossier contenant les fichiers source TypeScript */
     "esModuleInterop": true,                      /* Pour importer des modules CommonJS avec la syntaxe ES6 */
     "strict": true,                               /* Activer toutes les vérifications strictes */
-    "skipLibCheck": true                          /* Ignorer la vérification des fichiers .d.ts */
+    "skipLibCheck": true,                          /* Ignorer la vérification des fichiers .d.ts */
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
   "include": [
-    "src/**/*.ts"                                 /* Inclure tous les fichiers .ts dans le dossier src */
+    "src/**/*.ts", "types.d.ts"                                 /* Inclure tous les fichiers .ts dans le dossier src */
   ],
   "exclude": [
     "node_modules"                                /* Exclure le dossier node_modules */

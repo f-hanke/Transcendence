@@ -1,10 +1,4 @@
 "use strict";
-/*
-Maybe need to define the limit of the screen
-paddle ?
-
-Moving up and down along the y axis, in the accorded limits (careful to include the paddle height, where does the pos of the paddle starts)
-*/
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Player = void 0;
 class Player {
