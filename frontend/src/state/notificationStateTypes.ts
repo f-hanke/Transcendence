@@ -6,5 +6,5 @@ type Notification = {
 type NotificationState = Notification[];
 
 export type {
-  NotificationState
+  NotificationState, Notification
 }

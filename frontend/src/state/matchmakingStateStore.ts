@@ -1,5 +1,5 @@
 import { deepCopyObj } from "../utils/utils";
-import { Match, MatchmakingState } from "./matchmakingStateTypes";
+import { MatchDuringInitiation, MatchmakingState } from "./matchmakingStateTypes";
 import { StoreCallback } from "./types";
 
 class MatchmakingStateStore {
@@ -17,7 +17,7 @@ class MatchmakingStateStore {
     };
   }
 
-  addMatch(newMatch: Match) {
+  addMatch(newMatch: MatchDuringInitiation) {
     if (
       this.state.otherMatches.filter((elem) => elem.matchId === newMatch.matchId)
         .length == 0
@@ -34,7 +34,7 @@ class MatchmakingStateStore {
     this.listeners.forEach((callback) => callback());
   }
 
-  openOwnMatch(newMatch: Match) {
+  openOwnMatch(newMatch: MatchDuringInitiation) {
     if (this.state.ownMatch === null) {
       this.state.ownMatch = deepCopyObj(newMatch);
       this.listeners.forEach((callback) => callback());

@@ -1,12 +1,12 @@
-type Match = {
+type MatchDuringInitiation = {
   matchId: string;
   hostId: string;
   hostNickName: string;
 };
 
 type MatchmakingState = {
-  ownMatch: Match | null;
-  otherMatches: Match[];
+  ownMatch: MatchDuringInitiation | null;
+  otherMatches: MatchDuringInitiation[];
 };
 
-export type { MatchmakingState, Match };
+export type { MatchmakingState, MatchDuringInitiation };

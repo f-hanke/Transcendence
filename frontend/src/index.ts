@@ -25,21 +25,38 @@ document.addEventListener("DOMContentLoaded", () => {
       ownMatch: null,
       otherMatches: [
         {
-        hostId: "PONGER",
-        hostNickName: "PONGER",
-        matchId: "match_id_1",
-      },
-      {
-        hostId: "PINGER",
-        hostNickName: "PINGER",
-        matchId: "match_id_2",
-      },
-    ],
-    }
-  }
-
-
-);
+          hostId: "PONGER",
+          hostNickName: "PONGER",
+          matchId: "match_id_1",
+        },
+        {
+          hostId: "PINGER",
+          hostNickName: "PINGER",
+          matchId: "match_id_2",
+        },
+      ],
+    },
+    userState: {
+      avatar: "",
+      displayName: "TEST_USER",
+      friends: ["friend_1_id", "friend_2_id"],
+      id: "TEST_USER",
+      email: "test@user.de",
+      matchHistory: [
+        {
+          date: "15.02.2025",
+          player1Id: "TEST_USER",
+          player2Id: "friend_1_id",
+          result: {
+            player1: 1,
+            player2: 7,
+          },
+          tournament: null,
+        },
+      ],
+      online: true,
+    },
+  });
 
   const appRouter = document.createElement("app-router") as AppRouter;
 
