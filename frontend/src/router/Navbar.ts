@@ -15,6 +15,10 @@ class Navbar extends HTMLElement {
     );
   }
 
+  disconnectedCallback() {
+    if (this.unsubscribe) this.unsubscribe();
+  }
+
   render() {
     console.log("navabr rendered!");
     this.innerHTML = `
@@ -61,7 +65,7 @@ class Navbar extends HTMLElement {
             🚪 notify
         </button>
       <div class="p-4 border-t border-gray-700">
-        <button class="w-full p-2 bg-red-600 rounded-lg hover:bg-red-700">🚪 Logout</button>
+        <button class="w-full p-2 bg-red-600 rounded-lg hover:bg-red-700">🚪 ${window.store.languageStore.state.navbar.logout}</button>
       </div>
     </div>
   `;

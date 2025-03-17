@@ -1,5 +1,6 @@
 import { GameStateStore } from "./gameStateStore";
 import { LanguageStateStore } from "./languageStateStore/languageStateStore";
+import { MatchmakingStateStore } from "./matchmakingStateStore";
 import { NotificationStateStore } from "./notificationStateStore";
 import { State } from "./types";
 
@@ -7,12 +8,14 @@ class Store {
   gameStore: GameStateStore;
   notificationStore: NotificationStateStore;
   languageStore: LanguageStateStore;
+  matchmakingStore: MatchmakingStateStore;
   constructor(initialState: State) {
     this.gameStore = new GameStateStore(initialState.gameState);
     this.notificationStore = new NotificationStateStore(
       initialState.notificationState
     );
     this.languageStore = new LanguageStateStore();
+    this.matchmakingStore = new MatchmakingStateStore(initialState.matchmakingState);
   }
 
   // 🆕 Async fetch function to update state

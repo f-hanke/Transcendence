@@ -21,7 +21,25 @@ document.addEventListener("DOMContentLoaded", () => {
       height: 300,
       width: 600,
     },
-  });
+    matchmakingState: {
+      ownMatch: null,
+      otherMatches: [
+        {
+        hostId: "PONGER",
+        hostNickName: "PONGER",
+        matchId: "match_id_1",
+      },
+      {
+        hostId: "PINGER",
+        hostNickName: "PINGER",
+        matchId: "match_id_2",
+      },
+    ],
+    }
+  }
+
+
+);
 
   const appRouter = document.createElement("app-router") as AppRouter;
 

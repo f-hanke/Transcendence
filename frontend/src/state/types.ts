@@ -1,20 +1,15 @@
-import { GameStateStore } from "./gameStateStore";
 import { GameState } from "./gameStateTypes";
-import { NotificationStateStore } from "./notificationStateStore";
+import { MatchmakingState } from "./matchmakingStateTypes";
 import { NotificationState } from "./notificationStateTypes";
 
 interface State {
   gameState: GameState;
   notificationState: NotificationState;
-}
-
-type StatesStores ={
-  gameState: GameStateStore;
-  notificationState: NotificationStateStore;
+  matchmakingState: MatchmakingState;
 }
 
 type AllStateKeys = keyof State;
 
 type StoreCallback = () => void;
 
-export type { StatesStores, State, StoreCallback, AllStateKeys };
+export type { State, StoreCallback, AllStateKeys };
