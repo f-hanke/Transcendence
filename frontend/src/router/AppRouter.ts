@@ -33,9 +33,12 @@ class AppRouter extends HTMLElement {
 
     console.log("HI!");
     document.querySelector("#querynotifyBtn")?.addEventListener("click", () => {
-      window.store.updateNotificationState([
-        ...window.store.getNotificationState(),
-        [generateUniqueId(), `This is a notification!`],
+      window.store.notificationStore.update([
+        ...window.store.notificationStore.get(),
+        {
+          id: generateUniqueId(),
+          message: `This is a notification!`,
+        },
       ]);
       console.log("clicked!");
     });

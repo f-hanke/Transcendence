@@ -10,7 +10,7 @@ class NotificationModal extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribe = window.store.subscribe("notificationState", () =>
+    this.unsubscribe = window.store.notificationStore.subscribe(() =>
       this.render()
     );
   }
@@ -23,14 +23,13 @@ class NotificationModal extends HTMLElement {
   }
 
   render() {
-    const notificationState = window.store.getNotificationState();
-    if(notificationState.length == 0)
-      return;
+    const notificationState = window.store.notificationStore.get();
+    if (notificationState.length == 0) return;
     let notificationNode: HTMLElement;
     this.innerHTML = "";
     const div = document.createElement("div");
     div.setAttribute("class", "fixed top-0 left-1/2");
-    notificationState.forEach(([id, message], index) => {
+    notificationState.forEach(({id, message}, index) => {
       notificationNode = this.createNotificationNode(id, message);
 
       div.appendChild(notificationNode);
@@ -41,7 +40,7 @@ class NotificationModal extends HTMLElement {
     if (this.timeoutId) clearTimeout(this.timeoutId);
 
     this.timeoutId = window.setTimeout(() => {
-      window.store.updateNotificationState([]);
+      window.store.notificationStore.update([]);
       this.innerHTML = "";
       // notificationNode.remove();
       // let newState = notificationState.filter(([id2, msg]) => id2 !== id);

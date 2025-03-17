@@ -25,7 +25,7 @@ class MatchPage extends HTMLElement {
 
   connectedCallback() {
     console.log("Hello World!");
-    this.unsubscribe = window.store.subscribe("gameState", () => this.update());
+    this.unsubscribe = window.store.gameStore.subscribe(() => this.update());
     this.designCanvas();
     // // requestAnimationFrame(this.update);
     // // this.update();
@@ -57,8 +57,8 @@ class MatchPage extends HTMLElement {
       console.log("HELLO!")
       console.log(event)
       const data = JSON.parse(event.data);
-      const gameState = window.store.getGameState();
-      window.store.updateGameState({
+      const gameState = window.store.gameStore.get();
+      window.store.gameStore.update({
         ...gameState,
         ball: {
           x: data.ball.x,
@@ -80,8 +80,8 @@ class MatchPage extends HTMLElement {
   }
 
   designCanvas() {
-    this.canvas.width = window.store.getGameState().width;
-    this.canvas.height = window.store.getGameState().height;
+    this.canvas.width = window.store.gameStore.get().width;
+    this.canvas.height = window.store.gameStore.get().height;
     const divWrapper = createHtmlElementFromString(`
       <div class="flex justify-center items-center w-full h-full p-10"></div>
       `);
@@ -122,7 +122,7 @@ class MatchPage extends HTMLElement {
 
   update() {
     if (!this.ctx) return;
-    const gameState = window.store.getGameState();
+    const gameState = window.store.gameStore.get();
     this.clearCanvas(this.ctx, gameState);
     this.ctx.fillStyle = "white";
     this.drawBall(this.ctx, gameState);

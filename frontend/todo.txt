@@ -24,3 +24,9 @@
 - server determines who has the ball and sends new start position
 - repeat
 - in the end, server sends game over and disconnects clients
+
+
+
+- player settings page
+- match making page
+- chat page

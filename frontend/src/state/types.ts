@@ -1,25 +1,20 @@
+import { GameStateStore } from "./gameStateStore";
+import { GameState } from "./gameStateTypes";
+import { NotificationStateStore } from "./notificationStateStore";
+import { NotificationState } from "./notificationStateTypes";
+
 interface State {
   gameState: GameState;
   notificationState: NotificationState;
 }
 
-type NotificationState = [string, string][];
+type StatesStores ={
+  gameState: GameStateStore;
+  notificationState: NotificationStateStore;
+}
 
-type GameState = {
-  paddleLeft: number;
-  paddleRight: number;
-  ball: {
-    x: number;
-    y: number;
-    direction: {
-      x: number;
-      y: number;
-    };
-  };
-  width: number;
-  height: number;
-};
+type AllStateKeys = keyof State;
 
 type StoreCallback = () => void;
 
-export type { State, StoreCallback, GameState, NotificationState };
+export type { StatesStores, State, StoreCallback, AllStateKeys };
