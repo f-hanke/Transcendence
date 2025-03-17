@@ -26,7 +26,8 @@ interface MsgClientServe extends MsgBluePrint {
   type: "clientServe";
   data: {
     ball: Ball;
-    servingPlayer: Player;
+    player1: Extract<Player, "id" | "paddleY" | "paddleSpeed">;
+    player2: Extract<Player, "id" | "paddleY" | "paddleSpeed">;
   };
 }
 
