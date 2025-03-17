@@ -16,12 +16,12 @@ const fastify_1 = __importDefault(require("fastify"));
 const path_1 = __importDefault(require("path"));
 const static_1 = __importDefault(require("@fastify/static"));
 const cors_1 = __importDefault(require("@fastify/cors"));
+const chalk_1 = __importDefault(require("chalk")); //colors
 const fastify = (0, fastify_1.default)({ logger: true });
 // To allow requests from other domains (CORS)
 fastify.register(cors_1.default, { origin: "*", });
 // For real-time communication via WebSockets
 fastify.register(require('@fastify/websocket'));
-//fastify.register(websocket);
 fastify.register(static_1.default, {
     root: path_1.default.join(__dirname, '..', 'public'),
     prefix: '/',
@@ -29,13 +29,24 @@ fastify.register(static_1.default, {
 fastify.register(function (fastify) {
     return __awaiter(this, void 0, void 0, function* () {
         fastify.get('/ws', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
+            console.log(chalk_1.default.green("A client connected via WebSocket"));
             socket.on('message', message => {
-                // message.toString() === 'hi from client'
-                socket.send(JSON.stringify({ message: 'hi from server' }));
+                socket.send(JSON.stringify({ message: 'Welcome to WebSocket!' }));
+                console.log(chalk_1.default.blue("Message received:", message.toString()));
+            });
+            socket.on('close', () => {
+                console.log(chalk_1.default.red("A client disconnected"));
             });
         });
     });
 });
+//     console.log(chalk.blue("Message received:", message.toString()));
+//     connection.send(JSON.stringify({ message: "Server received: " + message.toString() }));
+//   });
+//   connection.on('close', () => {
+//     console.log(chalk.red("A client disconnected"));
+//   });
+//});
 // fastify.get('/', async (request, reply) => {
 // 	return { message: 'Welcome to your Pong game!' };
 //   });
@@ -45,9 +56,14 @@ fastify.register(function (fastify) {
 fastify.get('/favicon.ico', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
     reply.status(204).send();
 }));
-fastify.listen({ port: 3000 }, err => {
-    if (err) {
+const start = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield fastify.listen({ port: 3000, host: "0.0.0.0" });
+        console.log(chalk_1.default.cyan.bold("Server running on http://localhost:3000"));
+    }
+    catch (err) {
         fastify.log.error(err);
         process.exit(1);
     }
 });
+start();
