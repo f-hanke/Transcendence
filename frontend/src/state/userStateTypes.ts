@@ -14,7 +14,7 @@ type MatchFinished = {
 type UserState = {
   id: UserId;
   displayName: string;
-  avatar: string;
+  image: string;
   matchHistory: MatchFinished[];
   friends: UserId[];
   online: boolean;

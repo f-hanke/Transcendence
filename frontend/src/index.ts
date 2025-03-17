@@ -3,6 +3,7 @@
 import "./router/AppRouter.js"; // Assuming the AppRouter is inside `src/` folder
 import { AppRouter } from "./router/AppRouter.ts";
 import { Store } from "./state/store.js";
+import { exampleImage } from "./testing/exampleImage.ts";
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -49,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ],
     },
     userState: {
-      avatar: "",
+      image: exampleImage,
       displayName: "TEST_USER",
       friends: ["friend_1_id", "friend_2_id"],
       id: "TEST_USER",
@@ -77,6 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
   appRouter.addRoute("/about", "about-page"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/match", "match-page"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/matchmaking", "match-making"); // Associate "/about" route with <another-component>
+  appRouter.addRoute("/testpage", "test-page"); // Associate "/about" route with <another-component>
 
   // Append the router component to the body or any element in the DOM
   document.body.appendChild(appRouter);

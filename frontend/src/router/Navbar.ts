@@ -1,32 +1,48 @@
 import { SupportedLanguages } from "../state/languageStateStore/languageStateTypes";
 
 class Navbar extends HTMLElement {
+  unsubscribeLanguage: null | (() => void);
   unsubscribe: null | (() => void);
   constructor() {
     super();
+    this.unsubscribeLanguage = null;
     this.unsubscribe = null;
     // this.handleLanguageChange = this.handleLanguageChange.bind(this);
   }
 
   connectedCallback() {
     this.render();
-    this.unsubscribe = window.store.languageStore.subscribe(() =>
+    this.unsubscribeLanguage = window.store.languageStore.subscribe(() =>
+      this.render()
+    );
+    this.unsubscribe = window.store.userStore.subscribe(() =>
       this.render()
     );
   }
 
   disconnectedCallback() {
+    if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     if (this.unsubscribe) this.unsubscribe();
   }
+
+
+  // const fileInput = document.querySelector("#imageInput");
+  // fileInput.addEventListener("change", async (event) => {
+  //   const file = event.target.files[0];
+  //   const base64String = await fileToBase64(file);
+  //   document.querySelector("#preview").src = base64String; // Load into img
+  //   console.log(base64String); // Send this to backend to store in DB
+  // });
+
 
   render() {
     console.log("navabr rendered!");
     this.innerHTML = `
     <div class="h-full bg-gray-800 text-white shadow-lg flex flex-col">
       <div class="p-4 flex items-center space-x-3 border-b border-gray-700">
-        <img src="" alt="Profile" class="w-10 h-10 rounded-full" />
+        <img src="${window.store.userStore.get().image}" alt="Profile" class="w-10 h-10 rounded-full" />
         <div>
-          <a href="/profile" class="text-lg font-semibold hover:underline">John Doe</a>
+          <a href="/profile" class="text-lg font-semibold hover:underline">${window.store.userStore.get().displayName}</a>
         </div>
       </div>
       <nav class="flex-1 p-4 overflow-y-auto">
@@ -48,6 +64,9 @@ class Navbar extends HTMLElement {
           </li>
           <li>
             <a href="/settings" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ ${window.store.languageStore.state.navbar.settings}</a>
+          </li>
+          <li>
+            <a href="/testpage" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ Testpage</a>
           </li>
         </ul>
       </nav>
