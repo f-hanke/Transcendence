@@ -19,6 +19,23 @@ export class Game {
 		this.screenWidth = screenWidth;
 		this.screenHeight = screenHeight;
 	}
+	
+	startGame() {
+		console.log("Game started!");
+		this.isGameOver = false;
+		this.player1.score = 0;
+		this.player2.score = 0;
+		this.ball.reset();
+
+		const gameLoop = () => {
+			if (!this.isGameOver) {
+				this.update();
+				setTimeout(gameLoop, 1000 / 60); // 60 FPS
+			}
+		};
+
+		gameLoop();
+	}
 
 	update() {
 

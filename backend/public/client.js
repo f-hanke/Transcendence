@@ -5,13 +5,31 @@ const socket = new WebSocket('ws://localhost:3000/ws');
 
 socket.onopen = () => {
   console.log('Connected to WebSocket server');
+ // socket.send('start game');
   socket.send('Hello from the client!');
 };
 
 socket.onmessage = (event) => {
   const data = JSON.parse(event.data);
   console.log('Message from server:', event.data);
+
+  if (data.message === 'Game started!') {
+    console.log("The game has started!");
+    socket.send(message);
+  }
 };
+
+function sendMessageToServer(message) {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(message); // Envoie le message au serveur
+    console.log(`Sent message: ${message}`);
+  } else {
+    console.log('WebSocket is not connected.');
+  }
+}
+
+// Pour rendre la fonction accessible directement dans la console
+window.sendMessageToServer = sendMessageToServer;
 
 socket.onerror = (error) => {
   console.error("WebSocket Error:", error);
@@ -20,6 +38,15 @@ socket.onerror = (error) => {
 socket.onclose = () => {
   console.log("Disconnected from WebSocket");
 };
+
+function startGame() {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send('start game');
+    console.log('Command "start game" sent to the server.');
+  } else {
+    console.log('WebSocket is not connected.');
+  }
+}
 
 // Get the canvas element and its context
 // const canvas = document.getElementById('gameCanvas');

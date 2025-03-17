@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const Game_2 = require("./Game");
 const fastify_1 = __importDefault(require("fastify"));
 const path_1 = __importDefault(require("path"));
 const static_1 = __importDefault(require("@fastify/static"));
@@ -31,8 +32,18 @@ fastify.register(function (fastify) {
         fastify.get('/ws', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
             console.log(chalk_1.default.green("A client connected via WebSocket"));
             socket.on('message', message => {
-                socket.send(JSON.stringify({ message: 'Welcome to WebSocket!' }));
-                console.log(chalk_1.default.blue("Message received:", message.toString()));
+                console.log(chalk_1.default.blue("Message received:", message.toString())); // Journaliser le message reçu
+                const command = message.toString().trim().toLowerCase();
+                if (command === 'start game') {
+                    console.log(chalk_1.default.yellow("Starting the game..."));
+                    const game = new Game_2.Game(800, 800);
+                    game.startGame();
+                    socket.send(JSON.stringify({ message: 'Game started!' }));
+                }
+                else {
+                    // console.log(chalk.red("Invalid command received: ", message));
+                    socket.send(JSON.stringify({ message: 'Invalid command!' }));
+                }
             });
             socket.on('close', () => {
                 console.log(chalk_1.default.red("A client disconnected"));
@@ -40,19 +51,6 @@ fastify.register(function (fastify) {
         });
     });
 });
-//     console.log(chalk.blue("Message received:", message.toString()));
-//     connection.send(JSON.stringify({ message: "Server received: " + message.toString() }));
-//   });
-//   connection.on('close', () => {
-//     console.log(chalk.red("A client disconnected"));
-//   });
-//});
-// fastify.get('/', async (request, reply) => {
-// 	return { message: 'Welcome to your Pong game!' };
-//   });
-// fastify.get('/game', async (request, reply) => {
-//   return reply.sendFile('index.html'); // Sends the index.html located in 'public'
-// });
 fastify.get('/favicon.ico', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
     reply.status(204).send();
 }));
@@ -60,6 +58,8 @@ const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield fastify.listen({ port: 3000, host: "0.0.0.0" });
         console.log(chalk_1.default.cyan.bold("Server running on http://localhost:3000"));
+        // const game = new Game(800,800);
+        //game.startGame();
     }
     catch (err) {
         fastify.log.error(err);
