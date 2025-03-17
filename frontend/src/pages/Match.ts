@@ -1,5 +1,5 @@
 import { updateBallPosition } from "../ test";
-import { GameState } from "../state/types";
+import { GameState } from "../state/gameStateTypes";
 import { createHtmlElementFromString } from "../utils/utils";
 
 class MatchPage extends HTMLElement {

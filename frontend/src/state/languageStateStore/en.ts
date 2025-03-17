@@ -10,6 +10,15 @@ const en: LanguageState = {
     settings: "Settings",
     logout: "Logout",
   },
+  matchMaking: {
+    availableMatches: "Available Matches",
+    createMatch: "Create Match",
+    join: "join",
+    match: "Match",
+    matchMaking: "Matchmaking",
+    noMatchesAvailable: "No matches available!",
+    yourMatch: "Your match"
+  }
 } as const;
 
 export { en };

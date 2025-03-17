@@ -5,6 +5,7 @@ import "../pages/HomePage.js";
 import "../pages/Match.ts";
 import "./Navbar.ts";
 import "../components/notification-modal.ts";
+import "../pages/MatchMaking.ts"
 import { Page } from "./types.js";
 import { generateUniqueId } from "../utils/utils.ts";
 
@@ -18,8 +19,8 @@ class AppRouter extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
       <div class="flex flex-row h-screen">
-        <div id="navbar"></div>
-        <div id="app"></div>
+        <div id="navbar" class="w-1/4 h-full"></div>
+        <div id="app" class="w-3/4 h-full"></div>
       </div>
       <notification-modal></notification-modal>
     `;

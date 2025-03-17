@@ -8,6 +8,15 @@ type LanguageState = {
     settings: string;
     logout: string;
   };
+  matchMaking: {
+    match: string;
+    matchMaking: string;
+    createMatch: string;
+    availableMatches: string;
+    join: string;
+    noMatchesAvailable: string;
+    yourMatch: string;
+  }
 };
 
 type SupportedLanguages = "en" | "de";

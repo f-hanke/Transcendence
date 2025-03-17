@@ -1,4 +1,4 @@
-type Page = "home-page" | "about-page" | "match-page"
+type Page = "home-page" | "about-page" | "match-page" | "match-making"
 
 
 export type {

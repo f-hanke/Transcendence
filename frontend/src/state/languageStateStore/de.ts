@@ -10,6 +10,15 @@ const de: LanguageState = {
     settings: "Einstellungen",
     logout: "Ausloggen",
   },
+  matchMaking: {
+    availableMatches: "Verfuegbare Spiele",
+    createMatch: "Spiel erstellen",
+    join: "beitreten",
+    match: "Spiel",
+    matchMaking: "Matchmaking",
+    noMatchesAvailable: "Keine Spiele verfuegbar!",
+    yourMatch: "Dein Spiel"
+  }
 } as const;
 
 export { de };

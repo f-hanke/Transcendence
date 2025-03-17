@@ -5,6 +5,18 @@ import { AppRouter } from "./router/AppRouter.ts";
 import { Store } from "./state/store.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  // necessary to prevent page relaod when clicking on "a"-link elements
+  document.body.addEventListener("click", (event) => {
+    const target = event.target as HTMLAnchorElement;
+    if (target.tagName === "A" && target.getAttribute("href")?.startsWith("/")) {
+      event.preventDefault();
+      history.pushState(null, "", target.href);
+      window.dispatchEvent(new Event("popstate"));
+    }
+  });
+
+  console.log("DOM CONTENT LOADED!");
   window.store = new Store({
     notificationState: [],
     gameState: {
@@ -22,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
       width: 600,
     },
     matchmakingState: {
-      ownMatch: null,
+      ownMatchId: null,
       otherMatches: [
         {
           hostId: "PONGER",
@@ -64,6 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
   appRouter.addRoute("/", "home-page"); // Associate "/" route with <my-component>
   appRouter.addRoute("/about", "about-page"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/match", "match-page"); // Associate "/about" route with <another-component>
+  appRouter.addRoute("/matchmaking", "match-making"); // Associate "/about" route with <another-component>
 
   // Append the router component to the body or any element in the DOM
   document.body.appendChild(appRouter);

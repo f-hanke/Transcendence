@@ -5,7 +5,7 @@ type MatchDuringInitiation = {
 };
 
 type MatchmakingState = {
-  ownMatch: MatchDuringInitiation | null;
+  ownMatchId: string | null;
   otherMatches: MatchDuringInitiation[];
 };
 

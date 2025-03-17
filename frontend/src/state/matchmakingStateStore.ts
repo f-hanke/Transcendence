@@ -1,4 +1,4 @@
-import { deepCopyObj } from "../utils/utils";
+import { deepCopyObj, generateUniqueId } from "../utils/utils";
 import { MatchDuringInitiation, MatchmakingState } from "./matchmakingStateTypes";
 import { StoreCallback } from "./types";
 
@@ -34,16 +34,17 @@ class MatchmakingStateStore {
     this.listeners.forEach((callback) => callback());
   }
 
-  openOwnMatch(newMatch: MatchDuringInitiation) {
-    if (this.state.ownMatch === null) {
-      this.state.ownMatch = deepCopyObj(newMatch);
+  openOwnMatch() {
+    if (this.state.ownMatchId === null) {
+      console.log("openeed own match!");
+      this.state.ownMatchId = generateUniqueId();
       this.listeners.forEach((callback) => callback());
     }
   }
 
   closeOwnMatch() {
-    if (this.state.ownMatch) {
-      this.state.ownMatch = null;
+    if (this.state.ownMatchId) {
+      this.state.ownMatchId = null;
       this.listeners.forEach((callback) => callback());
     }
   }
