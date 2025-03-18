@@ -28,14 +28,13 @@ fastify.register(fastifyStatic, {
   prefix: '/',
 });
 
-let gameState = {
-  player1Y: 250,
-  player2Y: 250,
-  paddleSpeed: 10,
-  screenHeight: 600,
-};
 
-
+// let gameState = {
+//   player1Y: 250,
+//   player2Y: 250,
+//   paddleSpeed: 10,
+//   screenHeight: 600,
+// };
 
 
 fastify.register(async function (fastify) {
@@ -43,54 +42,61 @@ fastify.register(async function (fastify) {
     console.log(chalk.green("A client connected via WebSocket"));
 
     clients.add(socket);
-
+    const game = new Game(800, 800);
     socket.on('message', message => {
       console.log(chalk.blue("Message received:", message.toString()));  // Journaliser le message reçu
 
 
-      const command = message.toString().trim().toLowerCase();
-      if (command === 'start game') {
-        console.log(chalk.yellow("Starting the game..."));
+      // const command = message.toString().trim().toLowerCase();
+      // if (command === 'start game') {
+      //   console.log(chalk.yellow("Starting the game..."));
 
-        const game = new Game(800, 800);
-        game.startGame();
+      //   const game = new Game(800, 800);
+      //   game.startGame();
 
-        socket.send(JSON.stringify({ message: 'Game started!' }));
-      }
+      //   socket.send(JSON.stringify({ message: 'Game started!' }));
+      // }
 
       try {
         const data = JSON.parse(message.toString());
 
+        if (data.type === 'start') {
+          console.log(chalk.yellow("Starting the game..."));
+
+
+          game.startGame();
+
+          socket.send(JSON.stringify({ message: 'Game started!' }));
+
+        }
 
         if (data.type === 'move')
         {
           console.log(`Move : Player ${data.player}, Direction ${data.direction}`);
-          if (data.player === 1)
-          {
-            if (data.direction === 'up' && gameState.player1Y > 0)
-            {
-              gameState.player1Y -= gameState.paddleSpeed;
-            }
-            else if (data.direction === 'down' && gameState.player1Y + 100 < gameState.screenHeight) {
-              gameState.player1Y += gameState.paddleSpeed;
+          if (data.player === 1) {
+            if (data.direction === 'up' && game.player1.y > 0) {
+              game.player1.y -= game.player1.paddleSpeed;
+            } else if (data.direction === 'down' && game.player1.y + game.player1.paddleHeight < game.screenHeight) {
+              game.player1.y += game.player1.paddleSpeed;
             }
           }
-          else if (data.player === 2)
-          {
-            if (data.direction === 'up' && gameState.player2Y > 0)
-            {
-              gameState.player2Y -= gameState.paddleSpeed;
-            } else if (data.direction === 'down' && gameState.player2Y + 100 < gameState.screenHeight) {
-              gameState.player2Y += gameState.paddleSpeed;
+
+          // Mise à jour de la position du paddle 2
+          if (data.player === 2) {
+            if (data.direction === 'up' && game.player2.y > 0) {
+              game.player2.y -= game.player2.paddleSpeed;
+            } else if (data.direction === 'down' && game.player2.y + game.player2.paddleHeight < game.screenHeight) {
+              game.player2.y += game.player2.paddleSpeed;
             }
           }
 
           const updateMessage = JSON.stringify(
           {
             type: 'update',
-            player1Y: gameState.player1Y,
-            player2Y: gameState.player2Y,
+            player1Y: game.player1.y,
+            player2Y: game.player2.y,
           });
+
           console.log("Sending update :", updateMessage);
           clients.forEach((client: ws.WebSocket) => {
             if (client.readyState === ws.OPEN) {
@@ -101,7 +107,7 @@ fastify.register(async function (fastify) {
         }
 
       } catch (error) {
-       // console.log(chalk.red("Erreur lors du traitement du message :", error));
+        console.log(chalk.red("Error processing message:", error));
       }
     });
 
@@ -129,8 +135,6 @@ const start = async () => {
   try {
     await fastify.listen({ port: 3000, host: "0.0.0.0" });
     console.log(chalk.cyan.bold("Server running on http://localhost:3000"));
-   // const game = new Game(800,800);
-    //game.startGame();
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
