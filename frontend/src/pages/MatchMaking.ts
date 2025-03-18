@@ -59,7 +59,7 @@ class MatchMaking extends HTMLElement {
                   .otherMatches.map(
                     (match) => `
                   <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg">
-                    <span class="font-medium">${match.hostNickName}'s ${window.store.languageStore.state.matchMaking.match}</span>
+                    <span class="font-medium">${match.hostId}'s</span>
                     <button class="join-match-btn bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg" data-match-id="${match.matchId}">
                       ▶ ${window.store.languageStore.state.matchMaking.join}
                     </button>

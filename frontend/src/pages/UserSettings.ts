@@ -1,5 +1,6 @@
 import { UserState } from "../state/userStateTypes";
-import { convertToBase64, generateUniqueId } from "../utils/utils";
+import { convertToBase64, isDefined } from "../utils/utils";
+import { ObjAllPropsBoolean } from "../utils/utilsTypes";
 
 class UserSettings extends HTMLElement {
   unsubscribe: null | (() => void);
@@ -74,19 +75,28 @@ class UserSettings extends HTMLElement {
       (this.querySelector("#imageUpload") as HTMLLabelElement).click();
     });
 
-    document.querySelector("#saveBtn")?.addEventListener("click", async (event) => {
-      this.updatedState.email = (
-        document.querySelector("#email") as HTMLInputElement
-      ).value;
-      this.updatedState.displayName = (
-        document.querySelector("#displayName") as HTMLInputElement
-      ).value;
-      const image = (document.querySelector("#imageUpload") as HTMLInputElement).files?.[0];
-      // console.log(await convertToBase64(image));
-      console.log(image);
-      console.log("SAVE CLICKED");
-      console.log(this.updatedState);
-    });
+    // validate user input on the backend
+
+    document
+      .querySelector("#saveBtn")
+      ?.addEventListener("click", async (event) => {
+        const newImage = (
+          document.querySelector("#imageUpload") as HTMLInputElement
+        ).files?.[0];
+        const newEmail = (document.querySelector("#email") as HTMLInputElement)
+          .value;
+        const newDisplayName = (
+          document.querySelector("#displayName") as HTMLInputElement
+        ).value;
+        if (isDefined(newImage)) {
+          this.updatedState.image = await convertToBase64(newImage);
+          // (document.querySelector("#profileImage") as HTMLImageElement).src =
+          //   this.updatedState.image;
+        }
+        this.updatedState.email = newEmail;
+        this.updatedState.displayName = newDisplayName;
+        window.store.userStore.updateUserSettings(this.updatedState);
+      });
   }
 }
 
@@ -100,8 +110,6 @@ class UserSettings extends HTMLElement {
 //       this.querySelector("#profileImage")!.setAttribute("src", base64);
 //     }
 //   });
-
-
 
 customElements.define("user-settings", UserSettings);
 

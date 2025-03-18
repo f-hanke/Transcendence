@@ -21,10 +21,16 @@ class UserStateStore {
     return this.state;
   }
 
-  update(newState: UserState) {
-    this.state = deepCopyObj(newState);
+  updateUserSettings(updatedState: Partial<Pick<UserState, "image" | "displayName" | "email">>)
+  {
+    this.state = deepCopyObj({...this.state, ...updatedState});
     this.listeners.forEach((callback) => callback());
   }
+
+  // update(newState: UserState) {
+  //   this.state = deepCopyObj(newState);
+  //   this.listeners.forEach((callback) => callback());
+  // }
 
 }
 
