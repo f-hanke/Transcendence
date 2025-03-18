@@ -18,6 +18,13 @@ const en: LanguageState = {
     matchMaking: "Matchmaking",
     noMatchesAvailable: "No matches available!",
     yourMatch: "Your match"
+  },
+  oneVOneLocal: {
+    player1: "Player 1",
+    player2: "Player 2",
+    startGame: "Start Game",
+    localGameOnSame: "Local Game on same keyboard",
+
   }
 } as const;
 

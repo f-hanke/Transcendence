@@ -6,11 +6,13 @@ import { Store } from "./state/store.js";
 import { exampleImage } from "./testing/exampleImage.ts";
 
 document.addEventListener("DOMContentLoaded", () => {
-
   // necessary to prevent page relaod when clicking on "a"-link elements
   document.body.addEventListener("click", (event) => {
     const target = event.target as HTMLAnchorElement;
-    if (target.tagName === "A" && target.getAttribute("href")?.startsWith("/")) {
+    if (
+      target.tagName === "A" &&
+      target.getAttribute("href")?.startsWith("/")
+    ) {
       event.preventDefault();
       history.pushState(null, "", target.href);
       window.dispatchEvent(new Event("popstate"));
@@ -69,6 +71,9 @@ document.addEventListener("DOMContentLoaded", () => {
       ],
       online: true,
     },
+    oneVOneLocalState: {
+      player2Name: "",
+    },
   });
 
   const appRouter = document.createElement("app-router") as AppRouter;
@@ -79,6 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
   appRouter.addRoute("/match", "match-page"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/matchmaking", "match-making"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/testpage", "test-page"); // Associate "/about" route with <another-component>
+  appRouter.addRoute("/oneVOneLocal", "onevone-local"); // Associate "/about" route with <another-component>
 
   // Append the router component to the body or any element in the DOM
   document.body.appendChild(appRouter);

@@ -1,6 +1,7 @@
 import { GameState } from "./gameStateTypes";
 import { MatchmakingState } from "./matchmakingStateTypes";
 import { NotificationState } from "./notificationStateTypes";
+import { OneVOneLocalState } from "./oneVOneLocalStateTypes";
 import { UserState } from "./userStateTypes";
 
 interface State {
@@ -8,6 +9,7 @@ interface State {
   notificationState: NotificationState;
   matchmakingState: MatchmakingState;
   userState: UserState;
+  oneVOneLocalState: OneVOneLocalState;
 }
 
 type AllStateKeys = keyof State;

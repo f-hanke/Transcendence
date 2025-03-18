@@ -18,6 +18,14 @@ const de: LanguageState = {
     matchMaking: "Matchmaking",
     noMatchesAvailable: "Keine Spiele verfuegbar!",
     yourMatch: "Dein Spiel"
+  },
+  oneVOneLocal: {
+    player1: "Spieler 1",
+    player2: "Spieler 2",
+    startGame: "Spiel starten",
+    localGameOnSame: "Lokales Spiel auf derselben Tastatur",
+
+
   }
 } as const;
 

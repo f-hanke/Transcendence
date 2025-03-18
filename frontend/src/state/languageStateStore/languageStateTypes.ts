@@ -16,6 +16,12 @@ type LanguageState = {
     join: string;
     noMatchesAvailable: string;
     yourMatch: string;
+  },
+  oneVOneLocal: {
+    player1: string;
+    player2: string;
+    startGame: string;
+    localGameOnSame: string;
   }
 };
 

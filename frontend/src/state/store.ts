@@ -2,6 +2,7 @@ import { GameStateStore } from "./gameStateStore";
 import { LanguageStateStore } from "./languageStateStore/languageStateStore";
 import { MatchmakingStateStore } from "./matchmakingStateStore";
 import { NotificationStateStore } from "./notificationStateStore";
+import { OneVOneLocalStateStore } from "./oneVOneLocalStateStore";
 import { State } from "./types";
 import { UserStateStore } from "./userStateStore";
 
@@ -11,6 +12,7 @@ class Store {
   languageStore: LanguageStateStore;
   matchmakingStore: MatchmakingStateStore;
   userStore: UserStateStore;
+  oneVOneLocalStore: OneVOneLocalStateStore;
   constructor(initialState: State) {
     this.gameStore = new GameStateStore(initialState.gameState);
     this.notificationStore = new NotificationStateStore(
@@ -19,6 +21,7 @@ class Store {
     this.languageStore = new LanguageStateStore();
     this.matchmakingStore = new MatchmakingStateStore(initialState.matchmakingState);
     this.userStore = new UserStateStore(initialState.userState);
+    this.oneVOneLocalStore = new OneVOneLocalStateStore(initialState.oneVOneLocalState);
   }
 
   // 🆕 Async fetch function to update state

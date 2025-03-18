@@ -6,6 +6,7 @@ import "../pages/Match.ts";
 import "./Navbar.ts";
 import "../components/notification-modal.ts";
 import "../pages/MatchMaking.ts"
+import "../pages/OneVOneLocal.ts"
 import "../testing/TestPage.ts"
 import { Page } from "./types.js";
 import { generateUniqueId } from "../utils/utils.ts";

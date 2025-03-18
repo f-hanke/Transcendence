@@ -25,22 +25,12 @@ class Navbar extends HTMLElement {
     if (this.unsubscribe) this.unsubscribe();
   }
 
-
-  // const fileInput = document.querySelector("#imageInput");
-  // fileInput.addEventListener("change", async (event) => {
-  //   const file = event.target.files[0];
-  //   const base64String = await fileToBase64(file);
-  //   document.querySelector("#preview").src = base64String; // Load into img
-  //   console.log(base64String); // Send this to backend to store in DB
-  // });
-
-
   render() {
     console.log("navabr rendered!");
     this.innerHTML = `
     <div class="h-full bg-gray-800 text-white shadow-lg flex flex-col">
       <div class="p-4 flex items-center space-x-3 border-b border-gray-700">
-        <img src="${window.store.userStore.get().image}" alt="Profile" class="w-10 h-10 rounded-full" />
+        <img src="${window.store.userStore.get().image}" alt="Profile" class="w-20 h-20 rounded-full" />
         <div>
           <a href="/profile" class="text-lg font-semibold hover:underline">${window.store.userStore.get().displayName}</a>
         </div>
@@ -54,7 +44,7 @@ class Navbar extends HTMLElement {
             </a>
             <!-- Submenu -->
             <ul class="relative left-0 w-full hidden group-hover:block bg-gray-700 rounded-lg space-y-1 p-2 transition-all duration-300 ease-in-out transform opacity-0 group-hover:opacity-100 group-hover:translate-y-2">
-              <li><a href="/match" class="block px-4 py-2 hover:bg-gray-600 rounded">${window.store.languageStore.state.navbar.oneV1local}</a></li>
+              <li><a href="/oneVOneLocal" class="block px-4 py-2 hover:bg-gray-600 rounded">${window.store.languageStore.state.navbar.oneV1local}</a></li>
               <li><a href="/matchmaking" class="block px-4 py-2 hover:bg-gray-600 rounded">${window.store.languageStore.state.navbar.oneV1remote}</a></li>
               <li><a href="/play/tournament" class="block px-4 py-2 hover:bg-gray-600 rounded">${window.store.languageStore.state.navbar.tournament}</a></li>
             </ul>
