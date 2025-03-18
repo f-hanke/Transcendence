@@ -21,6 +21,7 @@ const chalk_1 = __importDefault(require("chalk")); //colors
 const ws_1 = __importDefault(require("ws"));
 const clients = new Set();
 const fastify = (0, fastify_1.default)({ logger: true });
+const game = new Game_2.Game(800, 600);
 // To allow requests from other domains (CORS)
 fastify.register(cors_1.default, { origin: "*", });
 // For real-time communication via WebSockets
@@ -35,27 +36,44 @@ fastify.register(static_1.default, {
 //   paddleSpeed: 10,
 //   screenHeight: 600,
 // };
+const gameLoop = () => {
+    if (!game.isGameOver) {
+        game.update(); // Mettre à jour la position de la balle et des paddles
+        // Envoi de la position de la balle et des paddles aux clients
+        const updateMessage = JSON.stringify({
+            type: 'update',
+            player1Y: game.player1.y,
+            player2Y: game.player2.y,
+            ballX: game.ball.x,
+            ballY: game.ball.y,
+        });
+        // Envoyer l'update à tous les clients connectés
+        clients.forEach((client) => {
+            if (client.readyState === ws_1.default.OPEN) {
+                client.send(updateMessage);
+            }
+        });
+        // Recommencer le game loop
+        setTimeout(gameLoop, 1000 / 60); // 60 FPS
+    }
+};
 fastify.register(function (fastify) {
     return __awaiter(this, void 0, void 0, function* () {
         fastify.get('/ws', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
             console.log(chalk_1.default.green("A client connected via WebSocket"));
             clients.add(socket);
-            const game = new Game_2.Game(800, 800);
+            //const game = new Game(800, 800);
             socket.on('message', message => {
                 console.log(chalk_1.default.blue("Message received:", message.toString())); // Journaliser le message reçu
-                // const command = message.toString().trim().toLowerCase();
-                // if (command === 'start game') {
-                //   console.log(chalk.yellow("Starting the game..."));
-                //   const game = new Game(800, 800);
-                //   game.startGame();
-                //   socket.send(JSON.stringify({ message: 'Game started!' }));
-                // }
                 try {
                     const data = JSON.parse(message.toString());
                     if (data.type === 'start') {
                         console.log(chalk_1.default.yellow("Starting the game..."));
                         game.startGame();
                         socket.send(JSON.stringify({ message: 'Game started!' }));
+                        if (clients.size === 1) {
+                            gameLoop(); // Lancer la boucle de jeu
+                        }
                     }
                     if (data.type === 'move') {
                         console.log(`Move : Player ${data.player}, Direction ${data.direction}`);

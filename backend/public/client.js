@@ -1,12 +1,19 @@
 // client.js
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
+let player1Y = 250;
+let player2Y = 250;
+let ballX = 400;
+let ballY = 300;
+let ballRadius = 10;
+let ballSpeedX = 3;
+let ballSpeedY = 3;
 
 const socket = new WebSocket('ws://localhost:3000/ws');
 
 socket.onopen = () => {
   console.log('Connected to WebSocket server');
- // socket.send('start game');
-  //socket.send('Hello from the client!');
 };
 
 socket.onmessage = (event) => {
@@ -25,9 +32,10 @@ socket.onmessage = (event) => {
     ballX = data.ballX;
     ballY = data.ballY;
 
-    drawPaddle1(player1Y);
-    drawPaddle2(player2Y);
-    drawBall(ballX, ballY);
+    drawGame();
+    // drawPaddle1(player1Y);
+    // drawPaddle2(player2Y);
+    // drawBall(ballX, ballY);
   }
 };
 
@@ -52,7 +60,7 @@ socket.onclose = () => {
 
 function startGame() {
   if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ type: 'start' }));  // Envoie un objet JSON
+    socket.send(JSON.stringify({ type: 'start' }));
     console.log('Command "start game" sent to the server.');
   } else {
     console.log('WebSocket is not connected.');
@@ -89,11 +97,27 @@ function drawPaddle2(yPosition) {
 function drawBall(x, y) {
   console.log(`Drawing ball at position: X=${x}, Y=${y}`);
 }
-// socket.onmessage = (event) => {
-//   const data = JSON.parse(event.data);
 
-//   if (data.type === 'update') {
-//     console.log(`Mise à jour reçue : Player 1 Y=${data.player1Y}, Player 2 Y=${data.player2Y}`);
-//     // update the graphic thingy
-//   }
-// };
+function drawGame() {
+  // Effacer le canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Dessiner les paddles
+  drawPaddle(10, player1Y); // Paddle gauche
+  drawPaddle(canvas.width - 20, player2Y); // Paddle droit
+
+  // Dessiner la balle
+  drawBall(ballX, ballY);
+}
+
+function drawPaddle(x, y) {
+  ctx.fillStyle = '#FFFFFF'; // Couleur blanche pour les paddles
+  ctx.fillRect(x, y, 10, 100); // Dessiner le paddle (10px de large, 100px de haut)
+}
+
+function drawBall(x, y) {
+  ctx.fillStyle = '#FFFFFF'; // Couleur blanche pour la balle
+  ctx.beginPath();
+  ctx.arc(x, y, ballRadius, 0, Math.PI * 2); // Dessiner un cercle (la balle)
+  ctx.fill();
+}

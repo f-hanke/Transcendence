@@ -15,6 +15,8 @@ const clients = new Set<ws.WebSocket>();
 
 const fastify = Fastify({ logger: true });
 
+const game = new Game(800, 600);
+
 // To allow requests from other domains (CORS)
 fastify.register(cors, { origin: "*", });
 
@@ -36,26 +38,39 @@ fastify.register(fastifyStatic, {
 //   screenHeight: 600,
 // };
 
+const gameLoop = () => {
+  if (!game.isGameOver) {
+    game.update();  // Mettre à jour la position de la balle et des paddles
+
+    // Envoi de la position de la balle et des paddles aux clients
+    const updateMessage = JSON.stringify({
+      type: 'update',
+      player1Y: game.player1.y,
+      player2Y: game.player2.y,
+      ballX: game.ball.x,
+      ballY: game.ball.y,
+    });
+
+    // Envoyer l'update à tous les clients connectés
+    clients.forEach((client: ws.WebSocket) => {
+      if (client.readyState === ws.OPEN) {
+        client.send(updateMessage);
+      }
+    });
+
+    // Recommencer le game loop
+    setTimeout(gameLoop, 1000 / 60); // 60 FPS
+  }
+};
 
 fastify.register(async function (fastify) {
   fastify.get('/ws', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
     console.log(chalk.green("A client connected via WebSocket"));
 
     clients.add(socket);
-    const game = new Game(800, 800);
+    //const game = new Game(800, 800);
     socket.on('message', message => {
       console.log(chalk.blue("Message received:", message.toString()));  // Journaliser le message reçu
-
-
-      // const command = message.toString().trim().toLowerCase();
-      // if (command === 'start game') {
-      //   console.log(chalk.yellow("Starting the game..."));
-
-      //   const game = new Game(800, 800);
-      //   game.startGame();
-
-      //   socket.send(JSON.stringify({ message: 'Game started!' }));
-      // }
 
       try {
         const data = JSON.parse(message.toString());
@@ -67,6 +82,9 @@ fastify.register(async function (fastify) {
           game.startGame();
 
           socket.send(JSON.stringify({ message: 'Game started!' }));
+          if (clients.size === 1) {
+            gameLoop();  // Lancer la boucle de jeu
+          }
 
         }
 
@@ -89,7 +107,7 @@ fastify.register(async function (fastify) {
               game.player2.y += game.player2.paddleSpeed;
             }
           }
-          game.update(); 
+          game.update();
           const updateMessage = JSON.stringify(
           {
             type: 'update',

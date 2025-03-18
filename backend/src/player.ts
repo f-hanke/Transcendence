@@ -14,7 +14,7 @@ export class Player {
 		this.score = 0;
 		this.paddleWidth = 10;
 		this.paddleHeight = 100;
-		this.paddleSpeed = 5;
+		this.paddleSpeed = 10;
 
 	}
 

@@ -10,9 +10,9 @@ export class Ball {
 	constructor() {
 		this.x = 400;
 		this.y = 300;
-		this.speedX = 4;
+		this.speedX = 2;
 		this.speedY = 3;
-		this.radius = 10;
+		this.radius = 5;
 	}
 
 
@@ -24,7 +24,7 @@ export class Ball {
 	reset() {
 		this.x = 400;
 		this.y = 300;
-		this.speedX = 4;
+		this.speedX = 2;
 		this.speedY = 3;
 	}
 }

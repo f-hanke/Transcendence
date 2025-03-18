@@ -63,12 +63,12 @@ export class Game {
 
         if (this.ball.x <= 0) {
             this.player2.score += 1;
-           // console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
+           console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
             this.ball.reset();
         }
         if (this.ball.x >= this.screenWidth) {
             this.player1.score += 1;
-            //console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
+            console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
             this.ball.reset();
         }
 
