@@ -2,16 +2,21 @@ class NotificationModal extends HTMLElement {
   message: string;
   timeoutId: number | null;
   unsubscribe: null | (() => void);
+  unsubscribeLanguage: null | (() => void);
   constructor() {
     super();
     this.message = "";
     this.timeoutId = null;
     this.unsubscribe = null;
+    this.unsubscribeLanguage = null;
   }
 
   connectedCallback() {
     this.unsubscribe = window.store.notificationStore.subscribe(() =>
       this.render()
+    );
+    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+      this.render.bind(this)
     );
   }
 
@@ -20,9 +25,11 @@ class NotificationModal extends HTMLElement {
       clearTimeout(this.timeoutId);
     }
     if (this.unsubscribe) this.unsubscribe();
+    if (this.unsubscribeLanguage) this.unsubscribeLanguage();
   }
 
   render() {
+    // console.log("Notification rendered!");
     const notificationState = window.store.notificationStore.get();
     if (notificationState.length == 0) return;
     let notificationNode: HTMLElement;

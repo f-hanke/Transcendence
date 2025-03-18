@@ -8,6 +8,7 @@ import "../components/notification-modal.ts";
 import "../pages/MatchMaking.ts"
 import "../pages/OneVOneLocal.ts"
 import "../testing/TestPage.ts"
+import "../pages/UserSettings.ts"
 import { Page } from "./types.js";
 import { generateUniqueId } from "../utils/utils.ts";
 
@@ -33,18 +34,6 @@ class AppRouter extends HTMLElement {
     // Listen to URL changes
     window.addEventListener("popstate", () => this.handleRouteChange());
     this.handleRouteChange(); // Initial route change on page load
-
-    console.log("HI!");
-    document.querySelector("#querynotifyBtn")?.addEventListener("click", () => {
-      window.store.notificationStore.update([
-        ...window.store.notificationStore.get(),
-        {
-          id: generateUniqueId(),
-          message: `This is a notification!`,
-        },
-      ]);
-      console.log("clicked!");
-    });
   }
 
   // Add routes to the AppRouter

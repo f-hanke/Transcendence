@@ -1,4 +1,5 @@
 import { SupportedLanguages } from "../state/languageStateStore/languageStateTypes";
+import { generateUniqueId } from "../utils/utils";
 
 class Navbar extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -26,7 +27,6 @@ class Navbar extends HTMLElement {
   }
 
   render() {
-    console.log("navabr rendered!");
     this.innerHTML = `
     <div class="h-full bg-gray-800 text-white shadow-lg flex flex-col">
       <div class="p-4 flex items-center space-x-3 border-b border-gray-700">
@@ -53,7 +53,7 @@ class Navbar extends HTMLElement {
             <a href="/messages" class="block p-2 rounded-lg hover:bg-gray-700">✉️ ${window.store.languageStore.state.navbar.messages}</a>
           </li>
           <li>
-            <a href="/settings" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ ${window.store.languageStore.state.navbar.settings}</a>
+            <a href="/userSettings" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ ${window.store.languageStore.state.navbar.settings}</a>
           </li>
           <li>
             <a href="/testpage" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ Testpage</a>
@@ -79,6 +79,17 @@ class Navbar extends HTMLElement {
     </div>
   `;
     document.querySelector("#language-select")!.addEventListener("change", (event) => this.handleLanguageChange(event));
+
+    document.querySelector("#querynotifyBtn")?.addEventListener("click", () => {
+      window.store.notificationStore.update([
+        ...window.store.notificationStore.get(),
+        {
+          id: generateUniqueId(),
+          message: `This is a notification!`,
+        },
+      ]);
+    });
+
   }
 
   handleLanguageChange(event: Event) {

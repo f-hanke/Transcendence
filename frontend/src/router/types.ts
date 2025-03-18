@@ -5,6 +5,7 @@ type Page =
   | "match-making"
   | "test-page"
   | "onevone-local"
+  | "user-settings"
   ;
 
 export type { Page };

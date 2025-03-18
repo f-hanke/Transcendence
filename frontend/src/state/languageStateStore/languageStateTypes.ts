@@ -22,6 +22,12 @@ type LanguageState = {
     player2: string;
     startGame: string;
     localGameOnSame: string;
+  },
+  userSettings: {
+    userSettings: string;
+    displayName: string;
+    email: string;
+    save: string;
   }
 };
 

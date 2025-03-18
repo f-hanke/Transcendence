@@ -24,8 +24,12 @@ const de: LanguageState = {
     player2: "Spieler 2",
     startGame: "Spiel starten",
     localGameOnSame: "Lokales Spiel auf derselben Tastatur",
-
-
+  },
+  userSettings: {
+    userSettings: "Benutzereinstellungen",
+    displayName: "Anzeigename",
+    email: "Email",
+    save: "Speichern",
   }
 } as const;
 

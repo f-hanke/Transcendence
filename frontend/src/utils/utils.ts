@@ -12,4 +12,13 @@ function createHtmlElementFromString(htmlString: string) {
   return template.content.firstElementChild as HTMLElement;
 }
 
-export { deepCopyObj, generateUniqueId, createHtmlElementFromString };
+async function convertToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+  });
+}
+
+export { deepCopyObj, generateUniqueId, createHtmlElementFromString, convertToBase64 };

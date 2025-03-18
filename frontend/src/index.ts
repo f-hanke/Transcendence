@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  console.log("DOM CONTENT LOADED!");
+  // console.log("DOM CONTENT LOADED!");
   window.store = new Store({
     notificationState: [],
     gameState: {
@@ -85,6 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
   appRouter.addRoute("/matchmaking", "match-making"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/testpage", "test-page"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/oneVOneLocal", "onevone-local"); // Associate "/about" route with <another-component>
+  appRouter.addRoute("/userSettings", "user-settings"); // Associate "/about" route with <another-component>
 
   // Append the router component to the body or any element in the DOM
   document.body.appendChild(appRouter);

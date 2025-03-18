@@ -17,8 +17,6 @@ class MatchMaking extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(() =>
       this.render()
     );
-    console.log("HERE!");
-    console.log(window.store.matchmakingStore);
   }
 
   disconnectedCallback() {

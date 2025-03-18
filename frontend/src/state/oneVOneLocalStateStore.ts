@@ -1,8 +1,3 @@
-import { deepCopyObj, generateUniqueId } from "../utils/utils";
-import {
-  MatchDuringInitiation,
-  MatchmakingState,
-} from "./matchmakingStateTypes";
 import { OneVOneLocalState } from "./oneVOneLocalStateTypes";
 import { StoreCallback } from "./types";
 
