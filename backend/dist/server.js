@@ -18,6 +18,8 @@ const path_1 = __importDefault(require("path"));
 const static_1 = __importDefault(require("@fastify/static"));
 const cors_1 = __importDefault(require("@fastify/cors"));
 const chalk_1 = __importDefault(require("chalk")); //colors
+const ws_1 = __importDefault(require("ws"));
+const clients = new Set();
 const fastify = (0, fastify_1.default)({ logger: true });
 // To allow requests from other domains (CORS)
 fastify.register(cors_1.default, { origin: "*", });
@@ -27,10 +29,17 @@ fastify.register(static_1.default, {
     root: path_1.default.join(__dirname, '..', 'public'),
     prefix: '/',
 });
+let gameState = {
+    player1Y: 250,
+    player2Y: 250,
+    paddleSpeed: 10,
+    screenHeight: 600,
+};
 fastify.register(function (fastify) {
     return __awaiter(this, void 0, void 0, function* () {
         fastify.get('/ws', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
             console.log(chalk_1.default.green("A client connected via WebSocket"));
+            clients.add(socket);
             socket.on('message', message => {
                 console.log(chalk_1.default.blue("Message received:", message.toString())); // Journaliser le message reçu
                 const command = message.toString().trim().toLowerCase();
@@ -40,13 +49,50 @@ fastify.register(function (fastify) {
                     game.startGame();
                     socket.send(JSON.stringify({ message: 'Game started!' }));
                 }
-                else {
-                    // console.log(chalk.red("Invalid command received: ", message));
-                    socket.send(JSON.stringify({ message: 'Invalid command!' }));
+                try {
+                    const data = JSON.parse(message.toString());
+                    if (data.type === 'move') {
+                        console.log(`Move : Joueur ${data.player}, Direction ${data.direction}`);
+                        if (data.player === 1) {
+                            if (data.direction === 'up' && gameState.player1Y > 0) {
+                                gameState.player1Y -= gameState.paddleSpeed;
+                            }
+                            else if (data.direction === 'down' && gameState.player1Y + 100 < gameState.screenHeight) {
+                                gameState.player1Y += gameState.paddleSpeed;
+                            }
+                        }
+                        else if (data.player === 2) {
+                            if (data.direction === 'up' && gameState.player2Y > 0) {
+                                gameState.player2Y -= gameState.paddleSpeed;
+                            }
+                            else if (data.direction === 'down' && gameState.player2Y + 100 < gameState.screenHeight) {
+                                gameState.player2Y += gameState.paddleSpeed;
+                            }
+                        }
+                        const updateMessage = JSON.stringify({
+                            type: 'update',
+                            player1Y: gameState.player1Y,
+                            player2Y: gameState.player2Y,
+                        });
+                        console.log("Sending update :", updateMessage);
+                        clients.forEach((client) => {
+                            if (client.readyState === ws_1.default.OPEN) {
+                                client.send(updateMessage);
+                            }
+                        });
+                    }
+                }
+                catch (error) {
+                    // console.log(chalk.red("Erreur lors du traitement du message :", error));
                 }
             });
+            //  else {
+            //  // console.log(chalk.red("Invalid command received: ", message));
+            //   socket.send(JSON.stringify({ message: 'Invalid command!' }));
+            // }
             socket.on('close', () => {
                 console.log(chalk_1.default.red("A client disconnected"));
+                clients.delete(socket);
             });
         });
     });

@@ -1,12 +1,17 @@
 'use strict';
 
 import { Game } from './Game';
+
 import Fastify from "fastify";
 import path from "path";
 import fastifyStatic from '@fastify/static';
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import chalk from "chalk"; //colors
+
+import ws from 'ws';
+
+const clients = new Set<ws.WebSocket>();
 
 const fastify = Fastify({ logger: true });
 
@@ -23,9 +28,21 @@ fastify.register(fastifyStatic, {
   prefix: '/',
 });
 
+let gameState = {
+  player1Y: 250,
+  player2Y: 250,
+  paddleSpeed: 10,
+  screenHeight: 600,
+};
+
+
+
+
 fastify.register(async function (fastify) {
   fastify.get('/ws', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
     console.log(chalk.green("A client connected via WebSocket"));
+
+    clients.add(socket);
 
     socket.on('message', message => {
       console.log(chalk.blue("Message received:", message.toString()));  // Journaliser le message reçu
@@ -38,17 +55,66 @@ fastify.register(async function (fastify) {
         const game = new Game(800, 800);
         game.startGame();
 
-
         socket.send(JSON.stringify({ message: 'Game started!' }));
-      } else {
+      }
 
-       // console.log(chalk.red("Invalid command received: ", message));
-        socket.send(JSON.stringify({ message: 'Invalid command!' }));
+      try {
+        const data = JSON.parse(message.toString());
+
+
+        if (data.type === 'move')
+        {
+          console.log(`Move : Player ${data.player}, Direction ${data.direction}`);
+          if (data.player === 1)
+          {
+            if (data.direction === 'up' && gameState.player1Y > 0)
+            {
+              gameState.player1Y -= gameState.paddleSpeed;
+            }
+            else if (data.direction === 'down' && gameState.player1Y + 100 < gameState.screenHeight) {
+              gameState.player1Y += gameState.paddleSpeed;
+            }
+          }
+          else if (data.player === 2)
+          {
+            if (data.direction === 'up' && gameState.player2Y > 0)
+            {
+              gameState.player2Y -= gameState.paddleSpeed;
+            } else if (data.direction === 'down' && gameState.player2Y + 100 < gameState.screenHeight) {
+              gameState.player2Y += gameState.paddleSpeed;
+            }
+          }
+
+          const updateMessage = JSON.stringify(
+          {
+            type: 'update',
+            player1Y: gameState.player1Y,
+            player2Y: gameState.player2Y,
+          });
+          console.log("Sending update :", updateMessage);
+          clients.forEach((client: ws.WebSocket) => {
+            if (client.readyState === ws.OPEN) {
+              client.send(updateMessage);
+            }
+          });
+
+        }
+
+      } catch (error) {
+       // console.log(chalk.red("Erreur lors du traitement du message :", error));
       }
     });
 
+
+      //  else {
+
+      //  // console.log(chalk.red("Invalid command received: ", message));
+      //   socket.send(JSON.stringify({ message: 'Invalid command!' }));
+      // }
+
     socket.on('close', () => {
       console.log(chalk.red("A client disconnected"));
+      clients.delete(socket);
     });
   });
 });

@@ -18,22 +18,18 @@ export class Player {
 
 	}
 
-	moveUp() {
-
-		//will need to change this if we want the rescaling
-		const borderUp = 600;
-
-		if (this.y + this.paddleSpeed < borderUp) {
-			this.y += this.paddleSpeed;
+	moveUp(screenHeight: number) {
+		if (this.y > 0) {
+		  this.y -= this.paddleSpeed;
 		}
-	}
+	  }
 
-	moveDown() {
-		const borderDown = 0;
-		if (this.y > borderDown) {
-			this.y -= this.paddleSpeed;
+	  moveDown(screenHeight: number) {
+		if (this.y + this.paddleHeight < screenHeight) {
+		  this.y += this.paddleSpeed;
 		}
-	}
+	  }
+
 
 	reset()
 	{

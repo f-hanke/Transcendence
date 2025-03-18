@@ -6,7 +6,7 @@ const socket = new WebSocket('ws://localhost:3000/ws');
 socket.onopen = () => {
   console.log('Connected to WebSocket server');
  // socket.send('start game');
-  socket.send('Hello from the client!');
+  //socket.send('Hello from the client!');
 };
 
 socket.onmessage = (event) => {
@@ -15,13 +15,17 @@ socket.onmessage = (event) => {
 
   if (data.message === 'Game started!') {
     console.log("The game has started!");
-    socket.send(message);
+
+  if (data.type === 'update') {
+      console.log(`Update: Player 1 Y=${data.player1Y}, Player 2 Y=${data.player2Y}`);
+    }
+    //socket.send(message);
   }
 };
 
 function sendMessageToServer(message) {
   if (socket.readyState === WebSocket.OPEN) {
-    socket.send(message); // Envoie le message au serveur
+    socket.send(message);
     console.log(`Sent message: ${message}`);
   } else {
     console.log('WebSocket is not connected.');
@@ -47,6 +51,35 @@ function startGame() {
     console.log('WebSocket is not connected.');
   }
 }
+
+document.addEventListener('keydown', (event) => {
+  let message = null;
+
+  if (event.key === 'ArrowUp') {
+    message = { type: 'move', player: 2, direction: 'up' };
+  } else if (event.key === 'ArrowDown') {
+    message = { type: 'move', player: 2, direction: 'down' };
+  } else if (event.key === 'w') {
+    message = { type: 'move', player: 1, direction: 'up' };
+  } else if (event.key === 's') {
+    message = { type: 'move', player: 1, direction: 'down' };
+  }
+
+  if (message) {
+    socket.send(JSON.stringify(message));
+  }
+});
+
+socket.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+
+  if (data.type === 'update') {
+    console.log(`Mise à jour reçue : Player 1 Y=${data.player1Y}, Player 2 Y=${data.player2Y}`);
+    // update the graphic thingy
+  }
+};
+
+
 
 // Get the canvas element and its context
 // const canvas = document.getElementById('gameCanvas');
@@ -114,19 +147,5 @@ function startGame() {
 // updateGame();
 
 
-// document.addEventListener('keydown', function(event) {
-//   if (event.key === 'ArrowUp' && player2Y > 0) {
-//     player2Y -= 10;
-//   } else if (event.key === 'ArrowDown' && player2Y < canvas.height - paddleHeight) {
-//     player2Y += 10;
-//   }
-// });
 
-
-// document.addEventListener('keydown', function(event) {
-//   if (event.key === 'w' && player1Y > 0) {
-//     player1Y -= 10;
-//   } else if (event.key === 's' && player1Y < canvas.height - paddleHeight) {
-//     player1Y += 10;
-//   }
 // });
