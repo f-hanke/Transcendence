@@ -12,9 +12,6 @@ class Ball {
     move(screenWidth, screenHeight) {
         this.x += this.speedX;
         this.y += this.speedY;
-        // if (this.y - this.radius <= 0 || this.y + this.radius >= screenHeight) {
-        // 	this.speedY *= -1; // Inverser la direction verticale
-        // }
     }
     reset() {
         this.x = 400;

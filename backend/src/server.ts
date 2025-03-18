@@ -89,12 +89,14 @@ fastify.register(async function (fastify) {
               game.player2.y += game.player2.paddleSpeed;
             }
           }
-
+          game.update(); 
           const updateMessage = JSON.stringify(
           {
             type: 'update',
             player1Y: game.player1.y,
             player2Y: game.player2.y,
+            ballX: game.ball.x,
+            ballY: game.ball.y
           });
 
           console.log("Sending update :", updateMessage);

@@ -17,13 +17,17 @@ socket.onmessage = (event) => {
     console.log("The game has started!");
   }
   if (data.type === 'update') {
-    console.log(`Update : Player 1 Y=${data.player1Y}, Player 2 Y=${data.player2Y}`);
+    console.log(`Update : Player 1 Y=${data.player1Y}, Player 2 Y=${data.player2Y}, Ball = ${data.ball}`);
 
     player1Y = data.player1Y;
     player2Y = data.player2Y;
+    player2Y = data.player2Y;
+    ballX = data.ballX;
+    ballY = data.ballY;
 
     drawPaddle1(player1Y);
     drawPaddle2(player2Y);
+    drawBall(ballX, ballY);
   }
 };
 
@@ -82,6 +86,9 @@ function drawPaddle2(yPosition) {
   console.log("Position of paddle2:", yPosition);
 }
 
+function drawBall(x, y) {
+  console.log(`Drawing ball at position: X=${x}, Y=${y}`);
+}
 // socket.onmessage = (event) => {
 //   const data = JSON.parse(event.data);
 
