@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="main-menu">
+        <h1>Ping-Pong</h1>
+        <button id="chat">Chat</button>
+    </div>
+
+    <div id="user-select" class="hidden">
+        <h2>Online Users</h2>
+        <div id="user-list"></div>
+        <button id="back-btn">Back</button>
+    </div>
+
+    <div id="chat-ui" class="hidden">
+        <h2>Chat</h2>
+		<div id="chat-messages"></div> <!-- Missing div for messages -->
+		<input type="text" id="message" placeholder="Type a message">
+		<button id="send-btn">Send</button>
+		<button id="chat-back">Back</button>
+    </div>
+</body>
+<script src="src/chatclient.js"></script>
+</html>
