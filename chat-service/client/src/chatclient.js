@@ -18,7 +18,7 @@ var selectedChatUser = null;
 function connectWebSocket() {
     if (socket)
         return;
-    socket = new WebSocket('ws://localhost:3000');
+    socket = new WebSocket('wss://localhost:3000');
     socket.onopen = function () { return console.log("WebSocket connected"); };
     socket.onmessage = function (event) {
         var data = JSON.parse(event.data);

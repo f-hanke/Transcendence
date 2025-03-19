@@ -1,6 +1,13 @@
 'use strict';
 
-const fastify = require('fastify')();
+const fs = require('fs');
+const fastify = require('fastify')({
+    https: {
+        key: fs.readFileSync('./ssl/key.pem'), // Load private key
+        cert: fs.readFileSync('./ssl/cert.pem') // Load certificate
+    }
+});
+
 fastify.register(require('@fastify/websocket'));
 
 let clients = new Map(); // Stores active clients (userId -> WebSocket)
@@ -71,5 +78,5 @@ fastify.listen({ port: 3000, host: '0.0.0.0'  }, (err) => {
 		fastify.log.error(err);
 		process.exit(1);
 	}
-	console.log('Server listening on http://localhost:3000/index.html');
+	console.log('Server listening on https://localhost:3000/index.html');
 });
