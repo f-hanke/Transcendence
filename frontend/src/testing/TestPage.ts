@@ -7,6 +7,7 @@ class TestPage extends HTMLElement {
 
   connectedCallback() {
     this.render();
+    const websocket = new WebSocket(`ws://localhost:3000?clientId=id_${Date.now()}`);
   }
 
   disconnectedCallback() {

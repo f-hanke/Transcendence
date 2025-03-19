@@ -10,7 +10,6 @@ const clients = new Map();
 fastify.register(async function (fastify) {
 	fastify.get('/', { websocket: true }, (socket, req) => {
 		socket.send(JSON.stringify({ type: 'updateGames', games }));
-
 		socket.on('message', (message) => {
 			const data = JSON.parse(message);
 
