@@ -2,10 +2,6 @@ function deepCopyObj(obj: object) {
   return JSON.parse(JSON.stringify(obj));
 }
 
-function generateUniqueId(): string {
-  return "id-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
-}
- 
 function createHtmlElementFromString(htmlString: string) {
   const template = document.createElement("template");
   template.innerHTML = htmlString;
@@ -21,8 +17,4 @@ async function convertToBase64(file: File): Promise<string> {
   });
 }
 
-function isDefined<T>(value: T | null | undefined): value is T {
-  return value !== null && value !== undefined;
-}
-
-export { deepCopyObj, generateUniqueId, createHtmlElementFromString, convertToBase64, isDefined };
+export { deepCopyObj, createHtmlElementFromString, convertToBase64 };

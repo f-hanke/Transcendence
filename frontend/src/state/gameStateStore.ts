@@ -1,6 +1,6 @@
 import { deepCopyObj } from "../utils/utils";
 import { GameState } from "./gameStateTypes";
-import {  StoreCallback } from "./types";
+import { StoreCallback } from "./types";
 
 class GameStateStore {
   listeners: Set<StoreCallback>;
@@ -19,6 +19,11 @@ class GameStateStore {
 
   update(newState: GameState) {
     this.state = deepCopyObj(newState);
+    this.listeners.forEach((callback) => callback());
+  }
+
+  updateServerSignaledStart() {
+    this.state.state = "startSignaledByServer";
     this.listeners.forEach((callback) => callback());
   }
 

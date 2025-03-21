@@ -1,4 +1,6 @@
 type GameState = {
+  matchId: string
+  state: "none" | "startSignaledByServer" | "started" | "endedNormally" | "endedPlayerLeft" 
   paddleLeft: number;
   paddleRight: number;
   ball: {

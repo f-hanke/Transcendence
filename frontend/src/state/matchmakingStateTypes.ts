@@ -1,9 +1,9 @@
-import type {BasicGame} from "../../../sharedTypes/matchmakingTypes"
+import { MatchMakingTypes } from "transcendence";
 
 
 type MatchmakingState = {
-  ownMatchId: string | null;
-  otherMatches: BasicGame[];
+  ownMatch: MatchMakingTypes.BasicGame | null;
+  otherMatches: MatchMakingTypes.BasicGame[];
 };
 
 export type { MatchmakingState };

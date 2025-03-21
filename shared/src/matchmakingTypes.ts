@@ -20,7 +20,7 @@ declare namespace MatchMakingTypes {
     | ClientDeleteGame;
     
   type ServerUpdateOneGame = {
-    type: "updateOneGames";
+    type: "updateOneGame";
     data: BasicGame;
   };
 
@@ -107,7 +107,7 @@ function isServerCancelGame(
 
 function isServerStartGame(
   value: unknown
-): value is MatchMakingTypes.ServerCancelGame {
+): value is MatchMakingTypes.ServerStartGame {
   return (
     typeof value === "object" &&
     value !== null &&

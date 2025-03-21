@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "target": "ESNext", // or ES6 or a specific target version
-    "module": "NodeNext", // This can be "NodeNext" if you're using Node.js modules
+    "module": "ESNext", // This can be "NodeNext" if you're using Node.js modules
     "outDir": "./dist", // Directory where compiled JS files should go
     "declaration": true, // Generate type declaration files (.d.ts)
     "declarationDir": "./dist/types", // Directory where type declarations should go
     "strict": true, // Enable strict mode for better type-checking
     "esModuleInterop": true, // Ensure compatibility with CommonJS modules
-    "moduleResolution": "nodenext" // Make sure module resolution works well with Node.js
+    "moduleResolution": "node", // Make sure module resolution works well with Node.js
   },
   "include": [
     "./src/**/*" // Include all TypeScript files in the src folder

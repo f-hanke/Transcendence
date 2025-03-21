@@ -1,16 +1,15 @@
 // Import all components at the beginning
-import { NotificationModal } from "../components/notification-modal.ts";
 import "../pages/AboutPage.js";
 import "../pages/HomePage.js";
 import "../pages/Match.ts";
 import "./Navbar.ts";
 import "../components/notification-modal.ts";
-import "../pages/MatchMaking.ts"
-import "../pages/OneVOneLocal.ts"
-import "../testing/TestPage.ts"
-import "../pages/UserSettings.ts"
+import "../pages/matchMaking/MatchMaking.ts";
+import "../pages/matchMaking/MatchItem.ts";
+import "../pages/OneVOneLocal.ts";
+import "../testing/TestPage.ts";
+import "../pages/UserSettings.ts";
 import { Page } from "./types.js";
-import { generateUniqueId } from "../utils/utils.ts";
 
 class AppRouter extends HTMLElement {
   routes: Record<string, Page>;

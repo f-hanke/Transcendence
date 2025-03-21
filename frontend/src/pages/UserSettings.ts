@@ -1,6 +1,6 @@
+import { isDefined } from "transcendence";
 import { UserState } from "../state/userStateTypes";
-import { convertToBase64, isDefined } from "../utils/utils";
-import { ObjAllPropsBoolean } from "../utils/utilsTypes";
+import { convertToBase64 } from "../utils/utils";
 
 class UserSettings extends HTMLElement {
   unsubscribe: null | (() => void);

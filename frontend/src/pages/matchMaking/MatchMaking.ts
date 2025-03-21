@@ -1,4 +1,5 @@
-import { generateUniqueId } from "../utils/utils";
+import { generateUniqueId, isDefined, MatchMakingTypes } from "transcendence";
+import { MatchMakingInterface } from "../../backendInterface/matchmakingInterface";
 
 class MatchMaking extends HTMLElement {
   unsubscribe: null | (() => void);
@@ -17,14 +18,19 @@ class MatchMaking extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(() =>
       this.render()
     );
+    MatchMakingInterface.connect();
   }
 
   disconnectedCallback() {
     if (this.unsubscribe) this.unsubscribe();
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
+    MatchMakingInterface.disconnect();
   }
 
   render() {
+    const ownMatchOpen = isDefined(
+      window.store.matchmakingStore.get().ownMatch
+    );
     this.innerHTML = `
       <div class="p-4 w-full h-full mx-auto bg-gray-800 text-white rounded-lg shadow-lg">
         <h2 class="text-xl font-semibold mb-4">${
@@ -33,7 +39,7 @@ class MatchMaking extends HTMLElement {
         <!-- Create a Match -->
         <div class="mb-6 p-4 bg-gray-700 rounded-lg">
           ${
-            window.store.matchmakingStore.get().ownMatchId
+            ownMatchOpen
               ? `<div>
                   <p class="font-semibold">${window.store.languageStore.state.matchMaking.yourMatch}</p>
                   <button id="close-match-btn" class="mt-3 bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-lg">
@@ -58,11 +64,21 @@ class MatchMaking extends HTMLElement {
                   .get()
                   .otherMatches.map(
                     (match) => `
-                  <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg">
-                    <span class="font-medium">${match.hostId}'s</span>
-                    <button class="join-match-btn bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg" data-match-id="${match.matchId}">
-                      ▶ ${window.store.languageStore.state.matchMaking.join}
-                    </button>
+                  <li>
+                     <match-item 
+                        matchId="${match.matchId}"
+                        hostId="${match.hostId}"
+                        hostName="${match.hostId}"
+                        oponentId="${
+                          match.oponentId ? match.oponentId : "Could be you!"
+                        }"
+                        oponentName="${
+                          match.oponentId ? match.oponentId : "Could be you!"
+                        }"
+                        renderJoin=${
+                          ownMatchOpen || match.oponentId ? "0" : "1"
+                        }>
+                      </match-item>
                   </li>`
                   )
                   .join("")}
@@ -72,16 +88,28 @@ class MatchMaking extends HTMLElement {
         </div>
       </div>
     `;
-    document
-      .querySelector("#create-match-btn")
-      ?.addEventListener("click", (event) =>
-        window.store.matchmakingStore.openOwnMatch()
-      );
+    document.querySelector("#create-match-btn")?.addEventListener("click", () =>
+      MatchMakingInterface.sendMessageToServer({
+        type: "createGame",
+        data: {
+          matchId: generateUniqueId(),
+          hostId: window.store.userStore.get().id,
+          oponentId: null,
+        },
+      })
+    );
+
     document
       .querySelector("#close-match-btn")
-      ?.addEventListener("click", (event) =>
-        window.store.matchmakingStore.closeOwnMatch()
-      );
+      ?.addEventListener("click", () => {
+        if (isDefined(window.store.matchmakingStore.get().ownMatch)) {
+          MatchMakingInterface.sendMessageToServer({
+            type: "deleteGame",
+            data: window.store.matchmakingStore.get()
+              .ownMatch as MatchMakingTypes.BasicGame,
+          });
+        }
+      });
   }
 }
 

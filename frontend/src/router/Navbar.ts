@@ -1,5 +1,7 @@
 import { SupportedLanguages } from "../state/languageStateStore/languageStateTypes";
-import { generateUniqueId } from "../utils/utils";
+// import { generateUniqueId } from "transcendence";
+
+import {generateUniqueId} from "transcendence";
 
 class Navbar extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -16,9 +18,7 @@ class Navbar extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(() =>
       this.render()
     );
-    this.unsubscribe = window.store.userStore.subscribe(() =>
-      this.render()
-    );
+    this.unsubscribe = window.store.userStore.subscribe(() => this.render());
   }
 
   disconnectedCallback() {
@@ -30,9 +30,13 @@ class Navbar extends HTMLElement {
     this.innerHTML = `
     <div class="h-full bg-gray-800 text-white shadow-lg flex flex-col">
       <div class="p-4 flex items-center space-x-3 border-b border-gray-700">
-        <img src="${window.store.userStore.get().image}" alt="Profile" class="w-20 h-20 rounded-full" />
+        <img src="${
+          window.store.userStore.get().image
+        }" alt="Profile" class="w-20 h-20 rounded-full" />
         <div>
-          <a href="/profile" class="text-lg font-semibold hover:underline">${window.store.userStore.get().displayName}</a>
+          <a href="/profile" class="text-lg font-semibold hover:underline">${
+            window.store.userStore.get().displayName
+          }</a>
         </div>
       </div>
       <nav class="flex-1 p-4 overflow-y-auto">
@@ -44,28 +48,47 @@ class Navbar extends HTMLElement {
             </a>
             <!-- Submenu -->
             <ul class="relative left-0 w-full hidden group-hover:block bg-gray-700 rounded-lg space-y-1 p-2 transition-all duration-300 ease-in-out transform opacity-0 group-hover:opacity-100 group-hover:translate-y-2">
-              <li><a href="/oneVOneLocal" class="block px-4 py-2 hover:bg-gray-600 rounded">${window.store.languageStore.state.navbar.oneV1local}</a></li>
-              <li><a href="/matchmaking" class="block px-4 py-2 hover:bg-gray-600 rounded">${window.store.languageStore.state.navbar.oneV1remote}</a></li>
-              <li><a href="/play/tournament" class="block px-4 py-2 hover:bg-gray-600 rounded">${window.store.languageStore.state.navbar.tournament}</a></li>
+              <li><a href="/oneVOneLocal" class="block px-4 py-2 hover:bg-gray-600 rounded">${
+                window.store.languageStore.state.navbar.oneV1local
+              }</a></li>
+              <li><a href="/matchmaking" class="block px-4 py-2 hover:bg-gray-600 rounded">${
+                window.store.languageStore.state.navbar.oneV1remote
+              }</a></li>
+              <li><a href="/play/tournament" class="block px-4 py-2 hover:bg-gray-600 rounded">${
+                window.store.languageStore.state.navbar.tournament
+              }</a></li>
             </ul>
           </li>
           <li>
-            <a href="/messages" class="block p-2 rounded-lg hover:bg-gray-700">✉️ ${window.store.languageStore.state.navbar.messages}</a>
+            <a href="/messages" class="block p-2 rounded-lg hover:bg-gray-700">✉️ ${
+              window.store.languageStore.state.navbar.messages
+            }</a>
           </li>
           <li>
-            <a href="/userSettings" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ ${window.store.languageStore.state.navbar.settings}</a>
+            <a href="/userSettings" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ ${
+              window.store.languageStore.state.navbar.settings
+            }</a>
           </li>
           <li>
             <a href="/testpage" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ Testpage</a>
           </li>
+          <li>${window.store.userStore.get().id}</li>
         </ul>
       </nav>
 
       <div class="p-4 border-t border-gray-700">
         <label for="language-select" class="text-sm text-gray-300">Language</label>
         <select id="language-select" class="mt-2 p-2 w-full bg-gray-600 text-white rounded-md">
-          <option value="en" ${window.store.languageStore.getSelectedLanguage() === 'en' ? 'selected' : ''}>English</option>
-          <option value="de" ${window.store.languageStore.getSelectedLanguage() === 'de' ? 'selected' : ''}>Deutsch</option>
+          <option value="en" ${
+            window.store.languageStore.getSelectedLanguage() === "en"
+              ? "selected"
+              : ""
+          }>English</option>
+          <option value="de" ${
+            window.store.languageStore.getSelectedLanguage() === "de"
+              ? "selected"
+              : ""
+          }>Deutsch</option>
           <!-- Add more languages here -->
         </select>
       </div>
@@ -74,11 +97,15 @@ class Navbar extends HTMLElement {
             🚪 notify
         </button>
       <div class="p-4 border-t border-gray-700">
-        <button class="w-full p-2 bg-red-600 rounded-lg hover:bg-red-700">🚪 ${window.store.languageStore.state.navbar.logout}</button>
+        <button class="w-full p-2 bg-red-600 rounded-lg hover:bg-red-700">🚪 ${
+          window.store.languageStore.state.navbar.logout
+        }</button>
       </div>
     </div>
   `;
-    document.querySelector("#language-select")!.addEventListener("change", (event) => this.handleLanguageChange(event));
+    document
+      .querySelector("#language-select")!
+      .addEventListener("change", (event) => this.handleLanguageChange(event));
 
     document.querySelector("#querynotifyBtn")?.addEventListener("click", () => {
       window.store.notificationStore.update([
@@ -89,14 +116,12 @@ class Navbar extends HTMLElement {
         },
       ]);
     });
-
   }
 
   handleLanguageChange(event: Event) {
     const language = (event.target as HTMLSelectElement).value;
     window.store.languageStore.set(language as SupportedLanguages);
   }
-
 }
 
 customElements.define("nav-bar", Navbar);

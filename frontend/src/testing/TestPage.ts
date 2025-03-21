@@ -1,5 +1,3 @@
-import { exampleImage } from "./exampleImage";
-
 class TestPage extends HTMLElement {
   constructor() {
     super();
@@ -7,7 +5,6 @@ class TestPage extends HTMLElement {
 
   connectedCallback() {
     this.render();
-    const websocket = new WebSocket(`ws://localhost:3000?clientId=id_${Date.now()}`);
   }
 
   disconnectedCallback() {
@@ -16,7 +13,11 @@ class TestPage extends HTMLElement {
 
   render() {
     this.innerHTML = `
-    
+      <match-item 
+      host="HELLO WORLD!" 
+      matchId="ID MATCH" 
+      oponent="ENDGEGENER"
+      renderJoin="1"></match-item>
     `
   }
 }

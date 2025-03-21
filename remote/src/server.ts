@@ -11,16 +11,22 @@ const fastify = Fastify();
 
 fastify.register(fastifyWebsocket);
 
-type MatchMakingFastifyRequest = FastifyRequest<{ Querystring: MatchMakingTypes.ClientQueryParamMatchMaking }>;
+type MatchMakingFastifyRequest = FastifyRequest<{
+  Querystring: MatchMakingTypes.ClientQueryParamMatchMaking;
+}>;
 
 let games: MatchMakingTypes.BasicGame[] = [];
 
 const socketToClientId = new Map<WebSocket, string>();
+const clientIdToSocket = new Map<string, WebSocket>();
 
 fastify.register(async function (fastify) {
   fastify.get("/", { websocket: true }, (socket, req) => {
     registerClient(req as MatchMakingFastifyRequest, socket);
-    sendMessageToClients({ type: "updateGames", data: games });
+    sendMessageToOneClient(socket, {
+      type: "updateGames",
+      data: games,
+    });
     socket.on("message", (message) => {
       const data = message.toString("utf-8");
       const dataJson = JSON.parse(data);
@@ -39,48 +45,51 @@ fastify.register(async function (fastify) {
       }
     });
     socket.on("close", () => {
+      console.log(
+        "WebSocket closed. Client ID: ",
+        socketToClientId.get(socket)
+      );
       unregisterClient(socket);
     });
-  });
-});
 
-fastify.listen({ port: 3000, host: "0.0.0.0" }, (err) => {
-  if (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-  console.log("Server listening on http://localhost:3000/index.html");
+    socket.on("error", (err) => {
+      console.error("WebSocket error:", err);
+    });
+  });
 });
 
 function registerClient(req: MatchMakingFastifyRequest, socket: WebSocket) {
   const clientId = getClientIdFromQueryParam(req as MatchMakingFastifyRequest);
   socketToClientId.set(socket, clientId);
+  clientIdToSocket.set(clientId, socket);
   console.log(" ~ Client connected: ", clientId);
 }
 
 function unregisterClient(socket: WebSocket) {
   const clientId = socketToClientId.get(socket) as string;
   socketToClientId.delete(socket);
+  clientIdToSocket.delete(clientId);
   console.log(" ~ Client disconnected: ", clientId);
 }
 
 function getClientIdFromQueryParam(req: MatchMakingFastifyRequest) {
   if (req?.query?.clientId) return req.query.clientId;
-  throw new Error(
-    "Client didn't provide their id in query string when connecting to websocket!"
-  );
+  const msg =
+    "Client didn't provide their id in query string when connecting to websocket!";
+  console.log(msg);
+  throw new Error(msg);
 }
 
 function handleClientLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
   console.log(" ~ leaveGame", dataJson.data.matchId);
   games = games.filter((g) => g.matchId !== dataJson.data.matchId);
-  sendMessageToClients({ type: "leaveGame", data: dataJson.data });
+  sendMessageToAllClients({ type: "leaveGame", data: dataJson.data });
 }
 
 function handleClientCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
   console.log(" ~ createGame", dataJson.data.matchId);
   games.push(dataJson.data);
-  sendMessageToClients({ type: "createGame", data: dataJson.data });
+  sendMessageToAllClients({ type: "createGame", data: dataJson.data });
 }
 
 function handleClientJoinGame(dataJson: MatchMakingTypes.ClientJoinGame) {
@@ -89,25 +98,76 @@ function handleClientJoinGame(dataJson: MatchMakingTypes.ClientJoinGame) {
     (game) => game.matchId === dataJson.data.matchId
   );
   if (!correspondingGame) {
-    games.push(dataJson.data);
+    throw new Error("Client tried to join game, that didn't exist!");
   } else if (!isDefined(correspondingGame.oponentId)) {
     correspondingGame.oponentId = dataJson.data.oponentId;
   } else {
     throw new Error("Client tried to join game, thats already full!");
   }
-  sendMessageToClients({ type: "joinGame", data: dataJson.data });
+  const participants = [
+    correspondingGame.hostId,
+    correspondingGame.oponentId as string,
+  ];
+  sendMessageToManyClients(participants, {
+    type: "startGame",
+    data: correspondingGame,
+  });
+  sendMessageToAllClientsBut(participants, {
+    type: "updateOneGame",
+    data: correspondingGame,
+  });
 }
 
 function handleClientDeleteGame(dataJson: MatchMakingTypes.ClientDeleteGame) {
   console.log(" ~ deleteGame", dataJson.data.matchId);
   games = games.filter((g) => g.matchId !== dataJson.data.matchId);
-  sendMessageToClients({ type: "deleteGame", data: dataJson.data });
+  sendMessageToAllClients({ type: "deleteGame", data: dataJson.data });
 }
 
-function sendMessageToClients(
+function sendMessageToAllClients(
   message: MatchMakingTypes.AllMatchMakingMessageTypes
 ) {
   fastify.websocketServer.clients.forEach((client) => {
     client.send(JSON.stringify(message));
   });
 }
+
+function sendMessageToAllClientsBut(
+  excludeClients: string[],
+  message: MatchMakingTypes.AllMatchMakingMessageTypes
+) {
+  fastify.websocketServer.clients.forEach((client) => {
+    if (!excludeClients.includes(socketToClientId.get(client) as string))
+      client.send(JSON.stringify(message));
+  });
+}
+
+function sendMessageToManyClients(
+  sentToClients: string[],
+  message: MatchMakingTypes.AllMatchMakingMessageTypes
+) {
+  fastify.websocketServer.clients.forEach((client) => {
+    if (sentToClients.includes(socketToClientId.get(client) as string))
+      client.send(JSON.stringify(message));
+  });
+}
+
+function sendMessageToOneClient(
+  clientIdOrSocket: string | WebSocket,
+  message: MatchMakingTypes.AllMatchMakingMessageTypes
+) {
+  const socket =
+    typeof clientIdOrSocket !== "string"
+      ? clientIdOrSocket
+      : (clientIdToSocket.get(clientIdOrSocket) as WebSocket);
+  socket.send(JSON.stringify(message));
+}
+
+fastify.listen({ port: 3000, host: "0.0.0.0" }, (err) => {
+  if (err) {
+    console.log("Server Error!");
+    fastify.log.error(err);
+    process.exit(1);
+  }
+  console.log("Server listening on http://localhost:3000/");
+});

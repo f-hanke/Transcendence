@@ -1,5 +1,6 @@
 // Import AppRouter component (it could be inside ./src/router.js)
 
+import { generateUniqueId } from "transcendence";
 import "./router/AppRouter.js"; // Assuming the AppRouter is inside `src/` folder
 import { AppRouter } from "./router/AppRouter.ts";
 import { Store } from "./state/store.js";
@@ -23,6 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
   window.store = new Store({
     notificationState: [],
     gameState: {
+      matchId: "",
+      state: "none",
       paddleLeft: 0.5,
       paddleRight: 0.5,
       ball: {
@@ -37,16 +40,16 @@ document.addEventListener("DOMContentLoaded", () => {
       width: 600,
     },
     matchmakingState: {
-      ownMatchId: null,
+      ownMatch: null,
       otherMatches: [
         {
           hostId: "PONGER",
-          hostNickName: "PONGER",
+          oponentId: null,
           matchId: "match_id_1",
         },
         {
           hostId: "PINGER",
-          hostNickName: "PINGER",
+          oponentId: null,
           matchId: "match_id_2",
         },
       ],
@@ -55,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
       image: exampleImage,
       displayName: "TEST_USER",
       friends: ["friend_1_id", "friend_2_id"],
-      id: "TEST_USER",
+      id: `userid_${generateUniqueId()}`,
       email: "test@user.de",
       matchHistory: [
         {
