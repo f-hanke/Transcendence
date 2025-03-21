@@ -33,7 +33,7 @@ fastify.register(static_1.default, {
 const gameLoop = () => {
     if (!game.isGameOver) {
         game.update();
-        console.log(chalk_1.default.cyan(`Ball position: x=${game.ball.x}, y=${game.ball.y}`)); // Vérifie si la balle bouge
+        //console.log(chalk.cyan(`Ball position: x=${game.ball.x}, y=${game.ball.y}`)); // Vérifie si la balle bouge
         const updateMessage = JSON.stringify({
             type: 'update',
             player1Y: game.player1.y,
@@ -49,6 +49,12 @@ const gameLoop = () => {
         setTimeout(gameLoop, 1000 / 60); // 60 FPS
     }
 };
+/*API */
+/*Route to start the game
+
+Successfull answer :  {"message": "Game started!"}
+
+*/
 fastify.post('/api/game/start', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
     game.startGame();
     const startMessage = JSON.stringify({ type: "Game started!" });
@@ -59,6 +65,53 @@ fastify.post('/api/game/start', (request, reply) => __awaiter(void 0, void 0, vo
         }
     });
     reply.send({ message: "Game started!" });
+}));
+/*Route to move the paddles
+
+ Player : 1 | 2
+ direction : up | down
+
+ */
+fastify.post('/api/game/move', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
+    const { player, direction } = request.body;
+    ; // Extraire les données de la requête
+    // Vérifier que la requête contient les bonnes données
+    if (player !== 1 && player !== 2) {
+        return reply.status(400).send({ message: 'Invalid player ID. Must be 1 or 2.' });
+    }
+    if (direction !== 'up' && direction !== 'down') {
+        return reply.status(400).send({ message: 'Invalid direction. Must be "up" or "down".' });
+    }
+    if (player === 1) {
+        if (direction === 'up' && game.player1.y > 0) {
+            game.player1.y -= game.player1.paddleSpeed;
+        }
+        else if (direction === 'down' && game.player1.y + game.player1.paddleHeight < game.screenHeight) {
+            game.player1.y += game.player1.paddleSpeed;
+        }
+    }
+    if (player === 2) {
+        if (direction === 'up' && game.player2.y > 0) {
+            game.player2.y -= game.player2.paddleSpeed;
+        }
+        else if (direction === 'down' && game.player2.y + game.player2.paddleHeight < game.screenHeight) {
+            game.player2.y += game.player2.paddleSpeed;
+        }
+    }
+    game.update();
+    const updateMessage = JSON.stringify({
+        type: 'update',
+        player1Y: game.player1.y,
+        player2Y: game.player2.y,
+        ballX: game.ball.x,
+        ballY: game.ball.y
+    });
+    clients.forEach((client) => {
+        if (client.readyState === ws_1.default.OPEN) {
+            client.send(updateMessage);
+        }
+    });
+    reply.send({ message: 'Paddle moved successfully!' });
 }));
 fastify.register(function (fastify) {
     return __awaiter(this, void 0, void 0, function* () {
