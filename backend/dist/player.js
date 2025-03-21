@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Player = void 0;
 class Player {
-    //paddle width and height??
     constructor(x) {
         this.x = x;
         this.y = 250;

@@ -33,6 +33,7 @@ fastify.register(static_1.default, {
 const gameLoop = () => {
     if (!game.isGameOver) {
         game.update();
+        console.log(chalk_1.default.cyan(`Ball position: x=${game.ball.x}, y=${game.ball.y}`)); // Vérifie si la balle bouge
         const updateMessage = JSON.stringify({
             type: 'update',
             player1Y: game.player1.y,
@@ -48,6 +49,17 @@ const gameLoop = () => {
         setTimeout(gameLoop, 1000 / 60); // 60 FPS
     }
 };
+fastify.post('/api/game/start', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
+    game.startGame();
+    const startMessage = JSON.stringify({ type: "Game started!" });
+    clients.forEach((client) => {
+        if (client.readyState === ws_1.default.OPEN) {
+            client.send(startMessage);
+            gameLoop();
+        }
+    });
+    reply.send({ message: "Game started!" });
+}));
 fastify.register(function (fastify) {
     return __awaiter(this, void 0, void 0, function* () {
         fastify.get('/ws', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
