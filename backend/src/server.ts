@@ -31,18 +31,11 @@ fastify.register(fastifyStatic, {
 });
 
 
-// let gameState = {
-//   player1Y: 250,
-//   player2Y: 250,
-//   paddleSpeed: 10,
-//   screenHeight: 600,
-// };
 
 const gameLoop = () => {
   if (!game.isGameOver) {
-    game.update();  // Mettre à jour la position de la balle et des paddles
+    game.update();
 
-    // Envoi de la position de la balle et des paddles aux clients
     const updateMessage = JSON.stringify({
       type: 'update',
       player1Y: game.player1.y,
@@ -51,14 +44,12 @@ const gameLoop = () => {
       ballY: game.ball.y,
     });
 
-    // Envoyer l'update à tous les clients connectés
     clients.forEach((client: ws.WebSocket) => {
       if (client.readyState === ws.OPEN) {
         client.send(updateMessage);
       }
     });
 
-    // Recommencer le game loop
     setTimeout(gameLoop, 1000 / 60); // 60 FPS
   }
 };
@@ -68,9 +59,9 @@ fastify.register(async function (fastify) {
     console.log(chalk.green("A client connected via WebSocket"));
 
     clients.add(socket);
-    //const game = new Game(800, 800);
+
     socket.on('message', message => {
-      console.log(chalk.blue("Message received:", message.toString()));  // Journaliser le message reçu
+      console.log(chalk.blue("Message received:", message.toString()));
 
       try {
         const data = JSON.parse(message.toString());
@@ -83,7 +74,7 @@ fastify.register(async function (fastify) {
 
           socket.send(JSON.stringify({ message: 'Game started!' }));
           if (clients.size === 1) {
-            gameLoop();  // Lancer la boucle de jeu
+            gameLoop();
           }
 
         }
@@ -99,7 +90,6 @@ fastify.register(async function (fastify) {
             }
           }
 
-          // Mise à jour de la position du paddle 2
           if (data.player === 2) {
             if (data.direction === 'up' && game.player2.y > 0) {
               game.player2.y -= game.player2.paddleSpeed;
@@ -107,7 +97,10 @@ fastify.register(async function (fastify) {
               game.player2.y += game.player2.paddleSpeed;
             }
           }
-          game.update();
+
+          if (!game.isGameOver) {
+            game.update();
+          }
           const updateMessage = JSON.stringify(
           {
             type: 'update',
@@ -130,13 +123,6 @@ fastify.register(async function (fastify) {
         console.log(chalk.red("Error processing message:", error));
       }
     });
-
-
-      //  else {
-
-      //  // console.log(chalk.red("Invalid command received: ", message));
-      //   socket.send(JSON.stringify({ message: 'Invalid command!' }));
-      // }
 
     socket.on('close', () => {
       console.log(chalk.red("A client disconnected"));

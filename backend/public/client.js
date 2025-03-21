@@ -33,9 +33,6 @@ socket.onmessage = (event) => {
     ballY = data.ballY;
 
     drawGame();
-    // drawPaddle1(player1Y);
-    // drawPaddle2(player2Y);
-    // drawBall(ballX, ballY);
   }
 };
 
@@ -99,25 +96,25 @@ function drawBall(x, y) {
 }
 
 function drawGame() {
-  // Effacer le canvas
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Dessiner les paddles
-  drawPaddle(10, player1Y); // Paddle gauche
-  drawPaddle(canvas.width - 20, player2Y); // Paddle droit
 
-  // Dessiner la balle
+  drawPaddle(10, player1Y);
+  drawPaddle(canvas.width - 20, player2Y);
+
+
   drawBall(ballX, ballY);
 }
 
 function drawPaddle(x, y) {
-  ctx.fillStyle = '#FFFFFF'; // Couleur blanche pour les paddles
-  ctx.fillRect(x, y, 10, 100); // Dessiner le paddle (10px de large, 100px de haut)
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(x, y, 10, 100);
 }
 
 function drawBall(x, y) {
-  ctx.fillStyle = '#FFFFFF'; // Couleur blanche pour la balle
+  ctx.fillStyle = '#FFFFFF';
   ctx.beginPath();
-  ctx.arc(x, y, ballRadius, 0, Math.PI * 2); // Dessiner un cercle (la balle)
+  ctx.arc(x, y, ballRadius, 0, Math.PI * 2); 
   ctx.fill();
 }

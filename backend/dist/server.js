@@ -30,16 +30,9 @@ fastify.register(static_1.default, {
     root: path_1.default.join(__dirname, '..', 'public'),
     prefix: '/',
 });
-// let gameState = {
-//   player1Y: 250,
-//   player2Y: 250,
-//   paddleSpeed: 10,
-//   screenHeight: 600,
-// };
 const gameLoop = () => {
     if (!game.isGameOver) {
-        game.update(); // Mettre à jour la position de la balle et des paddles
-        // Envoi de la position de la balle et des paddles aux clients
+        game.update();
         const updateMessage = JSON.stringify({
             type: 'update',
             player1Y: game.player1.y,
@@ -47,13 +40,11 @@ const gameLoop = () => {
             ballX: game.ball.x,
             ballY: game.ball.y,
         });
-        // Envoyer l'update à tous les clients connectés
         clients.forEach((client) => {
             if (client.readyState === ws_1.default.OPEN) {
                 client.send(updateMessage);
             }
         });
-        // Recommencer le game loop
         setTimeout(gameLoop, 1000 / 60); // 60 FPS
     }
 };
@@ -62,9 +53,8 @@ fastify.register(function (fastify) {
         fastify.get('/ws', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
             console.log(chalk_1.default.green("A client connected via WebSocket"));
             clients.add(socket);
-            //const game = new Game(800, 800);
             socket.on('message', message => {
-                console.log(chalk_1.default.blue("Message received:", message.toString())); // Journaliser le message reçu
+                console.log(chalk_1.default.blue("Message received:", message.toString()));
                 try {
                     const data = JSON.parse(message.toString());
                     if (data.type === 'start') {
@@ -72,7 +62,7 @@ fastify.register(function (fastify) {
                         game.startGame();
                         socket.send(JSON.stringify({ message: 'Game started!' }));
                         if (clients.size === 1) {
-                            gameLoop(); // Lancer la boucle de jeu
+                            gameLoop();
                         }
                     }
                     if (data.type === 'move') {
@@ -85,7 +75,6 @@ fastify.register(function (fastify) {
                                 game.player1.y += game.player1.paddleSpeed;
                             }
                         }
-                        // Mise à jour de la position du paddle 2
                         if (data.player === 2) {
                             if (data.direction === 'up' && game.player2.y > 0) {
                                 game.player2.y -= game.player2.paddleSpeed;
@@ -94,7 +83,9 @@ fastify.register(function (fastify) {
                                 game.player2.y += game.player2.paddleSpeed;
                             }
                         }
-                        game.update();
+                        if (!game.isGameOver) {
+                            game.update();
+                        }
                         const updateMessage = JSON.stringify({
                             type: 'update',
                             player1Y: game.player1.y,
@@ -114,10 +105,6 @@ fastify.register(function (fastify) {
                     console.log(chalk_1.default.red("Error processing message:", error));
                 }
             });
-            //  else {
-            //  // console.log(chalk.red("Invalid command received: ", message));
-            //   socket.send(JSON.stringify({ message: 'Invalid command!' }));
-            // }
             socket.on('close', () => {
                 console.log(chalk_1.default.red("A client disconnected"));
                 clients.delete(socket);

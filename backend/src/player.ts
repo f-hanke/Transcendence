@@ -6,8 +6,6 @@ export class Player {
 	paddleHeight: number;
 	paddleSpeed: number;
 
-	//paddle width and height??
-
 	constructor(x:number) {
 		this.x = x;
 		this.y = 250;
