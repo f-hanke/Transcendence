@@ -1,0 +1,33 @@
+# Environment variables
+.env
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Database files
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+logs/
+*.log
+npm-debug.log*
+
+# User uploads
+public/uploads/*
+!public/uploads/.gitkeep
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor-specific files
+.vscode/
+.idea/
+*.swp
+*.swo

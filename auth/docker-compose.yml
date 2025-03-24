@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data:/usr/src/app/data
+      - ./public/uploads:/usr/src/app/public/uploads
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - HOST=0.0.0.0
+      - DB_PATH=/usr/src/app/data/user-service.db
+      - JWT_SECRET=your_jwt_secret_here
+      - JWT_EXPIRES_IN=1d
+      - UPLOAD_DIR=/usr/src/app/public/uploads
+      - MAX_FILE_SIZE=5242880
+    restart: unless-stopped

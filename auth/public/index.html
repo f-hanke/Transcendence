@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FT Transcendence - User Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Define token storage
+    const TOKEN_KEY = 'auth_token';
+    
+    // Store token in localStorage
+    const saveToken = (token) => {
+      localStorage.setItem(TOKEN_KEY, token);
+    };
+    
+    // Get token from localStorage
+    const getToken = () => {
+      return localStorage.getItem(TOKEN_KEY);
+    };
+    
+    // Remove token from localStorage
+    const removeToken = () => {
+      localStorage.removeItem(TOKEN_KEY);
+    };
+    
+    // Check if user is authenticated
+    const isAuthenticated = () => {
+      return !!getToken();
+    };
+    
+    // API base URL
+    const API_URL = '/api/users';
+    
+    // Make API request with authentication
+    const apiRequest = async (endpoint, method = 'GET', data = null) => {
+      const token = getToken();
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const config = {
+        method,
+        headers
+      };
+      
+      if (data) {
+        config.body = JSON.stringify(data);
+      }
+      
+      try {
+        const response = await fetch(`${API_URL}${endpoint}`, config);
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'API request failed');
+        }
+        
+        return result;
+      } catch (error) {
+        console.error('API error:', error);
+        throw error;
+      }
+    };
+    
+    // API functions
+    const api = {
+      register: (userData) => apiRequest('/register', 'POST', userData),
+      login: (credentials) => apiRequest('/login', 'POST', credentials),
+      logout: () => apiRequest('/logout', 'POST'),
+      getCurrentUser: () => apiRequest('/me'),
+      updateDisplayName: (display_name) => apiRequest('/me/display-name', 'PUT', { display_name }),
+      getMatchHistory: () => apiRequest('/me/matches'),
+      getFriends: () => apiRequest('/me/friends'),
+      sendFriendRequest: (recipient_id) => apiRequest('/friend-requests', 'POST', { recipient_id }),
+      getPendingFriendRequests: () => apiRequest('/friend-requests/pending'),
+      respondToFriendRequest: (request_id, accept) => apiRequest('/friend-requests/respond', 'PUT', { request_id, accept }),
+      removeFriend: (friend_id) => apiRequest('/friends', 'DELETE', { friend_id }),
+      blockUser: (blocked_id) => apiRequest('/blocks', 'POST', { blocked_id }),
+      unblockUser: (blocked_id) => apiRequest('/blocks', 'DELETE', { blocked_id }),
+      getBlockedUsers: () => apiRequest('/blocks'),
+      getUserById: (id) => apiRequest(`/users/${id}`),
+      recordMatch: (data) => apiRequest('/matches', 'POST', data)
+    };
+    
+    // Upload avatar
+    const uploadAvatar = async (file) => {
+      const token = getToken();
+      const formData = new FormData();
+      formData.append('avatar', file);
+      
+      try {
+        const response = await fetch(`${API_URL}/me/avatar`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Upload failed');
+        }
+        
+        return result;
+      } catch (error) {
+        console.error('Upload error:', error);
+        throw error;
+      }
+    };
+    
+    // Router functions
+    const showPage = (pageId) => {
+      // Hide all pages
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.add('hidden');
+      });
+      
+      // Show the requested page
+      document.getElementById(pageId).classList.remove('hidden');
+      
+      // Update active nav items
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('bg-blue-700');
+        
+        if (item.getAttribute('data-page') === pageId) {
+          item.classList.add('bg-blue-700');
+        }
+      });
+      
+      // Load page data
+      switch (pageId) {
+        case 'profile':
+          loadUserProfile();
+          break;
+        case 'friends':
+          loadFriends();
+          break;
+        case 'matches':
+          loadMatches();
+          break;
+      }
+    };
+    
+    // Load user profile
+    const loadUserProfile = async () => {
+      try {
+        const result = await api.getCurrentUser();
+        
+        if (result.success) {
+          const user = result.user;
+          
+          // Update profile UI
+          document.getElementById('profile-display-name').textContent = user.display_name;
+          document.getElementById('profile-email').textContent = user.email;
+          document.getElementById('profile-wins').textContent = user.wins;
+          document.getElementById('profile-losses').textContent = user.losses;
+          document.getElementById('profile-avatar').src = `/public/uploads/${user.image}`;
+          document.getElementById('profile-created').textContent = new Date(user.created_at).toLocaleString();
+        }
+      } catch (error) {
+        showError('Failed to load profile: ' + error.message);
+      }
+    };
+    
+    // Load friends
+    const loadFriends = async () => {
+      try {
+        // Get friends
+        const friendsResult = await api.getFriends();
+        
+        // Get pending requests
+        const requestsResult = await api.getPendingFriendRequests();
+        
+        if (friendsResult.success && requestsResult.success) {
+          // Clear current lists
+          document.getElementById('friends-list').innerHTML = '';
+          document.getElementById('friend-requests-list').innerHTML = '';
+          
+          // Populate friends list
+          if (friendsResult.friends.length === 0) {
+            document.getElementById('friends-list').innerHTML = '<p class="text-gray-500">You have no friends yet.</p>';
+          } else {
+            friendsResult.friends.forEach(friend => {
+              const friendElement = document.createElement('div');
+              friendElement.className = 'bg-white p-4 rounded-lg shadow mb-4 flex items-center justify-between';
+              friendElement.innerHTML = `
+                <div class="flex items-center">
+                  <img src="/public/uploads/${friend.image}" alt="${friend.display_name}" class="w-12 h-12 rounded-full mr-4">
+                  <div>
+                    <h3 class="font-bold">${friend.display_name}</h3>
+                    <p class="text-sm ${friend.online_status ? 'text-green-500' : 'text-gray-500'}">
+                      ${friend.online_status ? 'Online' : 'Offline'}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 remove-friend" data-id="${friend.id}">Remove</button>
+                </div>
+              `;
+              document.getElementById('friends-list').appendChild(friendElement);
+            });
+            
+            // Add event listeners for remove buttons
+            document.querySelectorAll('.remove-friend').forEach(button => {
+              button.addEventListener('click', async (e) => {
+                const friendId = e.target.getAttribute('data-id');
+                
+                try {
+                  await api.removeFriend(friendId);
+                  showMessage('Friend removed successfully');
+                  loadFriends();
+                } catch (error) {
+                  showError('Failed to remove friend: ' + error.message);
+                }
+              });
+            });
+          }
+          
+          // Populate friend requests list
+          if (requestsResult.requests.length === 0) {
+            document.getElementById('friend-requests-list').innerHTML = '<p class="text-gray-500">You have no pending friend requests.</p>';
+          } else {
+            requestsResult.requests.forEach(request => {
+              const requestElement = document.createElement('div');
+              requestElement.className = 'bg-white p-4 rounded-lg shadow mb-4';
+              requestElement.innerHTML = `
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p><span class="font-bold">${request.asker_name}</span> wants to be your friend</p>
+                    <p class="text-sm text-gray-500">Sent on ${new Date(request.created_at).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-2 accept-request" data-id="${request.id}">Accept</button>
+                    <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 reject-request" data-id="${request.id}">Reject</button>
+                  </div>
+                </div>
+              `;
+              document.getElementById('friend-requests-list').appendChild(requestElement);
+            });
+            
+            // Add event listeners for accept/reject buttons
+            document.querySelectorAll('.accept-request').forEach(button => {
+              button.addEventListener('click', async (e) => {
+                const requestId = e.target.getAttribute('data-id');
+                
+                try {
+                  await api.respondToFriendRequest(requestId, true);
+                  showMessage('Friend request accepted');
+                  loadFriends();
+                } catch (error) {
+                  showError('Failed to accept request: ' + error.message);
+                }
+              });
+            });
+            
+            document.querySelectorAll('.reject-request').forEach(button => {
+              button.addEventListener('click', async (e) => {
+                const requestId = e.target.getAttribute('data-id');
+                
+                try {
+                  await api.respondToFriendRequest(requestId, false);
+                  showMessage('Friend request rejected');
+                  loadFriends();
+                } catch (error) {
+                  showError('Failed to reject request: ' + error.message);
+                }
+              });
+            });
+          }
+        }
+      } catch (error) {
+        showError('Failed to load friends: ' + error.message);
+      }
+    };
+    
+    // Load matches
+    const loadMatches = async () => {
+      try {
+        const result = await api.getMatchHistory();
+        
+        if (result.success) {
+          // Clear current list
+          document.getElementById('matches-list').innerHTML = '';
+          
+          // Populate matches list
+          if (result.matches.length === 0) {
+            document.getElementById('matches-list').innerHTML = '<p class="text-gray-500">You have no matches yet.</p>';
+          } else {
+            result.matches.forEach(match => {
+              const matchElement = document.createElement('div');
+              matchElement.className = 'bg-white p-4 rounded-lg shadow mb-4';
+              
+              const isWin = match.user_score > match.opponent_score;
+              
+              matchElement.innerHTML = `
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="font-bold ${isWin ? 'text-green-500' : 'text-red-500'}">
+                      ${isWin ? 'Win' : 'Loss'} against ${match.opponent_name}
+                    </h3>
+                    <p class="text-lg font-semibold">${match.user_score} - ${match.opponent_score}</p>
+                    <p class="text-sm text-gray-500">${new Date(match.date).toLocaleString()}</p>
+                  </div>
+                </div>
+              `;
+              document.getElementById('matches-list').appendChild(matchElement);
+            });
+          }
+        }
+      } catch (error) {
+        showError('Failed to load matches: ' + error.message);
+      }
+    };
+    
+    // Show error message
+    const showError = (message) => {
+      const errorElement = document.getElementById('error-message');
+      errorElement.textContent = message;
+      errorElement.classList.remove('hidden');
+      
+      // Hide after 5 seconds
+      setTimeout(() => {
+        errorElement.classList.add('hidden');
+      }, 5000);
+    };
+    
+    // Show success message
+    const showMessage = (message) => {
+      const successElement = document.getElementById('success-message');
+      successElement.textContent = message;
+      successElement.classList.remove('hidden');
+      
+      // Hide after 5 seconds
+      setTimeout(() => {
+        successElement.classList.add('hidden');
+      }, 5000);
+    };
+    
+    // Initialize app
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check authentication state
+      if (isAuthenticated()) {
+        document.getElementById('auth-pages').classList.add('hidden');
+        document.getElementById('app-pages').classList.remove('hidden');
+        
+        // Show profile page by default
+        showPage('profile');
+      } else {
+        document.getElementById('auth-pages').classList.remove('hidden');
+        document.getElementById('app-pages').classList.add('hidden');
+        
+        // Show login page by default
+        showPage('login');
+      }
+      
+      // Register form submit
+      document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        const display_name = document.getElementById('register-display-name').value;
+        
+        try {
+          const result = await api.register({ email, password, display_name });
+          
+          if (result.success) {
+            saveToken(result.token);
+            showMessage('Registration successful');
+            
+            // Show app pages
+            document.getElementById('auth-pages').classList.add('hidden');
+            document.getElementById('app-pages').classList.remove('hidden');
+            
+            // Show profile page
+            showPage('profile');
+          }
+        } catch (error) {
+          showError('Registration failed: ' + error.message);
+        }
+      });
+      
+      // Login form submit
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        
+        try {
+          const result = await api.login({ email, password });
+          
+          if (result.success) {
+            saveToken(result.token);
+            showMessage('Login successful');
+            
+            // Show app pages
+            document.getElementById('auth-pages').classList.add('hidden');
+            document.getElementById('app-pages').classList.remove('hidden');
+            
+            // Show profile page
+            showPage('profile');
+          }
+        } catch (error) {
+          showError('Login failed: ' + error.message);
+        }
+      });
+      
+      // Logout button
+      document.getElementById('logout-button').addEventListener('click', async () => {
+        try {
+          await api.logout();
+          removeToken();
+          
+          // Show auth pages
+          document.getElementById('auth-pages').classList.remove('hidden');
+          document.getElementById('app-pages').classList.add('hidden');
+          
+          // Show login page
+          showPage('login');
+          
+          showMessage('Logout successful');
+        } catch (error) {
+          showError('Logout failed: ' + error.message);
+        }
+      });
+      
+      // Update display name form
+      document.getElementById('update-display-name-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const display_name = document.getElementById('update-display-name-input').value;
+        
+        try {
+          const result = await api.updateDisplayName(display_name);
+          
+          if (result.success) {
+            showMessage('Display name updated successfully');
+            loadUserProfile();
+          }
+        } catch (error) {
+          showError('Failed to update display name: ' + error.message);
+        }
+      });
+      
+      // Avatar upload
+      document.getElementById('avatar-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        
+        if (file) {
+          try {
+            const result = await uploadAvatar(file);
+            
+            if (result.success) {
+              showMessage('Avatar updated successfully');
+              
+              // Update avatar preview
+              document.getElementById('profile-avatar').src = `/public/uploads/${result.filename}?t=${Date.now()}`;
+            }
+          } catch (error) {
+            showError('Failed to upload avatar: ' + error.message);
+          }
+        }
+      });
+      
+      // Friend request form
+      document.getElementById('send-friend-request-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const recipient_id = document.getElementById('friend-request-id').value;
+        
+        try {
+          const result = await api.sendFriendRequest(parseInt(recipient_id, 10));
+          
+          if (result.success) {
+            showMessage('Friend request sent successfully');
+            document.getElementById('friend-request-id').value = '';
+          }
+        } catch (error) {
+          showError('Failed to send friend request: ' + error.message);
+        }
+      });
+      
+      // Navigation
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const pageId = item.getAttribute('data-page');
+          showPage(pageId);
+        });
+      });
+      
+      // Auth navigation
+      document.getElementById('goto-register').addEventListener('click', () => {
+        showPage('register');
+      });
+      
+      document.getElementById('goto-login').addEventListener('click', () => {
+        showPage('login');
+      });
+    });
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <!-- Authentication pages -->
+  <div id="auth-pages" class="container mx-auto p-4">
+    <!-- Notification messages -->
+    <div id="error-message" class="hidden bg-red-500 text-white p-4 mb-4 rounded-lg"></div>
+    <div id="success-message" class="hidden bg-green-500 text-white p-4 mb-4 rounded-lg"></div>
+    
+    <!-- Login page -->
+    <div id="login" class="page max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold mb-6">Login</h1>
+      
+      <form id="login-form">
+        <div class="mb-4">
+          <label for="login-email" class="block text-gray-700 mb-2">Email</label>
+          <input type="email" id="login-email" class="w-full p-2 border rounded" required>
+        </div>
+        
+        <div class="mb-6">
+          <label for="login-password" class="block text-gray-700 mb-2">Password</label>
+          <input type="password" id="login-password" class="w-full p-2 border rounded" required>
+        </div>
+        
+        <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">Login</button>
+      </form>
+      
+      <p class="mt-4 text-center">
+        Don't have an account? 
+        <button id="goto-register" class="text-blue-500 hover:underline">Register</button>
+      </p>
+    </div>
+    
+    <!-- Register page -->
+    <div id="register" class="page hidden max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold mb-6">Register</h1>
+      
+      <form id="register-form">
+        <div class="mb-4">
+          <label for="register-email" class="block text-gray-700 mb-2">Email</label>
+          <input type="email" id="register-email" class="w-full p-2 border rounded" required>
+        </div>
+        
+        <div class="mb-4">
+          <label for="register-display-name" class="block text-gray-700 mb-2">Display Name</label>
+          <input type="text" id="register-display-name" class="w-full p-2 border rounded" required minlength="3" maxlength="20">
+          <p class="text-sm text-gray-500 mt-1">3-20 characters, letters, numbers, underscore, and hyphen only</p>
+        </div>
+        
+        <div class="mb-6">
+          <label for="register-password" class="block text-gray-700 mb-2">Password</label>
+          <input type="password" id="register-password" class="w-full p-2 border rounded" required minlength="8">
+          <p class="text-sm text-gray-500 mt-1">Minimum 8 characters</p>
+        </div>
+        
+        <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">Register</button>
+      </form>
+      
+      <p class="mt-4 text-center">
+        Already have an account? 
+        <button id="goto-login" class="text-blue-500 hover:underline">Login</button>
+      </p>
+    </div>
+  </div>
+  
+  <!-- Application pages -->
+  <div id="app-pages" class="hidden container mx-auto p-4">
+    <!-- Notification messages -->
+    <div id="error-message" class="hidden bg-red-500 text-white p-4 mb-4 rounded-lg"></div>
+    <div id="success-message" class="hidden bg-green-500 text-white p-4 mb-4 rounded-lg"></div>
+    
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white mb-6 rounded-lg">
+      <div class="container flex">
+        <div class="flex-1 flex">
+          <button class="nav-item py-4 px-6 hover:bg-blue-700" data-page="profile">Profile</button>
+          <button class="nav-item py-4 px-6 hover:bg-blue-700" data-page="friends">Friends</button>
+          <button class="nav-item py-4 px-6 hover:bg-blue-700" data-page="matches">Matches</button>
+        </div>
+        <div>
+          <button id="logout-button" class="py-4 px-6 hover:bg-red-600">Logout</button>
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Profile page -->
+    <div id="profile" class="page">
+      <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <div class="flex flex-col md:flex-row items-center mb-6">
+          <div class="mb-4 md:mb-0 md:mr-6">
+            <img id="profile-avatar" src="/public/uploads/default.png" alt="User Avatar" class="w-32 h-32 rounded-full">
+            <div class="mt-2">
+              <label for="avatar-upload" class="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 inline-block">
+                Change Avatar
+              </label>
+              <input type="file" id="avatar-upload" class="hidden" accept="image/jpeg,image/png,image/gif,image/webp">
+            </div>
+          </div>
+          
+          <div class="flex-1">
+            <h1 class="text-2xl font-bold mb-1">
+              <span id="profile-display-name">Loading...</span>
+            </h1>
+            <p class="text-gray-600 mb-4">
+              <span id="profile-email">Loading...</span>
+            </p>
+            
+            <div class="flex mb-4">
+              <div class="mr-6">
+                <span class="text-green-500 font-bold text-lg" id="profile-wins">0</span> Wins
+              </div>
+              <div>
+                <span class="text-red-500 font-bold text-lg" id="profile-losses">0</span> Losses
+              </div>
+            </div>
+            
+            <p class="text-sm text-gray-500">
+              Account created: <span id="profile-created">Loading...</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="border-t pt-4">
+          <h2 class="text-xl font-bold mb-4">Update Display Name</h2>
+          <form id="update-display-name-form" class="flex">
+            <input type="text" id="update-display-name-input" class="flex-1 p-2 border rounded-l" required minlength="3" maxlength="20">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600">Update</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Friends page -->
+    <div id="friends" class="page hidden">
+      <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h2 class="text-xl font-bold mb-4">Send Friend Request</h2>
+        <form id="send-friend-request-form" class="flex">
+          <input type="number" id="friend-request-id" class="flex-1 p-2 border rounded-l" placeholder="Enter user ID" required min="1">
+          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600">Send Request</button>
+        </form>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h2 class="text-xl font-bold mb-4">Friend Requests</h2>
+        <div id="friend-requests-list">
+          <p class="text-gray-500">Loading...</p>
+        </div>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-bold mb-4">Friends</h2>
+        <div id="friends-list">
+          <p class="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Matches page -->
+    <div id="matches" class="page hidden">
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-bold mb-4">Match History</h2>
+        <div id="matches-list">
+          <p class="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
