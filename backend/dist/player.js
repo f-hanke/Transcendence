@@ -20,7 +20,10 @@ class Player {
             this.y += this.paddleSpeed;
         }
     }
-    reset() {
+    resetScore() {
+        this.score = 0;
+    }
+    resetPos() {
         this.y = 50;
     }
 }

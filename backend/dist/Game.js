@@ -63,5 +63,13 @@ class Game {
             this.isGameOver = true;
         }
     }
+    resetGame() {
+        this.isGameOver = false;
+        this.ball.reset();
+        this.player1.resetScore();
+        this.player2.resetScore();
+        this.player1.resetPos();
+        this.player2.resetPos();
+    }
 }
 exports.Game = Game;

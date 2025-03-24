@@ -84,4 +84,14 @@ export class Game {
 		}
 	  }
 
+	  resetGame()
+	  {
+		this.isGameOver = false;
+		this.ball.reset();
+		this.player1.resetScore();
+		this.player2.resetScore();
+		this.player1.resetPos();
+		this.player2.resetPos();
+	  }
+
 }

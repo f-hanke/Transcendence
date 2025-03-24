@@ -34,7 +34,11 @@ socket.onmessage = (event) => {
 
     drawGame();
   }
+
+
 };
+
+
 
 function sendMessageToServer(message) {
   if (socket.readyState === WebSocket.OPEN) {
@@ -83,6 +87,7 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+/*------------------------------------------------------------------------------------------------------- */
 function drawPaddle1(yPosition) {
   console.log("Position of paddle1:", yPosition);
 }
@@ -115,6 +120,6 @@ function drawPaddle(x, y) {
 function drawBall(x, y) {
   ctx.fillStyle = '#FFFFFF';
   ctx.beginPath();
-  ctx.arc(x, y, ballRadius, 0, Math.PI * 2); 
+  ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
   ctx.fill();
 }

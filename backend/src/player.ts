@@ -28,8 +28,12 @@ export class Player {
 		}
 	  }
 
+	resetScore()
+	{
+		this.score = 0;
+	}
 
-	reset()
+	resetPos()
 	{
 		this.y = 50;
 	}

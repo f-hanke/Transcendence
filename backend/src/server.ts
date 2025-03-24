@@ -139,6 +139,39 @@ interface MoveRequestBody {
 
 
 
+fastify.get('/api/game/state', async (request, reply) => {
+  reply.send({
+    player1Y: game.player1.y,
+    player2Y: game.player2.y,
+    ballX: game.ball.x,
+    ballY: game.ball.y,
+    score1: game.player1.score,
+    score2: game.player2.score
+  });
+});
+
+
+fastify.get('/api/game/score', async (request, reply) => {
+  reply.send({
+    score1: game.player1.score,
+    score2: game.player2.score
+  });
+});
+
+
+fastify.post('/api/game/stop', async (request, reply) => {
+  game.isGameOver = true; 
+  reply.send({ message: "Game stopped!" });
+});
+
+
+fastify.post('/api/game/reset', async (request, reply) => {
+  game.resetGame();
+  reply.send({ message: "Game reset!" });
+});
+
+
+
 fastify.register(async function (fastify) {
   fastify.get('/ws', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
     console.log(chalk.green("A client connected via WebSocket"));

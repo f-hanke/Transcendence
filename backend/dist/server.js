@@ -71,11 +71,12 @@ fastify.post('/api/game/start', (request, reply) => __awaiter(void 0, void 0, vo
  Player : 1 | 2
  direction : up | down
 
+ succesfull answer:  "message": "Paddle moved successfully!"
+
  */
 fastify.post('/api/game/move', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
     const { player, direction } = request.body;
-    ; // Extraire les données de la requête
-    // Vérifier que la requête contient les bonnes données
+    ;
     if (player !== 1 && player !== 2) {
         return reply.status(400).send({ message: 'Invalid player ID. Must be 1 or 2.' });
     }
@@ -112,6 +113,30 @@ fastify.post('/api/game/move', (request, reply) => __awaiter(void 0, void 0, voi
         }
     });
     reply.send({ message: 'Paddle moved successfully!' });
+}));
+fastify.get('/api/game/state', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
+    reply.send({
+        player1Y: game.player1.y,
+        player2Y: game.player2.y,
+        ballX: game.ball.x,
+        ballY: game.ball.y,
+        score1: game.player1.score,
+        score2: game.player2.score
+    });
+}));
+fastify.get('/api/game/score', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
+    reply.send({
+        score1: game.player1.score,
+        score2: game.player2.score
+    });
+}));
+fastify.post('/api/game/stop', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
+    game.isGameOver = true;
+    reply.send({ message: "Game stopped!" });
+}));
+fastify.post('/api/game/reset', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
+    game.resetGame();
+    reply.send({ message: "Game reset!" });
 }));
 fastify.register(function (fastify) {
     return __awaiter(this, void 0, void 0, function* () {
