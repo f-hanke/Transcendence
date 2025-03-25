@@ -89,15 +89,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const appRouter = document.createElement("app-router") as AppRouter;
 
-  // Define routes with component tag names
-  appRouter.addRoute("/", "home-page"); // Associate "/" route with <my-component>
-  appRouter.addRoute("/about", "about-page"); // Associate "/about" route with <another-component>
-  appRouter.addRoute("/matchmaking", "match-making"); // Associate "/about" route with <another-component>
-  appRouter.addRoute("/testpage", "test-page"); // Associate "/about" route with <another-component>
-  appRouter.addRoute("/oneVOneLocal", "onevone-local"); // Associate "/about" route with <another-component>
-  appRouter.addRoute("/userSettings", "user-settings"); // Associate "/about" route with <another-component>
-  appRouter.addRoute("/runMatch", "run-match"); // Associate "/about" route with <another-component>
+  appRouter.addRoute("/matchmaking", "match-making");
+  appRouter.addRoute("/testpage", "test-page");
+  appRouter.addRoute("/oneVOneLocal", "onevone-local");
+  appRouter.addRoute("/userSettings", "user-settings");
+  appRouter.addRoute("/runMatch", "run-match");
+  appRouter.addRoute("/loginPage", "login-page");
 
-  // Append the router component to the body or any element in the DOM
+  appRouter.setProtectedRoutes(
+    [
+      "user-settings",
+    ]
+  );
+
   document.body.appendChild(appRouter);
 });
