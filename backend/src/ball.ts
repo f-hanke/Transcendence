@@ -1,3 +1,4 @@
+import { GameServiceTypes, gameSettings } from "transcendence";
 
 export class Ball {
 	x: number;
@@ -12,7 +13,7 @@ export class Ball {
 		this.y = 300;
 		this.speedX = 2;
 		this.speedY = 3;
-		this.radius = 5;
+		this.radius = gameSettings.ballRadius;
 	}
 
 

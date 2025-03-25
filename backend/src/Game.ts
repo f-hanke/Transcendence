@@ -2,6 +2,7 @@
 
 import { Player } from './player';
 import { Ball } from './ball';
+import { GameServiceTypes, gameSettings } from 'transcendence';
 
 export class Game {
 	player1: Player;
@@ -10,32 +11,63 @@ export class Game {
 	isGameOver: boolean;
 	screenWidth: number;
 	screenHeight: number;
+	gameLoopId: NodeJS.Timeout | null;
+	onGameOverCallback: ((reason: GameServiceTypes.PossibleGameEnds) => void) | null = null;
 
 	constructor(screenWidth: number, screenHeight: number) {
 		this.player1 = new Player(10);
-		this.player2 = new Player(screenWidth - 20);
+		this.player2 = new Player( gameSettings.pongTableWidth - 20);
 		this.ball = new Ball();
-		this.isGameOver = false;
-		this.screenWidth = screenWidth;
-		this.screenHeight = screenHeight;
+		this.isGameOver = true;
+		this.screenWidth = gameSettings.pongTableWidth;
+		this.screenHeight = gameSettings.pongTableHeight;
+		this.gameLoopId = null;
 	}
 
-	startGame() {
-		console.log("Game started!");
-		this.isGameOver = false;
-		this.player1.score = 0;
-		this.player2.score = 0;
-		this.ball.reset();
 
-		const gameLoop = () => {
-			if (!this.isGameOver) {
-				this.update();
-				setTimeout(gameLoop, 1000 / 60); // 60 FPS
-			}
-		};
+    gameLoop = () => {
+        if (!this.isGameOver) {
+            this.update();
+            this.gameLoopId = setTimeout(this.gameLoop, 1000 / 60); // 60 FPS
+        }
+    };
 
-		gameLoop();
-	}
+    startGame() {
+
+		if (!this.isGameOver) {
+            console.log("Game already running!");
+            return;
+        }
+
+        console.log("Game started!");
+        this.isGameOver = false;
+        this.player1.score = 0;
+        this.player2.score = 0;
+        this.ball.reset();
+
+        this.gameLoop();
+    }
+
+    stopGame(reason: GameServiceTypes.PossibleGameEnds) {
+        // if (this.isGameOver) {
+        //     console.log("Game is already stopped!");
+        //     return;
+        // }
+
+        this.isGameOver = true;
+
+        if (this.gameLoopId) {
+            clearTimeout(this.gameLoopId);
+            this.gameLoopId = null;
+        }
+        console.log("Game stopped!");
+
+		if (this.onGameOverCallback) {
+			this.onGameOverCallback(reason)
+
+		}
+    }
+
 
 	update() {
 
@@ -78,9 +110,10 @@ export class Game {
             this.ball.reset();
         }
 
-		//10 points to win
-		if (this.player1.score >= 5 || this.player2.score >= 5) {
-		  this.isGameOver = true;
+		if (this.player1.score >= gameSettings.maxScore || this.player2.score >= gameSettings.maxScore) {
+		//   this.isGameOver = true;
+		  //this.stopGame();
+		  this.stopGame("normalMaxScoreReached");
 		}
 	  }
 
@@ -92,6 +125,6 @@ export class Game {
 		this.player2.resetScore();
 		this.player1.resetPos();
 		this.player2.resetPos();
-	  }
+	}
 
 }
