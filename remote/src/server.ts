@@ -5,6 +5,7 @@ import {
   isDefined,
   matchmakingTypeGuards,
   MatchMakingTypes,
+  SharedTypes,
 } from "transcendence";
 
 const fastify = Fastify();
@@ -12,7 +13,7 @@ const fastify = Fastify();
 fastify.register(fastifyWebsocket);
 
 type MatchMakingFastifyRequest = FastifyRequest<{
-  Querystring: MatchMakingTypes.ClientQueryParamMatchMaking;
+  Querystring: SharedTypes.ClientQueryParamMatchMaking;
 }>;
 
 let games: MatchMakingTypes.BasicGame[] = [];
