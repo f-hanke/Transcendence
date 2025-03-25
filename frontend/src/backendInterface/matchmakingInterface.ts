@@ -1,0 +1,125 @@
+import {
+  colog,
+  isDefined,
+  jlog,
+  matchmakingTypeGuards,
+  MatchMakingTypes,
+} from "transcendence";
+
+class MatchMakingInterface {
+  constructor() {
+    throw new Error("This class cannot be instantiated.");
+  }
+
+  static websocket: WebSocket | null = null;
+
+  static connect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.websocket = new WebSocket(
+        `ws://localhost:3000?clientId=${window.store.userStore.get().id}`
+      );
+      this.websocket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        reject(new Error("WebSocket connection failed"));
+      };
+
+      this.websocket.onopen = () => {
+        console.log("WebSocket connected successfully!");
+        resolve();
+      };
+
+      this.websocket.onclose = () => {
+        console.log("WebSocket closed!");
+        this.websocket = null;
+      };
+
+      this.websocket.onmessage = (event) => {
+        this.handleMessage(event);
+      };
+    });
+  }
+
+  static disconnect() {
+    const ownMatch = window.store.matchmakingStore.get().ownMatch;
+    if (isDefined(ownMatch)) {
+      this.sendMessageToServer({
+        type: "deleteGame",
+        data: ownMatch as MatchMakingTypes.BasicGame,
+      });
+      window.store.matchmakingStore.deleteGame(ownMatch);
+    }
+    if (isDefined(this.websocket)) {
+      this.websocket.close();
+      this.websocket = null;
+    }
+  }
+
+  static handleMessage(event: MessageEvent) {
+    const dataJson = JSON.parse(event.data);
+    colog("CLIENT RECEIVED THE FOLLOWING MESSAGE");
+    jlog(dataJson);
+    if (matchmakingTypeGuards.isServerUpdateGames(dataJson)) {
+      this.handleServerUpdatedGames(dataJson);
+    } else if (matchmakingTypeGuards.isClientDeleteGame(dataJson)) {
+      this.handleServerDeleteGame(dataJson);
+    } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
+      this.handleServerStartGame(dataJson);
+    } else if (matchmakingTypeGuards.isServerUpdateOneGame(dataJson)) {
+      this.handleServerUpdateOneGame(dataJson);
+    } else if (matchmakingTypeGuards.isClientCreateGame(dataJson)) {
+      this.handleServerCreateGame(dataJson);
+    } else if (matchmakingTypeGuards.isClientLeaveGame(dataJson)) {
+      this.handleServerLeaveGame(dataJson);
+    } else {
+      jlog(dataJson);
+      throw new Error(
+        "Client received unknown message from matchmaking server!"
+      );
+    }
+  }
+
+  static handleServerUpdatedGames(
+    dataJson: MatchMakingTypes.ServerUpdateGames
+  ) {
+    window.store.matchmakingStore.updateFromAllMatches(dataJson.data);
+  }
+
+  static handleServerDeleteGame(dataJson: MatchMakingTypes.ClientDeleteGame) {
+    window.store.matchmakingStore.deleteGame(dataJson.data);
+  }
+
+  static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
+    window.store.gameStore.updateGameStateState("waitingForServerStart");
+  }
+
+  static handleServerUpdateOneGame(
+    dataJson: MatchMakingTypes.ServerUpdateOneGame
+  ) {
+    window.store.matchmakingStore.updateOneGame(dataJson.data);
+  }
+
+  static handleServerCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
+    window.store.matchmakingStore.createGame(dataJson.data);
+  }
+
+  static handleServerLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
+    window.store.matchmakingStore.deleteGame(dataJson.data);
+  }
+
+  static sendMessageToServer(
+    message: MatchMakingTypes.AllMatchMakingMessageTypes
+  ) {
+    console.log(this.websocket);
+    if (
+      isDefined(this.websocket) &&
+      this.websocket.readyState === WebSocket.OPEN
+    )
+      this.websocket.send(JSON.stringify(message));
+    else
+      throw new Error(
+        "Client tried to send message to server without having websocket connection!"
+      );
+  }
+}
+
+export { MatchMakingInterface };
