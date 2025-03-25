@@ -1,5 +1,7 @@
 import {
   colog,
+  gameServiceTypeGuards,
+  GameServiceTypes,
   isDefined,
   jlog,
   matchmakingTypeGuards,
@@ -40,13 +42,15 @@ class GameServiceInterface {
   }
 
   static disconnect() {
-    const ownMatch = window.store.matchmakingStore.get().ownMatch;
-    if (isDefined(ownMatch)) {
+    if (isDefined(window.store.gameStore.get().state === "running")) {
       this.sendMessageToServer({
-        type: "deleteGame",
-        data: ownMatch as MatchMakingTypes.BasicGame,
+        type: "clientLeftGame",
+        data: {
+          matchId: window.store.gameStore.get().matchId,
+          playerId: window.store.userStore.get().id,
+        },
       });
-      window.store.matchmakingStore.deleteGame(ownMatch);
+      window.store.gameStore.updateGameStateState("none");
     }
     if (isDefined(this.websocket)) {
       this.websocket.close();
@@ -58,56 +62,51 @@ class GameServiceInterface {
     const dataJson = JSON.parse(event.data);
     colog("CLIENT RECEIVED THE FOLLOWING MESSAGE");
     jlog(dataJson);
-    if (matchmakingTypeGuards.isServerUpdateGames(dataJson)) {
-      this.handleServerUpdatedGames(dataJson);
-    } else if (matchmakingTypeGuards.isClientDeleteGame(dataJson)) {
-      this.handleServerDeleteGame(dataJson);
-    } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
-      this.handleServerStartGame(dataJson);
-    } else if (matchmakingTypeGuards.isServerUpdateOneGame(dataJson)) {
-      this.handleServerUpdateOneGame(dataJson);
-    } else if (matchmakingTypeGuards.isClientCreateGame(dataJson)) {
-      this.handleServerCreateGame(dataJson);
-    } else if (matchmakingTypeGuards.isClientLeaveGame(dataJson)) {
-      this.handleServerLeaveGame(dataJson);
+
+    gameServiceTypeGuards;
+
+    if (gameServiceTypeGuards.isServerUpdateGameState(dataJson)) {
+      this.handleServerUpdateGameState(dataJson);
+    } else if (gameServiceTypeGuards.isServerGameIsOver(dataJson)) {
+      this.handleServerGameIsOver(dataJson);
+    } else if (gameServiceTypeGuards.isServerGameStarted(dataJson)) {
+      this.handleServerGameStarted(dataJson);
+    } else if (gameServiceTypeGuards.isServerError(dataJson)) {
+      this.handleServerError(dataJson);
+    } else if (gameServiceTypeGuards.isClientLeftGame(dataJson)) {
+      this.handleClientLeftGame(dataJson);
     } else {
       jlog(dataJson);
       throw new Error(
-        "Client received unknown message from matchmaking server!"
+        "Client received unknown message from gameService server!"
       );
     }
   }
 
-  static handleServerUpdatedGames(
-    dataJson: MatchMakingTypes.ServerUpdateGames
+  static handleServerUpdateGameState(
+    dataJson: GameServiceTypes.ServerUpdateGameState
   ) {
-    window.store.matchmakingStore.updateFromAllMatches(dataJson.data);
+    colog("TEST!");
   }
 
-  static handleServerDeleteGame(dataJson: MatchMakingTypes.ClientDeleteGame) {
-    window.store.matchmakingStore.deleteGame(dataJson.data);
+  static handleServerGameIsOver(dataJson: GameServiceTypes.ServerGameIsOver) {
+    colog("TEST!");
   }
 
-  static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    window.store.gameStore.updateGameStateState("startSignaledByServer");
+  static handleServerGameStarted(dataJson: GameServiceTypes.ServerGameStarted) {
+    colog("TEST!");
   }
 
-  static handleServerUpdateOneGame(
-    dataJson: MatchMakingTypes.ServerUpdateOneGame
-  ) {
-    window.store.matchmakingStore.updateOneGame(dataJson.data);
+  static handleServerError(dataJson: GameServiceTypes.ServerError) {
+    colog("TEST!");
   }
 
-  static handleServerCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
-    window.store.matchmakingStore.createGame(dataJson.data);
-  }
-
-  static handleServerLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
-    window.store.matchmakingStore.deleteGame(dataJson.data);
+  static handleClientLeftGame(dataJson: GameServiceTypes.ClientLeftGame) {
+    colog("TEST!");
   }
 
   static sendMessageToServer(
-    message: MatchMakingTypes.AllMatchMakingMessageTypes
+    message: GameServiceTypes.AllGameServiceMessageTypes
   ) {
     console.log(this.websocket);
     if (

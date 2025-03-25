@@ -32,7 +32,7 @@ class OneVOneLocal extends HTMLElement {
   }
 
   render() {
-    if(window.store.gameStore.get().state === "startSignaledByServer")
+    if(window.store.gameStore.get().state === "waitingForServerStart")
       navigateToSite("runMatch");
     this.innerHTML = `
       <div class="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-white p-6 rounded-lg shadow-lg">
@@ -75,7 +75,7 @@ class OneVOneLocal extends HTMLElement {
     document
       .querySelector("#startGameBtn")
       ?.addEventListener("click", (event) => {
-        window.store.gameStore.updateGameStateState("startSignaledByServer");
+        window.store.gameStore.updateGameStateState("waitingForServerStart");
       });
 
     const playerTwoInput = this.querySelector(

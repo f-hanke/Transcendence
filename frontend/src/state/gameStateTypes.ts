@@ -1,9 +1,11 @@
 type GameStateStates =
   | "none"
-  | "startSignaledByServer"
-  | "started"
+  | "waitingForServerStart"
+  | "running"
   | "endedNormally"
-  | "endedPlayerLeft";
+  | "endedPlayerLeft"
+  | "endedServerError"
+  ;
 
 
 type Paddle =  {

@@ -1,16 +1,16 @@
 declare namespace GameServiceTypes {
   type StaticGameProperties = {
-    // paddleWidth: number;
-    // paddleHeight: number;
-    // pongTableWidth: number;
-    // pongTableHeight: number;
-    // ballRadius: number;
-    // maxScore: number;
     typeOfGame: "local" | "remote";
     matchId: string;
     hostId: string;
     oponentId: string;
   };
+
+  type PossibleGameEnds =
+    | "normalMaxScoreReached"
+    | "playerLeftGame"
+    | "playerDisconnected"
+    | "serverError";
 
   type Ball = {
     x: number;
@@ -65,6 +65,7 @@ declare namespace GameServiceTypes {
       id: string;
       score: number;
     };
+    reason: PossibleGameEnds;
   };
 
   type DataServerError = {
@@ -120,9 +121,11 @@ declare namespace GameServiceTypes {
   type AllGameServiceMessageTypes =
     | ClientUpdatePaddlePosition
     | ClientLeftGame
+    | ClientIsReady
     | ServerUpdateGameState
     | ServerGameIsOver
-    | ClientIsReady;
+    | ServerError
+    | ServerGameStarted;
 }
 
 function isClientUpdatePaddlePosition(
@@ -193,11 +196,15 @@ function isServerGameIsOver(
     typeof message.data.player1.score === "number" &&
     message.data.player2 &&
     typeof message.data.player2.id === "string" &&
-    typeof message.data.player2.score === "number"
+    typeof message.data.player2.score === "number" &&
+    message.data.reason &&
+    typeof message.data.reason === "string"
   );
 }
 
-function isServerGameStarted(message: any): message is GameServiceTypes.ServerGameStarted {
+function isServerGameStarted(
+  message: any
+): message is GameServiceTypes.ServerGameStarted {
   return (
     message?.type === "serverGameStarted" &&
     message?.data &&

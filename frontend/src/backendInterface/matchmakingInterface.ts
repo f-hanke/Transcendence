@@ -89,7 +89,7 @@ class MatchMakingInterface {
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    window.store.gameStore.updateGameStateState("startSignaledByServer");
+    window.store.gameStore.updateGameStateState("waitingForServerStart");
   }
 
   static handleServerUpdateOneGame(
