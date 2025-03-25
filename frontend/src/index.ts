@@ -25,9 +25,16 @@ document.addEventListener("DOMContentLoaded", () => {
     notificationState: [],
     gameState: {
       matchId: "",
+      typeOfGame: "local",
       state: "none",
-      paddleLeft: 0.5,
-      paddleRight: 0.5,
+      paddleLeft: {
+        paddleSpeed: 0,
+        paddleY: 380,
+      },
+      paddleRight: {
+        paddleSpeed: 0,
+        paddleY: 380,
+      },
       ball: {
         x: 200,
         y: 100,
@@ -58,7 +65,8 @@ document.addEventListener("DOMContentLoaded", () => {
       image: exampleImage,
       displayName: "TEST_USER",
       friends: ["friend_1_id", "friend_2_id"],
-      id: `userid_${generateUniqueId()}`,
+      // id: `userid_${generateUniqueId()}`,
+      id: `userid_${sessionStorage.getItem("transTestId")}`,
       email: "test@user.de",
       matchHistory: [
         {
@@ -84,11 +92,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Define routes with component tag names
   appRouter.addRoute("/", "home-page"); // Associate "/" route with <my-component>
   appRouter.addRoute("/about", "about-page"); // Associate "/about" route with <another-component>
-  appRouter.addRoute("/match", "match-page"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/matchmaking", "match-making"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/testpage", "test-page"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/oneVOneLocal", "onevone-local"); // Associate "/about" route with <another-component>
   appRouter.addRoute("/userSettings", "user-settings"); // Associate "/about" route with <another-component>
+  appRouter.addRoute("/runMatch", "run-match"); // Associate "/about" route with <another-component>
 
   // Append the router component to the body or any element in the DOM
   document.body.appendChild(appRouter);

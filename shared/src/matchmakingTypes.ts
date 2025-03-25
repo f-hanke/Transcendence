@@ -1,8 +1,4 @@
 declare namespace MatchMakingTypes {
-  type ClientQueryParamMatchMaking = {
-    clientId?: string;
-  };
-
   type BasicGame = {
     matchId: string;
     hostId: string;
@@ -77,7 +73,7 @@ function isServerUpdateOneGame(
   return (
     typeof value === "object" &&
     value !== null &&
-    (value as any).type === "updateOneGames" &&
+    (value as any).type === "updateOneGame" &&
     isBasicGame((value as any).data)
   );
 }

@@ -6,7 +6,7 @@ import {
   MatchMakingTypes,
 } from "transcendence";
 
-class MatchMakingInterface {
+class GameServiceInterface {
   constructor() {
     throw new Error("This class cannot be instantiated.");
   }
@@ -16,7 +16,7 @@ class MatchMakingInterface {
   static connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.websocket = new WebSocket(
-        `ws://localhost:3000?clientId=${window.store.userStore.get().id}`
+        `ws://localhost:4000?clientId=${window.store.userStore.get().id}`
       );
       this.websocket.onerror = (error) => {
         console.error("WebSocket error:", error);
@@ -122,4 +122,4 @@ class MatchMakingInterface {
   }
 }
 
-export { MatchMakingInterface };
+export { GameServiceInterface };

@@ -1,4 +1,4 @@
-function deepCopyObj(obj: object) {
+function deepCopyObj<T extends object>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
@@ -17,4 +17,10 @@ async function convertToBase64(file: File): Promise<string> {
   });
 }
 
-export { deepCopyObj, createHtmlElementFromString, convertToBase64 };
+function navigateToSite(newRoute: string)
+{
+  history.pushState({}, "", newRoute);
+  window.dispatchEvent(new Event("popstate"));
+}
+
+export { deepCopyObj, createHtmlElementFromString, convertToBase64, navigateToSite };

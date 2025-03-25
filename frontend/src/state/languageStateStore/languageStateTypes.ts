@@ -13,6 +13,8 @@ type LanguageState = {
     matchMaking: string;
     createMatch: string;
     availableMatches: string;
+    yourOwnMatchHeading: string;
+    closeMatchButton: string;
     join: string;
     noMatchesAvailable: string;
     yourMatch: string;

@@ -1,3 +1,5 @@
+import { navigateToSite } from "../utils/utils";
+
 class TestPage extends HTMLElement {
   constructor() {
     super();
@@ -7,18 +9,22 @@ class TestPage extends HTMLElement {
     this.render();
   }
 
-  disconnectedCallback() {
-
-  }
+  disconnectedCallback() {}
 
   render() {
     this.innerHTML = `
-      <match-item 
-      host="HELLO WORLD!" 
-      matchId="ID MATCH" 
-      oponent="ENDGEGENER"
-      renderJoin="1"></match-item>
-    `
+    <div class="bg-black h-full w-full">
+      <!-- <match-score></match-score> -->
+      <run-match></run-match>
+      <!-- <pong-table></pong-table> -->
+    </div>
+
+      <!-- <button id="navigateToBtn">TEST STUFF</button> -->
+    `;
+
+    // document.querySelector("#navigateToBtn")?.addEventListener("click", () => {
+    //   navigateToSite("matchmaking");
+    // });
   }
 }
 

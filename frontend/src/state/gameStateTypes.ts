@@ -1,8 +1,22 @@
+type GameStateStates =
+  | "none"
+  | "startSignaledByServer"
+  | "started"
+  | "endedNormally"
+  | "endedPlayerLeft";
+
+
+type Paddle =  {
+  paddleY: number;
+  paddleSpeed: 0 | 1 | -1;
+};
+
 type GameState = {
-  matchId: string
-  state: "none" | "startSignaledByServer" | "started" | "endedNormally" | "endedPlayerLeft" 
-  paddleLeft: number;
-  paddleRight: number;
+  matchId: string;
+  state: GameStateStates;
+  typeOfGame: "local" | "remote";
+  paddleLeft: Paddle;
+  paddleRight: Paddle;
   ball: {
     x: number;
     y: number;
@@ -15,6 +29,4 @@ type GameState = {
   height: number;
 };
 
-export type {
-  GameState
-}
+export type { GameState, GameStateStates, Paddle };

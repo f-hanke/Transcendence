@@ -1,17 +1,23 @@
-import { generateUniqueId } from "../utils/utils";
+import { generateUniqueId } from "transcendence";
+import { navigateToSite } from "../../utils/utils";
 
 class OneVOneLocal extends HTMLElement {
   unsubscribe: null | (() => void);
+  unsubscribeGameState: null | (() => void);
   unsubscribeLanguage: null | (() => void);
   constructor() {
     super();
     this.unsubscribe = null;
     this.unsubscribeLanguage = null;
+    this.unsubscribeGameState = null;
   }
 
   connectedCallback() {
     this.render();
     this.unsubscribe = window.store.oneVOneLocalStore.subscribe(
+      this.render.bind(this)
+    );
+    this.unsubscribeGameState = window.store.gameStore.subscribe(
       this.render.bind(this)
     );
     this.unsubscribeLanguage = window.store.languageStore.subscribe(
@@ -22,9 +28,12 @@ class OneVOneLocal extends HTMLElement {
   disconnectedCallback() {
     if (this.unsubscribe) this.unsubscribe();
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
+    if (this.unsubscribeGameState) this.unsubscribeGameState();
   }
 
   render() {
+    if(window.store.gameStore.get().state === "startSignaledByServer")
+      navigateToSite("runMatch");
     this.innerHTML = `
       <div class="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-white p-6 rounded-lg shadow-lg">
         <h2 class="text-2xl font-bold mb-4">${
@@ -65,7 +74,9 @@ class OneVOneLocal extends HTMLElement {
     `;
     document
       .querySelector("#startGameBtn")
-      ?.addEventListener("click", (event) => console.log("GAME STARTED"));
+      ?.addEventListener("click", (event) => {
+        window.store.gameStore.updateGameStateState("startSignaledByServer");
+      });
 
     const playerTwoInput = this.querySelector(
       "#playerTwoInput"

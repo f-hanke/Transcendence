@@ -73,6 +73,10 @@ class Navbar extends HTMLElement {
             <a href="/testpage" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ Testpage</a>
           </li>
           <li>${window.store.userStore.get().id}</li>
+          <li>
+            <input id="setIdInput" class="text-black" type="text">
+            <button id="setIdButton">SET ID</button>
+          </li>
         </ul>
       </nav>
 
@@ -116,6 +120,15 @@ class Navbar extends HTMLElement {
         },
       ]);
     });
+
+    const inputId = document.querySelector("#setIdInput") as HTMLInputElement;
+    const btnSetId = document.querySelector("#setIdButton") as HTMLButtonElement;
+ 
+    btnSetId.addEventListener("click", () => {
+      const idVal = inputId.value;
+      sessionStorage.setItem("transTestId", idVal);
+    });
+
   }
 
   handleLanguageChange(event: Event) {

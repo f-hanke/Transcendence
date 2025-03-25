@@ -1,14 +1,15 @@
 // Import all components at the beginning
-import "../pages/AboutPage.js";
-import "../pages/HomePage.js";
-import "../pages/Match.ts";
+import "../pages/runMatch/PongTable.ts";
 import "./Navbar.ts";
-import "../components/notification-modal.ts";
+import "../pages/NotificationModal.ts";
 import "../pages/matchMaking/MatchMaking.ts";
 import "../pages/matchMaking/MatchItem.ts";
-import "../pages/OneVOneLocal.ts";
+import "../pages/matchMaking/OneVOneLocal.ts";
 import "../testing/TestPage.ts";
 import "../pages/UserSettings.ts";
+import "../pages/runMatch/RunMatch.ts";
+import "../pages/runMatch/PongTable.ts"
+import "../pages/runMatch/MatchScore.ts"
 import { Page } from "./types.js";
 
 class AppRouter extends HTMLElement {
