@@ -1,10 +1,9 @@
 import Fastify from 'fastify';
+import path from 'path';
 import fastifyJwt from '@fastify/jwt';
 import fastifyMultipart from '@fastify/multipart';
 import fastifyCors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
-import path from 'path';
-import fs from 'fs';
 
 import { config } from './config/config';
 import { initializeDatabase, closeDatabase } from './db/dbClient';
@@ -12,7 +11,7 @@ import userRoutes from './routes/userRoutes';
 import { createDefaultAvatar, ensureUploadDir } from './utils/fileUtils';
 
 // Create Fastify instance
-const fastify = Fastify({
+const server = Fastify({
   logger: {
     level: config.environment === 'development' ? 'info' : 'error',
     transport: config.environment === 'development'
@@ -27,11 +26,11 @@ const fastify = Fastify({
   },
 });
 
-// Register plugins
-async function start() {
+// Register plugins and start server
+const start = async () => {
   try {
     // Register JWT plugin
-    await fastify.register(fastifyJwt, {
+    await server.register(fastifyJwt, {
       secret: config.jwt.secret,
       sign: {
         expiresIn: config.jwt.expiresIn
@@ -39,29 +38,29 @@ async function start() {
     });
     
     // Register multipart plugin for file uploads
-    await fastify.register(fastifyMultipart, {
+    await server.register(fastifyMultipart, {
       limits: {
         fileSize: config.upload.maxFileSize
       }
     });
     
     // Register CORS plugin
-    await fastify.register(fastifyCors, {
+    await server.register(fastifyCors, {
       origin: true,
       credentials: true
     });
     
     // Serve static files
-    await fastify.register(fastifyStatic, {
+    await server.register(fastifyStatic, {
       root: path.join(process.cwd(), 'public'),
       prefix: '/public/'
     });
     
     // Register routes
-    await fastify.register(userRoutes, { prefix: '/api/users' });
+    await server.register(userRoutes, { prefix: '/api/users' });
     
     // Root route - serve the SPA
-    fastify.get('/', async (request, reply) => {
+    server.get('/', async (request, reply) => {
       return reply.sendFile('index.html');
     });
     
@@ -75,20 +74,20 @@ async function start() {
     await createDefaultAvatar();
     
     // Start the server
-    await fastify.listen({ port: config.port, host: config.host });
+    await server.listen({ port: config.port, host: config.host });
     console.log(`Server is running on http://${config.host}:${config.port}`);
   } catch (error) {
     console.error('Error starting server:', error);
     process.exit(1);
   }
-}
+};
 
 // Handle graceful shutdown
 const closeGracefully = async (signal: string) => {
   console.log(`Received ${signal}, closing server...`);
   
   try {
-    await fastify.close();
+    await server.close();
     await closeDatabase();
     console.log('Server closed successfully');
     process.exit(0);

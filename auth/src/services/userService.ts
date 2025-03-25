@@ -1,6 +1,7 @@
 import UserModel, { UserInput, User, UserWithStats } from '../models/user';
 import { hashPassword, verifyPassword } from '../utils/passwordUtils';
 import { saveFile, deleteFile } from '../utils/fileUtils';
+import { dbGet } from '../db/dbClient';  // Import dbGet directly from dbClient
 
 class UserService {
   // Register a new user
@@ -203,7 +204,7 @@ class UserService {
   async respondToFriendRequest(requestId: number, userId: number, accept: boolean): Promise<void> {
     try {
       // Find the request
-      const request: any = await UserModel.dbGet(
+      const request: any = await dbGet(
         'SELECT * FROM friend_requests WHERE id = ? AND responder = ?',
         [requestId, userId]
       );
