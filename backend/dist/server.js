@@ -30,6 +30,9 @@ fastify.register(static_1.default, {
     root: path_1.default.join(__dirname, '..', 'public'),
     prefix: '/',
 });
+function sendMessageToClient(socket, msg) {
+    socket.send(JSON.stringify(msg));
+}
 const gameLoop = () => {
     if (!game.isGameOver) {
         game.update();
@@ -46,6 +49,23 @@ const gameLoop = () => {
                 client.send(updateMessage);
             }
         });
+        if (game.isGameOver) {
+            const gameOverMessage = JSON.stringify({
+                type: "serverGameIsOver",
+                matchId: "some-match-id",
+                player1: { id: "player1-id", score: game.player1.score },
+                player2: { id: "player2-id", score: game.player2.score },
+                reason: "normalMaxScoreReached", // Ici, adapte selon la raison exacte
+            });
+            // Envoi du message de fin de jeu aux clients
+            clients.forEach((client) => {
+                if (client.readyState === ws_1.default.OPEN) {
+                    client.send(gameOverMessage);
+                }
+            });
+            console.log("Game Over! Message sent to clients:", gameOverMessage);
+            return; // Arrête le gameLoop
+        }
         setTimeout(gameLoop, 1000 / 60); // 60 FPS
     }
 };

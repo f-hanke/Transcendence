@@ -4,28 +4,50 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Game = void 0;
 const player_1 = require("./player");
 const ball_1 = require("./ball");
+const transcendence_1 = require("transcendence");
 class Game {
     constructor(screenWidth, screenHeight) {
+        this.onGameOverCallback = null;
+        this.gameLoop = () => {
+            if (!this.isGameOver) {
+                this.update();
+                this.gameLoopId = setTimeout(this.gameLoop, 1000 / 60); // 60 FPS
+            }
+        };
         this.player1 = new player_1.Player(10);
-        this.player2 = new player_1.Player(screenWidth - 20);
+        this.player2 = new player_1.Player(transcendence_1.gameSettings.pongTableWidth - 20);
         this.ball = new ball_1.Ball();
-        this.isGameOver = false;
-        this.screenWidth = screenWidth;
-        this.screenHeight = screenHeight;
+        this.isGameOver = true;
+        this.screenWidth = transcendence_1.gameSettings.pongTableWidth;
+        this.screenHeight = transcendence_1.gameSettings.pongTableHeight;
+        this.gameLoopId = null;
     }
     startGame() {
+        if (!this.isGameOver) {
+            console.log("Game already running!");
+            return;
+        }
         console.log("Game started!");
         this.isGameOver = false;
         this.player1.score = 0;
         this.player2.score = 0;
         this.ball.reset();
-        const gameLoop = () => {
-            if (!this.isGameOver) {
-                this.update();
-                setTimeout(gameLoop, 1000 / 60); // 60 FPS
-            }
-        };
-        gameLoop();
+        this.gameLoop();
+    }
+    stopGame(reason) {
+        // if (this.isGameOver) {
+        //     console.log("Game is already stopped!");
+        //     return;
+        // }
+        this.isGameOver = true;
+        if (this.gameLoopId) {
+            clearTimeout(this.gameLoopId);
+            this.gameLoopId = null;
+        }
+        console.log("Game stopped!");
+        if (this.onGameOverCallback) {
+            this.onGameOverCallback(reason);
+        }
     }
     update() {
         this.ball.move(this.screenWidth, this.screenHeight);
@@ -58,9 +80,10 @@ class Game {
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
             this.ball.reset();
         }
-        //10 points to win
-        if (this.player1.score >= 5 || this.player2.score >= 5) {
-            this.isGameOver = true;
+        if (this.player1.score >= transcendence_1.gameSettings.maxScore || this.player2.score >= transcendence_1.gameSettings.maxScore) {
+            //   this.isGameOver = true;
+            //this.stopGame();
+            this.stopGame("normalMaxScoreReached");
         }
     }
     resetGame() {

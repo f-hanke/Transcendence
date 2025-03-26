@@ -10,6 +10,8 @@ import websocket from "@fastify/websocket";
 import chalk from "chalk"; //colors
 
 import ws from 'ws';
+import { GameServiceTypes } from 'transcendence';
+import { send } from 'process';
 
 const clients = new Set<ws.WebSocket>();
 
@@ -31,8 +33,15 @@ fastify.register(fastifyStatic, {
 });
 
 
+function sendMessageToClient(socket: ws.WebSocket, msg: GameServiceTypes.AllGameServiceMessageTypes)
+{
+  socket.send(JSON.stringify(msg));
+}
 
 const gameLoop = () => {
+
+
+
   if (!game.isGameOver) {
     game.update();
 
@@ -46,11 +55,32 @@ const gameLoop = () => {
       ballY: game.ball.y,
     });
 
+
     clients.forEach((client: ws.WebSocket) => {
       if (client.readyState === ws.OPEN) {
         client.send(updateMessage);
       }
     });
+
+    if (game.isGameOver) {
+      const gameOverMessage = JSON.stringify({
+        type: "serverGameIsOver",
+        matchId: "some-match-id",
+        player1: { id: "player1-id", score: game.player1.score },
+        player2: { id: "player2-id", score: game.player2.score },
+        reason: "normalMaxScoreReached",
+      });
+
+      // Envoi du message de fin de jeu aux clients
+      clients.forEach((client: ws.WebSocket) => {
+        if (client.readyState === ws.OPEN) {
+          client.send(gameOverMessage);
+        }
+      });
+
+      console.log("Game Over! Message sent to clients:", gameOverMessage);
+      return; // Arrête le gameLoop
+    }
 
     setTimeout(gameLoop, 1000 / 60); // 60 FPS
   }
@@ -160,7 +190,7 @@ fastify.get('/api/game/score', async (request, reply) => {
 
 
 fastify.post('/api/game/stop', async (request, reply) => {
-  game.isGameOver = true; 
+  game.isGameOver = true;
   reply.send({ message: "Game stopped!" });
 });
 
@@ -243,6 +273,7 @@ fastify.register(async function (fastify) {
     });
 
     socket.on('close', () => {
+      /* If a game is on, need to end the game and send updates to the other client if remote */
       console.log(chalk.red("A client disconnected"));
       clients.delete(socket);
     });
