@@ -4,7 +4,17 @@
 'use strict';
 
 const path = require('path');
-const fastify = require('fastify')({ logger: true });
+const fastify = require('fastify')({
+  logger: {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        translateTime: 'HH:MM:ss Z',
+        ignore: 'pid,hostname',
+      },
+    },
+  },
+});
 const config = require('./config/config');
 
 // Register plugins

@@ -5,9 +5,9 @@ yarn-debug.log
 yarn-error.log
 
 # Database
-db/*.db
-db/*.sqlite
-db/*.sqlite3
+# db/*.db
+# db/*.sqlite
+# db/*.sqlite3
 
 # User uploads
 public/img/avatars/*
