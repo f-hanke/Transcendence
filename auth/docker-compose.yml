@@ -1,22 +1,17 @@
 version: '3.8'
 
 services:
-  user-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  app:
+    build: .
+    container_name: pong-user-management
     ports:
-      - "3001:3001"
+      - "3000:3000"
     volumes:
-      - ./data:/usr/src/app/data
-      - ./public/uploads:/usr/src/app/public/uploads
+      - ./db:/app/db
+      - ./public/img/avatars:/app/public/img/avatars
     environment:
       - NODE_ENV=development
-      - PORT=3001
+      - PORT=3000
       - HOST=0.0.0.0
-      - DB_PATH=/usr/src/app/data/user-service.db
-      - JWT_SECRET=your_jwt_secret_here
-      - JWT_EXPIRES_IN=1d
-      - UPLOAD_DIR=/usr/src/app/public/uploads
-      - MAX_FILE_SIZE=5242880
+      - SESSION_SECRET=your-secret-key-change-me-in-production
     restart: unless-stopped
