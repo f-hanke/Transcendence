@@ -1,6 +1,6 @@
 declare namespace GameServiceTypes {
   type StaticGameProperties = {
-    typeOfGame: "local" | "remote";
+    typeOfGame: "localPvP" | "localPvAi" | "remote";
     matchId: string;
     hostId: string;
     oponentId: string;

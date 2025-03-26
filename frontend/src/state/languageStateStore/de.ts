@@ -26,6 +26,8 @@ const de: LanguageState = {
     player2: "Spieler 2",
     startGame: "Spiel starten",
     localGameOnSame: "Lokales Spiel auf derselben Tastatur",
+    aIOrHumanBtnHuman: "Menschlicher Gegner",
+    aIOrHumanBtnAi: "KI-Gegner",
   },
   userSettings: {
     userSettings: "Benutzereinstellungen",

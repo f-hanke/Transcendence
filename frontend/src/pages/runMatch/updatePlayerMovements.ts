@@ -3,6 +3,8 @@ import { gameSettings, jlog } from "transcendence";
 import { deepCopyObj } from "../../utils/utils";
 import { PongTable } from "./PongTable";
 
+type PaddleLeftOrRight = Extract<keyof GameState, "paddleLeft" | "paddleRight">;
+
 class PlayerMovementsUpdater {
   gameState: GameState;
   pongTableComponent: PongTable;
@@ -11,15 +13,15 @@ class PlayerMovementsUpdater {
     this.pongTableComponent = pongTableComponent;
   }
 
-  updatePlayerMovementsRemote() {
+  updatePlayerMovementsRemote(paddleLeftOrRight: PaddleLeftOrRight) {
     const gameStateCurrent = window.store.gameStore.get();
     const gameStateNew = deepCopyObj(gameStateCurrent);
 
     const leftPaddleHasMoved = this.updatePaddleMovementsOnePaddle(
       ["ArrowUp"],
       ["ArrowDown"],
-      gameStateNew.paddleLeft,
-      gameStateCurrent.paddleLeft
+      gameStateNew[paddleLeftOrRight],
+      gameStateCurrent[paddleLeftOrRight]
     );
 
     if (leftPaddleHasMoved) {
@@ -28,11 +30,15 @@ class PlayerMovementsUpdater {
     }
 
     this.pongTableComponent.animationFrameId = requestAnimationFrame(() =>
-      this.updatePlayerMovementsLocal()
+      this.updatePlayerMovementsRemote(paddleLeftOrRight)
     );
   }
 
-  updatePlayerMovementsLocal() {
+  updatePlayerMovementsLocalPvAi(paddleLeftOrRight: PaddleLeftOrRight) {
+    return this.updatePlayerMovementsRemote(paddleLeftOrRight);
+  }
+
+  updatePlayerMovementsLocalPvP() {
     const gameStateCurrent = window.store.gameStore.get();
     const gameStateNew = deepCopyObj(gameStateCurrent);
 
@@ -53,7 +59,7 @@ class PlayerMovementsUpdater {
       // this.updateGameStateServer(gameStateNew);
     }
     this.pongTableComponent.animationFrameId = requestAnimationFrame(() =>
-      this.updatePlayerMovementsLocal()
+      this.updatePlayerMovementsLocalPvP()
     );
   }
 
@@ -110,12 +116,14 @@ class PlayerMovementsUpdater {
     }
 
     if (
-      gameStateNewPaddle.paddleY >= gameSettings.paddleMaxY && gameStateNewPaddle.paddleSpeed === 1
+      gameStateNewPaddle.paddleY >= gameSettings.paddleMaxY &&
+      gameStateNewPaddle.paddleSpeed === 1
     ) {
       gameStateNewPaddle.paddleSpeed = 0;
     }
     if (
-      gameStateNewPaddle.paddleY <= gameSettings.paddleMinY && gameStateNewPaddle.paddleSpeed === -1
+      gameStateNewPaddle.paddleY <= gameSettings.paddleMinY &&
+      gameStateNewPaddle.paddleSpeed === -1
     ) {
       gameStateNewPaddle.paddleSpeed = 0;
     }

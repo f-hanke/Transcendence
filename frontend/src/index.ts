@@ -25,13 +25,15 @@ document.addEventListener("DOMContentLoaded", () => {
     notificationState: [],
     gameState: {
       matchId: "",
-      typeOfGame: "local",
+      typeOfGame: "localPvP",
       state: "none",
       paddleLeft: {
+        playerId: "P_LEFT_PLAYER",
         paddleSpeed: 0,
         paddleY: 380,
       },
       paddleRight: {
+        playerId: "P_Right_PLAYER",
         paddleSpeed: 0,
         paddleY: 380,
       },
@@ -43,8 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
           y: 1,
         },
       },
-      height: 300,
-      width: 600,
     },
     matchmakingState: {
       ownMatch: null,
@@ -96,11 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
   appRouter.addRoute("/runMatch", "run-match");
   appRouter.addRoute("/loginPage", "login-page");
 
-  appRouter.setProtectedRoutes(
-    [
-      "user-settings",
-    ]
-  );
+  appRouter.setProtectedRoutes(["user-settings"]);
 
   document.body.appendChild(appRouter);
 });

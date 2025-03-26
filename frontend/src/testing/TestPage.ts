@@ -15,7 +15,7 @@ class TestPage extends HTMLElement {
     this.innerHTML = `
     <div class="bg-black h-full w-full">
       <!-- <match-score></match-score> -->
-      <login-page class="bg-white"></login-page>
+      <toggle-ai-button></toggle-ai-button>
       <!-- <pong-table></pong-table> -->
     </div>
 

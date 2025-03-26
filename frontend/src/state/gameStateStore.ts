@@ -1,5 +1,6 @@
+import { isDefined } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
-import { GameState, GameStateStates } from "./gameStateTypes";
+import { GameState, GameStateStates, GameTypeOfGame } from "./gameStateTypes";
 import { StoreCallback } from "./types";
 
 class GameStateStore {
@@ -22,9 +23,23 @@ class GameStateStore {
     this.updateListenersOnChange();
   }
 
-  updateGameStateState(newState: GameStateStates)
-  {
+  updateGameStateState(newState: GameStateStates) {
     this.state.state = newState;
+    this.updateListenersOnChange();
+  }
+
+  updateAssignPaddles(
+    playerLeftPaddleId: string,
+    playerRightPaddleId?: string
+  ) {
+    this.state.paddleLeft.playerId = playerLeftPaddleId;
+    if (isDefined(playerRightPaddleId))
+      this.state.paddleRight.playerId = playerRightPaddleId;
+    this.updateListenersOnChange();
+  }
+
+  updateGameStateTypeOfGame(newState: GameTypeOfGame) {
+    this.state.typeOfGame = newState;
     this.updateListenersOnChange();
   }
 

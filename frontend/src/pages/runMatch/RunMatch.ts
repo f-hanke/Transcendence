@@ -1,6 +1,3 @@
-import { colog } from "transcendence";
-import { updateBallPosition } from "../../ test";
-import { GameState } from "../../state/gameStateTypes";
 import { createHtmlElementFromString, navigateToSite } from "../../utils/utils";
 import { MatchScore } from "./MatchScore";
 

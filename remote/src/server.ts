@@ -123,7 +123,7 @@ function handleClientJoinGame(dataJson: MatchMakingTypes.ClientJoinGame) {
   ];
   sendMessageToManyClients(participants, {
     type: "startGame",
-    data: correspondingGame,
+    data: correspondingGame as MatchMakingTypes.BasicGameFull,
   });
   sendMessageToAllClientsBut(participants, {
     type: "updateOneGame",

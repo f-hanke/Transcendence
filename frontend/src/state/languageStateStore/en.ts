@@ -26,6 +26,8 @@ const en: LanguageState = {
     player2: "Player 2",
     startGame: "Start Game",
     localGameOnSame: "Local Game on same keyboard",
+    aIOrHumanBtnHuman: "Human Opponent",
+    aIOrHumanBtnAi: "AI Opponent",
   },
   userSettings: {
     userSettings: "User Settings",

@@ -12,6 +12,7 @@ import "../pages/runMatch/PongTable.ts";
 import "../pages/runMatch/MatchScore.ts";
 import "../pages/LoginPage.ts";
 import "../pages/ChangeLanguageButton.ts";
+import "../pages/matchMaking/ToggleAiButton.ts";
 import { Page } from "./types.js";
 import { createHtmlElementFromString, deepCopyObj } from "../utils/utils.ts";
 import { NotificationModal } from "../pages/NotificationModal.ts";

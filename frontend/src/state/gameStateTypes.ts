@@ -7,8 +7,11 @@ type GameStateStates =
   | "endedServerError"
   ;
 
+type GameTypeOfGame = "localPvP" | "localPvAi" | "remote";
+
 
 type Paddle =  {
+  playerId: string;
   paddleY: number;
   paddleSpeed: 0 | 1 | -1;
 };
@@ -16,7 +19,7 @@ type Paddle =  {
 type GameState = {
   matchId: string;
   state: GameStateStates;
-  typeOfGame: "local" | "remote";
+  typeOfGame: GameTypeOfGame;
   paddleLeft: Paddle;
   paddleRight: Paddle;
   ball: {
@@ -27,8 +30,6 @@ type GameState = {
       y: number;
     };
   };
-  width: number;
-  height: number;
 };
 
-export type { GameState, GameStateStates, Paddle };
+export type { GameState, GameStateStates, Paddle, GameTypeOfGame };
