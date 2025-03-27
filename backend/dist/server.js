@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendMessage = sendMessage;
 const Game_2 = require("./Game");
 const fastify_1 = __importDefault(require("fastify"));
 const path_1 = __importDefault(require("path"));
@@ -106,6 +107,7 @@ fastify.register(function (fastify) {
             clients.set(clientId, socket);
             socket.send(JSON.stringify({ message: `Hello, ${clientId}! You are connected` }));
             socket.on("message", (message) => {
+                var _a, _b;
                 const data = message.toString("utf-8");
                 const dataJson = JSON.parse(data);
                 if (transcendence_1.gameServiceTypeGuards.isClientIsReady(dataJson)) {
@@ -117,10 +119,13 @@ fastify.register(function (fastify) {
                             matchId: "whatever",
                         }
                     });
-                    // game.startGame();
-                    // gameLoop(matchId);
+                    games.get(dataJson.data.matchId).websocket = socket;
+                    (_a = games.get(dataJson.data.matchId)) === null || _a === void 0 ? void 0 : _a.startGame();
                     //if local or AI => start game
                     //if remote , wait for both
+                }
+                if (transcendence_1.gameServiceTypeGuards.isClientUpdatePaddlePosition(dataJson)) {
+                    (_b = games.get(dataJson.data.matchId)) === null || _b === void 0 ? void 0 : _b.updatePaddlePosition(dataJson.data.player1.paddleY, dataJson.data.player2.paddleY);
                 }
                 else {
                     console.log(chalk_1.default.green(` ${clientId} is NOT ready`));

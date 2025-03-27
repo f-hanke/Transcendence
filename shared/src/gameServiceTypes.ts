@@ -25,6 +25,7 @@ declare namespace GameServiceTypes {
 
   type DataClientIsReady = {
     clientId: string;
+    matchId: string;
   };
 
   type UpdatePlayerPaddle = {
@@ -229,7 +230,8 @@ function isClientIsReady(
   return (
     message?.type === "clientIsReady" &&
     message?.data &&
-    typeof message.data.clientId === "string"
+    typeof message.data.clientId === "string" &&
+    typeof message.data.matchId == "string"
   );
 }
 

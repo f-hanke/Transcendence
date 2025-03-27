@@ -13,16 +13,6 @@ class Player {
         this.paddleHeight = transcendence_1.gameSettings.paddleHeight;
         this.paddleSpeed = transcendence_1.gameSettings.paddleSpeed;
     }
-    moveUp() {
-        if (this.y > 0) {
-            this.y -= this.paddleSpeed;
-        }
-    }
-    moveDown(screenHeight) {
-        if (this.y + this.paddleHeight < screenHeight) {
-            this.y += this.paddleSpeed;
-        }
-    }
     resetScore() {
         this.score = 0;
     }

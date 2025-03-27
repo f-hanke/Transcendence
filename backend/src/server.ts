@@ -29,7 +29,7 @@ fastify.register(fastifyStatic, {
   prefix: '/',
 });
 
-function sendMessage(socket: ws.WebSocket, msg: GameServiceTypes.AllGameServiceMessageTypes): void {
+export function sendMessage(socket: ws.WebSocket, msg: GameServiceTypes.AllGameServiceMessageTypes): void {
 	socket.send(JSON.stringify(msg));
   }
 
@@ -126,7 +126,7 @@ fastify.register(async function (fastify) {
 		const dataJson = JSON.parse(data);
 		if (gameServiceTypeGuards.isClientIsReady(dataJson))
 		{
-			//dataJson.data.
+			//dataJson.data.matchId;
 			console.log(chalk.green(` ${clientId} is ready` ));
 			sendMessage(socket, {
 				type: "serverGameStarted",
@@ -135,13 +135,21 @@ fastify.register(async function (fastify) {
 				}
 			})
 
-			// game.startGame();
-			// gameLoop(matchId);
+			games.get(dataJson.data.matchId)!.websocket = socket;
+
+			games.get(dataJson.data.matchId)?.startGame();
+
 
 
 			//if local or AI => start game
 			//if remote , wait for both
 		}
+		if (gameServiceTypeGuards.isClientUpdatePaddlePosition(dataJson))
+		{
+			games.get(dataJson.data.matchId)?.updatePaddlePosition(dataJson.data.player1.paddleY, dataJson.data.player2!.paddleY);
+		}
+
+
 		else
 		{
 			console.log(chalk.green(` ${clientId} is NOT ready` ));

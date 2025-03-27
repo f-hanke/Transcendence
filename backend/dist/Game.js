@@ -5,6 +5,7 @@ exports.Game = void 0;
 const player_1 = require("./player");
 const ball_1 = require("./ball");
 const transcendence_1 = require("transcendence");
+const server_1 = require("./server");
 const { v4: uuidv4 } = require("uuid");
 class Game {
     constructor(typeOfGame, matchId, hostId, opponentId) {
@@ -12,9 +13,30 @@ class Game {
         this.gameLoop = () => {
             if (!this.isGameOver) {
                 this.update();
+                (0, server_1.sendMessage)(this.websocket, {
+                    type: "serverUpdateGameState",
+                    data: {
+                        ball: {
+                            x: this.ball.x,
+                            y: this.ball.y,
+                        },
+                        matchId: this.matchId,
+                        player1: {
+                            id: this.player1.id,
+                            paddleY: this.player1.y,
+                            score: this.player1.score,
+                        },
+                        player2: {
+                            id: this.player2.id,
+                            paddleY: this.player2.y,
+                            score: this.player2.score,
+                        }
+                    }
+                });
                 this.gameLoopId = setTimeout(this.gameLoop, 1000 / 60); // 60 FPS
             }
         };
+        this.websocket = null;
         this.matchId = matchId;
         this.typeOfGame = typeOfGame;
         this.player1 = new player_1.Player(hostId, transcendence_1.gameSettings.paddleWidth);
@@ -51,6 +73,10 @@ class Game {
         if (this.onGameOverCallback) {
             this.onGameOverCallback(reason);
         }
+    }
+    updatePaddlePosition(player1Y, player2Y) {
+        this.player1.y = player1Y;
+        this.player2.y = player2Y;
     }
     update() {
         this.ball.move(this.screenWidth, this.screenHeight);

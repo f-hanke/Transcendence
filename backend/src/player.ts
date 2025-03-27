@@ -14,25 +14,13 @@ export class Player {
 	constructor(id:string, y:number) {
 		this.id = id;
 		this.x = 10; //not correct
-		this.y = gameSettings.playerYStart; 
+		this.y = gameSettings.playerYStart;
 		this.score = 0;
 		this.paddleWidth = gameSettings.paddleWidth;
 		this.paddleHeight = gameSettings.paddleHeight;
 		this.paddleSpeed = gameSettings.paddleSpeed;
 	}
 
-
-	moveUp() {
-		if (this.y > 0) {
-		  this.y -= this.paddleSpeed;
-		}
-	  }
-
-	moveDown(screenHeight: number) {
-		if (this.y + this.paddleHeight < screenHeight) {
-		  this.y += this.paddleSpeed;
-		}
-	  }
 
 	resetScore()
 	{

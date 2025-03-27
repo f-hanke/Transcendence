@@ -2,11 +2,14 @@
 import { Player } from './player';
 import { Ball } from './ball';
 import { GameServiceTypes, gameSettings } from 'transcendence';
+import { WebSocket } from 'ws';
+import { sendMessage } from './server';
 
 const { v4: uuidv4 } = require("uuid");
 
 export class Game {
 	typeOfGame: GameServiceTypes.StaticGameProperties["typeOfGame"];
+	websocket : WebSocket | null;
     matchId: string;
 	player1: Player;
 	player2: Player;
@@ -19,6 +22,7 @@ export class Game {
 
 
 	constructor(typeOfGame: GameServiceTypes.StaticGameProperties["typeOfGame"] , matchId:string, hostId:string, opponentId:string ) {
+		this.websocket = null;
 		this.matchId = matchId;
 		this.typeOfGame = typeOfGame;
 		this.player1 = new Player(hostId, gameSettings.paddleWidth);
@@ -34,6 +38,26 @@ export class Game {
     gameLoop = () => {
         if (!this.isGameOver) {
             this.update();
+			sendMessage(this.websocket as WebSocket, {
+				type: "serverUpdateGameState",
+				data: {
+					ball:{
+						x: this.ball.x,
+						y: this.ball.y,
+					},
+					matchId: this.matchId,
+					player1:{
+						id: this.player1.id,
+						paddleY : this.player1.y,
+						score: this.player1.score,
+					},
+					player2:{
+						id: this.player2.id,
+						paddleY : this.player2.y,
+						score: this.player2.score,
+					}
+				}
+			})
             this.gameLoopId = setTimeout(this.gameLoop, 1000 / 60); // 60 FPS
         }
     };
@@ -74,6 +98,11 @@ export class Game {
 		}
     }
 
+	updatePaddlePosition(player1Y : number, player2Y : number)
+	{
+		this.player1.y = player1Y;
+		this.player2.y = player2Y;
+	}
 
 	update() {
 
