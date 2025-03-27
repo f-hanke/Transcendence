@@ -94,7 +94,7 @@ class MatchMakingInterface {
       dataJson.data.oponentId
     );
     window.store.gameStore.updateGameStateTypeOfGame("remote");
-    window.store.gameStore.updateGameStateState("waitingForServerStart");
+    window.store.gameStore.updateGameStateState("matchmakingSuccessful");
   }
 
   static handleServerUpdateOneGame(

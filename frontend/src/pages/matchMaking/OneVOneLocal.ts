@@ -38,7 +38,7 @@ class OneVOneLocal extends HTMLElement {
   }
 
   render() {
-    if (window.store.gameStore.get().state === "waitingForServerStart")
+    if (window.store.gameStore.get().state === "matchmakingSuccessful")
       navigateToSite("runMatch");
     this.innerHTML = `
       <div class="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-white p-6 rounded-lg shadow-lg">
@@ -82,7 +82,7 @@ class OneVOneLocal extends HTMLElement {
       .querySelector("#startGameBtn")
       ?.addEventListener("click", (event) => {
         this.assignPaddles();
-        window.store.gameStore.updateGameStateState("waitingForServerStart");
+        window.store.gameStore.updateGameStateState("matchmakingSuccessful");
       });
 
     const playerTwoInput = this.querySelector(

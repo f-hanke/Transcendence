@@ -1,5 +1,7 @@
 type GameStateStates =
   | "none"
+  | "matchmakingSuccessful"
+  | "waitingForClientReady"
   | "waitingForServerStart"
   | "running"
   | "endedNormally"
@@ -14,6 +16,7 @@ type Paddle =  {
   playerId: string;
   paddleY: number;
   paddleSpeed: 0 | 1 | -1;
+  score: number;
 };
 
 type GameState = {
