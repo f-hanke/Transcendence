@@ -1,4 +1,5 @@
-import { navigateToSite } from "../utils/utils";
+import { colog } from "transcendence";
+import { createHtmlElementFromString, navigateToSite } from "../utils/utils";
 
 class TestPage extends HTMLElement {
   constructor() {
@@ -6,25 +7,39 @@ class TestPage extends HTMLElement {
   }
 
   connectedCallback() {
-    this.render();
+    const modal = createHtmlElementFromString(`<central-modal>
+      <h2 class="text-xl font-bold">Confirm Action</h2>
+      <p>Are you sure you want to proceed?</p>
+    </central-modal>`);
+    this.appendChild(modal);
+    colog(modal);
+    colog(this);
+
+    this.innerHTML = `
+      <central-modal>
+        HELLO WORLD!
+        <h2 class="text-xl font-bold">Confirm Action</h2>
+        <!-- <p>Are you sure you want to proceed?</p> -->
+      </central-modal>
+    `;
+    // this.render();
   }
 
   disconnectedCallback() {}
 
   render() {
     this.innerHTML = `
-    <div class="bg-black h-full w-full">
-      <!-- <match-score></match-score> -->
-      <run-match></run-match>
-      <!-- <pong-table></pong-table> -->
-    </div>
-
-      <!-- <button id="navigateToBtn">TEST STUFF</button> -->
+      <central-modal>
+        HELLO WORLD!
+        <h2 class="text-xl font-bold">Confirm Action</h2>
+        <p>Are you sure you want to proceed?</p>
+      </central-modal>
     `;
+    // this.innerHTML = `
+    // <div class="bg-black h-full w-full">
 
-    // document.querySelector("#navigateToBtn")?.addEventListener("click", () => {
-    //   navigateToSite("matchmaking");
-    // });
+    // </div>
+    // `;
   }
 }
 

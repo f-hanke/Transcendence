@@ -5,6 +5,8 @@ declare namespace MatchMakingTypes {
     oponentId: string | null;
   };
 
+  type BasicGameFull = Omit<BasicGame, "oponentId"> & { oponentId: string };
+
   type AllMatchMakingMessageTypes =
     | ServerUpdateGames
     | ServerCancelGame
@@ -14,7 +16,7 @@ declare namespace MatchMakingTypes {
     | ClientJoinGame
     | ClientLeaveGame
     | ClientDeleteGame;
-    
+
   type ServerUpdateOneGame = {
     type: "updateOneGame";
     data: BasicGame;
@@ -32,7 +34,7 @@ declare namespace MatchMakingTypes {
 
   type ServerStartGame = {
     type: "startGame";
-    data: BasicGame;
+    data: BasicGameFull;
   };
 
   type ClientCreateGame = {
@@ -65,6 +67,12 @@ function isBasicGame(value: unknown): value is MatchMakingTypes.BasicGame {
     (typeof (value as any).oponentId === "string" ||
       (value as any).oponentId === null)
   );
+}
+
+function isBasicGameFull(
+  value: unknown
+): value is MatchMakingTypes.BasicGameFull {
+  return isBasicGame(value) && typeof (value as any).oponentId === "string";
 }
 
 function isServerUpdateOneGame(
@@ -108,7 +116,7 @@ function isServerStartGame(
     typeof value === "object" &&
     value !== null &&
     (value as any).type === "startGame" &&
-    isBasicGame((value as any).data)
+    isBasicGameFull((value as any).data)
   );
 }
 
@@ -158,6 +166,7 @@ function isClientJoinGame(
 
 const matchmakingTypeGuards = {
   isBasicGame,
+  isBasicGameFull,
   isServerUpdateOneGame,
   isServerUpdateGames,
   isServerCancelGame,

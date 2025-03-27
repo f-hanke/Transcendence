@@ -1,7 +1,5 @@
-import { SupportedLanguages } from "../state/languageStateStore/languageStateTypes";
-// import { generateUniqueId } from "transcendence";
 
-import {generateUniqueId} from "transcendence";
+import { generateUniqueId } from "transcendence";
 
 class Navbar extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -10,7 +8,6 @@ class Navbar extends HTMLElement {
     super();
     this.unsubscribeLanguage = null;
     this.unsubscribe = null;
-    // this.handleLanguageChange = this.handleLanguageChange.bind(this);
   }
 
   connectedCallback() {
@@ -107,9 +104,6 @@ class Navbar extends HTMLElement {
       </div>
     </div>
   `;
-    document
-      .querySelector("#language-select")!
-      .addEventListener("change", (event) => this.handleLanguageChange(event));
 
     document.querySelector("#querynotifyBtn")?.addEventListener("click", () => {
       window.store.notificationStore.update([
@@ -122,18 +116,14 @@ class Navbar extends HTMLElement {
     });
 
     const inputId = document.querySelector("#setIdInput") as HTMLInputElement;
-    const btnSetId = document.querySelector("#setIdButton") as HTMLButtonElement;
- 
+    const btnSetId = document.querySelector(
+      "#setIdButton"
+    ) as HTMLButtonElement;
+
     btnSetId.addEventListener("click", () => {
       const idVal = inputId.value;
       sessionStorage.setItem("transTestId", idVal);
     });
-
-  }
-
-  handleLanguageChange(event: Event) {
-    const language = (event.target as HTMLSelectElement).value;
-    window.store.languageStore.set(language as SupportedLanguages);
   }
 }
 

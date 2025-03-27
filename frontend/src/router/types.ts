@@ -1,11 +1,10 @@
 type Page =
-  | "home-page"
-  | "about-page"
   | "match-making"
   | "test-page"
   | "onevone-local"
   | "user-settings"
   | "run-match"
+  | "login-page"
   ;
 
 export type { Page };

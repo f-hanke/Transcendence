@@ -89,7 +89,12 @@ class MatchMakingInterface {
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    window.store.gameStore.updateGameStateState("waitingForServerStart");
+    window.store.gameStore.updateAssignPaddles(
+      dataJson.data.hostId,
+      dataJson.data.oponentId
+    );
+    window.store.gameStore.updateGameStateTypeOfGame("remote");
+    window.store.gameStore.updateGameStateState("matchmakingSuccessful");
   }
 
   static handleServerUpdateOneGame(

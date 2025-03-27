@@ -22,6 +22,8 @@ type LanguageState = {
   oneVOneLocal: {
     player1: string;
     player2: string;
+    aIOrHumanBtnHuman: string;
+    aIOrHumanBtnAi: string;
     startGame: string;
     localGameOnSame: string;
   },

@@ -37,7 +37,7 @@ class MatchMaking extends HTMLElement {
   render() {
     const ownMatch = window.store.matchmakingStore.get().ownMatch;
     const ownMatchOpen = isDefined(ownMatch);
-    if(window.store.gameStore.get().state === "waitingForServerStart")
+    if(window.store.gameStore.get().state === "matchmakingSuccessful")
       navigateToSite("runMatch");
     this.innerHTML = `
       <div class="p-4 w-full h-full mx-auto bg-gray-800 text-white rounded-lg shadow-lg">

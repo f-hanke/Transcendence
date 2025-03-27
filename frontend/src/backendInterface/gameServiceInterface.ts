@@ -26,6 +26,7 @@ class GameServiceInterface {
       };
 
       this.websocket.onopen = () => {
+        window.store.gameStore.updateGameStateState("waitingForClientReady");
         console.log("WebSocket connected successfully!");
         resolve();
       };
