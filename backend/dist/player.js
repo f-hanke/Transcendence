@@ -7,7 +7,7 @@ class Player {
     constructor(id, y) {
         this.id = id;
         this.x = 10; //not correct
-        this.y = transcendence_1.gameSettings.playerYStart; //not correct
+        this.y = transcendence_1.gameSettings.playerYStart;
         this.score = 0;
         this.paddleWidth = transcendence_1.gameSettings.paddleWidth;
         this.paddleHeight = transcendence_1.gameSettings.paddleHeight;

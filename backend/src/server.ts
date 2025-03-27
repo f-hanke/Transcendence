@@ -9,7 +9,7 @@ import { WebSocket } from "ws";
 import ws from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 import chalk from 'chalk';
-import { GameServiceTypes, MatchMakingTypes } from 'transcendence';
+import { gameServiceTypeGuards, GameServiceTypes, MatchMakingTypes } from 'transcendence';
 import fastifyWebsocket from '@fastify/websocket';
 import { request } from 'http';
 import { json } from 'stream/consumers';
@@ -94,18 +94,17 @@ function sendMessage(socket: ws.WebSocket, msg: GameServiceTypes.AllGameServiceM
 // 		oponentId: string | null;
 // }
 
-  fastify.post('/api/game/start', async (request, reply) => {
+fastify.post('/api/game/start', async (request, reply) => {
 
 	const message = JSON.stringify(request.body,null,2);
 	console.log(chalk.cyan.bold(message));
 	// const matchId = uuidv4();
-	const  {hostId, oponentId, matchId } = request.body as MatchMakingTypes.BasicGameFull;
+	const  {typeOfGame, hostId, oponentId, matchId } = request.body as GameServiceTypes.StaticGameProperties;
 	// request.query.clientId
-	const game = new Game("remote", matchId, hostId, oponentId );
+	const game = new Game(typeOfGame, matchId, hostId, oponentId );
 
 	games.set(matchId, game);
-	// game.startGame();
-	// gameLoop(matchId);
+
 	reply.send({ message: 'Game started!', matchId });
   });
 
@@ -120,9 +119,34 @@ fastify.register(async function (fastify) {
 
 	clients.set(clientId, socket);
 
-	socket.send(JSON.stringify({ message: `Bonjour, ${clientId}! You are connected` }));
+	socket.send(JSON.stringify({ message: `Hello, ${clientId}! You are connected` }));
+
+	socket.on("message", (message) => {
+		const data = message.toString("utf-8");
+		const dataJson = JSON.parse(data);
+		if (gameServiceTypeGuards.isClientIsReady(dataJson))
+		{
+			//dataJson.data.
+			console.log(chalk.green(` ${clientId} is ready` ));
+			sendMessage(socket, {
+				type: "serverGameStarted",
+				data: {
+					matchId: "whatever",
+				}
+			})
+
+			// game.startGame();
+			// gameLoop(matchId);
 
 
+			//if local or AI => start game
+			//if remote , wait for both
+		}
+		else
+		{
+			console.log(chalk.green(` ${clientId} is NOT ready` ));
+		}
+	})
 
 	socket.on('close', () => {
 		console.log(chalk.red(`A client with ID: ${clientId} disconnected`));;

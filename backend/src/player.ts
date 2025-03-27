@@ -14,7 +14,7 @@ export class Player {
 	constructor(id:string, y:number) {
 		this.id = id;
 		this.x = 10; //not correct
-		this.y = gameSettings.playerYStart; //not correct
+		this.y = gameSettings.playerYStart; 
 		this.score = 0;
 		this.paddleWidth = gameSettings.paddleWidth;
 		this.paddleHeight = gameSettings.paddleHeight;

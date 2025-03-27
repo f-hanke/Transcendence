@@ -6,7 +6,7 @@ import { GameServiceTypes, gameSettings } from 'transcendence';
 const { v4: uuidv4 } = require("uuid");
 
 export class Game {
-	typeOfGame: "local" | "remote";
+	typeOfGame: GameServiceTypes.StaticGameProperties["typeOfGame"];
     matchId: string;
 	player1: Player;
 	player2: Player;
@@ -18,7 +18,7 @@ export class Game {
 	onGameOverCallback: ((reason: GameServiceTypes.PossibleGameEnds) => void) | null = null;
 
 
-	constructor(typeOfGame: "local" | "remote", matchId:string, hostId:string, opponentId:string ) {
+	constructor(typeOfGame: GameServiceTypes.StaticGameProperties["typeOfGame"] , matchId:string, hostId:string, opponentId:string ) {
 		this.matchId = matchId;
 		this.typeOfGame = typeOfGame;
 		this.player1 = new Player(hostId, gameSettings.paddleWidth);

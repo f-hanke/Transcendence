@@ -85,6 +85,7 @@ function closeGamesOpenedByClient(socket: WebSocket) {
   }
 }
 
+
 function getClientIdFromQueryParam(req: MatchMakingFastifyRequest) {
   if (req?.query?.clientId) return req.query.clientId;
   const msg =

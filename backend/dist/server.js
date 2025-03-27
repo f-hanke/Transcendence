@@ -18,6 +18,7 @@ const path_1 = __importDefault(require("path"));
 const static_1 = __importDefault(require("@fastify/static"));
 const cors_1 = __importDefault(require("@fastify/cors"));
 const chalk_1 = __importDefault(require("chalk"));
+const transcendence_1 = require("transcendence");
 const websocket_1 = __importDefault(require("@fastify/websocket"));
 const fastify = (0, fastify_1.default)({ logger: true });
 const games = new Map();
@@ -89,12 +90,10 @@ fastify.post('/api/game/start', (request, reply) => __awaiter(void 0, void 0, vo
     const message = JSON.stringify(request.body, null, 2);
     console.log(chalk_1.default.cyan.bold(message));
     // const matchId = uuidv4();
-    const { hostId, oponentId, matchId } = request.body;
+    const { typeOfGame, hostId, oponentId, matchId } = request.body;
     // request.query.clientId
-    const game = new Game_2.Game("remote", matchId, hostId, oponentId);
+    const game = new Game_2.Game(typeOfGame, matchId, hostId, oponentId);
     games.set(matchId, game);
-    // game.startGame();
-    // gameLoop(matchId);
     reply.send({ message: 'Game started!', matchId });
 }));
 fastify.register(function (fastify) {
@@ -105,7 +104,28 @@ fastify.register(function (fastify) {
             const clientId = urlParams.get('clientId') || 'anonymous';
             console.log(chalk_1.default.green(`A client with ID: ${clientId} connected via WebSocket`));
             clients.set(clientId, socket);
-            socket.send(JSON.stringify({ message: `Bonjour, ${clientId}! You are connected` }));
+            socket.send(JSON.stringify({ message: `Hello, ${clientId}! You are connected` }));
+            socket.on("message", (message) => {
+                const data = message.toString("utf-8");
+                const dataJson = JSON.parse(data);
+                if (transcendence_1.gameServiceTypeGuards.isClientIsReady(dataJson)) {
+                    //dataJson.data.matchId;
+                    console.log(chalk_1.default.green(` ${clientId} is ready`));
+                    sendMessage(socket, {
+                        type: "serverGameStarted",
+                        data: {
+                            matchId: "whatever",
+                        }
+                    });
+                    // game.startGame();
+                    // gameLoop(matchId);
+                    //if local or AI => start game
+                    //if remote , wait for both
+                }
+                else {
+                    console.log(chalk_1.default.green(` ${clientId} is NOT ready`));
+                }
+            });
             socket.on('close', () => {
                 console.log(chalk_1.default.red(`A client with ID: ${clientId} disconnected`));
                 ;

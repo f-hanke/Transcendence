@@ -11,11 +11,14 @@ type GameSettings = {
   maxScore: number;
   ballSpeed: number;
   paddleSpeed: number;
+  playerYStart: number;
 };
 
 const gameSettings: GameSettings = {
   paddleWidth: 10,
   paddleHeight: 50,
+  playerYStart: -1,
+
   // without bumpers, playable field
   pongTableWidth: 800,
   pongTableHeight: 400,
@@ -35,7 +38,9 @@ gameSettings.canvasHeight =
 
 gameSettings.paddleMaxY = gameSettings.pongTableHeight + gameSettings.bumperHeight - gameSettings.paddleHeight / 2;
 gameSettings.paddleMinY = gameSettings.bumperHeight + gameSettings.paddleHeight / 2;
+gameSettings.playerYStart = ( gameSettings.paddleMaxY - gameSettings.paddleMinY ) / 2 + gameSettings.paddleMinY;
 
 export { gameSettings };
 
 export type { GameSettings };
+
