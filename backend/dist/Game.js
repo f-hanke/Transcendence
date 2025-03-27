@@ -1,12 +1,13 @@
 "use strict";
-/* Game logic */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Game = void 0;
+/* Game logic */
 const player_1 = require("./player");
 const ball_1 = require("./ball");
 const transcendence_1 = require("transcendence");
+const { v4: uuidv4 } = require("uuid");
 class Game {
-    constructor(screenWidth, screenHeight) {
+    constructor(typeOfGame, matchId, hostId, opponentId) {
         this.onGameOverCallback = null;
         this.gameLoop = () => {
             if (!this.isGameOver) {
@@ -14,8 +15,10 @@ class Game {
                 this.gameLoopId = setTimeout(this.gameLoop, 1000 / 60); // 60 FPS
             }
         };
-        this.player1 = new player_1.Player(10);
-        this.player2 = new player_1.Player(transcendence_1.gameSettings.pongTableWidth - 20);
+        this.matchId = matchId;
+        this.typeOfGame = typeOfGame;
+        this.player1 = new player_1.Player(hostId, transcendence_1.gameSettings.paddleWidth);
+        this.player2 = new player_1.Player(opponentId, transcendence_1.gameSettings.pongTableWidth - transcendence_1.gameSettings.paddleWidth);
         this.ball = new ball_1.Ball();
         this.isGameOver = true;
         this.screenWidth = transcendence_1.gameSettings.pongTableWidth;

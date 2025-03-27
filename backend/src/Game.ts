@@ -1,10 +1,13 @@
 /* Game logic */
-
 import { Player } from './player';
 import { Ball } from './ball';
 import { GameServiceTypes, gameSettings } from 'transcendence';
 
+const { v4: uuidv4 } = require("uuid");
+
 export class Game {
+	typeOfGame: "local" | "remote";
+    matchId: string;
 	player1: Player;
 	player2: Player;
 	ball: Ball;
@@ -14,9 +17,12 @@ export class Game {
 	gameLoopId: NodeJS.Timeout | null;
 	onGameOverCallback: ((reason: GameServiceTypes.PossibleGameEnds) => void) | null = null;
 
-	constructor(screenWidth: number, screenHeight: number) {
-		this.player1 = new Player(10);
-		this.player2 = new Player( gameSettings.pongTableWidth - 20);
+
+	constructor(typeOfGame: "local" | "remote", matchId:string, hostId:string, opponentId:string ) {
+		this.matchId = matchId;
+		this.typeOfGame = typeOfGame;
+		this.player1 = new Player(hostId, gameSettings.paddleWidth);
+		this.player2 = new Player(opponentId, gameSettings.pongTableWidth - gameSettings.paddleWidth);
 		this.ball = new Ball();
 		this.isGameOver = true;
 		this.screenWidth = gameSettings.pongTableWidth;

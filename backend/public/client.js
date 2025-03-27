@@ -10,15 +10,25 @@ let ballRadius = 10;
 let ballSpeedX = 3;
 let ballSpeedY = 3;
 
-const socket = new WebSocket('ws://localhost:3000/ws');
+const socket = new WebSocket('ws://localhost:3000/ws?clientId=leo123');
 
 socket.onopen = () => {
   console.log('Connected to WebSocket server');
+   const readyMessage = {
+    type : "clientIsReady",
+    data : {
+      clientId: "client123",
+    }
+  };
+  socket.send(JSON.stringify(readyMessage));
+
 };
 
 socket.onmessage = (event) => {
   const data = JSON.parse(event.data);
+
   console.log('Message from server:', event.data);
+
 
   if (data.type === 'Game started!') {
     console.log("The game has started!");
