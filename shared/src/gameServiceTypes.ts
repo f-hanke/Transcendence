@@ -222,7 +222,7 @@ function isServerError(message: any): message is GameServiceTypes.ServerError {
 
 function isClientIsReady(
   message: any
-): message is GameServiceTypes.ServerError {
+): message is GameServiceTypes.ClientIsReady {
   return (
     message?.type === "clientIsReady" &&
     message?.data &&
