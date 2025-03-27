@@ -16,9 +16,12 @@ class GameServiceInterface {
   static websocket: WebSocket | null = null;
 
   static connect(): Promise<void> {
+
+    const address = "http://10.15.204.5:3000/ws";
+
     return new Promise((resolve, reject) => {
       this.websocket = new WebSocket(
-        `ws://localhost:4000?clientId=${window.store.userStore.get().id}`
+        `${address}?clientId=${window.store.userStore.get().id}`
       );
       this.websocket.onerror = (error) => {
         console.error("WebSocket error:", error);
@@ -37,7 +40,8 @@ class GameServiceInterface {
       };
 
       this.websocket.onmessage = (event) => {
-        this.handleMessage(event);
+        jlog(event.data);
+        // this.handleMessage(event);
       };
     });
   }

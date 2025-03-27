@@ -36,6 +36,7 @@ class RunMatch extends HTMLElement {
     const gameState = window.store.gameStore.get().state;
     this.renderRunningGame();
     if (gameState === "none") navigateToSite("/");
+    
     // if (gameState === "running") {
     //  this.renderRunningGame();
     // }
