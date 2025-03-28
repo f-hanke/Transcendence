@@ -25,6 +25,7 @@ declare namespace GameServiceTypes {
 
   type DataClientIsReady = {
     clientId: string;
+    matchId: string;
   };
 
   type UpdatePlayerPaddle = {
@@ -33,10 +34,13 @@ declare namespace GameServiceTypes {
     paddleSpeed: 0 | 1 | -1;
   };
 
+
+
   type DataClientUpdatePaddlePosition = {
     matchId: string;
     player1: UpdatePlayerPaddle;
     player2: UpdatePlayerPaddle | null;
+    //ball: Ball;
   };
 
   type DataClientLeftGame = {
@@ -222,11 +226,12 @@ function isServerError(message: any): message is GameServiceTypes.ServerError {
 
 function isClientIsReady(
   message: any
-): message is GameServiceTypes.ServerError {
+): message is GameServiceTypes.ClientIsReady {
   return (
     message?.type === "clientIsReady" &&
     message?.data &&
-    typeof message.data.clientId === "string"
+    typeof message.data.clientId === "string" &&
+    typeof message.data.matchId == "string"
   );
 }
 
