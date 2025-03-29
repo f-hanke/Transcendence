@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES6",                              /* Utiliser ES6 pour le code généré */
-    "module": "commonjs",                         /* Utiliser le format de module CommonJS */
+    "target": "ESNext",                              /* Utiliser ES6 pour le code généré */
+    "module": "ESNext",                         /* Utiliser le format de module CommonJS */
+    "moduleResolution": "bundler",
     "outDir": "./dist",                           /* Dossier de sortie pour les fichiers compilés */
     "rootDir": "./src",                           /* Dossier contenant les fichiers source TypeScript */
     "esModuleInterop": true,                      /* Pour importer des modules CommonJS avec la syntaxe ES6 */
@@ -13,7 +14,7 @@
     "src/**/*.ts", "types.d.ts"                                 /* Inclure tous les fichiers .ts dans le dossier src */
   ],
   "exclude": [
-    "node_modules"                                /* Exclure le dossier node_modules */
+    "node_modules", "dist"                                /* Exclure le dossier node_modules */
   ]
 }
 

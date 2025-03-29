@@ -1,11 +1,11 @@
 /* Game logic */
-import { Player } from './player';
-import { Ball } from './ball';
+import { Player } from './player.js';
+import { Ball } from './ball.js';
 import { GameServiceTypes, gameSettings } from 'transcendence';
 import { WebSocket } from 'ws';
-import { sendMessage } from './server';
+import { sendMessage } from './server.js';
 
-const { v4: uuidv4 } = require("uuid");
+// const { v4: uuidv4 } = require("uuid");
 
 export class Game {
 	typeOfGame: GameServiceTypes.StaticGameProperties["typeOfGame"];

@@ -1,52 +1,59 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Game = void 0;
 /* Game logic */
-const player_1 = require("./player");
-const ball_1 = require("./ball");
-const transcendence_1 = require("transcendence");
-const server_1 = require("./server");
-const { v4: uuidv4 } = require("uuid");
-class Game {
+import { Player } from './player.js';
+import { Ball } from './ball.js';
+import { gameSettings } from 'transcendence';
+import { sendMessage } from './server.js';
+// const { v4: uuidv4 } = require("uuid");
+export class Game {
+    typeOfGame;
+    websocket;
+    matchId;
+    player1;
+    player2;
+    ball;
+    isGameOver;
+    screenWidth;
+    screenHeight;
+    gameLoopId;
+    onGameOverCallback = null;
     constructor(typeOfGame, matchId, hostId, opponentId) {
-        this.onGameOverCallback = null;
-        this.gameLoop = () => {
-            if (!this.isGameOver) {
-                this.update();
-                (0, server_1.sendMessage)(this.websocket, {
-                    type: "serverUpdateGameState",
-                    data: {
-                        ball: {
-                            x: this.ball.x,
-                            y: this.ball.y,
-                        },
-                        matchId: this.matchId,
-                        player1: {
-                            id: this.player1.id,
-                            paddleY: this.player1.y,
-                            score: this.player1.score,
-                        },
-                        player2: {
-                            id: this.player2.id,
-                            paddleY: this.player2.y,
-                            score: this.player2.score,
-                        }
-                    }
-                });
-                this.gameLoopId = setTimeout(this.gameLoop, 1000 / 60); // 60 FPS
-            }
-        };
         this.websocket = null;
         this.matchId = matchId;
         this.typeOfGame = typeOfGame;
-        this.player1 = new player_1.Player(hostId, transcendence_1.gameSettings.paddleWidth);
-        this.player2 = new player_1.Player(opponentId, transcendence_1.gameSettings.pongTableWidth - transcendence_1.gameSettings.paddleWidth);
-        this.ball = new ball_1.Ball();
+        this.player1 = new Player(hostId, gameSettings.paddleWidth);
+        this.player2 = new Player(opponentId, gameSettings.pongTableWidth - gameSettings.paddleWidth);
+        this.ball = new Ball();
         this.isGameOver = true;
-        this.screenWidth = transcendence_1.gameSettings.pongTableWidth;
-        this.screenHeight = transcendence_1.gameSettings.pongTableHeight;
+        this.screenWidth = gameSettings.pongTableWidth;
+        this.screenHeight = gameSettings.pongTableHeight;
         this.gameLoopId = null;
     }
+    gameLoop = () => {
+        if (!this.isGameOver) {
+            this.update();
+            sendMessage(this.websocket, {
+                type: "serverUpdateGameState",
+                data: {
+                    ball: {
+                        x: this.ball.x,
+                        y: this.ball.y,
+                    },
+                    matchId: this.matchId,
+                    player1: {
+                        id: this.player1.id,
+                        paddleY: this.player1.y,
+                        score: this.player1.score,
+                    },
+                    player2: {
+                        id: this.player2.id,
+                        paddleY: this.player2.y,
+                        score: this.player2.score,
+                    }
+                }
+            });
+            this.gameLoopId = setTimeout(this.gameLoop, 1000 / 60); // 60 FPS
+        }
+    };
     startGame() {
         if (!this.isGameOver) {
             console.log("Game already running!");
@@ -109,7 +116,7 @@ class Game {
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
             this.ball.reset();
         }
-        if (this.player1.score >= transcendence_1.gameSettings.maxScore || this.player2.score >= transcendence_1.gameSettings.maxScore) {
+        if (this.player1.score >= gameSettings.maxScore || this.player2.score >= gameSettings.maxScore) {
             //   this.isGameOver = true;
             //this.stopGame();
             this.stopGame("normalMaxScoreReached");
@@ -124,4 +131,3 @@ class Game {
         this.player2.resetPos();
     }
 }
-exports.Game = Game;

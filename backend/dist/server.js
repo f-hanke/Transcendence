@@ -1,38 +1,23 @@
-'use strict';
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendMessage = sendMessage;
-const Game_2 = require("./Game");
-const fastify_1 = __importDefault(require("fastify"));
-const path_1 = __importDefault(require("path"));
-const static_1 = __importDefault(require("@fastify/static"));
-const cors_1 = __importDefault(require("@fastify/cors"));
-const chalk_1 = __importDefault(require("chalk"));
-const transcendence_1 = require("transcendence");
-const websocket_1 = __importDefault(require("@fastify/websocket"));
-const fastify = (0, fastify_1.default)({ logger: true });
+"use strict";
+import { Game } from "./Game.js";
+import Fastify from "fastify";
+import cors from "@fastify/cors";
+// import { v4 as uuidv4 } from 'uuid';
+import chalk from "chalk";
+import { gameServiceTypeGuards, } from "transcendence";
+import fastifyWebsocket from "@fastify/websocket";
+const fastify = Fastify({ logger: true });
 const games = new Map();
 const clients = new Map();
 //const clients = new Set<ws.WebSocket>();
-fastify.register(websocket_1.default);
-fastify.register(cors_1.default, { origin: '*' });
+fastify.register(fastifyWebsocket);
+fastify.register(cors, { origin: "*" });
 //fastify.register(require('@fastify/websocket'));
-fastify.register(static_1.default, {
-    root: path_1.default.join(__dirname, '..', 'public'),
-    prefix: '/',
-});
-function sendMessage(socket, msg) {
+// fastify.register(fastifyStatic, {
+//   root: path.join(__dirname, '..', 'public'),
+//   prefix: '/',
+// });
+export function sendMessage(socket, msg) {
     socket.send(JSON.stringify(msg));
 }
 // function gameLoop(matchId : string) {
@@ -87,73 +72,76 @@ function sendMessage(socket, msg) {
 // 		hostId: string;
 // 		oponentId: string | null;
 // }
-fastify.post('/api/game/start', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
+fastify.post("/api/game/start", async (request, reply) => {
     const message = JSON.stringify(request.body, null, 2);
-    console.log(chalk_1.default.cyan.bold(message));
+    console.log(chalk.cyan.bold(message));
     // const matchId = uuidv4();
     const { typeOfGame, hostId, oponentId, matchId } = request.body;
     // request.query.clientId
-    const game = new Game_2.Game(typeOfGame, matchId, hostId, oponentId);
+    const game = new Game(typeOfGame, matchId, hostId, oponentId);
     games.set(matchId, game);
-    reply.send({ message: 'Game started!', matchId });
-}));
-fastify.register(function (fastify) {
-    return __awaiter(this, void 0, void 0, function* () {
-        fastify.get('/ws', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
-            const urlParams = new URLSearchParams(req.url.split('?')[1]);
-            console.log(req === null || req === void 0 ? void 0 : req.query);
-            const clientId = urlParams.get('clientId') || 'anonymous';
-            console.log(chalk_1.default.green(`A client with ID: ${clientId} connected via WebSocket`));
-            clients.set(clientId, socket);
-            socket.send(JSON.stringify({ message: `Hello, ${clientId}! You are connected` }));
-            socket.on("message", (message) => {
-                var _a, _b;
-                const data = message.toString("utf-8");
-                const dataJson = JSON.parse(data);
-                if (transcendence_1.gameServiceTypeGuards.isClientIsReady(dataJson)) {
-                    //dataJson.data.matchId;
-                    console.log(chalk_1.default.green(` ${clientId} is ready`));
-                    sendMessage(socket, {
-                        type: "serverGameStarted",
-                        data: {
-                            matchId: "whatever",
-                        }
-                    });
-                    games.get(dataJson.data.matchId).websocket = socket;
-                    (_a = games.get(dataJson.data.matchId)) === null || _a === void 0 ? void 0 : _a.startGame();
-                    //if local or AI => start game
-                    //if remote , wait for both
-                }
-                if (transcendence_1.gameServiceTypeGuards.isClientUpdatePaddlePosition(dataJson)) {
-                    (_b = games.get(dataJson.data.matchId)) === null || _b === void 0 ? void 0 : _b.updatePaddlePosition(dataJson.data.player1.paddleY, dataJson.data.player2.paddleY);
-                }
-                else {
-                    console.log(chalk_1.default.green(` ${clientId} is NOT ready`));
-                }
-            });
-            socket.on('close', () => {
-                console.log(chalk_1.default.red(`A client with ID: ${clientId} disconnected`));
-                ;
-                clients.delete(clientId);
-            });
+    reply.send({ message: "Game started!", matchId });
+});
+fastify.register(async function (fastify) {
+    fastify.get("/ws", { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
+        const urlParams = new URLSearchParams(req.url.split("?")[1]);
+        console.log(req?.query);
+        const clientId = urlParams.get("clientId") || "anonymous";
+        console.log(chalk.green(`A client with ID: ${clientId} connected via WebSocket`));
+        clients.set(clientId, socket);
+        //   socket.send(
+        //     JSON.stringify({ message: `Hello, ${clientId}! You are connected` })
+        //   );
+        socket.on("message", (message) => {
+            const data = message.toString("utf-8");
+            const dataJson = JSON.parse(data);
+            if (gameServiceTypeGuards.isClientIsReady(dataJson)) {
+                //dataJson.data.matchId;
+                console.log(chalk.green(` ${clientId} is ready`));
+                setTimeout(() => sendMessage(socket, {
+                    type: "serverGameStarted",
+                    data: {
+                        matchId: dataJson.data.matchId,
+                    },
+                }), 3000);
+                //   setTimeout(() => {
+                //     throw new Error("HERE");
+                //   }, 10);
+                games.get(dataJson.data.matchId).websocket = socket;
+                games.get(dataJson.data.matchId)?.startGame();
+                //if local or AI => start game
+                //if remote , wait for both
+            }
+            if (gameServiceTypeGuards.isClientUpdatePaddlePosition(dataJson)) {
+                games
+                    .get(dataJson.data.matchId)
+                    ?.updatePaddlePosition(dataJson.data.player1.paddleY, dataJson.data.player2.paddleY);
+            }
+            else {
+                console.log(chalk.green(` ${clientId} is NOT ready`));
+            }
+        });
+        socket.on("close", () => {
+            console.log(chalk.red(`A client with ID: ${clientId} disconnected`));
+            clients.delete(clientId);
         });
     });
 });
-fastify.get('/favicon.ico', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
+fastify.get("/favicon.ico", async (request, reply) => {
     reply.status(200);
     //.send();
-    reply.send({ message: 'Game started!' });
-}));
-const start = () => __awaiter(void 0, void 0, void 0, function* () {
+    reply.send({ message: "Game started!" });
+});
+const start = async () => {
     try {
-        yield fastify.listen({ port: 3000, host: "0.0.0.0" });
-        console.log(chalk_1.default.cyan.bold("Server running on http://localhost:3000"));
+        await fastify.listen({ port: 3000, host: "0.0.0.0" });
+        console.log(chalk.cyan.bold("Server running on http://localhost:3000"));
     }
     catch (err) {
         fastify.log.error(err);
         process.exit(1);
     }
-});
+};
 start();
 //   fastify.register(async function (fastify) {
 //   fastify.get('/ws', { websocket: true }, (socket, req) => {
