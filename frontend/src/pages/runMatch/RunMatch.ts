@@ -32,18 +32,13 @@ class RunMatch extends HTMLElement {
     if (this.matchScoreComponent) this.matchScoreComponent.update();
   }
 
-  render() {
+  async render() {
     const gameState = window.store.gameStore.get().state;
-    this.renderRunningGame();
     if (gameState === "none") navigateToSite("/");
-    
-    // if (gameState === "running") {
-    //  this.renderRunningGame();
-    // }
+    this.renderRunningGame();
   }
 
-  renderRunningGame()
-  {
+  renderRunningGame() {
     this.matchScoreComponent = createHtmlElementFromString(
       "<match-score></match-score>"
     ) as MatchScore;

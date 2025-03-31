@@ -16,20 +16,10 @@ class OneVOneLocalStateStore {
     };
   }
 
-  updatePlayer2Name(newPlayer2Name: string)
-  {
+  updatePlayer2Name(newPlayer2Name: string) {
     this.state.player2Name = newPlayer2Name;
     this.listeners.forEach((callback) => callback());
   }
-
-  // update(newState: OneVOneLocalState) {
-  //   if ([null, undefined, ""].includes(newState.player2Name)) {
-  //     this.state.player2Name = null;
-  //   } else {
-  //     this.state = deepCopyObj(newState);
-  //   }
-  //   this.listeners.forEach((callback) => callback());
-  // }
 
   get(): OneVOneLocalState {
     return this.state;

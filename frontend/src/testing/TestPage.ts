@@ -1,6 +1,11 @@
 import { colog, GameServiceTypes, MatchMakingTypes } from "transcendence";
-import { createHtmlElementFromString, navigateToSite } from "../utils/utils";
+import {
+  buildBackendRoute,
+  createHtmlElementFromString,
+  navigateToSite,
+} from "../utils/utils";
 import { GameServiceInterface } from "../backendInterface/gameServiceInterface";
+import { CentralModalListeners } from "../pages/CentralModalListeners";
 
 class TestPage extends HTMLElement {
   constructor() {
@@ -29,9 +34,23 @@ class TestPage extends HTMLElement {
   disconnectedCallback() {}
 
   render() {
+    const modal = createHtmlElementFromString(`<central-modal-listeners>HELLO WORLD</central-modal-listeners>`) as CentralModalListeners;
+    colog(modal);
+    this.innerHTML = "";
+    this.appendChild(modal);
+    modal.open();
+    modal.setKeyListener (
+      {
+        "Space": () => console.log("space pressed"),
+        "ArrowUp": () => console.log("space pressed"),
+        "ArrowDown": () => console.log("space pressed"),
+      }
+    );
+
     this.innerHTML = `
       <button id="testButton">SEND REQUEST</button>
       <button id="sendReady">READY</button>
+      <register-page></register-page>
       <!-- <central-modal>
         HELLO WORLD!
         <h2 class="text-xl font-bold">Confirm Action</h2>
@@ -43,28 +62,28 @@ class TestPage extends HTMLElement {
 
     // </div>
     // `;
-    //   document.querySelector("#testButton")?.addEventListener("click", () => {
-    //     colog("clicked!");
-    //     const game: MatchMakingTypes.BasicGameFull = {
-    //       hostId: "test",
-    //       oponentId: "test",
-    //       matchId: "testMatch",
-    //     }
-    //     fetch("http://10.15.204.5:3000/api/game/start", {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: JSON.stringify(game),
-    //     })
-    //       .then((response) => response.json()) // Parse JSON response
-    //       .then((data) => console.log(data)) // Handle the response data
-    //       .catch((error) => console.error("Error:", error)); // Handle errors
-    //   });
-    // }
+      // document.querySelector("#testButton")?.addEventListener("click", () => {
+      //   colog("clicked!");
+      //   const game: MatchMakingTypes.BasicGameFull = {
+      //     hostId: "test",
+      //     oponentId: "test",
+      //     matchId: "testMatch",
+      //   }
+      //   fetch("http://localhost:3000/api/game/start", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify(game),
+      //   })
+      //     .then((response) => response.json()) // Parse JSON response
+      //     .then((data) => console.log(data)) // Handle the response data
+      //     .catch((error) => console.error("Error:", error)); // Handle errors
+      // });
 
-    document.querySelector("#testButton")?.addEventListener("click", () => {
-      GameServiceInterface.connect();
+    document.querySelector("#testButton")?.addEventListener("click",async () => {
+      await GameServiceInterface.connect();
+      colog("HELLO WORLD!");
     });
 
     document.querySelector("#sendReady")?.addEventListener("click", () => {
@@ -72,6 +91,7 @@ class TestPage extends HTMLElement {
         type: "clientIsReady",
         data: {
           clientId: window.store.userStore.get().id,
+          matchId: "dsf"
         },
       });
 

@@ -25,7 +25,7 @@ const gameSettings: GameSettings = {
   // bumpers are drawn in addition to playable field
   bumperHeight: 10,
   ballRadius: 5,
-  maxScore: 7,
+  maxScore: 2,
   ballSpeed: 3,
   paddleSpeed: 3,
   canvasHeight: -1,

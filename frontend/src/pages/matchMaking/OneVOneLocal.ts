@@ -1,4 +1,4 @@
-import { colog, generateUniqueId } from "transcendence";
+import { generateUniqueId } from "transcendence";
 import { navigateToSite } from "../../utils/utils";
 
 class OneVOneLocal extends HTMLElement {
@@ -13,6 +13,7 @@ class OneVOneLocal extends HTMLElement {
   }
 
   connectedCallback() {
+    window.store.gameStore.updateMatchId(generateUniqueId());
     this.addEventListener("playerChangedTypeOfLocalGame", () => {
       this.typeOfGameChange();
     });
@@ -39,7 +40,7 @@ class OneVOneLocal extends HTMLElement {
 
   render() {
     if (window.store.gameStore.get().state === "matchmakingSuccessful")
-      navigateToSite("runMatch");
+      navigateToSite("manageMatch");
     this.innerHTML = `
       <div class="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-white p-6 rounded-lg shadow-lg">
         <h2 class="text-2xl font-bold mb-4">${

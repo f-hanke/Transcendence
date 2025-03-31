@@ -175,8 +175,6 @@ function isServerUpdateGameState(
     typeof message.data.player1.id === "string" &&
     typeof message.data.player1.score === "number" &&
     typeof message.data.player1.paddleY === "number" &&
-    typeof message.data.player1.paddleSpeed === "number" &&
-    typeof message.data.player1.paddleSpeed === "number" &&
     message.data.ball &&
     typeof message.data.ball.x === "number" &&
     typeof message.data.ball.y === "number" &&

@@ -2,6 +2,7 @@ import { GameState, Paddle } from "../../state/gameStateTypes";
 import { gameSettings, jlog } from "transcendence";
 import { deepCopyObj } from "../../utils/utils";
 import { PongTable } from "./PongTable";
+import { GameServiceInterface } from "../../backendInterface/gameServiceInterface";
 
 type PaddleLeftOrRight = Extract<keyof GameState, "paddleLeft" | "paddleRight">;
 
@@ -56,7 +57,7 @@ class PlayerMovementsUpdater {
     );
     if (leftPaddleHasMoved || rightPaddleHasMoved) {
       this.updateGameStateClient(gameStateNew);
-      // this.updateGameStateServer(gameStateNew);
+      this.updateGameStateServer(gameStateNew);
     }
     this.pongTableComponent.animationFrameId = requestAnimationFrame(() =>
       this.updatePlayerMovementsLocalPvP()
@@ -68,7 +69,22 @@ class PlayerMovementsUpdater {
   }
 
   updateGameStateServer(newGameState: GameState) {
-    // send update message to server
+    GameServiceInterface.sendMessageToServer({
+      type: "clientUpdatePaddlePosition",
+      data: {
+        matchId: newGameState.matchId,
+        player1: {
+          playerId: newGameState.paddleLeft.playerId,
+          paddleY: newGameState.paddleLeft.paddleY,
+          paddleSpeed: newGameState.paddleLeft.paddleSpeed,
+        },
+        player2: {
+          playerId: newGameState.paddleRight.playerId,
+          paddleY: newGameState.paddleRight.paddleY,
+          paddleSpeed: newGameState.paddleRight.paddleSpeed,
+        },
+      },
+    });
   }
 
   updatePaddleMovementsOnePaddle(

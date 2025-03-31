@@ -1,7 +1,7 @@
 
 import styles from "../../index.css?inline";
 
-class CentralModal extends HTMLElement {
+class CentralModalButtons extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
   okCallback: (() => void) | null = null;
   cancelCallback: (() => void) | null = null;
@@ -74,6 +74,6 @@ class CentralModal extends HTMLElement {
   }
 }
 
-customElements.define("central-modal", CentralModal);
+customElements.define("central-modal-buttons", CentralModalButtons);
 
-export { CentralModal };
+export { CentralModalButtons };

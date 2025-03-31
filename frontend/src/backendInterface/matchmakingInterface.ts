@@ -5,6 +5,7 @@ import {
   matchmakingTypeGuards,
   MatchMakingTypes,
 } from "transcendence";
+import { buildBackendRoute } from "../utils/utils";
 
 class MatchMakingInterface {
   constructor() {
@@ -14,10 +15,14 @@ class MatchMakingInterface {
   static websocket: WebSocket | null = null;
 
   static connect(): Promise<void> {
+    const address = buildBackendRoute({
+      websocketOrApi: "ws",
+      service: "matchmakingService",
+      route: "",
+      addClientIdAsQueryParam: true,
+    });
     return new Promise((resolve, reject) => {
-      this.websocket = new WebSocket(
-        `ws://localhost:3000?clientId=${window.store.userStore.get().id}`
-      );
+      this.websocket = new WebSocket(address);
       this.websocket.onerror = (error) => {
         console.error("WebSocket error:", error);
         reject(new Error("WebSocket connection failed"));

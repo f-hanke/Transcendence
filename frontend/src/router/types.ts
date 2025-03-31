@@ -3,8 +3,9 @@ type Page =
   | "test-page"
   | "onevone-local"
   | "user-settings"
-  | "run-match"
+  | "manage-match"
   | "login-page"
+  | "register-page"
   ;
 
 export type { Page };

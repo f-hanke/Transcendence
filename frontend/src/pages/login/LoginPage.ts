@@ -1,3 +1,5 @@
+import { navigateToSite } from "../../utils/utils";
+
 class LoginPage extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
   constructor() {
@@ -18,8 +20,8 @@ class LoginPage extends HTMLElement {
 
   render() {
     this.innerHTML = `
-        <div class="bg-gray-800 h-screen flex justify-center items-center">
-          <div class="p-8 rounded-lg shadow-lg">
+        <div class="bg-gray-800 h-screen flex flex-col justify-center items-center select-none">
+          <div class="p-8 rounded-lg shadow-lg w-96">
             <h2 class="text-2xl font-bold text-center mb-6">Login to Pong</h2>
             <form id="loginForm" class="space-y-4">
             <div>
@@ -37,8 +39,17 @@ class LoginPage extends HTMLElement {
             </button>
             </form>
           </div>
+          <button id="loginGoToRegister" class="w-96 bg-blue-500 text-white p-2 my-8 rounded hover:bg-blue-600">
+            Not registered?
+          </button>
         </div>
         `;
+
+    (
+      this.querySelector("#loginGoToRegister") as HTMLButtonElement
+    ).addEventListener("click", () => {
+      navigateToSite("/registerPage");
+    });
 
     document
       .querySelector("#loginForm")

@@ -8,12 +8,15 @@ import "../pages/matchMaking/OneVOneLocal.ts";
 import "../testing/TestPage.ts";
 import "../pages/UserSettings.ts";
 import "../pages/runMatch/RunMatch.ts";
+import "../pages/runMatch/ManageMatch.ts";
 import "../pages/runMatch/PongTable.ts";
 import "../pages/runMatch/MatchScore.ts";
-import "../pages/LoginPage.ts";
+import "../pages/login/LoginPage.ts";
+import "../pages/login/RegisterPage.ts";
 import "../pages/ChangeLanguageButton.ts";
 import "../pages/matchMaking/ToggleAiButton.ts";
-import "../pages/CentralModal.ts";
+import "../pages/CentralModalButtons.ts";
+import "../pages/CentralModalListeners.ts";
 import { Page } from "./types.js";
 import { createHtmlElementFromString, deepCopyObj } from "../utils/utils.ts";
 import { NotificationModal } from "../pages/NotificationModal.ts";
@@ -89,6 +92,7 @@ class AppRouter extends HTMLElement {
       }
       const element = document.createElement(route);
       if (route === "login-page") this.renderLoginPage(element);
+      else if (route === "register-page") this.renderLoginPage(element);
       else {
         this.appDiv.appendChild(element);
       }

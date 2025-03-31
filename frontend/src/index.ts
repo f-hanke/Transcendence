@@ -1,13 +1,19 @@
 // Import AppRouter component (it could be inside ./src/router.js)
 
-import { generateUniqueId } from "transcendence";
+import { colog, gameSettings, generateUniqueId, jlog } from "transcendence";
 import "./router/AppRouter.js"; // Assuming the AppRouter is inside `src/` folder
 import { AppRouter } from "./router/AppRouter.ts";
 import { Store } from "./state/store.js";
 import { exampleImage } from "./testing/exampleImage.ts";
+import { brepo } from "./utils/utils.ts";
 
 document.addEventListener("DOMContentLoaded", () => {
   // necessary to prevent page relaod when clicking on "a"-link elements
+
+  window.colog = (val: any) => colog(val);
+  window.jlog = (val: any) => jlog(val);
+  window.brepo = (val: any) => brepo(val);
+
   document.body.addEventListener("click", (event) => {
     const target = event.target as HTMLAnchorElement;
     if (
@@ -40,12 +46,8 @@ document.addEventListener("DOMContentLoaded", () => {
         score: 0,
       },
       ball: {
-        x: 200,
-        y: 100,
-        direction: {
-          x: 1,
-          y: 1,
-        },
+        x: gameSettings.playerYStart,
+        y: gameSettings.playerYStart,
       },
     },
     matchmakingState: {
@@ -87,7 +89,12 @@ document.addEventListener("DOMContentLoaded", () => {
     oneVOneLocalState: {
       player2Name: "",
     },
+    registerState: {
+      displayName: "",
+      email: "",
+    },
   });
+
 
   const appRouter = document.createElement("app-router") as AppRouter;
 
@@ -95,8 +102,9 @@ document.addEventListener("DOMContentLoaded", () => {
   appRouter.addRoute("/testpage", "test-page");
   appRouter.addRoute("/oneVOneLocal", "onevone-local");
   appRouter.addRoute("/userSettings", "user-settings");
-  appRouter.addRoute("/runMatch", "run-match");
+  appRouter.addRoute("/manageMatch", "manage-match");
   appRouter.addRoute("/loginPage", "login-page");
+  appRouter.addRoute("/registerPage", "register-page");
 
   appRouter.setProtectedRoutes(["user-settings"]);
 

@@ -3,6 +3,7 @@ import { LanguageStateStore } from "./languageStateStore/languageStateStore";
 import { MatchmakingStateStore } from "./matchmakingStateStore";
 import { NotificationStateStore } from "./notificationStateStore";
 import { OneVOneLocalStateStore } from "./oneVOneLocalStateStore";
+import { RegisterStore } from "./registerStateStore";
 import { State } from "./types";
 import { UserStateStore } from "./userStateStore";
 
@@ -13,6 +14,7 @@ class Store {
   matchmakingStore: MatchmakingStateStore;
   userStore: UserStateStore;
   oneVOneLocalStore: OneVOneLocalStateStore;
+  registerStore: RegisterStore;
   constructor(initialState: State) {
     this.gameStore = new GameStateStore(initialState.gameState);
     this.notificationStore = new NotificationStateStore(
@@ -22,20 +24,9 @@ class Store {
     this.matchmakingStore = new MatchmakingStateStore(initialState.matchmakingState);
     this.userStore = new UserStateStore(initialState.userState);
     this.oneVOneLocalStore = new OneVOneLocalStateStore(initialState.oneVOneLocalState);
+    this.registerStore = new RegisterStore(initialState.registerState);
   }
 
-  // 🆕 Async fetch function to update state
-  // async fetchState<K extends AllStateKeys>(
-  //   key: K,
-  //   fetchFunction: () => Promise<State[K]>
-  // ): Promise<void> {
-  //   try {
-  //     const data = await fetchFunction();
-  //     this.setState({ [key]: data });
-  //   } catch (error) {
-  //     console.error(`Failed to fetch ${key}:`, error);
-  //   }
-  // }
 }
 
 export { Store };

@@ -1,7 +1,8 @@
-import { isDefined } from "transcendence";
+import { GameServiceTypes, isDefined } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
 import { GameState, GameStateStates, GameTypeOfGame } from "./gameStateTypes";
 import { StoreCallback } from "./types";
+import { GameServiceInterface } from "../backendInterface/gameServiceInterface";
 
 class GameStateStore {
   listeners: Set<StoreCallback>;
@@ -43,8 +44,20 @@ class GameStateStore {
     this.updateListenersOnChange();
   }
 
+  updateBallPosition(newBall: GameServiceTypes.Ball) {
+    this.state.ball.x = newBall.x;
+    this.state.ball.y = newBall.y;
+    this.updateListenersOnChange();
+  }
+
   updateListenersOnChange() {
     this.listeners.forEach((callback) => callback());
+  }
+
+  updateMatchId(matchId: string)
+  {
+    this.state.matchId = matchId;
+    this.updateListenersOnChange();
   }
 
   get(): GameState {
