@@ -2,8 +2,9 @@ import { GameServiceTypes } from "./gameServiceTypes.js";
 import { MatchMakingTypes } from "./matchmakingTypes.js";
 import { SharedTypes } from "./sharedTypes.js";
 import { GameSettings, gameSettings } from "./gameSettings.js";
+import { AuthServiceTypes } from "./authTypes.js";
 
-export type { GameServiceTypes, MatchMakingTypes, SharedTypes, GameSettings };
+export type { AuthServiceTypes, GameServiceTypes, MatchMakingTypes, SharedTypes, GameSettings };
 
 import {
   isTypedObject,
