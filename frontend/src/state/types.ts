@@ -1,3 +1,4 @@
+import { ChatMessageState, ChatUserState } from "./chatStateTypes";
 import { GameState } from "./gameStateTypes";
 import { MatchmakingState } from "./matchmakingStateTypes";
 import { NotificationState } from "./notificationStateTypes";
@@ -12,6 +13,8 @@ interface State {
   userState: UserState;
   oneVOneLocalState: OneVOneLocalState;
   registerState: RegisterState;
+  chatMessageState: ChatMessageState;
+  chatUserState: ChatUserState;
 }
 
 type AllStateKeys = keyof State;

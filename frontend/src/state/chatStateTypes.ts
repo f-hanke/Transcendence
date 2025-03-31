@@ -1,17 +1,26 @@
-import { UserState } from "./userStateTypes";
-
-type AuthorId = string;
-
 type Message = {
   ownMessage: boolean;
   id: string;
   message: string;
+  date: string;
 };
 
-type ChatState =
-{
-  messages: Record<AuthorId, Message[]>
-  users: UserState[];
-}
+type ChatMessageState = {
+  userId: string;
+  messages: Message[];
+};
 
-export type { ChatState, Message, AuthorId };
+type ChatUser = {
+  id: string;
+  displayName: string;
+  image: string;
+  online: boolean;
+  blocked: boolean;
+  email: string;
+  lastMessage: string;
+  unreadMessages: boolean;
+};
+
+type ChatUserState = Map<string, ChatUser>;
+
+export type { ChatMessageState, Message, ChatUser, ChatUserState };

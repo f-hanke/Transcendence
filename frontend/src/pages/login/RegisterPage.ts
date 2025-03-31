@@ -27,6 +27,7 @@ class RegisterPage extends HTMLElement {
   }
 
   render() {
+    // if user is logged in, redirect to landing page
     this.innerHTML = `
       <div class="flex flex-col justify-center items-center h-screen bg-gray-800 select-none">
         <form id="registerForm" class="p-6 rounded-lg shadow-lg w-96">

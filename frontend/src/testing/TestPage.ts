@@ -48,14 +48,7 @@ class TestPage extends HTMLElement {
     );
 
     this.innerHTML = `
-      <button id="testButton">SEND REQUEST</button>
-      <button id="sendReady">READY</button>
-      <register-page></register-page>
-      <!-- <central-modal>
-        HELLO WORLD!
-        <h2 class="text-xl font-bold">Confirm Action</h2>
-        <p>Are you sure you want to proceed?</p>
-      </central-modal> -->
+      <chat-layout></chat-layout>
     `;
     // this.innerHTML = `
     // <div class="bg-black h-full w-full">

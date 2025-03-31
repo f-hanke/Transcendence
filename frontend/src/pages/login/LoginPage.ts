@@ -19,6 +19,7 @@ class LoginPage extends HTMLElement {
   }
 
   render() {
+    // if user is logged in, redirect to landing page
     this.innerHTML = `
         <div class="bg-gray-800 h-screen flex flex-col justify-center items-center select-none">
           <div class="p-8 rounded-lg shadow-lg w-96">

@@ -17,6 +17,10 @@ import "../pages/ChangeLanguageButton.ts";
 import "../pages/matchMaking/ToggleAiButton.ts";
 import "../pages/CentralModalButtons.ts";
 import "../pages/CentralModalListeners.ts";
+import "../pages/chat/ChatLayout.ts";
+import "../pages/chat/ChatCurrent.ts";
+import "../pages/chat/ChatList.ts";
+import "../pages/chat/ChatUserComponent.ts";
 import { Page } from "./types.js";
 import { createHtmlElementFromString, deepCopyObj } from "../utils/utils.ts";
 import { NotificationModal } from "../pages/NotificationModal.ts";
@@ -28,7 +32,8 @@ class AppRouter extends HTMLElement {
   protectedRoutes: Page[];
   navbarDiv: HTMLDivElement;
   appDiv: HTMLDivElement;
-  wrapperDiv: HTMLDivElement;
+  wrapperDivApp: HTMLDivElement;
+  wrapperDivLogin: HTMLDivElement;
   changeLanguageBtn: ChangeLanguageButton;
   notificationModal: NotificationModal;
   navBar: Navbar;
@@ -36,31 +41,37 @@ class AppRouter extends HTMLElement {
     super();
     this.routes = {};
     this.protectedRoutes = [];
+    this.wrapperDivLogin = createHtmlElementFromString(
+      `<div class='block w-full h-screen'></div>`
+    ) as HTMLDivElement;
     this.navbarDiv = createHtmlElementFromString(
       `<div id="navbar" class="w-1/4 h-full"></div>`
     ) as HTMLDivElement;
     this.appDiv = createHtmlElementFromString(
-      `<div id="app" class="w-3/4 h-full"></div>`
+      `<div id="app" class="block w-3/4 h-full"></div>`
     ) as HTMLDivElement;
-    this.wrapperDiv = createHtmlElementFromString(
+    this.wrapperDivApp = createHtmlElementFromString(
       `<div class="flex flex-row h-screen"></div>`
     ) as HTMLDivElement;
     this.notificationModal = document.createElement(
       "notification-modal"
     ) as NotificationModal;
     this.navBar = document.createElement("nav-bar") as Navbar;
-    this.changeLanguageBtn =
-      createHtmlElementFromString(`<change-language-button></change-language-button>`) as ChangeLanguageButton;
+    this.changeLanguageBtn = createHtmlElementFromString(
+      `<change-language-button></change-language-button>`
+    ) as ChangeLanguageButton;
   }
 
   connectedCallback() {
     this.navbarDiv.appendChild(this.navBar);
-    this.wrapperDiv.appendChild(this.navbarDiv);
-    this.wrapperDiv.appendChild(this.appDiv);
-    this.wrapperDiv.appendChild(this.changeLanguageBtn);
-    this.appendChild(this.wrapperDiv);
+    this.wrapperDivApp.appendChild(this.navbarDiv);
+    this.wrapperDivApp.appendChild(this.appDiv);
+    this.wrapperDivApp.appendChild(this.changeLanguageBtn);
+    this.appendChild(this.wrapperDivLogin);
+    this.appendChild(this.wrapperDivApp);
     this.appendChild(this.notificationModal);
     // this.innerHTML = `
+    //   <div class='block w-full h-screen'></div>
     //   <div class="flex flex-row h-screen">
     //     <div id="navbar" class="w-1/4 h-full"></div>
     //     <div id="app" class="w-3/4 h-full"></div>
@@ -84,6 +95,7 @@ class AppRouter extends HTMLElement {
     const route = this.routes[path];
 
     this.appDiv.innerHTML = "";
+    this.wrapperDivLogin.innerHTML = "";
 
     if (route) {
       if (this.protectedRoutes.includes(route)) {
@@ -91,38 +103,40 @@ class AppRouter extends HTMLElement {
         // if not valid, redirect to login page
       }
       const element = document.createElement(route);
-      if (route === "login-page") this.renderLoginPage(element);
-      else if (route === "register-page") this.renderLoginPage(element);
-      else {
-        this.appDiv.appendChild(element);
+      if (route === "login-page") {
+        this.renderLogin(element);
+      } else if (route === "register-page") {
+        this.renderLogin(element);
+      } else {
+        this.renderApp(element);
       }
     } else {
-      this.appDiv.innerHTML = "<h2>404 - Not Found</h2>";
+      const element = createHtmlElementFromString("<h2>404 - Not Found</h2>");
+      this.renderApp(element);
     }
   }
 
-  renderLoginPage(element: HTMLElement) {
-    const wrapperDiv = createHtmlElementFromString(
-      "<div class='w-full h-screen'></div>"
-    );
-    this.innerHTML = "";
-    wrapperDiv.appendChild(element);
-    this.appendChild(wrapperDiv);
+  renderApp(element: HTMLElement) {
+    if (this.wrapperDivLogin.classList.contains("block"))
+      this.wrapperDivLogin.classList.remove("block");
+    if (this.wrapperDivApp.classList.contains("hidden"))
+      this.wrapperDivApp.classList.remove("hidden");
+    this.wrapperDivLogin.classList.add("hidden");
+    this.wrapperDivApp.classList.add("block");
+    this.appDiv.appendChild(element);
+  }
+
+  renderLogin(element: HTMLElement) {
+    if (this.wrapperDivApp.classList.contains("block"))
+      this.wrapperDivApp.classList.remove("block");
+    if (this.wrapperDivLogin.classList.contains("hidden"))
+      this.wrapperDivLogin.classList.remove("hidden");
+    this.wrapperDivApp.classList.add("hidden");
+    this.wrapperDivLogin.classList.add("block");
+    this.wrapperDivLogin.appendChild(element);
   }
 }
 
 customElements.define("app-router", AppRouter);
-
-// function showNotification(message: string) {
-//   console.log("showNotification");
-//   const notification = document.createElement("notification-modal") as NotificationModal;
-//   document.body.appendChild(notification);
-//   notification.showNotification(message);
-// }
-
-// document.getElementById("notify-btn")?.addEventListener("click", () => {
-//   console.log("HI!");
-//   showNotification("This is a test notification!");
-// });
 
 export { AppRouter };
