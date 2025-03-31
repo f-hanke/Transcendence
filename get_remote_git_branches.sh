@@ -11,5 +11,5 @@ git branch --format '%(refname:short)' | while read branch; do
     git checkout $branch
     git pull
 done
-
+# git fetch --prune
 git checkout "$current_branch"
