@@ -96,9 +96,11 @@ export class Game {
             }
         });
     }
-    updatePaddlePosition(player1Y, player2Y) {
-        this.player1.y = player1Y;
-        this.player2.y = player2Y;
+    updatePaddlePosition(data) {
+        this.player1.y = data.player1.paddleY;
+        this.player1.paddleSpeed = data.player1.paddleSpeed;
+        this.player2.y = data.player2.paddleY;
+        this.player2.paddleSpeed = data.player2.paddleSpeed;
     }
     update() {
         console.log(this.ball.x);
@@ -110,15 +112,26 @@ export class Game {
         if (this.ball.x + this.ball.radius <= this.player1.x + this.player1.paddleWidth &&
             this.ball.y <= this.player1.y + this.player1.paddleHeight / 2 &&
             this.ball.y >= this.player1.y - this.player1.paddleHeight / 2) {
-            console.log("HIT LEFT PADDLE");
+            if ((this.player1.paddleSpeed > 0 && this.ball.speedY > 0)
+                || (this.player2.paddleSpeed < 0 && this.ball.speedY < 0))
+                this.ball.speedY *= 1.5;
+            if ((this.player1.paddleSpeed > 0 && this.ball.speedY < 0) ||
+                (this.player1.paddleSpeed < 0 && this.ball.speedY > 0))
+                this.ball.speedY *= 0.5;
             this.ball.speedX *= -1;
-            this.ball.x = this.player1.x + this.player1.paddleWidth + this.ball.radius;
         }
         //right player
         if (this.player2.x - this.player2.paddleWidth / 2 <= this.ball.x + this.ball.radius &&
             this.ball.y <= this.player2.y + this.player2.paddleHeight / 2 &&
             this.ball.y >= this.player2.y - this.player2.paddleHeight / 2) {
-            console.log("HIT RIGHT PADDLE");
+            // if (this.player2.paddleSpeed >= 1)
+            // 	this.ball.speedY *=
+            if ((this.player2.paddleSpeed > 0 && this.ball.speedY > 0)
+                || (this.player2.paddleSpeed < 0 && this.ball.speedY < 0))
+                this.ball.speedY *= 14.5;
+            if ((this.player2.paddleSpeed > 0 && this.ball.speedY < 0) ||
+                (this.player2.paddleSpeed < 0 && this.ball.speedY > 0))
+                this.ball.speedY *= 0.5;
             this.ball.speedX *= -1;
         }
         if (this.ball.x <= 0) {

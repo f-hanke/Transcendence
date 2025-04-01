@@ -67,7 +67,7 @@ fastify.register(async function (fastify) {
             if (gameServiceTypeGuards.isClientUpdatePaddlePosition(dataJson)) {
                 games
                     .get(dataJson.data.matchId)
-                    ?.updatePaddlePosition(dataJson.data.player1.paddleY, dataJson.data.player2.paddleY);
+                    ?.updatePaddlePosition(dataJson.data);
             }
             else {
                 console.log(chalk.green(` ${clientId} is NOT ready`));
