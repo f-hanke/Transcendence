@@ -21,6 +21,9 @@ let games: MatchMakingTypes.BasicGame[] = [];
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket>();
 
+// localhost:3000/ws?clientId=dklglsjkdg
+
+
 fastify.register(async function (fastify) {
   fastify.get("/", { websocket: true }, (socket, req) => {
     registerClient(req as MatchMakingFastifyRequest, socket);

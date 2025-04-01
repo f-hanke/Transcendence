@@ -1,6 +1,6 @@
 type Message = {
-  ownMessage: boolean;
-  id: string;
+  ownerId: boolean;
+  recipientId: string;
   message: string;
   date: string;
 };
@@ -14,6 +14,7 @@ type ChatUser = {
   id: string;
   displayName: string;
   image: string;
+  friend: boolean;
   online: boolean;
   blocked: boolean;
   email: string;
