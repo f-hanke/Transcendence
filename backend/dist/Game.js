@@ -80,6 +80,21 @@ export class Game {
         if (this.onGameOverCallback) {
             this.onGameOverCallback(reason);
         }
+        sendMessage(this.websocket, {
+            type: "serverGameIsOver",
+            data: {
+                matchId: this.matchId,
+                player1: {
+                    id: this.player1.id,
+                    score: this.player1.score,
+                },
+                player2: {
+                    id: this.player2.id,
+                    score: this.player2.score,
+                },
+                reason: "normalMaxScoreReached",
+            }
+        });
     }
     updatePaddlePosition(player1Y, player2Y) {
         this.player1.y = player1Y;
