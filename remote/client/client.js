@@ -1,28 +1,28 @@
 //sreens
-var mainMenu = document.getElementById("main-menu");
-var onlineGameMenu = document.getElementById("online-game-menu");
-var gameScreen = document.getElementById("game-screen");
+const mainMenu = document.getElementById("main-menu");
+const onlineGameMenu = document.getElementById("online-game-menu");
+const gameScreen = document.getElementById("game-screen");
 //buttons
-var onlineGameBtn = document.getElementById("online-game");
-var createGameBtn = document.getElementById("create-game");
-var backToMenuBtn = document.getElementById("back-to-menu");
-var leaveGameBtn = document.getElementById("leave-game");
-var gameList = document.getElementById("game-list");
-var currentGameID = null;
-var socket = null;
-var clientID;
+const onlineGameBtn = document.getElementById("online-game");
+const createGameBtn = document.getElementById("create-game");
+const backToMenuBtn = document.getElementById("back-to-menu");
+const leaveGameBtn = document.getElementById("leave-game");
+const gameList = document.getElementById("game-list");
+let currentGameID = null;
+let socket = null;
+let clientID;
 // Switch to online game menu
-onlineGameBtn.addEventListener("click", function () {
+onlineGameBtn.addEventListener("click", () => {
     socket = new WebSocket("ws://localhost:3000");
-    clientID = "player-".concat(Math.floor(Math.random() * 10000));
+    clientID = `player-${Math.floor(Math.random() * 10000)}`;
     mainMenu.classList.add("hidden");
     onlineGameMenu.classList.remove("hidden");
-    socket.onopen = function () {
+    socket.onopen = () => {
         console.log("Connected to server");
-        socket.send(JSON.stringify({ type: "connect", clientID: clientID }));
+        socket.send(JSON.stringify({ type: "connect", clientID }));
     };
-    socket.onmessage = function (event) {
-        var data = JSON.parse(event.data);
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
         console.log("Received Message: ", data);
         if (data.type === "updateGames") {
             updateGameList(data.games);
@@ -42,7 +42,7 @@ onlineGameBtn.addEventListener("click", function () {
     };
 });
 // Go back to main menu
-backToMenuBtn.addEventListener("click", function () {
+backToMenuBtn.addEventListener("click", () => {
     if (currentGameID) {
         socket.send(JSON.stringify({ type: "leaveGameMenu", gameID: currentGameID }));
         currentGameID = null;
@@ -55,14 +55,14 @@ backToMenuBtn.addEventListener("click", function () {
     }
 });
 // Create a new game
-createGameBtn.addEventListener("click", function () {
+createGameBtn.addEventListener("click", () => {
     currentGameID = Date.now();
-    socket.send(JSON.stringify({ type: "createGame", clientID: clientID, currentGameID: currentGameID }));
+    socket.send(JSON.stringify({ type: "createGame", clientID, currentGameID }));
 });
 // Leave a game
-leaveGameBtn.addEventListener("click", function () {
+leaveGameBtn.addEventListener("click", () => {
     if (currentGameID) {
-        socket.send(JSON.stringify({ type: "leaveGame", clientID: clientID, gameID: currentGameID }));
+        socket.send(JSON.stringify({ type: "leaveGame", clientID, gameID: currentGameID }));
         currentGameID = null;
     }
     gameScreen.classList.add("hidden");
@@ -72,7 +72,7 @@ leaveGameBtn.addEventListener("click", function () {
 function joinGame(gameID) {
     if (currentGameID)
         return;
-    socket.send(JSON.stringify({ type: "joinGame", clientID: clientID, gameID: gameID }));
+    socket.send(JSON.stringify({ type: "joinGame", clientID, gameID }));
     currentGameID = gameID;
 }
 // Start game when 2 players are in
@@ -84,22 +84,22 @@ function startGame() {
 function updateGameList(games) {
     gameList.innerHTML = "";
     createGameBtn.disabled = games.length >= 5 || currentGameID !== null;
-    games.forEach(function (game) {
-        var gameBox = document.createElement("div");
+    games.forEach(game => {
+        const gameBox = document.createElement("div");
         gameBox.classList.add("game-box");
-        gameBox.innerHTML = "<p>Game from ".concat(game.creator, "</p><p>Players: ").concat(game.players.length, "/2</p><div class=\"game-actions\"></div>");
+        gameBox.innerHTML = `<p>Game from ${game.creator}</p><p>Players: ${game.players.length}/2</p><div class="game-actions"></div>`;
         if (game.players.length < 2 && game.creator !== clientID) {
-            var joinBtn = document.createElement("button");
+            const joinBtn = document.createElement("button");
             joinBtn.textContent = "Join";
-            joinBtn.onclick = function () { return joinGame(game.id); };
+            joinBtn.onclick = () => joinGame(game.id);
             gameBox.querySelector('.game-actions').appendChild(joinBtn);
             if (currentGameID !== null)
                 joinBtn.disabled = true;
         }
         if (game.creator === clientID) {
-            var leaveBtn = document.createElement("button");
+            const leaveBtn = document.createElement("button");
             leaveBtn.textContent = "Leave";
-            leaveBtn.onclick = function () {
+            leaveBtn.onclick = () => {
                 socket.send(JSON.stringify({ type: "deleteGame", gameID: game.id }));
                 currentGameID = null;
             };
@@ -108,3 +108,4 @@ function updateGameList(games) {
         gameList.appendChild(gameBox);
     });
 }
+export {};

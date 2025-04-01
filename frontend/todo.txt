@@ -1,0 +1,13 @@
+- create simple reusable components like buttons
+- add change language optn more beautiful
+- chat page
+- login
+- user info page
+- event bus, notification service, tournament service
+
+Chat requirements:
+    - direct messages between users
+    - block users -> prevent from seeing further messages from that account
+    - invite others to play via chat interface
+    - tournament system must notify users about next game
+    - access other players profiles via chat interface 
