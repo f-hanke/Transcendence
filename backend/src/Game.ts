@@ -5,8 +5,6 @@ import { GameServiceTypes, gameSettings } from 'transcendence';
 import { WebSocket } from 'ws';
 import { sendMessage } from './server.js';
 
-// const { v4: uuidv4 } = require("uuid");
-
 export class Game {
 	typeOfGame: GameServiceTypes.StaticGameProperties["typeOfGame"];
 	websocket : WebSocket | null;
@@ -95,6 +93,7 @@ export class Game {
 		if (this.onGameOverCallback) {
 			this.onGameOverCallback(reason)
 		}
+
 		sendMessage(this.websocket as WebSocket,{
 			type : "serverGameIsOver",
 			data:{
@@ -107,7 +106,7 @@ export class Game {
 					id: this.player2.id,
 					score : this.player2.score,
 				},
-				reason : "normalMaxScoreReached",
+				reason : reason,
 				}
 			})
 		}
@@ -155,8 +154,6 @@ export class Game {
 			this.ball.y <= this.player2.y  + this.player2.paddleHeight/2 &&
 			this.ball.y >= this.player2.y - this.player2.paddleHeight/2
 		) {
-			// if (this.player2.paddleSpeed >= 1)
-			// 	this.ball.speedY *=
 			if ((this.player2.paddleSpeed > 0 && this.ball.speedY > 0)
 				|| ( this.player2.paddleSpeed < 0 && this.ball.speedY <0 ))
 				this.ball.speedY *= 14.5;
@@ -167,8 +164,6 @@ export class Game {
 			this.ball.speedX *= -1;
 
 		}
-
-
 
 
         if (this.ball.x <= 0) {
@@ -182,13 +177,9 @@ export class Game {
             this.ball.reset();
         }
 
-		if (this.player1.score >= gameSettings.maxScore || this.player2.score >= gameSettings.maxScore) {
-		//   this.isGameOver = true;
-		  //this.stopGame();
+		if (this.player1.score >= gameSettings.maxScore || this.player2.score >= gameSettings.maxScore)
 		  this.stopGame("normalMaxScoreReached");
-		}
 	  }
-
 	  resetGame()
 	  {
 		this.isGameOver = false;

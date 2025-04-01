@@ -9,10 +9,7 @@ import fastifyWebsocket from "@fastify/websocket";
 const fastify = Fastify({ logger: true });
 const games = new Map();
 const clients = new Map();
-// const clientsGames =  new Map<clientId, matchId>();
-// const clientsGames =  new Map<matchId, clients[]>();
-//  type test = string[]
-//  type test = [string, string | null]
+const clientsGames = new Map(); //clientId -> matchId
 //const clients = new Set<ws.WebSocket>();
 fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
@@ -32,6 +29,8 @@ fastify.post("/api/game/start", async (request, reply) => {
     // request.query.clientId
     const game = new Game(typeOfGame, matchId, hostId, oponentId);
     games.set(matchId, game);
+    clientsGames.set(hostId, matchId);
+    clientsGames.set(oponentId, matchId);
     reply.send({ message: "Game started!", matchId });
 });
 fastify.register(async function (fastify) {
@@ -75,7 +74,20 @@ fastify.register(async function (fastify) {
         });
         socket.on("close", () => {
             console.log(chalk.red(`A client with ID: ${clientId} disconnected`));
+            const matchId = clientsGames.get(clientId);
             clients.delete(clientId);
+            clientsGames.delete(clientId);
+            if (matchId) {
+                const game = games.get(matchId);
+                game?.stopGame("playerDisconnected");
+                if (game) {
+                    const otherPlayerId = game.player1.id === clientId ? game.player2.id : game.player1.id;
+                    //   if (clients.has(otherPlayerId)) {
+                    //sebd to other client that stayed that he won
+                    //   }
+                    games.delete(matchId);
+                }
+            }
         });
     });
 });

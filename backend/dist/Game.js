@@ -3,7 +3,6 @@ import { Player } from './player.js';
 import { Ball } from './ball.js';
 import { gameSettings } from 'transcendence';
 import { sendMessage } from './server.js';
-// const { v4: uuidv4 } = require("uuid");
 export class Game {
     typeOfGame;
     websocket;
@@ -92,7 +91,7 @@ export class Game {
                     id: this.player2.id,
                     score: this.player2.score,
                 },
-                reason: "normalMaxScoreReached",
+                reason: reason,
             }
         });
     }
@@ -124,8 +123,6 @@ export class Game {
         if (this.player2.x - this.player2.paddleWidth / 2 <= this.ball.x + this.ball.radius &&
             this.ball.y <= this.player2.y + this.player2.paddleHeight / 2 &&
             this.ball.y >= this.player2.y - this.player2.paddleHeight / 2) {
-            // if (this.player2.paddleSpeed >= 1)
-            // 	this.ball.speedY *=
             if ((this.player2.paddleSpeed > 0 && this.ball.speedY > 0)
                 || (this.player2.paddleSpeed < 0 && this.ball.speedY < 0))
                 this.ball.speedY *= 14.5;
@@ -144,11 +141,8 @@ export class Game {
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
             this.ball.reset();
         }
-        if (this.player1.score >= gameSettings.maxScore || this.player2.score >= gameSettings.maxScore) {
-            //   this.isGameOver = true;
-            //this.stopGame();
+        if (this.player1.score >= gameSettings.maxScore || this.player2.score >= gameSettings.maxScore)
             this.stopGame("normalMaxScoreReached");
-        }
     }
     resetGame() {
         this.isGameOver = false;
