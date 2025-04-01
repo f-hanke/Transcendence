@@ -1,11 +1,13 @@
 // Import AppRouter component (it could be inside ./src/router.js)
 
-import { colog, gameSettings, generateUniqueId, jlog } from "transcendence";
+import { colog, gameSettings, jlog } from "transcendence";
 import "./router/AppRouter.js"; // Assuming the AppRouter is inside `src/` folder
 import { AppRouter } from "./router/AppRouter.ts";
 import { Store } from "./state/store.js";
 import { exampleImage } from "./testing/exampleImage.ts";
 import { brepo } from "./utils/utils.ts";
+import { State } from "./state/types.ts";
+import { ChatUserState } from "./state/chatStateTypes.ts";
 
 document.addEventListener("DOMContentLoaded", () => {
   // necessary to prevent page relaod when clicking on "a"-link elements
@@ -26,8 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // console.log("DOM CONTENT LOADED!");
-  window.store = new Store({
+  const test_user_id = `userid_${sessionStorage.getItem("transTestId")}`;
+
+  const initialState: State = {
     notificationState: [],
     gameState: {
       matchId: "",
@@ -70,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
       displayName: "TEST_USER",
       friends: ["friend_1_id", "friend_2_id"],
       // id: `userid_${generateUniqueId()}`,
-      id: `userid_${sessionStorage.getItem("transTestId")}`,
+      id: test_user_id,
       email: "test@user.de",
       matchHistory: [
         {
@@ -93,8 +96,44 @@ document.addEventListener("DOMContentLoaded", () => {
       displayName: "",
       email: "",
     },
-  });
+    chatMessageState: {
+      messages: [],
+      recipientId: "safsdf",
+    },
+    chatUserState: new Map as ChatUserState,
+  };
 
+  for (let i = 0; i < 10; i++) {
+    if (i < 5) {
+      initialState.chatMessageState.messages.push({
+        authorId: test_user_id,
+        date: "25.12.2025",
+        message: "TEST MESSAGE COMING FROM USER",
+        recipientId: String(i),
+      });
+    } else {
+      initialState.chatMessageState.messages.push({
+        authorId: String(i),
+        date: "25.12.2025",
+        message: "TEST MESSAGE DIRECTED AT USER",
+        recipientId: test_user_id,
+      });
+    }
+    initialState.chatUserState.set("hello", {
+      blocked: Math.random() < 0.5,
+      friend: Math.random() < 0.5,
+      online: Math.random() < 0.5,
+      unreadMessages: Math.random() < 0.5,
+      displayName: "DisplayName",
+      recipientId: String(i),
+      email: "test@email.com",
+      image: "some BASE64 encoded string",
+      lastMessage: "This was the last message!",
+    });
+  }
+
+  // console.log("DOM CONTENT LOADED!");
+  window.store = new Store(initialState);
 
   const appRouter = document.createElement("app-router") as AppRouter;
 

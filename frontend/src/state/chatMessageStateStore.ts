@@ -1,5 +1,6 @@
+import { ChatServiceTypes } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
-import { ChatMessageState, Message } from "./chatStateTypes";
+import { ChatMessageState } from "./chatStateTypes";
 import { StoreCallback } from "./types";
 
 class ChatMessageStateStore {
@@ -26,7 +27,7 @@ class ChatMessageStateStore {
     this.listeners.forEach((callback) => callback());
   }
 
-  addMessage(newMessage: Message) {
+  addMessage(newMessage: ChatServiceTypes.Message) {
     this.state.messages.push(newMessage);
     this.updateListenersOnChange();
   }

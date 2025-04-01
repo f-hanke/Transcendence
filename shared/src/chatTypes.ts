@@ -1,9 +1,6 @@
-// user mit details, last message
-//
-
 declare namespace ChatServiceTypes {
   type Message = {
-    authorId: boolean;
+    authorId: string;
     recipientId: string;
     message: string;
     date: string;

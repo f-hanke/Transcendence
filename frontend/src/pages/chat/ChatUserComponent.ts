@@ -1,7 +1,7 @@
-import { ChatUser } from "../../state/chatStateTypes";
+import { ChatServiceTypes } from "transcendence";
 
 type ChatUserComponentData = Pick<
-  ChatUser,
+  ChatServiceTypes.ChatUser,
   "displayName" | "image" | "online" | "lastMessage" | "unreadMessages"
 >;
 
