@@ -20,8 +20,8 @@ export class Game {
         this.websocket = null;
         this.matchId = matchId;
         this.typeOfGame = typeOfGame;
-        this.player1 = new Player(hostId, gameSettings.paddleWidth);
-        this.player2 = new Player(opponentId, gameSettings.pongTableWidth - gameSettings.paddleWidth);
+        this.player1 = new Player(hostId, gameSettings.player1XStart);
+        this.player2 = new Player(opponentId, gameSettings.player2XStart);
         this.ball = new Ball();
         this.isGameOver = true;
         this.screenWidth = gameSettings.pongTableWidth;
@@ -86,25 +86,25 @@ export class Game {
         this.player2.y = player2Y;
     }
     update() {
+        console.log(this.ball.x);
         this.ball.move(this.screenWidth, this.screenHeight);
         if (this.ball.y <= 0 || this.ball.y >= this.screenHeight) {
             this.ball.speedY *= -1;
         }
         //left player
-        if (this.ball.x - this.ball.radius <= this.player1.x + this.player1.paddleWidth &&
-            this.ball.x + this.ball.radius >= this.player1.x &&
-            this.ball.y >= this.player1.y &&
-            this.ball.y <= this.player1.y + this.player1.paddleHeight) {
+        if (this.ball.x + this.ball.radius <= this.player1.x + this.player1.paddleWidth &&
+            this.ball.y <= this.player1.y + this.player1.paddleHeight / 2 &&
+            this.ball.y >= this.player1.y - this.player1.paddleHeight / 2) {
+            console.log("HIT LEFT PADDLE");
             this.ball.speedX *= -1;
             this.ball.x = this.player1.x + this.player1.paddleWidth + this.ball.radius;
         }
         //right player
-        if (this.ball.x + this.ball.radius >= this.player2.x &&
-            this.ball.x - this.ball.radius <= this.player2.x + this.player2.paddleWidth &&
-            this.ball.y >= this.player2.y &&
-            this.ball.y <= this.player2.y + this.player2.paddleHeight) {
+        if (this.player2.x - this.player2.paddleWidth / 2 <= this.ball.x + this.ball.radius &&
+            this.ball.y <= this.player2.y + this.player2.paddleHeight / 2 &&
+            this.ball.y >= this.player2.y - this.player2.paddleHeight / 2) {
+            console.log("HIT RIGHT PADDLE");
             this.ball.speedX *= -1;
-            this.ball.x = this.player2.x - this.ball.radius;
         }
         if (this.ball.x <= 0) {
             this.player2.score += 1;
