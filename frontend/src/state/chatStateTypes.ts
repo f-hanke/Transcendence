@@ -1,27 +1,10 @@
-type Message = {
-  ownerId: boolean;
-  recipientId: string;
-  message: string;
-  date: string;
-};
+import { ChatServiceTypes } from "transcendence";
 
 type ChatMessageState = {
-  userId: string;
-  messages: Message[];
-};
+    recipientId: string;
+    messages: ChatServiceTypes.Message[];
+  };
 
-type ChatUser = {
-  id: string;
-  displayName: string;
-  image: string;
-  friend: boolean;
-  online: boolean;
-  blocked: boolean;
-  email: string;
-  lastMessage: string;
-  unreadMessages: boolean;
-};
+type ChatUserState = Map<string, ChatServiceTypes.ChatUser>;
 
-type ChatUserState = Map<string, ChatUser>;
-
-export type { ChatMessageState, Message, ChatUser, ChatUserState };
+export type { ChatUserState, ChatMessageState };
