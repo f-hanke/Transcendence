@@ -74,13 +74,13 @@ export class Game {
         this.ball.reset();
 
         this.gameLoop();
-    }
+   	}
 
-    stopGame(reason: GameServiceTypes.PossibleGameEnds) {
-        // if (this.isGameOver) {
-        //     console.log("Game is already stopped!");
-        //     return;
-        // }
+	stopGame(reason: GameServiceTypes.PossibleGameEnds) {
+		if (this.isGameOver) {
+			console.log("Game is already stopped!");
+			return;
+		}
 
         this.isGameOver = true;
 
@@ -88,6 +88,7 @@ export class Game {
             clearTimeout(this.gameLoopId);
             this.gameLoopId = null;
         }
+
         console.log("Game stopped!");
 
 		if (this.onGameOverCallback) {
@@ -121,17 +122,14 @@ export class Game {
 	}
 
 
-
 	update() {
-
-		console.log(this.ball.x);
 
 		this.ball.move(this.screenWidth, this.screenHeight)
 		if (this.ball.y <= 0 || this.ball.y >= this.screenHeight) {
             this.ball.speedY *= -1;
         }
 
-			//left player
+		//left player
 		if (
 			this.ball.x + this.ball.radius <= this.player1.x + this.player1.paddleWidth &&
 			this.ball.y <= this.player1.y + this.player1.paddleHeight/2 &&
@@ -180,8 +178,10 @@ export class Game {
 		if (this.player1.score >= gameSettings.maxScore || this.player2.score >= gameSettings.maxScore)
 		  this.stopGame("normalMaxScoreReached");
 	  }
-	  resetGame()
-	  {
+
+
+	resetGame() {
+	
 		this.isGameOver = false;
 		this.ball.reset();
 		this.player1.resetScore();

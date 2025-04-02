@@ -18,23 +18,16 @@ import fastifyWebsocket from "@fastify/websocket";
 import { request } from "http";
 import { json } from "stream/consumers";
 
+
 const fastify = Fastify({ logger: true });
 const games = new Map<string, Game>();
 const clients = new Map();
-
 const clientsGames =  new Map<string, string>(); //clientId -> matchId
 
-//const clients = new Set<ws.WebSocket>();
-fastify.register(fastifyWebsocket);
 
+fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
 
-//fastify.register(require('@fastify/websocket'));
-
-// fastify.register(fastifyStatic, {
-//   root: path.join(__dirname, '..', 'public'),
-//   prefix: '/',
-// });
 
 export function sendMessage(
   socket: WebSocket,
@@ -47,17 +40,19 @@ export function sendMessage(
 fastify.post("/api/game/start", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
   console.log(chalk.cyan.bold(message));
-  // const matchId = uuidv4();
-  const { typeOfGame, hostId, oponentId, matchId } =
-    request.body as GameServiceTypes.StaticGameProperties;
-  // request.query.clientId
-  const game = new Game(typeOfGame, matchId, hostId, oponentId);
 
+  const { typeOfGame, hostId, oponentId, matchId } =
+  request.body as GameServiceTypes.StaticGameProperties;
+
+  const game = new Game(typeOfGame, matchId, hostId, oponentId);
   games.set(matchId, game);
+
   clientsGames.set(hostId, matchId);
   clientsGames.set(oponentId, matchId);
   reply.send({ message: "Game started!", matchId });
+
 });
+
 
 fastify.register(async function (fastify) {
   fastify.get(
@@ -70,18 +65,14 @@ fastify.register(async function (fastify) {
       console.log(
         chalk.green(`A client with ID: ${clientId} connected via WebSocket`)
       );
-
       clients.set(clientId, socket);
 
-      //   socket.send(
-      //     JSON.stringify({ message: `Hello, ${clientId}! You are connected` })
-      //   );
-
+      /*------------------------------------------------------------*/
       socket.on("message", (message) => {
         const data = message.toString("utf-8");
         const dataJson = JSON.parse(data);
+
         if (gameServiceTypeGuards.isClientIsReady(dataJson)) {
-          //dataJson.data.matchId;
           console.log(chalk.green(` ${clientId} is ready`));
           setTimeout(
             () =>
@@ -92,46 +83,50 @@ fastify.register(async function (fastify) {
                 },
               }),
             3000
-          );
-
-          //   setTimeout(() => {
-          //     throw new Error("HERE");
-          //   }, 10);
-
+          )
           games.get(dataJson.data.matchId)!.websocket = socket;
 
+          //if local or AI => start game
           games.get(dataJson.data.matchId)?.startGame();
 
-          //if local or AI => start game
+
           //if remote , wait for both
         }
+
+
         if (gameServiceTypeGuards.isClientUpdatePaddlePosition(dataJson)) {
           games
             .get(dataJson.data.matchId)
             ?.updatePaddlePosition(dataJson.data);
-        } else {
-          console.log(chalk.green(` ${clientId} is NOT ready`));
+        }
+
+        /*Not sure*/
+        if (gameServiceTypeGuards.isClientLeftGame(dataJson))
+        {
+          const game = games.get(dataJson.data.matchId);
+          game?.stopGame("playerLeftGame");
         }
       });
 
+      /*------------------------------------------------------------*/
       socket.on("close", () => {
-        console.log(chalk.red(`A client with ID: ${clientId} disconnected`));
-		const matchId = clientsGames.get(clientId);
 
-		clients.delete(clientId);
-		clientsGames.delete(clientId);
+      console.log(chalk.red(`A client with ID: ${clientId} disconnected`));
+	  	const matchId = clientsGames.get(clientId);
+
+	  	clients.delete(clientId);
+	  	clientsGames.delete(clientId);
 
 
-		if (matchId) {
-			const game = games.get(matchId);
-			game?.stopGame("playerDisconnected");
-			if (game) {
-			  const otherPlayerId = game.player1.id === clientId ? game.player2.id : game.player1.id;
+	  	if (matchId) {
+		  	const game = games.get(matchId);
+		  	game?.stopGame("playerDisconnected");
+		  	if (game) {
+			    const otherPlayerId = game.player1.id === clientId ? game.player2.id : game.player1.id;
 
 			//   if (clients.has(otherPlayerId)) {
 					//sebd to other client that stayed that he won
 			//   }
-
 			  games.delete(matchId);
 			}
 		  }

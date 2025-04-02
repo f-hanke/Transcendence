@@ -102,7 +102,6 @@ export class Game {
         this.player2.paddleSpeed = data.player2.paddleSpeed;
     }
     update() {
-        console.log(this.ball.x);
         this.ball.move(this.screenWidth, this.screenHeight);
         if (this.ball.y <= 0 || this.ball.y >= this.screenHeight) {
             this.ball.speedY *= -1;
