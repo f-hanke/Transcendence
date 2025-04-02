@@ -42,34 +42,36 @@ class GameServiceInterface {
   }
 
   static connect(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const address = buildBackendRoute({
-        websocketOrApi: "ws",
-        service: "gameService",
-        route: "/ws",
-        addClientIdAsQueryParam: true,
+    if (!isDefined(this.websocket)) {
+      return new Promise((resolve, reject) => {
+        const address = buildBackendRoute({
+          websocketOrApi: "ws",
+          service: "gameService",
+          route: "/ws",
+          addClientIdAsQueryParam: true,
+        });
+        this.websocket = new WebSocket(address);
+        this.websocket.onerror = (error) => {
+          console.error("WebSocket error:", error);
+          reject(new Error("WebSocket connection failed"));
+        };
+
+        this.websocket.onopen = () => {
+          window.store.gameStore.updateGameStateState("waitingForClientReady");
+          console.log("WebSocket connected successfully!");
+          resolve();
+        };
+
+        this.websocket.onclose = () => {
+          console.log("WebSocket closed!");
+          this.websocket = null;
+        };
+
+        this.websocket.onmessage = (event) => {
+          this.handleMessage(event);
+        };
       });
-      this.websocket = new WebSocket(address);
-      this.websocket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        reject(new Error("WebSocket connection failed"));
-      };
-
-      this.websocket.onopen = () => {
-        window.store.gameStore.updateGameStateState("waitingForClientReady");
-        console.log("WebSocket connected successfully!");
-        resolve();
-      };
-
-      this.websocket.onclose = () => {
-        console.log("WebSocket closed!");
-        this.websocket = null;
-      };
-
-      this.websocket.onmessage = (event) => {
-        this.handleMessage(event);
-      };
-    });
+    } else return Promise.resolve();
   }
 
   static disconnect() {

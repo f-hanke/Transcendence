@@ -1,3 +1,4 @@
+import { colog } from "transcendence";
 import { GameServiceInterface } from "../../backendInterface/gameServiceInterface";
 import { createHtmlElementFromString, navigateToSite } from "../../utils/utils";
 import { CentralModalListeners } from "../CentralModalListeners";
@@ -28,7 +29,7 @@ class ManageMatch extends HTMLElement {
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     if (this.unsubscribeGameState) this.unsubscribeGameState();
     if (window.store.gameStore.get().state === "running")
-      this.leaveGame.bind(this);
+      this.leaveGame();
   }
 
   async render() {
@@ -108,15 +109,8 @@ class ManageMatch extends HTMLElement {
   }
 
   leaveGame() {
-    window.store.gameStore.updateGameStateState("none");
-    GameServiceInterface.sendMessageToServer({
-      type: "clientLeftGame",
-      data: {
-        playerId: window.store.userStore.get().id,
-        matchId: window.store.gameStore.get().matchId,
-      },
-    });
     GameServiceInterface.disconnect();
+    window.store.gameStore.updateGameStateState("none");
   }
 }
 
