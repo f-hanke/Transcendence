@@ -5,6 +5,7 @@ import {
   isDefined,
   matchmakingTypeGuards,
   MatchMakingTypes,
+  SharedTypes,
 } from "transcendence";
 
 const fastify = Fastify();
@@ -12,13 +13,16 @@ const fastify = Fastify();
 fastify.register(fastifyWebsocket);
 
 type MatchMakingFastifyRequest = FastifyRequest<{
-  Querystring: MatchMakingTypes.ClientQueryParamMatchMaking;
+  Querystring: SharedTypes.ClientQueryParamMatchMaking;
 }>;
 
 let games: MatchMakingTypes.BasicGame[] = [];
 
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket>();
+
+// localhost:3000/ws?clientId=dklglsjkdg
+
 
 fastify.register(async function (fastify) {
   fastify.get("/", { websocket: true }, (socket, req) => {
@@ -49,6 +53,7 @@ fastify.register(async function (fastify) {
         "WebSocket closed. Client ID: ",
         socketToClientId.get(socket)
       );
+      closeGamesOpenedByClient(socket);
       unregisterClient(socket);
     });
 
@@ -72,6 +77,18 @@ function unregisterClient(socket: WebSocket) {
   console.log(" ~ Client disconnected: ", clientId);
 }
 
+function closeGamesOpenedByClient(socket: WebSocket) {
+  const clientId = socketToClientId.get(socket) as string;
+  const gameOfClient = games.find((match) => match.hostId === clientId);
+  if (isDefined(gameOfClient)) {
+    handleClientDeleteGame({
+      type: "deleteGame",
+      data: gameOfClient,
+    });
+  }
+}
+
+
 function getClientIdFromQueryParam(req: MatchMakingFastifyRequest) {
   if (req?.query?.clientId) return req.query.clientId;
   const msg =
@@ -82,7 +99,7 @@ function getClientIdFromQueryParam(req: MatchMakingFastifyRequest) {
 
 function handleClientLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
   console.log(" ~ leaveGame", dataJson.data.matchId);
-  games = games.filter((g) => g.matchId !== dataJson.data.matchId);
+  removeGameFromServerGameList(dataJson.data);
   sendMessageToAllClients({ type: "leaveGame", data: dataJson.data });
 }
 
@@ -110,7 +127,7 @@ function handleClientJoinGame(dataJson: MatchMakingTypes.ClientJoinGame) {
   ];
   sendMessageToManyClients(participants, {
     type: "startGame",
-    data: correspondingGame,
+    data: correspondingGame as MatchMakingTypes.BasicGameFull,
   });
   sendMessageToAllClientsBut(participants, {
     type: "updateOneGame",
@@ -120,7 +137,7 @@ function handleClientJoinGame(dataJson: MatchMakingTypes.ClientJoinGame) {
 
 function handleClientDeleteGame(dataJson: MatchMakingTypes.ClientDeleteGame) {
   console.log(" ~ deleteGame", dataJson.data.matchId);
-  games = games.filter((g) => g.matchId !== dataJson.data.matchId);
+  removeGameFromServerGameList(dataJson.data);
   sendMessageToAllClients({ type: "deleteGame", data: dataJson.data });
 }
 
@@ -161,6 +178,11 @@ function sendMessageToOneClient(
       ? clientIdOrSocket
       : (clientIdToSocket.get(clientIdOrSocket) as WebSocket);
   socket.send(JSON.stringify(message));
+}
+
+function removeGameFromServerGameList(game: MatchMakingTypes.BasicGame)
+{
+  games = games.filter((g) => g.matchId !== game.matchId);
 }
 
 fastify.listen({ port: 3000, host: "0.0.0.0" }, (err) => {

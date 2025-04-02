@@ -11,8 +11,10 @@ const de: LanguageState = {
     logout: "Ausloggen",
   },
   matchMaking: {
-    availableMatches: "Verfuegbare Spiele",
+    availableMatches: "Verfuegbare andere Spiele",
+    yourOwnMatchHeading: "Dein eigenes Spiel",
     createMatch: "Spiel erstellen",
+    closeMatchButton: "Spiel loeschen",
     join: "beitreten",
     match: "Spiel",
     matchMaking: "Matchmaking",
@@ -24,6 +26,8 @@ const de: LanguageState = {
     player2: "Spieler 2",
     startGame: "Spiel starten",
     localGameOnSame: "Lokales Spiel auf derselben Tastatur",
+    aIOrHumanBtnHuman: "Menschlicher Gegner",
+    aIOrHumanBtnAi: "KI-Gegner",
   },
   userSettings: {
     userSettings: "Benutzereinstellungen",

@@ -13,6 +13,8 @@ type LanguageState = {
     matchMaking: string;
     createMatch: string;
     availableMatches: string;
+    yourOwnMatchHeading: string;
+    closeMatchButton: string;
     join: string;
     noMatchesAvailable: string;
     yourMatch: string;
@@ -20,6 +22,8 @@ type LanguageState = {
   oneVOneLocal: {
     player1: string;
     player2: string;
+    aIOrHumanBtnHuman: string;
+    aIOrHumanBtnAi: string;
     startGame: string;
     localGameOnSame: string;
   },

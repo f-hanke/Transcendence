@@ -1,20 +1,34 @@
+type GameStateStates =
+  | "none"
+  | "matchmakingSuccessful"
+  | "waitingForClientReady"
+  | "waitingForServerStart"
+  | "running"
+  | "endedNormally"
+  | "endedPlayerLeft"
+  | "endedServerError"
+  ;
+
+type GameTypeOfGame = "localPvP" | "localPvAi" | "remote";
+
+
+type Paddle =  {
+  playerId: string;
+  paddleY: number;
+  paddleSpeed: 0 | 1 | -1;
+  score: number;
+};
+
 type GameState = {
-  matchId: string
-  state: "none" | "startSignaledByServer" | "started" | "endedNormally" | "endedPlayerLeft" 
-  paddleLeft: number;
-  paddleRight: number;
+  matchId: string;
+  state: GameStateStates;
+  typeOfGame: GameTypeOfGame;
+  paddleLeft: Paddle;
+  paddleRight: Paddle;
   ball: {
     x: number;
     y: number;
-    direction: {
-      x: number;
-      y: number;
-    };
   };
-  width: number;
-  height: number;
 };
 
-export type {
-  GameState
-}
+export type { GameState, GameStateStates, Paddle, GameTypeOfGame };

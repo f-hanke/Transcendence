@@ -1,36 +1,9 @@
-- Notification system with modal
-    - user online
 - create simple reusable components like buttons
-- style navbar, add change language optn
-- create game canvas etc.
-- make pages
-    - login
-    - user optns
-    - user info page
-    - chat page
-    - tournament page
-- use typescript
-- create language.json files
-
-
-- call api to initiliase game with size, p v p or p v ai
-- give id of player starting the game
-- connect to websocket
-- websocket sends initial game state
-- someone has the ball, can move paddle and then presses space to start the ball
-- game start is send to server with current paddle positions
-- server starts game, updates are send back and forth
-- server sends point scored and current score to client
-- server determines who has the ball and sends new start position
-- repeat
-- in the end, server sends game over and disconnects clients
-
-
-
-- player settings page
-- match making page
+- add change language optn more beautiful
 - chat page
-
+- login
+- user info page
+- event bus, notification service, tournament service
 
 Chat requirements:
     - direct messages between users

@@ -1,4 +1,4 @@
-import { MatchPage } from "./pages/Match";
+import { MatchPage } from "./pages/runMatch/PongTable";
 
 // Smoothly update ball position
 function updateBallPosition(matchPage: MatchPage, websocket: WebSocket) {

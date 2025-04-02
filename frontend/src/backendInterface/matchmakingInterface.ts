@@ -1,9 +1,11 @@
 import {
+  colog,
   isDefined,
   jlog,
   matchmakingTypeGuards,
   MatchMakingTypes,
 } from "transcendence";
+import { buildBackendRoute } from "../utils/utils";
 
 class MatchMakingInterface {
   constructor() {
@@ -13,10 +15,14 @@ class MatchMakingInterface {
   static websocket: WebSocket | null = null;
 
   static connect(): Promise<void> {
+    const address = buildBackendRoute({
+      websocketOrApi: "ws",
+      service: "matchmakingService",
+      route: "",
+      addClientIdAsQueryParam: true,
+    });
     return new Promise((resolve, reject) => {
-      this.websocket = new WebSocket(
-        `ws://localhost:3000?clientId=${window.store.userStore.get().id}`
-      );
+      this.websocket = new WebSocket(address);
       this.websocket.onerror = (error) => {
         console.error("WebSocket error:", error);
         reject(new Error("WebSocket connection failed"));
@@ -40,8 +46,7 @@ class MatchMakingInterface {
 
   static disconnect() {
     const ownMatch = window.store.matchmakingStore.get().ownMatch;
-    if (isDefined(ownMatch))
-    {
+    if (isDefined(ownMatch)) {
       this.sendMessageToServer({
         type: "deleteGame",
         data: ownMatch as MatchMakingTypes.BasicGame,
@@ -56,6 +61,8 @@ class MatchMakingInterface {
 
   static handleMessage(event: MessageEvent) {
     const dataJson = JSON.parse(event.data);
+    colog("CLIENT RECEIVED THE FOLLOWING MESSAGE");
+    jlog(dataJson);
     if (matchmakingTypeGuards.isServerUpdateGames(dataJson)) {
       this.handleServerUpdatedGames(dataJson);
     } else if (matchmakingTypeGuards.isClientDeleteGame(dataJson)) {
@@ -87,7 +94,12 @@ class MatchMakingInterface {
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    window.store.gameStore.updateServerSignaledStart();
+    window.store.gameStore.updateAssignPaddles(
+      dataJson.data.hostId,
+      dataJson.data.oponentId
+    );
+    window.store.gameStore.updateGameStateTypeOfGame("remote");
+    window.store.gameStore.updateGameStateState("matchmakingSuccessful");
   }
 
   static handleServerUpdateOneGame(

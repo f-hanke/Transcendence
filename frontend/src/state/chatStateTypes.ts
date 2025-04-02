@@ -1,17 +1,10 @@
-import { UserState } from "./userStateTypes";
+import { ChatServiceTypes } from "transcendence";
 
-type AuthorId = string;
+type ChatMessageState = {
+    recipientId: string;
+    messages: ChatServiceTypes.Message[];
+  };
 
-type Message = {
-  ownMessage: boolean;
-  id: string;
-  message: string;
-};
+type ChatUserState = Map<string, ChatServiceTypes.ChatUser>;
 
-type ChatState =
-{
-  messages: Record<AuthorId, Message[]>
-  users: UserState[];
-}
-
-export type { ChatState, Message, AuthorId };
+export type { ChatUserState, ChatMessageState };

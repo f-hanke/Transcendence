@@ -11,8 +11,10 @@ const en: LanguageState = {
     logout: "Logout",
   },
   matchMaking: {
-    availableMatches: "Available Matches",
+    availableMatches: "Available Matches of other",
+    yourOwnMatchHeading: "Your own match",
     createMatch: "Create Match",
+    closeMatchButton: "Close Match",
     join: "join",
     match: "Match",
     matchMaking: "Matchmaking",
@@ -24,6 +26,8 @@ const en: LanguageState = {
     player2: "Player 2",
     startGame: "Start Game",
     localGameOnSame: "Local Game on same keyboard",
+    aIOrHumanBtnHuman: "Human Opponent",
+    aIOrHumanBtnAi: "AI Opponent",
   },
   userSettings: {
     userSettings: "User Settings",

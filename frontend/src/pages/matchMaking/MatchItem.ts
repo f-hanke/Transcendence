@@ -8,6 +8,7 @@ class MatchItem extends HTMLElement {
   oponentName: string | null;
   matchId: string | null;
   renderJoin: "0" | "1" | null;
+  matchIsRunning: "0" | "1" | null;
 
   constructor() {
     super();
@@ -17,6 +18,7 @@ class MatchItem extends HTMLElement {
     this.oponentName = null;
     this.matchId = null;
     this.renderJoin = null;
+    this.matchIsRunning = null;
   }
 
   static get observedAttributes() {
@@ -27,6 +29,7 @@ class MatchItem extends HTMLElement {
       "oponentName",
       "matchId",
       "renderJoin",
+      "matchIsRunning",
     ];
   }
 
@@ -43,6 +46,7 @@ class MatchItem extends HTMLElement {
     this.oponentName = this.getAttribute("oponentName");
     this.matchId = this.getAttribute("matchId");
     this.renderJoin = this.getAttribute("renderJoin") as "0" | "1" | null;
+    this.matchIsRunning = this.getAttribute("matchIsRunning") as "0" | "1" | null;
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -52,12 +56,14 @@ class MatchItem extends HTMLElement {
     if (name === "oponentName") this[name] = newValue;
     if (name === "matchId") this[name] = newValue;
     if (name === "renderJoin") this[name] = newValue as "1" | "0";
+    if (name === "matchIsRunning") this[name] = newValue as "1" | "0";
     if (
       isDefined("hostId") &&
       isDefined("hostName") &&
       isDefined("oponentId") &&
       isDefined("oponentName") &&
       isDefined("matchId") &&
+      isDefined("matchIsRunning") &&
       isDefined("renderJoin")
     )
       this.render();
@@ -88,6 +94,13 @@ class MatchItem extends HTMLElement {
                 </button>`
               : ""
           }
+          ${
+            this.matchIsRunning === "1"
+            ? `<div class="relative top-0 right-0 h-full bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">
+                Game Running
+              </div>`
+            : ""
+          }
         </li>
       `;
     const joinButton = this.querySelector(".join-match-btn");
@@ -103,7 +116,7 @@ class MatchItem extends HTMLElement {
       data: {
         matchId: this.matchId as string,
         hostId: this.hostId as string,
-        oponentId: null,
+        oponentId: window.store.userStore.get().id,
       },
     });
   }

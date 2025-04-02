@@ -1,7 +1,5 @@
-import { SupportedLanguages } from "../state/languageStateStore/languageStateTypes";
-// import { generateUniqueId } from "transcendence";
 
-import {generateUniqueId} from "transcendence";
+import { generateUniqueId } from "transcendence";
 
 class Navbar extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -10,7 +8,6 @@ class Navbar extends HTMLElement {
     super();
     this.unsubscribeLanguage = null;
     this.unsubscribe = null;
-    // this.handleLanguageChange = this.handleLanguageChange.bind(this);
   }
 
   connectedCallback() {
@@ -29,10 +26,10 @@ class Navbar extends HTMLElement {
   render() {
     this.innerHTML = `
     <div class="h-full bg-gray-800 text-white shadow-lg flex flex-col">
-      <div class="p-4 flex items-center space-x-3 border-b border-gray-700">
+      <div class="p-4 flex flex-col items-center space-x-3 border-b border-gray-700">
         <img src="${
           window.store.userStore.get().image
-        }" alt="Profile" class="w-20 h-20 rounded-full" />
+        }" alt="Profile" class="w-32 h-32 rounded-full" />
         <div>
           <a href="/profile" class="text-lg font-semibold hover:underline">${
             window.store.userStore.get().displayName
@@ -72,27 +69,20 @@ class Navbar extends HTMLElement {
           <li>
             <a href="/testpage" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ Testpage</a>
           </li>
+          <li>
+            <a href="/loginPage" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ Login</a>
+          </li>
+          <li>
+            <a href="/registerPage" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ Register</a>
+          </li>
           <li>${window.store.userStore.get().id}</li>
+          <li>
+            <input id="setIdInput" class="text-black" type="text">
+            <button id="setIdButton">SET ID</button>
+          </li>
         </ul>
       </nav>
-
-      <div class="p-4 border-t border-gray-700">
-        <label for="language-select" class="text-sm text-gray-300">Language</label>
-        <select id="language-select" class="mt-2 p-2 w-full bg-gray-600 text-white rounded-md">
-          <option value="en" ${
-            window.store.languageStore.getSelectedLanguage() === "en"
-              ? "selected"
-              : ""
-          }>English</option>
-          <option value="de" ${
-            window.store.languageStore.getSelectedLanguage() === "de"
-              ? "selected"
-              : ""
-          }>Deutsch</option>
-          <!-- Add more languages here -->
-        </select>
-      </div>
-
+      
       <button id="querynotifyBtn" class="w-full p-2 bg-red-600 rounded-lg hover:bg-red-700">
             🚪 notify
         </button>
@@ -103,9 +93,6 @@ class Navbar extends HTMLElement {
       </div>
     </div>
   `;
-    document
-      .querySelector("#language-select")!
-      .addEventListener("change", (event) => this.handleLanguageChange(event));
 
     document.querySelector("#querynotifyBtn")?.addEventListener("click", () => {
       window.store.notificationStore.update([
@@ -116,11 +103,16 @@ class Navbar extends HTMLElement {
         },
       ]);
     });
-  }
 
-  handleLanguageChange(event: Event) {
-    const language = (event.target as HTMLSelectElement).value;
-    window.store.languageStore.set(language as SupportedLanguages);
+    const inputId = document.querySelector("#setIdInput") as HTMLInputElement;
+    const btnSetId = document.querySelector(
+      "#setIdButton"
+    ) as HTMLButtonElement;
+
+    btnSetId.addEventListener("click", () => {
+      const idVal = inputId.value;
+      sessionStorage.setItem("transTestId", idVal);
+    });
   }
 }
 

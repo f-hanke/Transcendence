@@ -1,6 +1,8 @@
+import { GameServiceTypes, isDefined } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
-import { GameState } from "./gameStateTypes";
+import { GameState, GameStateStates, GameTypeOfGame } from "./gameStateTypes";
 import { StoreCallback } from "./types";
+import { GameServiceInterface } from "../backendInterface/gameServiceInterface";
 
 class GameStateStore {
   listeners: Set<StoreCallback>;
@@ -19,12 +21,43 @@ class GameStateStore {
 
   update(newState: GameState) {
     this.state = deepCopyObj(newState);
+    this.updateListenersOnChange();
+  }
+
+  updateGameStateState(newState: GameStateStates) {
+    this.state.state = newState;
+    this.updateListenersOnChange();
+  }
+
+  updateAssignPaddles(
+    playerLeftPaddleId: string,
+    playerRightPaddleId?: string
+  ) {
+    this.state.paddleLeft.playerId = playerLeftPaddleId;
+    if (isDefined(playerRightPaddleId))
+      this.state.paddleRight.playerId = playerRightPaddleId;
+    this.updateListenersOnChange();
+  }
+
+  updateGameStateTypeOfGame(newState: GameTypeOfGame) {
+    this.state.typeOfGame = newState;
+    this.updateListenersOnChange();
+  }
+
+  updateBallPosition(newBall: GameServiceTypes.Ball) {
+    this.state.ball.x = newBall.x;
+    this.state.ball.y = newBall.y;
+    this.updateListenersOnChange();
+  }
+
+  updateListenersOnChange() {
     this.listeners.forEach((callback) => callback());
   }
 
-  updateServerSignaledStart() {
-    this.state.state = "startSignaledByServer";
-    this.listeners.forEach((callback) => callback());
+  updateMatchId(matchId: string)
+  {
+    this.state.matchId = matchId;
+    this.updateListenersOnChange();
   }
 
   get(): GameState {

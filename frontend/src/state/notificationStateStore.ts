@@ -1,5 +1,5 @@
 import { deepCopyObj } from "../utils/utils";
-import { NotificationState } from "./notificationStateTypes";
+import { Notification, NotificationState } from "./notificationStateTypes";
 import { StoreCallback } from "./types";
 
 class NotificationStateStore {
@@ -19,6 +19,12 @@ class NotificationStateStore {
 
   update(newState: NotificationState) {
     this.state = deepCopyObj(newState);
+    this.listeners.forEach((callback) => callback());
+  }
+
+  updateAddNotification(notification: Notification)
+  {
+    this.state.push(deepCopyObj(notification));
     this.listeners.forEach((callback) => callback());
   }
 
