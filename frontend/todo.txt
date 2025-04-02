@@ -11,3 +11,9 @@ Chat requirements:
     - invite others to play via chat interface
     - tournament system must notify users about next game
     - access other players profiles via chat interface 
+
+
+- reset game state to start position before starting any game in frontend
+- call create game api only once when playing remote games
+- oponent ip etc. doesn't get send correctly when creating remote game
+- generally set up remote game, correctly update player paddle positions etc.

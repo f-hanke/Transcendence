@@ -39,13 +39,13 @@ document.addEventListener("DOMContentLoaded", () => {
       paddleLeft: {
         playerId: "P_LEFT_PLAYER",
         paddleSpeed: 0,
-        paddleY: 380,
+        paddleY: gameSettings.playerYStart,
         score: 0,
       },
       paddleRight: {
         playerId: "P_Right_PLAYER",
         paddleSpeed: 0,
-        paddleY: 380,
+        paddleY: gameSettings.playerYStart,
         score: 0,
       },
       ball: {
