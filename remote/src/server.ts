@@ -5,6 +5,7 @@ import {
   isDefined,
   matchmakingTypeGuards,
   MatchMakingTypes,
+  portSettings,
   SharedTypes,
 } from "transcendence";
 
@@ -185,7 +186,7 @@ function removeGameFromServerGameList(game: MatchMakingTypes.BasicGame)
   games = games.filter((g) => g.matchId !== game.matchId);
 }
 
-fastify.listen({ port: 3000, host: "0.0.0.0" }, (err) => {
+fastify.listen({ port: portSettings.matchmakingService, host: "0.0.0.0" }, (err) => {
   if (err) {
     console.log("Server Error!");
     fastify.log.error(err);

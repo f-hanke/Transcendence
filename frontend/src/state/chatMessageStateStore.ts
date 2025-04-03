@@ -6,9 +6,36 @@ import { StoreCallback } from "./types";
 class ChatMessageStateStore {
   listeners: Set<StoreCallback>;
   state: ChatMessageState;
-  constructor(initialState: ChatMessageState) {
-    this.state = initialState;
+  constructor() {
+    this.state = this.init();
     this.listeners = new Set<StoreCallback>();
+  }
+
+  init() {
+    this.state = {
+      messages: [],
+      recipientId: "",
+    };
+
+    for (let i = 0; i < 10; i++) {
+      if (i < 5) {
+        this.state.messages.push({
+          authorId: window.store.userStore.get().id,
+          date: "25.12.2025",
+          message: "TEST MESSAGE COMING FROM USER",
+          recipientId: String(i),
+        });
+      } else {
+        this.state.messages.push({
+          authorId: String(i),
+          date: "25.12.2025",
+          message: "TEST MESSAGE DIRECTED AT USER",
+          recipientId: window.store.userStore.get().id,
+        });
+      }
+    }
+
+    return this.state;
   }
 
   subscribe(callback: StoreCallback): () => void {

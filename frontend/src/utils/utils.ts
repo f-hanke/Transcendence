@@ -1,4 +1,4 @@
-import { isDefined } from "transcendence";
+import {  isDefined, portSettings } from "transcendence";
 import { RouteBuilder } from "./utilsTypes";
 
 function deepCopyObj<T extends object>(obj: T): T {
@@ -43,13 +43,16 @@ function buildBackendRoute(optn: {
   let port;
   switch (optn.service) {
     case "gameService":
-      port = import.meta.env.VITE_PORT_GAME_SERVICE;
+      // port = import.meta.env.VITE_PORT_GAME_SERVICE;
+      port = portSettings.gameService;
       break;
     case "matchmakingService":
-      port = import.meta.env.VITE_PORT_MATCHMAKING_SERVICE;
+      // port = import.meta.env.VITE_PORT_MATCHMAKING_SERVICE;
+      port = portSettings.matchmakingService;
       break;
     case "chatService":
-      port = import.meta.env.VITE_PORT_CHAT_SERVICE;
+      // port = import.meta.env.VITE_PORT_CHAT_SERVICE;
+      port = portSettings.chatService;
       break;
   }
   if (optn.addClientIdAsQueryParam === true) {

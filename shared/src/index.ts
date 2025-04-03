@@ -4,6 +4,8 @@ import { SharedTypes } from "./sharedTypes.js";
 import { GameSettings, gameSettings } from "./gameSettings.js";
 import { AuthServiceTypes } from "./authTypes.js";
 import { ChatServiceTypes } from "./chatTypes.js";
+import { PortSettings, portSettings } from "./portSettings.js";
+
 
 export type {
   AuthServiceTypes,
@@ -12,6 +14,7 @@ export type {
   SharedTypes,
   GameSettings,
   ChatServiceTypes,
+  PortSettings,
 };
 
 import {
@@ -33,4 +36,5 @@ export {
   jlog,
   gameServiceTypeGuards,
   gameSettings,
+  portSettings,
 };

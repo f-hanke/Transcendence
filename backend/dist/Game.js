@@ -66,10 +66,10 @@ export class Game {
         this.gameLoop();
     }
     stopGame(reason) {
-        // if (this.isGameOver) {
-        //     console.log("Game is already stopped!");
-        //     return;
-        // }
+        if (this.isGameOver) {
+            console.log("Game is already stopped!");
+            return;
+        }
         this.isGameOver = true;
         if (this.gameLoopId) {
             clearTimeout(this.gameLoopId);

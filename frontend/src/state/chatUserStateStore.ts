@@ -6,9 +6,29 @@ import { StoreCallback } from "./types";
 class ChatUserStateStore {
   listeners: Set<StoreCallback>;
   state: ChatUserState;
-  constructor(initialState: ChatUserState) {
-    this.state = initialState;
+  constructor() {
+    this.state = this.init();
     this.listeners = new Set<StoreCallback>();
+  }
+
+  init(){
+    this.state = new Map as ChatUserState;
+
+    for (let i = 0; i < 10; i++) {
+      this.state.set(`user_${i}`, {
+        blocked: Math.random() < 0.5,
+        friend: Math.random() < 0.5,
+        online: Math.random() < 0.5,
+        unreadMessages: Math.random() < 0.5,
+        displayName: "DisplayName",
+        recipientId: String(i),
+        email: "test@email.com",
+        image: "some BASE64 encoded string",
+        lastMessage: "This was the last message!",
+      });
+    }
+
+    return this.state;
   }
 
   subscribe(callback: StoreCallback): () => void {

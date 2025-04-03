@@ -17,3 +17,4 @@ Chat requirements:
 - call create game api only once when playing remote games
 - oponent ip etc. doesn't get send correctly when creating remote game
 - generally set up remote game, correctly update player paddle positions etc.
+- use values from game settings for paddle x position

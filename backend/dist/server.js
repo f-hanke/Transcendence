@@ -4,7 +4,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 // import { v4 as uuidv4 } from 'uuid';
 import chalk from "chalk";
-import { gameServiceTypeGuards, } from "transcendence";
+import { gameServiceTypeGuards, portSettings, } from "transcendence";
 import fastifyWebsocket from "@fastify/websocket";
 const fastify = Fastify({ logger: true });
 const games = new Map();
@@ -87,8 +87,8 @@ fastify.get("/favicon.ico", async (request, reply) => {
 });
 const start = async () => {
     try {
-        await fastify.listen({ port: 3000, host: "0.0.0.0" });
-        console.log(chalk.cyan.bold("Server running on http://localhost:3000"));
+        await fastify.listen({ port: portSettings.gameService, host: "0.0.0.0" });
+        console.log(chalk.cyan.bold(`Server running on http://localhost:${portSettings.gameService}`));
     }
     catch (err) {
         fastify.log.error(err);

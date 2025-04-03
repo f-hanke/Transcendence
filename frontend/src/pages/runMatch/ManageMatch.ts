@@ -36,16 +36,16 @@ class ManageMatch extends HTMLElement {
     const gameState = window.store.gameStore.get().state;
     if (gameState === "none") navigateToSite("/");
     if (gameState === "matchmakingSuccessful") {
+      window.store.gameStore.updateGameStateState("waitingForClientReady");
       await GameServiceInterface.createMatchOnServer({
         typeOfGame: window.store.gameStore.get().typeOfGame,
         matchId: window.store.gameStore.get().matchId,
         hostId: window.store.userStore.get().id,
         oponentId: window.store.oneVOneLocalStore.get().player2Name,
       });
-      await GameServiceInterface.connect();
-      window.store.gameStore.updateGameStateState("waitingForClientReady");
     }
     if (gameState === "waitingForClientReady") {
+      await GameServiceInterface.connect();
       this.renderWaitingClientStartModal();
     }
     if (gameState === "waitingForServerStart") {

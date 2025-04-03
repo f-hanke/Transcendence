@@ -23,6 +23,7 @@ type GameState = {
   matchId: string;
   state: GameStateStates;
   typeOfGame: GameTypeOfGame;
+  selfHosted: boolean;
   paddleLeft: Paddle;
   paddleRight: Paddle;
   ball: {

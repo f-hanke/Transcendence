@@ -1,4 +1,4 @@
-import { GameServiceTypes, isDefined } from "transcendence";
+import { GameServiceTypes, gameSettings, generateUniqueId, isDefined } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
 import { GameState, GameStateStates, GameTypeOfGame } from "./gameStateTypes";
 import { StoreCallback } from "./types";
@@ -7,9 +7,36 @@ import { GameServiceInterface } from "../backendInterface/gameServiceInterface";
 class GameStateStore {
   listeners: Set<StoreCallback>;
   state: GameState;
-  constructor(initialState: GameState) {
-    this.state = initialState;
+  constructor() {
+    this.state = this.init();
     this.listeners = new Set<StoreCallback>();
+  }
+
+  init()
+  {
+    this.state = {
+      selfHosted: true,
+      matchId: generateUniqueId(),
+      typeOfGame: "localPvP",
+      state: "none",
+      paddleLeft: {
+        playerId: "P_LEFT_PLAYER",
+        paddleSpeed: 0,
+        paddleY: gameSettings.playerYStart,
+        score: 0,
+      },
+      paddleRight: {
+        playerId: "P_Right_PLAYER",
+        paddleSpeed: 0,
+        paddleY: gameSettings.playerYStart,
+        score: 0,
+      },
+      ball: {
+        x: gameSettings.ballXStart,
+        y: gameSettings.ballYStart,
+      },
+    }
+    return this.state;
   }
 
   subscribe(callback: StoreCallback): () => void {

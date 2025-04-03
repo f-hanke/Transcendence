@@ -6,7 +6,6 @@ import { MatchmakingStateStore } from "./matchmakingStateStore";
 import { NotificationStateStore } from "./notificationStateStore";
 import { OneVOneLocalStateStore } from "./oneVOneLocalStateStore";
 import { RegisterStore } from "./registerStateStore";
-import { State } from "./types";
 import { UserStateStore } from "./userStateStore";
 
 class Store {
@@ -19,18 +18,16 @@ class Store {
   registerStore: RegisterStore;
   chatMessageStore: ChatMessageStateStore;
   chatUserStore: ChatUserStateStore;
-  constructor(initialState: State) {
-    this.gameStore = new GameStateStore(initialState.gameState);
-    this.notificationStore = new NotificationStateStore(
-      initialState.notificationState
-    );
+  constructor() {
+    this.userStore = new UserStateStore();
+    this.gameStore = new GameStateStore();
+    this.notificationStore = new NotificationStateStore();
     this.languageStore = new LanguageStateStore();
-    this.matchmakingStore = new MatchmakingStateStore(initialState.matchmakingState);
-    this.userStore = new UserStateStore(initialState.userState);
-    this.oneVOneLocalStore = new OneVOneLocalStateStore(initialState.oneVOneLocalState);
-    this.registerStore = new RegisterStore(initialState.registerState);
-    this.chatMessageStore = new ChatMessageStateStore(initialState.chatMessageState);
-    this.chatUserStore = new ChatUserStateStore(initialState.chatUserState);
+    this.matchmakingStore = new MatchmakingStateStore();
+    this.oneVOneLocalStore = new OneVOneLocalStateStore();
+    this.registerStore = new RegisterStore();
+    this.chatMessageStore = new ChatMessageStateStore();
+    this.chatUserStore = new ChatUserStateStore();
   }
 
 }
