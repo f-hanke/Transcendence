@@ -1,4 +1,3 @@
-import { colog } from "transcendence";
 import { GameServiceInterface } from "../../backendInterface/gameServiceInterface";
 import { createHtmlElementFromString, navigateToSite } from "../../utils/utils";
 import { CentralModalListeners } from "../CentralModalListeners";
@@ -29,6 +28,7 @@ class ManageMatch extends HTMLElement {
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     if (this.unsubscribeGameState) this.unsubscribeGameState();
     if (window.store.gameStore.get().state === "running") this.leaveGame();
+    window.store.gameStore.reset();
   }
 
   async render() {
@@ -97,13 +97,6 @@ class ManageMatch extends HTMLElement {
       },
       KeyN: this.leaveGame.bind(this),
     });
-
-    // this.innerHTML = `
-    //   <central-modal-listemers>
-    //    <h2 class="text-xl font-bold">Confirm Action</h2>
-    //    <p>Are you sure you want to proceed?</p>
-    //  </central-modal>
-    // `
   }
 
   renderRunningGame() {

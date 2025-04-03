@@ -50,6 +50,10 @@ class GameStateStore {
     return this.state;
   }
 
+  reset(){
+    this.init();
+  }
+
   subscribe(callback: StoreCallback): () => void {
     this.listeners.add(callback);
     return () => {
@@ -89,6 +93,22 @@ class GameStateStore {
   updateBallPosition(newBall: GameServiceTypes.Ball) {
     this.state.ball.x = newBall.x;
     this.state.ball.y = newBall.y;
+    this.updateListenersOnChange();
+  }
+
+  updateBallPositionNOponentPaddle(
+    newState: GameServiceTypes.DataServerUpdateGameState
+  ) {
+    const ownId = window.store.userStore.get().id;
+    this.state.ball.x = newState.ball.x;
+    this.state.ball.y = newState.ball.y;
+    const oponentPaddle =
+      ownId === this.state.paddleLeft.playerId
+        ? this.state.paddleRight
+        : this.state.paddleLeft;
+    const newOponentPaddle =
+      ownId === newState.player1.id ? newState.player2 : newState.player1;
+    oponentPaddle.paddleY = newOponentPaddle.paddleY;
     this.updateListenersOnChange();
   }
 

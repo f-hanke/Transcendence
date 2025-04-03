@@ -52,10 +52,6 @@ class PongTable extends HTMLElement {
   }
 
   startAnimationFrame() {
-    // option local 1v1 left and right paddle
-    // option local 1vai left paddle
-    // option remote 1v1 left paddle
-    // option remote 1v1 right paddle
     const typeOfGame = window.store.gameStore.get().typeOfGame;
     switch (typeOfGame) {
       case "localPvP":
@@ -65,7 +61,7 @@ class PongTable extends HTMLElement {
         break;
       case "localPvAi":
         requestAnimationFrame(() => {
-          this.playerMovementsUpdater.updatePlayerMovementsLocalPvAi("paddleLeft");
+          this.playerMovementsUpdater.updatePlayerMovementsLocalPvAi();
         });
         break;
       case "remote":

@@ -4,9 +4,6 @@ import {
   GameServiceTypes,
   generateUniqueId,
   isDefined,
-  jlog,
-  matchmakingTypeGuards,
-  MatchMakingTypes,
 } from "transcendence";
 import { buildBackendRoute } from "../utils/utils";
 
@@ -15,6 +12,9 @@ class GameServiceInterface {
     throw new Error("This class cannot be instantiated.");
   }
 
+  static correctUpdateHandlingFunction: (
+    dataJson: GameServiceTypes.ServerUpdateGameState
+  ) => void = GameServiceInterface.handleServerUpdateGameStateRemote;
   static websocket: WebSocket | null = null;
 
   static async createMatchOnServer(
@@ -43,6 +43,7 @@ class GameServiceInterface {
 
   static connect(): Promise<void> {
     if (!isDefined(this.websocket)) {
+      this.pickCorrectServerUpdateHandlingFunction();
       return new Promise((resolve, reject) => {
         const address = buildBackendRoute({
           websocketOrApi: "ws",
@@ -96,7 +97,7 @@ class GameServiceInterface {
     // colog("CLIENT RECEIVED THE FOLLOWING MESSAGE");
     // jlog(dataJson);
     if (gameServiceTypeGuards.isServerUpdateGameState(dataJson)) {
-      this.handleServerUpdateGameState(dataJson);
+      this.correctUpdateHandlingFunction(dataJson);
     } else if (gameServiceTypeGuards.isServerGameIsOver(dataJson)) {
       this.handleServerGameIsOver(dataJson);
     } else if (gameServiceTypeGuards.isServerGameStarted(dataJson)) {
@@ -113,7 +114,19 @@ class GameServiceInterface {
     }
   }
 
-  static handleServerUpdateGameState(
+  static handleServerUpdateGameStateRemote(
+    dataJson: GameServiceTypes.ServerUpdateGameState
+  ) {
+    window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+  }
+
+  static handleServerUpdateGameStateLocalPvAi(
+    dataJson: GameServiceTypes.ServerUpdateGameState
+  ) {
+    window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+  }
+
+  static handleServerUpdateGameStateLocalPvp(
     dataJson: GameServiceTypes.ServerUpdateGameState
   ) {
     window.store.gameStore.updateBallPosition(dataJson.data.ball);
@@ -132,11 +145,11 @@ class GameServiceInterface {
   }
 
   static handleServerError(dataJson: GameServiceTypes.ServerError) {
-    colog("TEST!");
+    colog("SERVER ERROR!");
   }
 
   static handleClientLeftGame(dataJson: GameServiceTypes.ClientLeftGame) {
-    colog("TEST!");
+    colog("CLIENT LEFT GAME!");
   }
 
   static sendMessageToServer(
@@ -152,6 +165,24 @@ class GameServiceInterface {
       throw new Error(
         "Client tried to send message to server without having websocket connection!"
       );
+  }
+
+  static pickCorrectServerUpdateHandlingFunction() {
+    const gameType = window.store.gameStore.get().typeOfGame;
+    switch (gameType) {
+      case "localPvP":
+        this.correctUpdateHandlingFunction =
+          this.handleServerUpdateGameStateLocalPvp;
+        break;
+      case "localPvAi":
+        this.correctUpdateHandlingFunction =
+          this.handleServerUpdateGameStateLocalPvAi;
+        break;
+      case "remote":
+        this.correctUpdateHandlingFunction =
+          this.handleServerUpdateGameStateRemote;
+        break;
+    }
   }
 }
 

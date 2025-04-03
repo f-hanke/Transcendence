@@ -27,7 +27,7 @@ class PlayerMovementsUpdater {
 
     if (leftPaddleHasMoved) {
       this.updateGameStateClient(gameStateNew);
-      // this.updateGameStateServer(gameStateNew);
+      this.updateGameStateServerRemote(gameStateNew);
     }
 
     this.pongTableComponent.animationFrameId = requestAnimationFrame(() =>
@@ -35,8 +35,25 @@ class PlayerMovementsUpdater {
     );
   }
 
-  updatePlayerMovementsLocalPvAi(paddleLeftOrRight: PaddleLeftOrRight) {
-    return this.updatePlayerMovementsRemote(paddleLeftOrRight);
+  updatePlayerMovementsLocalPvAi() {
+    const gameStateCurrent = window.store.gameStore.get();
+    const gameStateNew = deepCopyObj(gameStateCurrent);
+
+    const leftPaddleHasMoved = this.updatePaddleMovementsOnePaddle(
+      ["ArrowUp"],
+      ["ArrowDown"],
+      gameStateNew["paddleLeft"],
+      gameStateCurrent["paddleLeft"]
+    );
+
+    if (leftPaddleHasMoved) {
+      this.updateGameStateClient(gameStateNew);
+      this.updateGameStateServerLocalPvAi(gameStateNew);
+    }
+
+    this.pongTableComponent.animationFrameId = requestAnimationFrame(() =>
+      this.updatePlayerMovementsLocalPvAi()
+    );
   }
 
   updatePlayerMovementsLocalPvP() {
@@ -57,7 +74,7 @@ class PlayerMovementsUpdater {
     );
     if (leftPaddleHasMoved || rightPaddleHasMoved) {
       this.updateGameStateClient(gameStateNew);
-      this.updateGameStateServer(gameStateNew);
+      this.updateGameStateServerLocalPvP(gameStateNew);
     }
     this.pongTableComponent.animationFrameId = requestAnimationFrame(() =>
       this.updatePlayerMovementsLocalPvP()
@@ -68,7 +85,7 @@ class PlayerMovementsUpdater {
     window.store.gameStore.update(newGameState);
   }
 
-  updateGameStateServer(newGameState: GameState) {
+  updateGameStateServerLocalPvP(newGameState: GameState) {
     GameServiceInterface.sendMessageToServer({
       type: "clientUpdatePaddlePosition",
       data: {
@@ -83,6 +100,40 @@ class PlayerMovementsUpdater {
           paddleY: newGameState.paddleRight.paddleY,
           paddleSpeed: newGameState.paddleRight.paddleSpeed,
         },
+      },
+    });
+  }
+
+  updateGameStateServerLocalPvAi(newGameState: GameState) {
+    GameServiceInterface.sendMessageToServer({
+      type: "clientUpdatePaddlePosition",
+      data: {
+        matchId: newGameState.matchId,
+        player1: {
+          playerId: newGameState.paddleLeft.playerId,
+          paddleY: newGameState.paddleLeft.paddleY,
+          paddleSpeed: newGameState.paddleLeft.paddleSpeed,
+        },
+        player2: null,
+      },
+    });
+  }
+
+  updateGameStateServerRemote(newGameState: GameState) {
+    const myPaddle =
+      window.store.userStore.get().id === newGameState.paddleLeft.playerId
+        ? newGameState.paddleLeft
+        : newGameState.paddleRight;
+    GameServiceInterface.sendMessageToServer({
+      type: "clientUpdatePaddlePosition",
+      data: {
+        matchId: newGameState.matchId,
+        player1: {
+          playerId: myPaddle.playerId,
+          paddleY: myPaddle.paddleY,
+          paddleSpeed: myPaddle.paddleSpeed,
+        },
+        player2: null,
       },
     });
   }

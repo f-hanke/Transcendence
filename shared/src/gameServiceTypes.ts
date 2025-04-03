@@ -40,7 +40,6 @@ declare namespace GameServiceTypes {
     matchId: string;
     player1: UpdatePlayerPaddle;
     player2: UpdatePlayerPaddle | null;
-    //ball: Ball;
   };
 
   type DataClientLeftGame = {
