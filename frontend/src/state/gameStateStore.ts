@@ -1,6 +1,16 @@
-import { GameServiceTypes, gameSettings, generateUniqueId, isDefined } from "transcendence";
+import {
+  GameServiceTypes,
+  gameSettings,
+  generateUniqueId,
+  isDefined,
+} from "transcendence";
 import { deepCopyObj } from "../utils/utils";
-import { GameState, GameStateStates, GameTypeOfGame } from "./gameStateTypes";
+import {
+  GameState,
+  GameStateStates,
+  GameTypeOfGame,
+  UpdateOnSuccessfullMatchmaking,
+} from "./gameStateTypes";
 import { StoreCallback } from "./types";
 import { GameServiceInterface } from "../backendInterface/gameServiceInterface";
 
@@ -12,9 +22,10 @@ class GameStateStore {
     this.listeners = new Set<StoreCallback>();
   }
 
-  init()
-  {
+  init() {
     this.state = {
+      oponentId: "",
+      hostId: "",
       selfHosted: true,
       matchId: generateUniqueId(),
       typeOfGame: "localPvP",
@@ -35,7 +46,7 @@ class GameStateStore {
         x: gameSettings.ballXStart,
         y: gameSettings.ballYStart,
       },
-    }
+    };
     return this.state;
   }
 
@@ -51,18 +62,22 @@ class GameStateStore {
     this.updateListenersOnChange();
   }
 
-  updateGameStateState(newState: GameStateStates) {
+  updateGameStateState(
+    newState: GameStateStates,
+    updateListeners: boolean = true
+  ) {
     this.state.state = newState;
-    this.updateListenersOnChange();
+    if (updateListeners) this.updateListenersOnChange();
   }
 
-  updateAssignPaddles(
-    playerLeftPaddleId: string,
-    playerRightPaddleId?: string
-  ) {
-    this.state.paddleLeft.playerId = playerLeftPaddleId;
-    if (isDefined(playerRightPaddleId))
-      this.state.paddleRight.playerId = playerRightPaddleId;
+  updateMatchMakingSuccessful(data: UpdateOnSuccessfullMatchmaking) {
+    this.state.paddleLeft.playerId = data.playerLeftPaddleId;
+    this.state.paddleRight.playerId = data.playerRightPaddleId;
+    this.state.hostId = data.hostId;
+    this.state.oponentId = data.oponentId;
+    this.state.selfHosted = data.selfHosted;
+    if (isDefined(data.matchId)) this.state.matchId = data.matchId;
+    if (isDefined(data.typeOfGame)) this.state.typeOfGame = data.typeOfGame;
     this.updateListenersOnChange();
   }
 
@@ -81,8 +96,7 @@ class GameStateStore {
     this.listeners.forEach((callback) => callback());
   }
 
-  updateMatchId(matchId: string)
-  {
+  updateMatchId(matchId: string) {
     this.state.matchId = matchId;
     this.updateListenersOnChange();
   }

@@ -74,13 +74,13 @@ class DrawPongTable {
   drawPaddles() {
     this.ctx.fillStyle = "white";
     this.ctx.fillRect(
-      0,
+      gameSettings.player1XStart - gameSettings.paddleWidth / 2,
       this.gameState.paddleLeft.paddleY - gameSettings.paddleHeight / 2,
       gameSettings.paddleWidth,
       gameSettings.paddleHeight
     );
     this.ctx.fillRect(
-      gameSettings.pongTableWidth - gameSettings.paddleWidth,
+      gameSettings.player2XStart - gameSettings.paddleWidth / 2,
       this.gameState.paddleRight.paddleY - gameSettings.paddleHeight / 2,
       gameSettings.paddleWidth,
       gameSettings.paddleHeight

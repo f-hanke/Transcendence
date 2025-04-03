@@ -96,11 +96,15 @@ class MatchMakingInterface {
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    window.store.gameStore.updateAssignPaddles(
-      dataJson.data.hostId,
-      dataJson.data.oponentId
-    );
-// here update match status
+    const isSelfHosted = dataJson.data.hostId === window.store.userStore.get().id;
+    window.store.gameStore.updateMatchMakingSuccessful({
+      hostId: dataJson.data.hostId,
+      oponentId: dataJson.data.oponentId,
+      selfHosted: isSelfHosted,
+      matchId: dataJson.data.matchId,
+      playerLeftPaddleId: dataJson.data.hostId,
+      playerRightPaddleId: dataJson.data.oponentId,
+    });
     window.store.gameStore.updateGameStateTypeOfGame("remote");
     window.store.gameStore.updateGameStateState("matchmakingSuccessful");
   }

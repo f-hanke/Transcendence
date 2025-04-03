@@ -28,21 +28,25 @@ class ManageMatch extends HTMLElement {
   disconnectedCallback() {
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     if (this.unsubscribeGameState) this.unsubscribeGameState();
-    if (window.store.gameStore.get().state === "running")
-      this.leaveGame();
+    if (window.store.gameStore.get().state === "running") this.leaveGame();
   }
 
   async render() {
     const gameState = window.store.gameStore.get().state;
     if (gameState === "none") navigateToSite("/");
     if (gameState === "matchmakingSuccessful") {
-      window.store.gameStore.updateGameStateState("waitingForClientReady");
-      await GameServiceInterface.createMatchOnServer({
-        typeOfGame: window.store.gameStore.get().typeOfGame,
-        matchId: window.store.gameStore.get().matchId,
-        hostId: window.store.userStore.get().id,
-        oponentId: window.store.oneVOneLocalStore.get().player2Name,
-      });
+      window.store.gameStore.updateGameStateState(
+        "waitingForClientReady",
+        false
+      );
+      if (window.store.gameStore.get().selfHosted) {
+        await GameServiceInterface.createMatchOnServer({
+          typeOfGame: window.store.gameStore.get().typeOfGame,
+          matchId: window.store.gameStore.get().matchId,
+          hostId: window.store.gameStore.get().hostId,
+          oponentId: window.store.gameStore.get().oponentId,
+        });
+      }
     }
     if (gameState === "waitingForClientReady") {
       await GameServiceInterface.connect();

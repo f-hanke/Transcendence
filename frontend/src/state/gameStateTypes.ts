@@ -1,3 +1,5 @@
+import { MakePropsOptional } from "../globalTypes";
+
 type GameStateStates =
   | "none"
   | "matchmakingSuccessful"
@@ -6,13 +8,11 @@ type GameStateStates =
   | "running"
   | "endedNormally"
   | "endedPlayerLeft"
-  | "endedServerError"
-  ;
+  | "endedServerError";
 
 type GameTypeOfGame = "localPvP" | "localPvAi" | "remote";
 
-
-type Paddle =  {
+type Paddle = {
   playerId: string;
   paddleY: number;
   paddleSpeed: 0 | 1 | -1;
@@ -21,6 +21,8 @@ type Paddle =  {
 
 type GameState = {
   matchId: string;
+  hostId: string;
+  oponentId: string;
   state: GameStateStates;
   typeOfGame: GameTypeOfGame;
   selfHosted: boolean;
@@ -32,4 +34,22 @@ type GameState = {
   };
 };
 
-export type { GameState, GameStateStates, Paddle, GameTypeOfGame };
+type UpdateOnSuccessfullMatchmakingHelper = Pick<
+  GameState,
+  "oponentId" | "hostId" | "selfHosted" | "matchId" | "typeOfGame"
+> & {
+  playerLeftPaddleId: string;
+  playerRightPaddleId: string;
+};
+
+
+type UpdateOnSuccessfullMatchmaking = MakePropsOptional<UpdateOnSuccessfullMatchmakingHelper, "matchId" | "typeOfGame">;
+
+
+export type {
+  GameState,
+  GameStateStates,
+  Paddle,
+  GameTypeOfGame,
+  UpdateOnSuccessfullMatchmaking,
+};

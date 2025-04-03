@@ -20,7 +20,7 @@ class ChatMessageStateStore {
     for (let i = 0; i < 10; i++) {
       if (i < 5) {
         this.state.messages.push({
-          authorId: window.store.userStore.get().id,
+          authorId: "USER_ID",
           date: "25.12.2025",
           message: "TEST MESSAGE COMING FROM USER",
           recipientId: String(i),
@@ -30,7 +30,7 @@ class ChatMessageStateStore {
           authorId: String(i),
           date: "25.12.2025",
           message: "TEST MESSAGE DIRECTED AT USER",
-          recipientId: window.store.userStore.get().id,
+          recipientId: "USER_ID",
         });
       }
     }
