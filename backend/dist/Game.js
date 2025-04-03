@@ -3,7 +3,6 @@ import { Player } from './player.js';
 import { Ball } from './ball.js';
 import { gameSettings } from 'transcendence';
 import { sendMessage } from './server.js';
-// const { v4: uuidv4 } = require("uuid");
 export class Game {
     typeOfGame;
     websocket;
@@ -20,8 +19,8 @@ export class Game {
         this.websocket = null;
         this.matchId = matchId;
         this.typeOfGame = typeOfGame;
-        this.player1 = new Player(hostId, gameSettings.paddleWidth);
-        this.player2 = new Player(opponentId, gameSettings.pongTableWidth - gameSettings.paddleWidth);
+        this.player1 = new Player(hostId, gameSettings.player1XStart);
+        this.player2 = new Player(opponentId, gameSettings.player2XStart);
         this.ball = new Ball();
         this.isGameOver = true;
         this.screenWidth = gameSettings.pongTableWidth;
@@ -80,10 +79,27 @@ export class Game {
         if (this.onGameOverCallback) {
             this.onGameOverCallback(reason);
         }
+        sendMessage(this.websocket, {
+            type: "serverGameIsOver",
+            data: {
+                matchId: this.matchId,
+                player1: {
+                    id: this.player1.id,
+                    score: this.player1.score,
+                },
+                player2: {
+                    id: this.player2.id,
+                    score: this.player2.score,
+                },
+                reason: reason,
+            }
+        });
     }
-    updatePaddlePosition(player1Y, player2Y) {
-        this.player1.y = player1Y;
-        this.player2.y = player2Y;
+    updatePaddlePosition(data) {
+        this.player1.y = data.player1.paddleY;
+        this.player1.paddleSpeed = data.player1.paddleSpeed;
+        this.player2.y = data.player2.paddleY;
+        this.player2.paddleSpeed = data.player2.paddleSpeed;
     }
     update() {
         this.ball.move(this.screenWidth, this.screenHeight);
@@ -91,20 +107,28 @@ export class Game {
             this.ball.speedY *= -1;
         }
         //left player
-        if (this.ball.x - this.ball.radius <= this.player1.x + this.player1.paddleWidth &&
-            this.ball.x + this.ball.radius >= this.player1.x &&
-            this.ball.y >= this.player1.y &&
-            this.ball.y <= this.player1.y + this.player1.paddleHeight) {
+        if (this.ball.x + this.ball.radius <= this.player1.x + this.player1.paddleWidth &&
+            this.ball.y <= this.player1.y + this.player1.paddleHeight / 2 &&
+            this.ball.y >= this.player1.y - this.player1.paddleHeight / 2) {
+            if ((this.player1.paddleSpeed > 0 && this.ball.speedY > 0)
+                || (this.player2.paddleSpeed < 0 && this.ball.speedY < 0))
+                this.ball.speedY *= 1.5;
+            if ((this.player1.paddleSpeed > 0 && this.ball.speedY < 0) ||
+                (this.player1.paddleSpeed < 0 && this.ball.speedY > 0))
+                this.ball.speedY *= 0.5;
             this.ball.speedX *= -1;
-            this.ball.x = this.player1.x + this.player1.paddleWidth + this.ball.radius;
         }
         //right player
-        if (this.ball.x + this.ball.radius >= this.player2.x &&
-            this.ball.x - this.ball.radius <= this.player2.x + this.player2.paddleWidth &&
-            this.ball.y >= this.player2.y &&
-            this.ball.y <= this.player2.y + this.player2.paddleHeight) {
+        if (this.player2.x - this.player2.paddleWidth / 2 <= this.ball.x + this.ball.radius &&
+            this.ball.y <= this.player2.y + this.player2.paddleHeight / 2 &&
+            this.ball.y >= this.player2.y - this.player2.paddleHeight / 2) {
+            if ((this.player2.paddleSpeed > 0 && this.ball.speedY > 0)
+                || (this.player2.paddleSpeed < 0 && this.ball.speedY < 0))
+                this.ball.speedY *= 14.5;
+            if ((this.player2.paddleSpeed > 0 && this.ball.speedY < 0) ||
+                (this.player2.paddleSpeed < 0 && this.ball.speedY > 0))
+                this.ball.speedY *= 0.5;
             this.ball.speedX *= -1;
-            this.ball.x = this.player2.x - this.ball.radius;
         }
         if (this.ball.x <= 0) {
             this.player2.score += 1;
@@ -116,11 +140,8 @@ export class Game {
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
             this.ball.reset();
         }
-        if (this.player1.score >= gameSettings.maxScore || this.player2.score >= gameSettings.maxScore) {
-            //   this.isGameOver = true;
-            //this.stopGame();
+        if (this.player1.score >= gameSettings.maxScore || this.player2.score >= gameSettings.maxScore)
             this.stopGame("normalMaxScoreReached");
-        }
     }
     resetGame() {
         this.isGameOver = false;
