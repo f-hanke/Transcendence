@@ -34,8 +34,6 @@ declare namespace GameServiceTypes {
     paddleSpeed: 0 | 1 | -1;
   };
 
-
-
   type DataClientUpdatePaddlePosition = {
     matchId: string;
     player1: UpdatePlayerPaddle;

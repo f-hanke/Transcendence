@@ -30,7 +30,7 @@ const gameSettings: GameSettings = {
   // bumpers are drawn in addition to playable field
   bumperHeight: 10,
   ballRadius: 5,
-  maxScore: 2,
+  maxScore: 200,
   ballSpeed: 3,
   paddleSpeed: 3,
   canvasHeight: -1,
@@ -49,9 +49,10 @@ gameSettings.paddleMaxY =
   gameSettings.paddleHeight / 2;
 gameSettings.paddleMinY =
   gameSettings.bumperHeight + gameSettings.paddleHeight / 2;
-gameSettings.playerYStart =
+gameSettings.playerYStart = Math.round(
   (gameSettings.paddleMaxY - gameSettings.paddleMinY) / 2 +
-  gameSettings.paddleMinY;
+    gameSettings.paddleMinY
+);
 
 gameSettings.player1XStart = gameSettings.paddleWidth / 2;
 gameSettings.player2XStart =

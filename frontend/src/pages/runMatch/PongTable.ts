@@ -91,7 +91,7 @@ class PongTable extends HTMLElement {
     this.canvas.width = gameSettings.pongTableWidth;
     this.canvas.height = gameSettings.canvasHeight;
     const divWrapper = createHtmlElementFromString(`
-      <div class="flex justify-center items-center w-full h-full"></div>
+      <div class="flex justify-center items-center"></div>
       `);
     divWrapper.appendChild(this.canvas);
     this.appendChild(divWrapper);

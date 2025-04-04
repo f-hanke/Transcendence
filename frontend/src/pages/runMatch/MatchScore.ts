@@ -1,3 +1,5 @@
+import { padNumberToString, roundIntToString } from "../../utils/utils";
+
 class MatchScore extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
   leftPaddleY: HTMLDivElement;
@@ -12,54 +14,75 @@ class MatchScore extends HTMLElement {
     super();
     this.unsubscribeLanguage = null;
     this.innerHTML = `
-    <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white p-4 rounded-md w-96 flex justify-between text-sm">
-      <!-- Left Paddle Info -->
-      <div class="text-left">
-        <div id="left-paddle" class="font-semibold">Left Paddle</div>
-        <div id="left-paddle-pos">Y: 0</div>
-        <div id="left-paddle-speed">Speed: 0</div>
-      </div>
-
-      <!-- Right Paddle Info -->
-      <div class="text-right">
-        <div id="right-paddle" class="font-semibold">Right Paddle</div>
-        <div id="right-paddle-pos">Y: 0</div>
-        <div id="right-paddle-speed">Speed: 0</div>
-      </div>
-
-      <!-- Ball Info (Centered) -->
-      <div class="absolute bottom-[-1.5rem] left-1/2 transform -translate-x-1/2 text-center">
-        <div id="ball-pos" class="font-semibold px-2 py-1 rounded text-xs">
-          Ball:
-          <div id="ball-pos-x">X=0</div>
-          <div id="ball-pos-y">Y=0</div>
+    <div class="text-lg bg-black bg-opacity-70 text-white p-4 rounded-md w-96 flex w-full justify-center text-sm">
+      <div class="text-left w-40">
+        <div id="leftPlayerNameDisplay" class="font-semibold">Player_1_ID</div>
+        <div class="font-semibold">
+          <span>Score:</span>
+          <span class="whitespace-pre font-mono" id="leftPlayerScoreDisplay">0</span>
+        </div>
+        <div>
+          <span>Paddle Pos:</span>
+          <span class="whitespace-pre font-mono" id="leftPaddlePosDisplay">0</span>
+        </div>
+        <div>
+          <span>Paddle Speed:</span>
+          <span class="whitespace-pre font-mono" id="leftPaddleSpeedDisplay">0</span>  
         </div>
       </div>
-      <div id="scoreLeft">0</div>
-      <div id="scoreRight">0</div>
+
+      <div class="text-center w-40">
+        <div id="ball-pos" class="font-semibold px-2 py-1 rounded">
+          Ball
+          <div >
+            <span>X:</span>
+            <span class="whitespace-pre font-mono" id="ballPosXDisplay">0</span>
+          </div>
+          <div>
+            <span>Y:</span>
+            <span class="whitespace-pre font-mono" id="ballPosYDisplay">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-right w-40">
+        <div id="rightPlayerNameDisplay" class="font-semibold">Player_2_ID</div>
+        <div class="font-semibold">
+          <span>Score:</span>
+          <span class="whitespace-pre font-mono" id="rightPlayerScoreDisplay">0</span>
+        </div>
+        <div>
+          <span>Paddle Pos:</span>
+          <span class="whitespace-pre font-mono" id="rightPaddlePosDisplay">0</span>
+        </div>
+        <div>
+          <span>Paddle Speed:</span>
+          <span class="whitespace-pre font-mono" id="rightPaddleSpeedDisplay">0</span>  
+        </div>
+      </div>
     </div>  
     `;
 
     this.leftPaddleY = document.querySelector(
-      "#left-paddle-pos"
+      "#leftPaddlePosDisplay"
     ) as HTMLDivElement;
     this.leftPaddleSpeed = document.querySelector(
-      "#left-paddle-speed"
+      "#leftPaddleSpeedDisplay"
     ) as HTMLDivElement;
     this.rightPaddleY = document.querySelector(
-      "#right-paddle-pos"
+      "#rightPaddlePosDisplay"
     ) as HTMLDivElement;
     this.rightPaddleSpeed = document.querySelector(
-      "#right-paddle-speed"
+      "#rightPaddleSpeedDisplay"
     ) as HTMLDivElement;
-    this.ballX = document.querySelector("#ball-pos-x") as HTMLDivElement;
-    this.ballY = document.querySelector("#ball-pos-y") as HTMLDivElement;
+    this.ballX = document.querySelector("#ballPosXDisplay") as HTMLDivElement;
+    this.ballY = document.querySelector("#ballPosYDisplay") as HTMLDivElement;
 
     this.scoreLeft = document.querySelector(
-      "#scoreLeft"
+      "#leftPlayerScoreDisplay"
     ) as HTMLDivElement;
     this.scoreRight = document.querySelector(
-      "#scoreRight"
+      "#rightPlayerScoreDisplay"
     ) as HTMLDivElement;
   }
 
@@ -75,20 +98,20 @@ class MatchScore extends HTMLElement {
 
   update() {
     const gameState = window.store.gameStore.get();
-    this.leftPaddleY.innerHTML = `Y = ${String(gameState.paddleLeft.paddleY)}`;
-    this.leftPaddleSpeed.innerHTML = `S = ${String(
-      gameState.paddleLeft.paddleSpeed
+    this.leftPaddleY.innerHTML = `${String(gameState.paddleLeft.paddleY)}`;
+    this.leftPaddleSpeed.innerHTML = `${padNumberToString(
+      gameState.paddleLeft.paddleSpeed,
+      2
     )}`;
-    this.rightPaddleY.innerHTML = `Y = ${String(
-      gameState.paddleRight.paddleY
+    this.rightPaddleY.innerHTML = `${gameState.paddleRight.paddleY}`;
+    this.rightPaddleSpeed.innerHTML = `${padNumberToString(
+      gameState.paddleRight.paddleSpeed,
+      2
     )}`;
-    this.rightPaddleSpeed.innerHTML = `S = ${String(
-      gameState.paddleRight.paddleSpeed
-    )}`;
-    this.ballX.innerHTML = `X = ${String(gameState.ball.x)}`;
-    this.ballY.innerHTML = `Y = ${String(gameState.ball.y)}`;
-    this.scoreLeft.innerHTML = `${gameState.paddleLeft.score}`
-    this.scoreRight.innerHTML = `${gameState.paddleRight.score}`
+    this.ballX.innerHTML = `${roundIntToString(gameState.ball.x).padStart(3, " ")}`;
+    this.ballY.innerHTML = `${roundIntToString(gameState.ball.y).padStart(3, " ")}`;
+    this.scoreLeft.innerHTML = `${gameState.paddleLeft.score}`;
+    this.scoreRight.innerHTML = `${gameState.paddleRight.score}`;
   }
 
   render() {}

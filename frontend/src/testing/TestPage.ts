@@ -73,6 +73,9 @@ class TestPage extends HTMLElement {
     this.innerHTML = `
       <chat-layout></chat-layout>
     `;
+    this.innerHTML = `
+      <match-score></match-score>
+    `;
     // this.innerHTML = `
     // <div class="bg-black h-full w-full">
 

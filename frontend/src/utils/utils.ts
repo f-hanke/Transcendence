@@ -1,4 +1,4 @@
-import {  isDefined, portSettings } from "transcendence";
+import { isDefined, portSettings } from "transcendence";
 import { RouteBuilder } from "./utilsTypes";
 
 function deepCopyObj<T extends object>(obj: T): T {
@@ -20,9 +20,8 @@ async function convertToBase64(file: File): Promise<string> {
   });
 }
 
-function brepo(msg?: any)
-{
-  console.log("You ordered a break, her it is .......:D:DXDXD"); 
+function brepo(msg?: any) {
+  console.log("You ordered a break, her it is .......:D:DXDXD");
   throw new Error(msg);
 }
 
@@ -67,11 +66,22 @@ function buildBackendRoute(optn: {
   return uri;
 }
 
+function roundIntToString(num: number) {
+  return `${Math.round(num)}`;
+}
+
+function padNumberToString(num:number, padToLength: number, padWith: string = " ")
+{
+  return `${num}`.padStart(padToLength, padWith);
+}
+
 export {
   deepCopyObj,
   createHtmlElementFromString,
   convertToBase64,
   navigateToSite,
   buildBackendRoute,
-  brepo
+  brepo,
+  roundIntToString,
+  padNumberToString
 };
