@@ -8,7 +8,7 @@ export class Ball {
     constructor() {
         this.x = 400;
         this.y = 200;
-        this.speedX = 2;
+        this.speedX = 5;
         this.speedY = Math.round(Math.random() * 3);
         this.radius = gameSettings.ballRadius;
     }
@@ -19,7 +19,7 @@ export class Ball {
     reset() {
         this.x = 400;
         this.y = 200;
-        this.speedX = 2;
+        this.speedX = 5;
         this.speedY = Math.round(Math.random() * 3);
     }
 }

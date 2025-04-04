@@ -6,6 +6,8 @@ class MatchScore extends HTMLElement {
   rightPaddleSpeed: HTMLDivElement;
   ballX: HTMLDivElement;
   ballY: HTMLDivElement;
+  scoreLeft: HTMLDivElement;
+  scoreRight: HTMLDivElement;
   constructor() {
     super();
     this.unsubscribeLanguage = null;
@@ -33,6 +35,8 @@ class MatchScore extends HTMLElement {
           <div id="ball-pos-y">Y=0</div>
         </div>
       </div>
+      <div id="scoreLeft">0</div>
+      <div id="scoreRight">0</div>
     </div>  
     `;
 
@@ -50,6 +54,13 @@ class MatchScore extends HTMLElement {
     ) as HTMLDivElement;
     this.ballX = document.querySelector("#ball-pos-x") as HTMLDivElement;
     this.ballY = document.querySelector("#ball-pos-y") as HTMLDivElement;
+
+    this.scoreLeft = document.querySelector(
+      "#scoreLeft"
+    ) as HTMLDivElement;
+    this.scoreRight = document.querySelector(
+      "#scoreRight"
+    ) as HTMLDivElement;
   }
 
   connectedCallback() {
@@ -76,6 +87,8 @@ class MatchScore extends HTMLElement {
     )}`;
     this.ballX.innerHTML = `X = ${String(gameState.ball.x)}`;
     this.ballY.innerHTML = `Y = ${String(gameState.ball.y)}`;
+    this.scoreLeft.innerHTML = `${gameState.paddleLeft.score}`
+    this.scoreRight.innerHTML = `${gameState.paddleRight.score}`
   }
 
   render() {}

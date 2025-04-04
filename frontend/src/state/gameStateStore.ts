@@ -9,10 +9,10 @@ import {
   GameState,
   GameStateStates,
   GameTypeOfGame,
+  Paddle,
   UpdateOnSuccessfullMatchmaking,
 } from "./gameStateTypes";
 import { StoreCallback } from "./types";
-import { GameServiceInterface } from "../backendInterface/gameServiceInterface";
 
 class GameStateStore {
   listeners: Set<StoreCallback>;
@@ -23,6 +23,18 @@ class GameStateStore {
   }
 
   init() {
+    const paddleRight: Paddle = {
+      playerId: "P_Right_PLAYER",
+      paddleSpeed: 0,
+      paddleY: gameSettings.playerYStart,
+      score: 0,
+    };
+    const paddleLeft: Paddle = {
+      playerId: "P_LEFT_PLAYER",
+      paddleSpeed: 0,
+      paddleY: gameSettings.playerYStart,
+      score: 0,
+    };
     this.state = {
       oponentId: "",
       hostId: "",
@@ -30,18 +42,11 @@ class GameStateStore {
       matchId: generateUniqueId(),
       typeOfGame: "localPvP",
       state: "none",
-      paddleLeft: {
-        playerId: "P_LEFT_PLAYER",
-        paddleSpeed: 0,
-        paddleY: gameSettings.playerYStart,
-        score: 0,
-      },
-      paddleRight: {
-        playerId: "P_Right_PLAYER",
-        paddleSpeed: 0,
-        paddleY: gameSettings.playerYStart,
-        score: 0,
-      },
+      paddleLeft: paddleLeft,
+      ownPaddle: paddleLeft,
+      paddleRight: paddleRight,
+      enemyPaddle: paddleRight,
+      playerIdToPaddleMap: new Map(),
       ball: {
         x: gameSettings.ballXStart,
         y: gameSettings.ballYStart,
@@ -50,7 +55,7 @@ class GameStateStore {
     return this.state;
   }
 
-  reset(){
+  reset() {
     this.init();
   }
 
@@ -62,7 +67,7 @@ class GameStateStore {
   }
 
   update(newState: GameState) {
-    this.state = deepCopyObj(newState);
+    this.state = structuredClone(newState);
     this.updateListenersOnChange();
   }
 
@@ -80,6 +85,20 @@ class GameStateStore {
     this.state.hostId = data.hostId;
     this.state.oponentId = data.oponentId;
     this.state.selfHosted = data.selfHosted;
+    this.state.ownPaddle = data.selfHosted
+      ? this.state.paddleLeft
+      : this.state.paddleRight;
+    this.state.enemyPaddle = data.selfHosted
+      ? this.state.paddleRight
+      : this.state.paddleLeft;
+    this.state.playerIdToPaddleMap.set(
+      this.state.paddleLeft.playerId,
+      this.state.paddleLeft
+    );
+    this.state.playerIdToPaddleMap.set(
+      this.state.paddleRight.playerId,
+      this.state.paddleRight
+    );
     if (isDefined(data.matchId)) this.state.matchId = data.matchId;
     if (isDefined(data.typeOfGame)) this.state.typeOfGame = data.typeOfGame;
     this.updateListenersOnChange();
@@ -90,25 +109,31 @@ class GameStateStore {
     this.updateListenersOnChange();
   }
 
-  updateBallPosition(newBall: GameServiceTypes.Ball) {
-    this.state.ball.x = newBall.x;
-    this.state.ball.y = newBall.y;
+  updateBallPosition(newState: GameServiceTypes.DataServerUpdateGameState) {
+    this.state.ball.x = newState.ball.x;
+    this.state.ball.y = newState.ball.y;
+    this.updateScore(newState);
     this.updateListenersOnChange();
+  }
+
+  updateScore(newState: GameServiceTypes.DataServerUpdateGameState) {
+    const paddle1ById = this.getPaddleByPlayerId(newState.player1.id);
+    const paddle2ById = this.getPaddleByPlayerId(newState.player2.id);
+    paddle1ById.score = newState.player1.score;
+    paddle2ById.score = newState.player2.score;
   }
 
   updateBallPositionNOponentPaddle(
     newState: GameServiceTypes.DataServerUpdateGameState
   ) {
-    const ownId = window.store.userStore.get().id;
     this.state.ball.x = newState.ball.x;
     this.state.ball.y = newState.ball.y;
-    const oponentPaddle =
-      ownId === this.state.paddleLeft.playerId
-        ? this.state.paddleRight
-        : this.state.paddleLeft;
     const newOponentPaddle =
-      ownId === newState.player1.id ? newState.player2 : newState.player1;
-    oponentPaddle.paddleY = newOponentPaddle.paddleY;
+      window.store.userStore.get().id === newState.player1.id
+        ? newState.player2
+        : newState.player1;
+    this.getPaddleByPlayerId(newOponentPaddle.id).paddleY =
+      newOponentPaddle.paddleY;
     this.updateListenersOnChange();
   }
 
@@ -123,6 +148,10 @@ class GameStateStore {
 
   get(): GameState {
     return this.state;
+  }
+
+  getPaddleByPlayerId(playerId: string) {
+    return this.state.playerIdToPaddleMap.get(playerId) as Paddle;
   }
 }
 

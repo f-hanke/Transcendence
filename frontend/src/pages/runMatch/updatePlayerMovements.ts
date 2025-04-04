@@ -16,7 +16,7 @@ class PlayerMovementsUpdater {
 
   updatePlayerMovementsRemote(paddleLeftOrRight: PaddleLeftOrRight) {
     const gameStateCurrent = window.store.gameStore.get();
-    const gameStateNew = deepCopyObj(gameStateCurrent);
+    const gameStateNew = structuredClone(gameStateCurrent);
 
     const leftPaddleHasMoved = this.updatePaddleMovementsOnePaddle(
       ["ArrowUp"],
@@ -30,6 +30,7 @@ class PlayerMovementsUpdater {
       this.updateGameStateServerRemote(gameStateNew);
     }
 
+
     this.pongTableComponent.animationFrameId = requestAnimationFrame(() =>
       this.updatePlayerMovementsRemote(paddleLeftOrRight)
     );
@@ -37,7 +38,7 @@ class PlayerMovementsUpdater {
 
   updatePlayerMovementsLocalPvAi() {
     const gameStateCurrent = window.store.gameStore.get();
-    const gameStateNew = deepCopyObj(gameStateCurrent);
+    const gameStateNew = structuredClone(gameStateCurrent);
 
     const leftPaddleHasMoved = this.updatePaddleMovementsOnePaddle(
       ["ArrowUp"],
@@ -58,7 +59,7 @@ class PlayerMovementsUpdater {
 
   updatePlayerMovementsLocalPvP() {
     const gameStateCurrent = window.store.gameStore.get();
-    const gameStateNew = deepCopyObj(gameStateCurrent);
+    const gameStateNew = structuredClone(gameStateCurrent);
 
     const leftPaddleHasMoved = this.updatePaddleMovementsOnePaddle(
       ["w", "W"],
@@ -72,10 +73,16 @@ class PlayerMovementsUpdater {
       gameStateNew.paddleRight,
       gameStateCurrent.paddleRight
     );
+
+    structuredClone
+
     if (leftPaddleHasMoved || rightPaddleHasMoved) {
       this.updateGameStateClient(gameStateNew);
       this.updateGameStateServerLocalPvP(gameStateNew);
     }
+
+    // this.pongTableComponent.render();
+
     this.pongTableComponent.animationFrameId = requestAnimationFrame(() =>
       this.updatePlayerMovementsLocalPvP()
     );

@@ -129,7 +129,7 @@ class GameServiceInterface {
   static handleServerUpdateGameStateLocalPvp(
     dataJson: GameServiceTypes.ServerUpdateGameState
   ) {
-    window.store.gameStore.updateBallPosition(dataJson.data.ball);
+    window.store.gameStore.updateBallPosition(dataJson.data);
   }
 
   static handleServerGameIsOver(dataJson: GameServiceTypes.ServerGameIsOver) {

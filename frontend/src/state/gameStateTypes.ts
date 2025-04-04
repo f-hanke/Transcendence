@@ -28,6 +28,9 @@ type GameState = {
   selfHosted: boolean;
   paddleLeft: Paddle;
   paddleRight: Paddle;
+  ownPaddle: Paddle;
+  enemyPaddle: Paddle;
+  playerIdToPaddleMap: Map<string, Paddle>;
   ball: {
     x: number;
     y: number;
@@ -42,9 +45,10 @@ type UpdateOnSuccessfullMatchmakingHelper = Pick<
   playerRightPaddleId: string;
 };
 
-
-type UpdateOnSuccessfullMatchmaking = MakePropsOptional<UpdateOnSuccessfullMatchmakingHelper, "matchId" | "typeOfGame">;
-
+type UpdateOnSuccessfullMatchmaking = MakePropsOptional<
+  UpdateOnSuccessfullMatchmakingHelper,
+  "matchId" | "typeOfGame"
+>;
 
 export type {
   GameState,
