@@ -1,7 +1,8 @@
 import { isDefined } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
-import { ChatUserState } from "./chatStateTypes";
+import { ChatUserGroups, ChatUserState } from "./chatStateTypes";
 import { StoreCallback } from "./types";
+import { exampleImage } from "../testing/exampleImage";
 
 class ChatUserStateStore {
   listeners: Set<StoreCallback>;
@@ -11,10 +12,10 @@ class ChatUserStateStore {
     this.listeners = new Set<StoreCallback>();
   }
 
-  init(){
-    this.state = new Map as ChatUserState;
+  init() {
+    this.state = new Map() as ChatUserState;
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 20; i++) {
       this.state.set(`user_${i}`, {
         blocked: Math.random() < 0.5,
         friend: Math.random() < 0.5,
@@ -23,7 +24,7 @@ class ChatUserStateStore {
         displayName: "DisplayName",
         recipientId: String(i),
         email: "test@email.com",
-        image: "some BASE64 encoded string",
+        image: exampleImage,
         lastMessage: "This was the last message!",
       });
     }
@@ -40,6 +41,22 @@ class ChatUserStateStore {
 
   get(): ChatUserState {
     return this.state;
+  }
+
+  getUserGroups(): ChatUserGroups {
+    const groups: ChatUserGroups = {
+      friends: [],
+      online: [],
+      offline: [],
+    };
+    this.state.forEach((userObj, userId) => {
+      const userCopy = deepCopyObj(userObj);
+      if (userObj.friend) groups.friends.push(userCopy);
+      else if (userObj.online) groups.online.push(userCopy);
+      else if (!userObj.online) groups.offline.push(userCopy);
+      else throw new Error("User not assigned to any group!");
+    });
+    return groups;
   }
 
   updateChangeUserOnlineStatus(userId: string, online: boolean) {
