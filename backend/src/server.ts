@@ -60,11 +60,9 @@ fastify.register(async function (fastify) {
     { websocket: true },
     (socket /* WebSocket */, req /* FastifyRequest */) => {
       const urlParams = new URLSearchParams(req.url.split("?")[1]);
-      console.log(req?.query);
+      //console.log(req?.query);
       const clientId = urlParams.get("clientId") || "anonymous";
-      console.log(
-        chalk.green(`A client with ID: ${clientId} connected via WebSocket`)
-      );
+      console.log(chalk.green(`A client with ID: ${clientId} connected via WebSocket`));
       clients.set(clientId, socket);
 
       /*------------------------------------------------------------*/
@@ -82,8 +80,9 @@ fastify.register(async function (fastify) {
                   matchId: dataJson.data.matchId,
                 },
               }),
-            3000
+            1000
           )
+
           games.get(dataJson.data.matchId)!.websocket = socket;
 
           //if local or AI => start game
@@ -105,6 +104,8 @@ fastify.register(async function (fastify) {
         {
           const game = games.get(dataJson.data.matchId);
           game?.stopGame("playerLeftGame");
+         // games.delete(dataJson.data.matchId);
+
         }
       });
 
@@ -145,8 +146,8 @@ fastify.get("/favicon.ico", async (request, reply) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: 3000, host: "0.0.0.0" });
-    console.log(chalk.cyan.bold("Server running on http://localhost:3000"));
+    await fastify.listen({ port: 3001, host: "0.0.0.0" });
+    console.log(chalk.cyan.bold("Server running on http://localhost:3001"));
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

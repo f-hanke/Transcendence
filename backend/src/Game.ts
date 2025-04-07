@@ -134,13 +134,15 @@ export class Game {
 			this.ball.x + this.ball.radius <= this.player1.x + this.player1.paddleWidth &&
 			this.ball.y <= this.player1.y + this.player1.paddleHeight/2 &&
 			this.ball.y >= this.player1.y - this.player1.paddleHeight/2
-		) {
+		)
+		{
 			if ((this.player1.paddleSpeed > 0 && this.ball.speedY > 0)
 				|| ( this.player2.paddleSpeed < 0 && this.ball.speedY <0 ))
 				this.ball.speedY *= 1.5;
 			if ((this.player1.paddleSpeed > 0 && this.ball.speedY < 0) ||
 				(this.player1.paddleSpeed < 0 && this.ball.speedY > 0) )
 				this.ball.speedY *= 0.5;
+
 			this.ball.speedX *= -1;
 
 		}
@@ -152,6 +154,11 @@ export class Game {
 			this.ball.y <= this.player2.y  + this.player2.paddleHeight/2 &&
 			this.ball.y >= this.player2.y - this.player2.paddleHeight/2
 		) {
+			console.log(this.player2.x);
+			console.log(this.player2.y);
+			console.log(this.ball.y);
+			console.log(this.ball.x);
+			
 			if ((this.player2.paddleSpeed > 0 && this.ball.speedY > 0)
 				|| ( this.player2.paddleSpeed < 0 && this.ball.speedY <0 ))
 				this.ball.speedY *= 14.5;
@@ -181,7 +188,7 @@ export class Game {
 
 
 	resetGame() {
-	
+
 		this.isGameOver = false;
 		this.ball.reset();
 		this.player1.resetScore();
