@@ -1,10 +1,9 @@
 // Import AppRouter component (it could be inside ./src/router.js)
 
-import { colog, gameSettings, generateUniqueId, jlog } from "transcendence";
+import { colog, jlog } from "transcendence";
 import "./router/AppRouter.js"; // Assuming the AppRouter is inside `src/` folder
 import { AppRouter } from "./router/AppRouter.ts";
 import { Store } from "./state/store.js";
-import { exampleImage } from "./testing/exampleImage.ts";
 import { brepo } from "./utils/utils.ts";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -26,75 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // console.log("DOM CONTENT LOADED!");
-  window.store = new Store({
-    notificationState: [],
-    gameState: {
-      matchId: "",
-      typeOfGame: "localPvP",
-      state: "none",
-      paddleLeft: {
-        playerId: "P_LEFT_PLAYER",
-        paddleSpeed: 0,
-        paddleY: 380,
-        score: 0,
-      },
-      paddleRight: {
-        playerId: "P_Right_PLAYER",
-        paddleSpeed: 0,
-        paddleY: 380,
-        score: 0,
-      },
-      ball: {
-        x: gameSettings.playerYStart,
-        y: gameSettings.playerYStart,
-      },
-    },
-    matchmakingState: {
-      ownMatch: null,
-      otherMatches: [
-        {
-          hostId: "PONGER",
-          oponentId: null,
-          matchId: "match_id_1",
-        },
-        {
-          hostId: "PINGER",
-          oponentId: null,
-          matchId: "match_id_2",
-        },
-      ],
-    },
-    userState: {
-      image: exampleImage,
-      displayName: "TEST_USER",
-      friends: ["friend_1_id", "friend_2_id"],
-      // id: `userid_${generateUniqueId()}`,
-      id: `userid_${sessionStorage.getItem("transTestId")}`,
-      email: "test@user.de",
-      matchHistory: [
-        {
-          date: "15.02.2025",
-          player1Id: "TEST_USER",
-          player2Id: "friend_1_id",
-          result: {
-            player1: 1,
-            player2: 7,
-          },
-          tournament: null,
-        },
-      ],
-      online: true,
-    },
-    oneVOneLocalState: {
-      player2Name: "",
-    },
-    registerState: {
-      displayName: "",
-      email: "",
-    },
-  });
-
+  window.store = new Store();
 
   const appRouter = document.createElement("app-router") as AppRouter;
 

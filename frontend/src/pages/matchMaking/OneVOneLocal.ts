@@ -82,7 +82,7 @@ class OneVOneLocal extends HTMLElement {
     document
       .querySelector("#startGameBtn")
       ?.addEventListener("click", (event) => {
-        this.assignPaddles();
+        this.setGameState();
         window.store.gameStore.updateGameStateState("matchmakingSuccessful");
       });
 
@@ -106,19 +106,15 @@ class OneVOneLocal extends HTMLElement {
     playerTwoInput.focus();
   }
 
-  assignPaddles() {
-    if (window.store.gameStore.get().typeOfGame === "localPvAi") {
-      window.store.gameStore.updateAssignPaddles(
-        window.store.userStore.get().id,
-        "idAi"
-      );
-    } else 
-    {
-      window.store.gameStore.updateAssignPaddles(
-        window.store.userStore.get().id,
-        "idTempHuman"
-      );
-    }
+  setGameState() {
+    const idSecondPlayer = window.store.gameStore.get().typeOfGame === "localPvAi" ? `idAi_${generateUniqueId()}` : `idTempHuman_${generateUniqueId()}`;
+      window.store.gameStore.updateMatchMakingSuccessful({
+        hostId: window.store.userStore.get().id,
+        oponentId: idSecondPlayer,
+        selfHosted: true,
+        playerLeftPaddleId:  window.store.userStore.get().id,
+        playerRightPaddleId: idSecondPlayer,
+      });
   }
 
   typeOfGameChange() {

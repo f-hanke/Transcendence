@@ -5,9 +5,17 @@ import { RegisterState } from "./registerStateTypes";
 class RegisterStore {
   listeners: Set<StoreCallback>;
   state: RegisterState;
-  constructor(initialState: RegisterState) {
-    this.state = initialState;
+  constructor() {
+    this.state = this.init();
     this.listeners = new Set<StoreCallback>();
+  }
+
+  init() {
+    this.state = {
+      displayName: "",
+      email: "",
+    };
+    return this.state;
   }
 
   subscribe(callback: StoreCallback): () => void {
@@ -35,8 +43,7 @@ class RegisterStore {
     return this.state;
   }
 
-  getResetState()
-  {
+  getResetState() {
     return {
       displayName: "",
       email: "",

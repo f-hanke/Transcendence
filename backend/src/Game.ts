@@ -164,7 +164,7 @@ export class Game {
 				this.ball.speedY *= 14.5;
 			if ((this.player2.paddleSpeed > 0 && this.ball.speedY < 0) ||
 				(this.player2.paddleSpeed < 0 && this.ball.speedY > 0) )
-				this.ball.speedY *= 0.5;
+				this.ball.speedY *= 14.5;
 
 			this.ball.speedX *= -1;
 

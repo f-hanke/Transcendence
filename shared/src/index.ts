@@ -4,6 +4,10 @@ import { SharedTypes } from "./sharedTypes.js";
 import { GameSettings, gameSettings } from "./gameSettings.js";
 import { AuthServiceTypes } from "./authTypes.js";
 import { ChatServiceTypes } from "./chatTypes.js";
+import {
+  TransNetworkSettings,
+  transNetworkSettings,
+} from "./networkSettings.js";
 
 export type {
   AuthServiceTypes,
@@ -12,6 +16,7 @@ export type {
   SharedTypes,
   GameSettings,
   ChatServiceTypes,
+  TransNetworkSettings,
 };
 
 import {
@@ -33,4 +38,5 @@ export {
   jlog,
   gameServiceTypeGuards,
   gameSettings,
+  transNetworkSettings,
 };

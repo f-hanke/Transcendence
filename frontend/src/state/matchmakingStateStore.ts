@@ -6,9 +6,17 @@ import { StoreCallback } from "./types";
 class MatchmakingStateStore {
   listeners: Set<StoreCallback>;
   state: MatchmakingState;
-  constructor(initialState: MatchmakingState) {
-    this.state = initialState;
+  constructor() {
+    this.state = this.init();
     this.listeners = new Set<StoreCallback>();
+  }
+
+  init() {
+    this.state = {
+      ownMatch: null,
+      otherMatches: [],
+    };
+    return this.state;
   }
 
   updateListenersOnChange() {
@@ -62,7 +70,7 @@ class MatchmakingStateStore {
     };
     const clientId = window.store.userStore.get().id;
     allMatches.forEach((match) => {
-      if ((match.hostId === clientId)) newState.ownMatch = match;
+      if (match.hostId === clientId) newState.ownMatch = match;
       else newState.otherMatches.push(match);
     });
     this.state = deepCopyObj(newState);
@@ -71,7 +79,7 @@ class MatchmakingStateStore {
 
   updateOneGame(updateMatch: MatchMakingTypes.BasicGame) {
     const game = this.state.otherMatches.find(
-      (match) => (match.matchId === updateMatch.matchId)
+      (match) => match.matchId === updateMatch.matchId
     );
     if (isDefined(game)) game.oponentId = updateMatch.oponentId;
     else this.state.otherMatches.push(deepCopyObj(updateMatch));

@@ -5,9 +5,14 @@ import { StoreCallback } from "./types";
 class NotificationStateStore {
   listeners: Set<StoreCallback>;
   state: NotificationState;
-  constructor(initialState: NotificationState) {
-    this.state = initialState;
+  constructor() {
+    this.state = this.init();
     this.listeners = new Set<StoreCallback>();
+  }
+
+  init(){
+    this.state = [];
+    return this.state;
   }
 
   subscribe(callback: StoreCallback): () => void {

@@ -13,6 +13,7 @@ import {
   gameServiceTypeGuards,
   GameServiceTypes,
   MatchMakingTypes,
+  transNetworkSettings,
 } from "transcendence";
 import fastifyWebsocket from "@fastify/websocket";
 import { request } from "http";
@@ -146,8 +147,8 @@ fastify.get("/favicon.ico", async (request, reply) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: 3001, host: "0.0.0.0" });
-    console.log(chalk.cyan.bold("Server running on http://localhost:3001"));
+    await fastify.listen({ port: transNetworkSettings.gameService.port, host: "0.0.0.0" });
+    console.log(chalk.cyan.bold(`Server running on http://localhost:${transNetworkSettings.gameService.port}`));
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

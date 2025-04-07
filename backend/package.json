@@ -4,7 +4,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "clear && rm -rf ./dist && npx tsc -p tsconfig.json && node dist/server.js"
+    "build": "clear && rm -rf ./dist && npx tsc -p tsconfig.json",
+    "dev": "npm run build && node ./dist/server.js"
   },
   "keywords": [],
   "author": "",

@@ -1,9 +1,4 @@
-import { ChatUser } from "../../state/chatStateTypes";
-
-type ChatUserComponentData = Pick<
-  ChatUser,
-  "displayName" | "image" | "online" | "lastMessage" | "unreadMessages"
->;
+import { ChatServiceTypes, generateUniqueId } from "transcendence";
 
 class ChatUserComponent extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -11,7 +6,10 @@ class ChatUserComponent extends HTMLElement {
   lastMessage: string;
   unreadMessages: boolean;
   online: boolean;
+  blocked: boolean;
+  friend: boolean;
   image: string;
+  id: string;
   constructor() {
     super();
     this.unsubscribeLanguage = null;
@@ -19,7 +17,10 @@ class ChatUserComponent extends HTMLElement {
     this.lastMessage = "";
     this.unreadMessages = false;
     this.online = false;
+    this.blocked = false;
+    this.friend = false;
     this.image = "";
+    this.id = generateUniqueId();
   }
 
   connectedCallback() {
@@ -34,53 +35,80 @@ class ChatUserComponent extends HTMLElement {
   }
 
   render() {
-    // const shortMessage =
-    //   this.lastMessage.length > 20
-    //     ? this.lastMessage.substring(0, 20) + "..."
-    //     : this.lastMessage;
-
+    const unfriend = `
+       <div class="relative w-5 h-5 text-xs flex items-center justify-center">
+        <span class="inset-0 flex items-center justify-center">
+          <div class="">🧑‍🤝‍🧑</div>
+          <div class="absolute left-0 top-0 w-full h-0.5 bg-red-600 transform rotate-45 translate-y-2"></div>
+        </span>
+      </div>
+    `;
+    const friend = this.friend ? unfriend : "🧑‍🤝‍🧑";
+    const onlineClass = this.online ? "shadow-green-500" : "shadow-gray-400";
     this.innerHTML = `
-      <div class="flex items-center justify-between p-3 border-b border-gray-300 bg-white hover:bg-gray-100 cursor-pointer">
+      <div class="flex items-center justify-between p-3 border-b border-gray-300 bg-gray-700 hover:bg-gray-600 cursor-pointer select-none">
         <div class="flex items-center space-x-3">
-
           <div class="flex flex-col">
-                <img src="${this.image}" alt="${
-      this.displayName
-    }" class="w-10 h-10 rounded-full border-2 border-gray-300">
+                <img src="${this.image}" alt="${this.displayName}" class="w-10 h-10 rounded-full shadow-[0_0_0_3px_black] ${onlineClass}">
 
-    <div class="flex items-center justify-between">
-    <div class="w-3 h-3 rounded-full ${
-                  this.online ? "bg-green-500" : "bg-gray-400"
-                }"></div>
-          <button class="bg-blue-500 text-white text-xs rounded hover:bg-blue-600">
+    <div class="flex items-center justify-between mt-2">
+          <button id="${this.id}_inviteToPlayBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center">
           🏓
-              </button>
+          </button>
+          <!-- <button class="text-white text-xs rounded hover:bg-blue-600">
+          🧑‍🤝‍🧑
+          </button> -->
+          <button id="blockBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center">
+          ⛔	
+          </button>
+          <button id="friendBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center flex items-center justify-center">
+          ${friend}
+          </button>
     </div>
 
                 
           </div>
 
-          <div class="w-44">
-            <p class="text-gray-800">${this.displayName}</p>
+          <div class="w-40">
+            <p class="text-white">${this.displayName}</p>
             <p class="text-sm text-gray-500 truncate w-full overflow-hidden text-ellipsis whitespace-nowrap">${this.lastMessage}</p>
           </div>
         </div>
 
         <div class="flex items-center space-x-2">
           <!-- Online Status Indicator -->
-         
-
-       
         </div>
       </div>
     `;
+
+    const inviteToPlayBtn =  document
+    .querySelector(`#${this.id}_inviteToPlayBtn`) as HTMLButtonElement;
+
+    inviteToPlayBtn.addEventListener("click", () => {
+          alert("invited to play");
+      })
+
+    const blockBtn =  document
+    .querySelector("#blockBtn")
+    ?.addEventListener("click", () => {
+          alert("blocked");
+      })
+  
+    const friendBtn =  document
+    .querySelector("#friendBtn")
+    ?.addEventListener("click", () => {
+          alert("friend");
+      })
+
   }
 
-  setData(data: ChatUserComponentData) {
+  setData(data: ChatServiceTypes.ChatUser) {
     this.displayName = data.displayName;
     this.lastMessage = data.lastMessage;
     this.unreadMessages = data.unreadMessages;
     this.online = data.online;
+    this.friend = data.friend;
+    this.blocked = data.blocked;
     this.image = data.image;
     this.render();
   }

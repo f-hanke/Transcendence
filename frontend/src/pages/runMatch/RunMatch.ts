@@ -39,6 +39,7 @@ class RunMatch extends HTMLElement {
   }
 
   renderRunningGame() {
+    this.innerHTML = "";
     this.matchScoreComponent = createHtmlElementFromString(
       "<match-score></match-score>"
     ) as MatchScore;
@@ -46,10 +47,10 @@ class RunMatch extends HTMLElement {
       "<pong-table></pong-table>"
     );
     const wrapper = createHtmlElementFromString(
-      "<div class='bg-black h-full w-full text-white'><div>"
+      "<div class='bg-black flex flex-col justify-center h-full w-full text-white'><div>"
     );
-    wrapper.appendChild(pongTableComponent);
     wrapper.appendChild(this.matchScoreComponent);
+    wrapper.appendChild(pongTableComponent);
     this.appendChild(wrapper);
   }
 }

@@ -4,9 +4,16 @@ import { StoreCallback } from "./types";
 class OneVOneLocalStateStore {
   listeners: Set<StoreCallback>;
   state: OneVOneLocalState;
-  constructor(initialState: OneVOneLocalState) {
-    this.state = initialState;
+  constructor() {
+    this.state = this.init();
     this.listeners = new Set<StoreCallback>();
+  }
+
+  init() {
+    this.state = {
+      player2Name: "",
+    };
+    return this.state;
   }
 
   subscribe(callback: StoreCallback): () => void {
