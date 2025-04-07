@@ -17,24 +17,23 @@ class ChatMessageStateStore {
       recipientId: "",
     };
 
-    for (let i = 0; i < 10; i++) {
-      if (i < 5) {
+    for (let i = 0; i < 20; i++) {
+      if (i % 2 == 0) {
         this.state.messages.push({
           authorId: "USER_ID",
-          date: "25.12.2025",
+          date: Date.now(),
           message: "TEST MESSAGE COMING FROM USER",
           recipientId: String(i),
         });
       } else {
         this.state.messages.push({
           authorId: String(i),
-          date: "25.12.2025",
+          date: Date.now(),
           message: "TEST MESSAGE DIRECTED AT USER",
           recipientId: "USER_ID",
         });
       }
     }
-
     return this.state;
   }
 

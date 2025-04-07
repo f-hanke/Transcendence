@@ -134,6 +134,8 @@ class GameStateStore {
         : newState.player1;
     this.getPaddleByPlayerId(newOponentPaddle.id).paddleY =
       newOponentPaddle.paddleY;
+    this.getPaddleByPlayerId(newState.player1.id).score = newState.player1.score;
+    this.getPaddleByPlayerId(newState.player2.id).score = newState.player2.score;
     this.updateListenersOnChange();
   }
 

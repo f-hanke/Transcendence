@@ -49,7 +49,7 @@ class ChatUserComponent extends HTMLElement {
       <div class="flex items-center justify-between p-3 border-b border-gray-300 bg-gray-700 hover:bg-gray-600 cursor-pointer select-none">
         <div class="flex items-center space-x-3">
           <div class="flex flex-col">
-                <img src="${this.image}" alt="${this.displayName}" class="w-10 h-10 rounded-full shadow-[0_0_0_3px_black] ${onlineClass}">
+            <img id="${this.id}_userImage" src="${this.image}" alt="${this.displayName}" class="w-10 h-10 rounded-full shadow-[0_0_0_3px_black] ${onlineClass}">
 
     <div class="flex items-center justify-between mt-2">
           <button id="${this.id}_inviteToPlayBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center">
@@ -58,10 +58,10 @@ class ChatUserComponent extends HTMLElement {
           <!-- <button class="text-white text-xs rounded hover:bg-blue-600">
           🧑‍🤝‍🧑
           </button> -->
-          <button id="blockBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center">
+          <button id="${this.id}_blockBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center">
           ⛔	
           </button>
-          <button id="friendBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center flex items-center justify-center">
+          <button id="${this.id}_friendBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center flex items-center justify-center">
           ${friend}
           </button>
     </div>
@@ -74,32 +74,31 @@ class ChatUserComponent extends HTMLElement {
             <p class="text-sm text-gray-500 truncate w-full overflow-hidden text-ellipsis whitespace-nowrap">${this.lastMessage}</p>
           </div>
         </div>
-
-        <div class="flex items-center space-x-2">
-          <!-- Online Status Indicator -->
-        </div>
       </div>
     `;
 
-    const inviteToPlayBtn =  document
-    .querySelector(`#${this.id}_inviteToPlayBtn`) as HTMLButtonElement;
-
+    const inviteToPlayBtn = document.querySelector(
+      `#${this.id}_inviteToPlayBtn`
+    ) as HTMLButtonElement;
     inviteToPlayBtn.addEventListener("click", () => {
-          alert("invited to play");
-      })
+      alert("invited to play");
+    });
 
-    const blockBtn =  document
-    .querySelector("#blockBtn")
-    ?.addEventListener("click", () => {
-          alert("blocked");
-      })
+    const blockBtn = document.querySelector(`#${this.id}_blockBtn`) as HTMLButtonElement;
+    blockBtn.addEventListener("click", () => {
+      alert("blocked");
+    });
+
+    const friendBtn = document.querySelector(`#${this.id}_friendBtn`) as HTMLButtonElement;
+    friendBtn.addEventListener("click", () => {
+      alert("friend");
+    });
+
+    const image = document.querySelector(`#${this.id}_userImage`) as HTMLButtonElement;
+    image.addEventListener("click", () => {
+      alert("user profile");
+    });
   
-    const friendBtn =  document
-    .querySelector("#friendBtn")
-    ?.addEventListener("click", () => {
-          alert("friend");
-      })
-
   }
 
   setData(data: ChatServiceTypes.ChatUser) {
