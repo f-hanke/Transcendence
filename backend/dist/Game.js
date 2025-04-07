@@ -122,10 +122,6 @@ export class Game {
         if (this.player2.x - this.player2.paddleWidth / 2 <= this.ball.x + this.ball.radius &&
             this.ball.y <= this.player2.y + this.player2.paddleHeight / 2 &&
             this.ball.y >= this.player2.y - this.player2.paddleHeight / 2) {
-            console.log(this.player2.x);
-            console.log(this.player2.y);
-            console.log(this.ball.y);
-            console.log(this.ball.x);
             if ((this.player2.paddleSpeed > 0 && this.ball.speedY > 0)
                 || (this.player2.paddleSpeed < 0 && this.ball.speedY < 0))
                 this.ball.speedY *= 14.5;
