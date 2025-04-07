@@ -5,7 +5,10 @@ import { gameSettings } from 'transcendence';
 import { sendMessage } from './server.js';
 export class Game {
     typeOfGame;
+    websocketplayer1;
+    websocketplayer2;
     websocket;
+    remoteWebsockets;
     matchId;
     player1;
     player2;
@@ -16,6 +19,8 @@ export class Game {
     gameLoopId;
     onGameOverCallback = null;
     constructor(typeOfGame, matchId, hostId, opponentId) {
+        this.websocketplayer1 = null;
+        this.websocketplayer2 = null;
         this.websocket = null;
         this.matchId = matchId;
         this.typeOfGame = typeOfGame;
@@ -26,11 +31,13 @@ export class Game {
         this.screenWidth = gameSettings.pongTableWidth;
         this.screenHeight = gameSettings.pongTableHeight;
         this.gameLoopId = null;
+        this.remoteWebsockets = null;
     }
     gameLoop = () => {
+        // console.log(this.remoteWebsockets?.get(this.player1.id));
+        // console.log(this.remoteWebsockets?.get(this.player2.id));
         if (!this.isGameOver) {
-            this.update();
-            sendMessage(this.websocket, {
+            const gameStateMsgNew = {
                 type: "serverUpdateGameState",
                 data: {
                     ball: {
@@ -49,7 +56,18 @@ export class Game {
                         score: this.player2.score,
                     }
                 }
-            });
+            };
+            this.update();
+            if (this.typeOfGame == 'remote') {
+                console.log("Sending remote update");
+                sendMessage(this.websocketplayer1, gameStateMsgNew);
+                sendMessage(this.websocketplayer2, gameStateMsgNew);
+                // sendMessage(this.remoteWebsockets?.get(this.player1.id) as WebSocket, gameStateMsgNew)
+                // sendMessage(this.remoteWebsockets?.get(this.player2.id) as WebSocket, gameStateMsgNew)
+            }
+            else {
+                sendMessage(this.websocket, gameStateMsgNew);
+            }
             this.gameLoopId = setTimeout(this.gameLoop, 1000 / 60); // 60 FPS
         }
     };
@@ -100,6 +118,16 @@ export class Game {
         this.player1.paddleSpeed = data.player1.paddleSpeed;
         this.player2.y = data.player2.paddleY;
         this.player2.paddleSpeed = data.player2.paddleSpeed;
+    }
+    updatePaddlePositionRemote(data) {
+        if (data.player1.playerId == this.player1.id) {
+            this.player1.y = data.player1.paddleY;
+            this.player1.paddleSpeed = data.player1.paddleSpeed;
+        }
+        else {
+            this.player2.y = data.player1.paddleY;
+            this.player2.paddleSpeed = data.player1.paddleSpeed;
+        }
     }
     update() {
         this.ball.move(this.screenWidth, this.screenHeight);

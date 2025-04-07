@@ -39,7 +39,7 @@ fastify.register(async function (fastify) {
             const dataJson = JSON.parse(data);
             console.log("Received message:", dataJson);
             const current_game = games.get(dataJson.data.matchId);
-            console.log("Current game:", current_game);
+            // console.log("Current game:", current_game);
             if (!current_game) {
                 console.log("Error or game not created");
             }
@@ -52,35 +52,37 @@ fastify.register(async function (fastify) {
                 console.log(chalk.yellow(`Initializing match with hostId: ${hostId}, oponentId: ${oponentId}`));
                 console.log(chalk.yellow(`Client ${clientId} connected to match ${matchId}`));
                 if (!readyClients.has(matchId)) {
-                    readyClients.set(matchId, {
+                    const newReadyClient = {
                         hostIdReady: false,
                         oponentIdReady: false,
                         sockets: new Map()
-                    });
-                    console.log(chalk.yellow(`Initialized readyClients for match ${matchId}`));
+                    };
+                    readyClients.set(matchId, newReadyClient);
+                    current_game.remoteWebsockets = newReadyClient.sockets;
                 }
                 const match = readyClients.get(matchId);
                 console.log(`Current match status: hostIdReady: ${match.hostIdReady}, oponentIdReady: ${match.oponentIdReady}`);
                 if (gameServiceTypeGuards.isClientIsReady(dataJson)) {
                     console.log(chalk.green(`${clientId} is ready`));
-                    match.sockets.set(clientId, socket);
-                    console.log(chalk.yellow(`clientId: ${clientId}, hostId: ${hostId}, oponentId: ${oponentId}`));
+                    match.sockets.set(dataJson.data.clientId, socket);
                     if (clientId === hostId) {
                         match.hostIdReady = true;
                         console.log(chalk.yellow(`${hostId} is marked as ready`));
+                        current_game.websocketplayer1 = socket;
                     }
                     else if (clientId === oponentId) {
                         match.oponentIdReady = true;
+                        current_game.websocketplayer2 = socket;
                         console.log(chalk.yellow(`${oponentId} is marked as ready`));
                     }
-                    console.log(`Update current match status: hostIdReady: ${match.hostIdReady}, oponentIdReady: ${match.oponentIdReady}`);
+                    //console.log(`Update current match status: hostIdReady: ${match.hostIdReady}, oponentIdReady: ${match.oponentIdReady}`);
                     if (current_game.isGameOver === false) {
                         console.log("Game already running!");
                         return;
                     }
                     if (match.hostIdReady && match.oponentIdReady) {
                         console.log(chalk.yellow(`Both players ready for match ${matchId}. Starting game...`));
-                        for (const [id, sock] of match.sockets.entries()) {
+                        for (const [id, socket] of match.sockets.entries()) {
                             sendMessage(socket, {
                                 type: "serverGameStarted",
                                 data: {
@@ -92,6 +94,11 @@ fastify.register(async function (fastify) {
                         games.get(dataJson.data.matchId)?.startGame();
                         readyClients.delete(dataJson.data.matchId);
                     }
+                }
+                if (gameServiceTypeGuards.isClientUpdatePaddlePosition(dataJson)) {
+                    games
+                        .get(dataJson.data.matchId)
+                        ?.updatePaddlePositionRemote(dataJson.data);
                 }
             }
             else if (current_game.typeOfGame == "localPvP") {
