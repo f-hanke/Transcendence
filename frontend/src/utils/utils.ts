@@ -1,4 +1,4 @@
-import { isDefined, portSettings } from "transcendence";
+import { isDefined, transNetworkSettings } from "transcendence";
 import { RouteBuilder } from "./utilsTypes";
 
 function deepCopyObj<T extends object>(obj: T): T {
@@ -38,20 +38,20 @@ function buildBackendRoute(optn: {
   addClientIdAsQueryParam?: RouteBuilder.AddClientIdAsQueryParam;
 }) {
   const socketOrApiString = optn.websocketOrApi === "api" ? "http" : "ws";
-  let ip = import.meta.env.VITE_BACKEND_IP;
-  let port;
+  let port: number = -1;
+  let ip: string = "";
   switch (optn.service) {
     case "gameService":
-      // port = import.meta.env.VITE_PORT_GAME_SERVICE;
-      port = portSettings.gameService;
+      ip = transNetworkSettings.gameService.ip;
+      port = transNetworkSettings.gameService.port;
       break;
     case "matchmakingService":
-      // port = import.meta.env.VITE_PORT_MATCHMAKING_SERVICE;
-      port = portSettings.matchmakingService;
+      ip = transNetworkSettings.matchmakingService.ip;
+      port = transNetworkSettings.matchmakingService.port;
       break;
     case "chatService":
-      // port = import.meta.env.VITE_PORT_CHAT_SERVICE;
-      port = portSettings.chatService;
+      ip = transNetworkSettings.chatService.ip;
+      port = transNetworkSettings.chatService.port;
       break;
   }
   if (optn.addClientIdAsQueryParam === true) {
@@ -70,8 +70,11 @@ function roundIntToString(num: number) {
   return `${Math.round(num)}`;
 }
 
-function padNumberToString(num:number, padToLength: number, padWith: string = " ")
-{
+function padNumberToString(
+  num: number,
+  padToLength: number,
+  padWith: string = " "
+) {
   return `${num}`.padStart(padToLength, padWith);
 }
 
@@ -83,5 +86,5 @@ export {
   buildBackendRoute,
   brepo,
   roundIntToString,
-  padNumberToString
+  padNumberToString,
 };
