@@ -1,3 +1,4 @@
+import { ChatServiceTypes } from "transcendence";
 import { createHtmlElementFromString } from "../../utils/utils";
 import { ChatUserComponent } from "./ChatUserComponent";
 
@@ -29,31 +30,47 @@ class ChatList extends HTMLElement {
     this.innerHTML = `
           <!-- Left Panel: User List -->
           <div class="w-72 h-full bg-gray-800 text-white p-4 overflow-y-auto">
-            <h2 class="text-lg font-bold mb-4">Users</h2>
-            <ul id="userList" class="space-y-2">
-              <li class="p-2 bg-gray-700 rounded cursor-pointer">User 1</li>
-              <li class="p-2 bg-gray-700 rounded cursor-pointer">User 2</li>
-              <li class="p-2 bg-gray-700 rounded cursor-pointer">User 3</li>
-            </ul>
+            <div id="chatFriendsList">
+              <h2 class="text-lg font-bold py-4" class="text-lg font-bold">Friends</h2>
+            </div>
+            <div id="chatOnlineUsersList">
+              <h2 class="text-lg font-bold py-4">Online</h2>
+            </div>
+            <div id="chatOfflineUsersList">
+              <h2 class="text-lg font-bold py-4">Offline</h2>
+            </div>
           </div>
       `;
 
-    const userListWrapper = this.querySelector("#userList") as HTMLUListElement;
+    const friendsContainer = this.querySelector(
+      "#chatFriendsList"
+    ) as HTMLDivElement;
+    const onlineContainer = this.querySelector(
+      "#chatOnlineUsersList"
+    ) as HTMLDivElement;
+    const offlineContainer = this.querySelector(
+      "#chatOfflineUsersList"
+    ) as HTMLDivElement;
 
+    const userGroups = window.store.chatUserStore.getUserGroups();
+
+    for (const user of userGroups.friends) {
+      this.createAndAppend(friendsContainer, user);
+    }
+    for (const user of userGroups.online) {
+      this.createAndAppend(onlineContainer, user);
+    }
+    for (const user of userGroups.offline) {
+      this.createAndAppend(offlineContainer, user);
+    }
+  }
+
+  createAndAppend(container: HTMLDivElement, user: ChatServiceTypes.ChatUser) {
     const elem = createHtmlElementFromString(
       `<chat-user-component></chat-user-component>`
     ) as ChatUserComponent;
-
-
-    userListWrapper.appendChild(elem);
-    elem.setData({
-      displayName: "DISPLAY NAME",
-      image: "dfsdf",
-      lastMessage: "LAST MESSAGE AND MORE AND MORE",
-      online: true,
-      unreadMessages: true,
-    });
-
+    container.appendChild(elem);
+    elem.setData(user);
   }
 }
 

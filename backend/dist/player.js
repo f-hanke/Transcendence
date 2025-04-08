@@ -8,9 +8,9 @@ export class Player {
     paddleSpeed;
     id;
     /*Something to do with the position */
-    constructor(id, y) {
+    constructor(id, x) {
         this.id = id;
-        this.x = 10; //not correct
+        this.x = x;
         this.y = gameSettings.playerYStart;
         this.score = 0;
         this.paddleWidth = gameSettings.paddleWidth;

@@ -7,7 +7,7 @@ import {
 } from "transcendence";
 import { buildBackendRoute } from "../utils/utils";
 
-class MatchMakingInterface {
+class ChatInterface {
   constructor() {
     throw new Error("This class cannot be instantiated.");
   }
@@ -18,7 +18,7 @@ class MatchMakingInterface {
     if (!isDefined(this.websocket)) {
       const address = buildBackendRoute({
         websocketOrApi: "ws",
-        service: "matchmakingService",
+        service: "chatService",
         route: "",
         addClientIdAsQueryParam: true,
       });
@@ -47,14 +47,6 @@ class MatchMakingInterface {
   }
 
   static disconnect() {
-    const ownMatch = window.store.matchmakingStore.get().ownMatch;
-    if (isDefined(ownMatch)) {
-      this.sendMessageToServer({
-        type: "deleteGame",
-        data: ownMatch as MatchMakingTypes.BasicGame,
-      });
-      window.store.matchmakingStore.deleteGame(ownMatch);
-    }
     if (isDefined(this.websocket)) {
       this.websocket.close();
       this.websocket = null;
@@ -63,8 +55,6 @@ class MatchMakingInterface {
 
   static handleMessage(event: MessageEvent) {
     const dataJson = JSON.parse(event.data);
-    colog("CLIENT RECEIVED THE FOLLOWING MESSAGE");
-    jlog(dataJson);
     if (matchmakingTypeGuards.isServerUpdateGames(dataJson)) {
       this.handleServerUpdatedGames(dataJson);
     } else if (matchmakingTypeGuards.isClientDeleteGame(dataJson)) {
@@ -139,4 +129,4 @@ class MatchMakingInterface {
   }
 }
 
-export { MatchMakingInterface };
+export { ChatInterface };

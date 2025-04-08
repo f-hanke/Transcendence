@@ -27,24 +27,29 @@ class ManageMatch extends HTMLElement {
   disconnectedCallback() {
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     if (this.unsubscribeGameState) this.unsubscribeGameState();
-    if (window.store.gameStore.get().state === "running")
-      this.leaveGame.bind(this);
+    if (window.store.gameStore.get().state === "running") this.leaveGame();
+    window.store.gameStore.reset();
   }
 
   async render() {
     const gameState = window.store.gameStore.get().state;
     if (gameState === "none") navigateToSite("/");
     if (gameState === "matchmakingSuccessful") {
-      await GameServiceInterface.createMatchOnServer({
-        typeOfGame: window.store.gameStore.get().typeOfGame,
-        matchId: window.store.gameStore.get().matchId,
-        hostId: window.store.userStore.get().id,
-        oponentId: window.store.oneVOneLocalStore.get().player2Name,
-      });
-      await GameServiceInterface.connect();
-      window.store.gameStore.updateGameStateState("waitingForClientReady");
+      window.store.gameStore.updateGameStateState(
+        "waitingForClientReady",
+        false
+      );
+      if (window.store.gameStore.get().selfHosted) {
+        await GameServiceInterface.createMatchOnServer({
+          typeOfGame: window.store.gameStore.get().typeOfGame,
+          matchId: window.store.gameStore.get().matchId,
+          hostId: window.store.gameStore.get().hostId,
+          oponentId: window.store.gameStore.get().oponentId,
+        });
+      }
     }
     if (gameState === "waitingForClientReady") {
+      await GameServiceInterface.connect();
       this.renderWaitingClientStartModal();
     }
     if (gameState === "waitingForServerStart") {
@@ -92,13 +97,6 @@ class ManageMatch extends HTMLElement {
       },
       KeyN: this.leaveGame.bind(this),
     });
-
-    // this.innerHTML = `
-    //   <central-modal-listemers>
-    //    <h2 class="text-xl font-bold">Confirm Action</h2>
-    //    <p>Are you sure you want to proceed?</p>
-    //  </central-modal>
-    // `
   }
 
   renderRunningGame() {
@@ -108,15 +106,8 @@ class ManageMatch extends HTMLElement {
   }
 
   leaveGame() {
-    window.store.gameStore.updateGameStateState("none");
-    GameServiceInterface.sendMessageToServer({
-      type: "clientLeftGame",
-      data: {
-        playerId: window.store.userStore.get().id,
-        matchId: window.store.gameStore.get().matchId,
-      },
-    });
     GameServiceInterface.disconnect();
+    window.store.gameStore.updateGameStateState("none");
   }
 }
 

@@ -11,9 +11,9 @@ export class Player {
 
 
 	/*Something to do with the position */
-	constructor(id:string, y:number) {
+	constructor(id:string, x:number) {
 		this.id = id;
-		this.x = 10; //not correct
+		this.x = x;
 		this.y = gameSettings.playerYStart;
 		this.score = 0;
 		this.paddleWidth = gameSettings.paddleWidth;
