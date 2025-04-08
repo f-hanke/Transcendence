@@ -1,10 +1,17 @@
 {
+  "scripts": {
+    "dev": "tsc && node dist/server.js"
+  },
   "dependencies": {
+    "@fastify/cors": "^11.0.1",
     "@fastify/static": "^8.1.1",
     "@fastify/websocket": "^11.0.2",
-    "fastify": "^5.2.1"
+    "fastify": "^5.2.1",
+    "transcendence": "file:../shared"
   },
   "devDependencies": {
-    "@types/ws": "^8.18.0"
+    "@types/node": "^22.13.10",
+    "@types/ws": "^8.18.0",
+    "typescript": "^5.8.2"
   }
 }

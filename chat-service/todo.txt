@@ -1,8 +1,0 @@
-- websocket
-	- real time messaging send/receive
-	- game invites
-- API
-	- chat history
-	- friendlist
-
-tsc client/client.ts -w
