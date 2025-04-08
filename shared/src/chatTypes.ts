@@ -37,7 +37,12 @@ declare namespace ChatServiceTypes {
   // client send message
   //
 
-  type AllChatMessageTypes = ServerSendUserList;
+  type AllChatMessageTypes =
+    | ServerSendUserList
+    | ServerSendChatHistory
+    | ServerClientChangedOnlineStatus
+    | ServerClientChangedOnlineStatus
+    | ClientSentMessage;
 
   type DataServerSendUserList = {
     chatUsers: ChatUser[];
@@ -79,9 +84,6 @@ declare namespace ChatServiceTypes {
     type: "clientInviteToPlay";
     data: { recipientId: string };
   };
-
-  
-
 }
 
 function isChatUser(obj: any): obj is ChatServiceTypes.ChatUser {
@@ -110,6 +112,16 @@ function isServerSendUserList(
   );
 }
 
+function isServerSentMessage(
+  message: any
+): message is ChatServiceTypes.ServerSentMessage {
+  return (
+    message?.type === "serverSentMessage" && message?.data
+    // && Array.isArray(message.data)
+    //  &&isChatUser(message.data[0])
+  );
+}
+
 function isServerSendChatHistory(
   message: any
 ): message is ChatServiceTypes.ServerSendChatHistory {
@@ -124,6 +136,7 @@ const chatServiceTypeGuards = {
   isServerSendUserList,
   isChatUser,
   isServerSendChatHistory,
+  isServerSentMessage,
 } as const;
 
 export { chatServiceTypeGuards };

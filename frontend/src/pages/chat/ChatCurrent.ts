@@ -1,5 +1,6 @@
 import { ChatServiceTypes } from "transcendence";
 import { createHtmlElementFromString } from "../../utils/utils";
+import { ChatInterface } from "../../backendInterface/chatInterface";
 
 let i = 0;
 
@@ -41,7 +42,7 @@ class ChatCurrent extends HTMLElement {
             <div class="mt-2 flex">
               <input id="chatInput" type="text" placeholder="Type a message..."
                 class="flex-grow p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <button id="sendButton" class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600">Send</button>
+              <button id="chatSendButton" class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600">Send</button>
             </div>
           </div>
       `;
@@ -49,23 +50,39 @@ class ChatCurrent extends HTMLElement {
       `#messagesContainer`
     ) as HTMLDivElement;
 
-   const curMsgState = window.store.chatMessageStore.get();
-
+    const curMsgState = window.store.chatMessageStore.get();
 
     curMsgState.messages.forEach((msg) => {
       this.createAndAppend(msgContainer, msg);
     });
 
+    const input = this.querySelector("#chatInput") as HTMLInputElement;
+    const chatSendButton = this.querySelector(
+      "#chatSendButton"
+    ) as HTMLButtonElement;
+    chatSendButton.addEventListener("click", () => {
+      ChatInterface.sendMessageToServer({
+        type: "clientSentMessage",
+        data: {
+          authorId: window.store.userStore.get().id,
+          recipientId: window.store.chatMessageStore.get().recipientId,
+          date: new Date(Date.now()).toISOString(),
+          message: input.value,
+        },
+      });
+    });
   }
 
   createAndAppend(container: HTMLDivElement, msg: ChatServiceTypes.Message) {
-    const isOwnMsg = i % 2 == 0  ? true : false;
+    const isOwnMsg = i % 2 == 0 ? true : false;
     i++;
     const styleOwnMsg = "self-end border-green-300";
     const styleOtherMsg = "self-start border-blue-300";
     const elem = createHtmlElementFromString(
       `
-      <div class="my-2 border-2 rounded-lg w-3/4  ${isOwnMsg ? styleOwnMsg : styleOtherMsg}">
+      <div class="my-2 border-2 rounded-lg w-3/4  ${
+        isOwnMsg ? styleOwnMsg : styleOtherMsg
+      }">
         <div>${msg.date}</div>
         <div>${msg.message}</div>
       </div>
@@ -73,7 +90,6 @@ class ChatCurrent extends HTMLElement {
     ) as HTMLDivElement;
     container.appendChild(elem);
   }
-
 }
 
 customElements.define("chat-current", ChatCurrent);

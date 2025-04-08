@@ -53,9 +53,11 @@ class ChatMessageStateStore {
     this.listeners.forEach((callback) => callback());
   }
 
-  addMessage(newMessage: ChatServiceTypes.Message) {
-    this.state.messages.push(newMessage);
-    this.updateListenersOnChange();
+  addMessage(recipientId: string, newMessage: ChatServiceTypes.Message) {
+    if (this.state.recipientId === recipientId) {
+      this.state.messages.push(deepCopyObj(newMessage));
+      this.updateListenersOnChange();
+    }
   }
 
   updateListenersOnChange() {
