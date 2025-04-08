@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import fastifyWebsocket, { WebsocketHandler } from '@fastify/websocket';
 import cors from '@fastify/cors';
 import { WebSocket } from 'ws';
-import { ChatServiceTypes, SharedTypes, transNetworkSettings } from 'transcendence';
+import { chatServiceTypeGuards, ChatServiceTypes, SharedTypes, transNetworkSettings } from 'transcendence';
 import { FastifyRequest } from 'fastify/types/request';
 import { parse } from 'path';
 
@@ -28,15 +28,11 @@ function getClientIdFromQueryParam(req: MatchMakingFastifyRequest) {
 }
 
 fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
-
 	console.log("Chat history request received");
-	console.log("Params: ", req.query);
 	const recipientId = getClientIdFromQueryParam(req as MatchMakingFastifyRequest);
 
 	console.log(recipientId);
 	const messages = messageMap.get(parseInt(recipientId));
-	//print messages
-	console.log("Messages: ", messages);
 
 	return reply.send({type: "serverSendChatHistory", data: messages});
 });
@@ -115,7 +111,8 @@ const generateTestConversation = (recipientId: number) => {
 	messageMap.set(parseInt(recipientIdString), conversation);
 };
 
-const clients = new Map<WebSocket, string>();
+const socketToClientId = new Map<WebSocket, string>();
+const clientIdToSocket = new Map<string, WebSocket>();
 
 fastify.register(async function (fastify) {
 	fastify.get("/ws", { websocket: true }, (socket, req) => {
@@ -126,14 +123,29 @@ fastify.register(async function (fastify) {
 
 		socket.on('message', (message) => {
 			const data = message.toString("utf-8");
-			console.log("message received: ", data);
-			socket.send(data);
+			const dataJson = JSON.parse(data);
+			if (dataJson.type == "clientSentMessage") {
+				const dataJsonType = dataJson as ChatServiceTypes.ClientSentMessage;
+				console.log(dataJsonType);
+				console.log(`${dataJsonType.data.authorId} sent a msg to ${dataJsonType.data.recipientId}`)
+				if (clientIdToSocket.has(dataJsonType.data.recipientId)) {
+					console.log(`-----> recipient online`);
+					const recipientSocket = clientIdToSocket.get(dataJsonType.data.recipientId);
+					recipientSocket?.send(JSON.stringify({
+						type: "serverSentMessage",
+						data: dataJsonType.data,
+					}));
+				}
+				else
+					console.log(`-----> recipient offline`);
+			}
 		});
 
 		socket.on('close', () => {
-			const clientId = clients.get(socket);
+			const clientId = socketToClientId.get(socket) as string;
+			socketToClientId.delete(socket);
+			clientIdToSocket.delete(clientId);
 			console.log(`Client disconnected: ${clientId}`);
-			clients.delete(socket);
 		});
 		socket.on("error", (err) => {
 			console.error("WebSocket error:", err);
@@ -148,7 +160,8 @@ function registerClient(req: FastifyRequest, socket: WebSocket) {
 		socket.close(1008, "Missing clientId");
 		return;
 	}
-	clients.set(socket, clientId);
+	socketToClientId.set(socket, clientId);
+	clientIdToSocket.set(clientId, socket);
 	console.log(`Client connected: ${clientId}`);
 }
 
