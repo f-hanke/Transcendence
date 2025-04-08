@@ -2,8 +2,9 @@ import Fastify from 'fastify';
 import fastifyWebsocket, { WebsocketHandler } from '@fastify/websocket';
 import cors from '@fastify/cors';
 import { WebSocket } from 'ws';
-import { ChatServiceTypes, transNetworkSettings } from 'transcendence';
+import { ChatServiceTypes, SharedTypes, transNetworkSettings } from 'transcendence';
 import { FastifyRequest } from 'fastify/types/request';
+import { parse } from 'path';
 
 const fastify = Fastify();
 fastify.register(fastifyWebsocket);
@@ -11,7 +12,35 @@ fastify.register(cors, { origin: "*" });
 
 type ChatUser = ChatServiceTypes.ChatUser;
 type Message = ChatServiceTypes.Message;
-type ServerSendChatHistory = ChatServiceTypes.ServerSendChatHistory;
+
+const messageMap = new Map<number, Message[]>();
+
+type MatchMakingFastifyRequest = FastifyRequest<{
+	Querystring: SharedTypes.ClientQueryParamMatchMaking;
+}>;
+
+function getClientIdFromQueryParam(req: MatchMakingFastifyRequest) {
+	if (req?.query?.recipientId) return req.query.recipientId;
+	const msg =
+	  "Client didn't provide their id in query string when connecting to websocket!";
+	console.log(msg);
+	throw new Error(msg);
+}
+
+fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
+
+	console.log("Chat history request received");
+	console.log("Params: ", req.query);
+	const recipientId = getClientIdFromQueryParam(req as MatchMakingFastifyRequest);
+
+	console.log(recipientId);
+	const messages = messageMap.get(parseInt(recipientId));
+	//print messages
+	console.log("Messages: ", messages);
+
+	return reply.send({type: "serverSendChatHistory", data: messages});
+});
+
 
 const generateTestUsers = () =>{
 	const users: ChatUser[] = [];
@@ -28,6 +57,7 @@ const generateTestUsers = () =>{
 		image: "test",
 		lastMessage: `Last message from user ${i}`,
 	  });
+	  generateTestConversation(i);
 	}
 	const ServerSendUserList = {
 		type: "serverSendUserList",
@@ -38,68 +68,52 @@ const generateTestUsers = () =>{
 	return ServerSendUserList;
   };
 
-const generateTestConversation = (): Message[] => {
+const generateTestConversation = (recipientId: number) => {
 	const now = new Date();
 	const formatDate = (minutesAgo: number) =>
 		new Date(now.getTime() - minutesAgo * 60 * 1000).toISOString();
 
+	const recipientIdString = recipientId.toString();
 	const conversation: Message[] = [
 		{
-		authorId: "1",
-		recipientId: "2",
+		authorId: "user1",
+		recipientId: recipientIdString,
 		message: "Hey! How’s it going?",
 		date: formatDate(5),
 		},
 		{
-		authorId: "2",
-		recipientId: "1",
-		message: "Good, just working on a project. You?",
+		authorId: recipientIdString,
+		recipientId: "user1",
+		message: `${recipientIdString} Good, just working on a project. You?`,
 		date: formatDate(4),
 		},
 		{
-		authorId: "1",
-		recipientId: "2",
+		authorId: "user1",
+		recipientId: recipientIdString,
 		message: "Same here! Doing some TypeScript stuff.",
 		date: formatDate(3),
 		},
 		{
-		authorId: "2",
-		recipientId: "1",
-		message: "Nice! Let me know if you wanna pair-program later.",
+		authorId: recipientIdString,
+		recipientId: "user1",
+		message: `${recipientIdString} Nice! Let me know if you wanna pair-program later.`,
 		date: formatDate(2),
 		},
 		{
-		authorId: "1",
-		recipientId: "2",
+		authorId: "user1",
+		recipientId: recipientIdString,
 		message: "For sure! Ping me after 6?",
 		date: formatDate(1),
 		},
 		{
-		authorId: "2",
-		recipientId: "1",
-		message: "Will do ✌️",
+		authorId: recipientIdString,
+		recipientId: "user1",
+		message: `${recipientIdString} Will do`,
 		date: formatDate(0),
 		},
 	];
-
-	return conversation;
+	messageMap.set(parseInt(recipientIdString), conversation);
 };
-
-fastify.get('/chat-history/:recipientId', async (req, reply) => {
-	const { recipientId } = req.params as { recipientId: string };
-
-	const history = generateTestConversation().filter(
-		(msg) => msg.recipientId === recipientId || msg.authorId === recipientId
-	);
-
-	return reply.send({
-		type: "serverSendChatHistory",
-		data: {
-		recipientId,
-		history,
-		},
-	});
-});
 
 const clients = new Map<WebSocket, string>();
 
