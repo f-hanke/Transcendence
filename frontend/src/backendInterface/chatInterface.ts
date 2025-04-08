@@ -1,8 +1,8 @@
 import {
+  chatServiceTypeGuards,
+  ChatServiceTypes,
   colog,
   isDefined,
-  jlog,
-  matchmakingTypeGuards,
   MatchMakingTypes,
 } from "transcendence";
 import { buildBackendRoute } from "../utils/utils";
@@ -14,14 +14,53 @@ class ChatInterface {
 
   static websocket: WebSocket | null = null;
 
+  static async requestChatHistory(recipientId: string) {
+    const address = buildBackendRoute({
+      websocketOrApi: "api",
+      service: "chatService",
+      route: "/chat-history/",
+      queryData: {
+        recipientId: recipientId,
+      },
+    });
+    colog(address);
+    try {
+      const response = await fetch(address, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const responseJson =await  response.json();
+      colog(responseJson);
+      if (chatServiceTypeGuards.isServerSendChatHistory(responseJson)) {
+        window.store.chatMessageStore.update({
+          recipientId: recipientId,
+          messages: responseJson.data,
+        });
+      } else {
+        throw new Error(`Server Send Chat History Wrong Data Type received!`);
+      }
+      window.store;
+      if (!response.ok) {
+        colog("fetchin 2");
+        throw new Error(`Couldn't create match on Server via API!`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
   static connect(): Promise<void> {
     if (!isDefined(this.websocket)) {
+      colog("connecting to chat");
       const address = buildBackendRoute({
         websocketOrApi: "ws",
         service: "chatService",
-        route: "",
+        route: "/ws",
         addClientIdAsQueryParam: true,
       });
+      colog(address);
       return new Promise((resolve, reject) => {
         this.websocket = new WebSocket(address);
         this.websocket.onerror = (error) => {
@@ -48,37 +87,42 @@ class ChatInterface {
 
   static disconnect() {
     if (isDefined(this.websocket)) {
+      colog("disconnecting from chat");
       this.websocket.close();
       this.websocket = null;
     }
   }
 
   static handleMessage(event: MessageEvent) {
+    colog("Hi!");
     const dataJson = JSON.parse(event.data);
-    if (matchmakingTypeGuards.isServerUpdateGames(dataJson)) {
-      this.handleServerUpdatedGames(dataJson);
-    } else if (matchmakingTypeGuards.isClientDeleteGame(dataJson)) {
-      this.handleServerDeleteGame(dataJson);
-    } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
-      this.handleServerStartGame(dataJson);
-    } else if (matchmakingTypeGuards.isServerUpdateOneGame(dataJson)) {
-      this.handleServerUpdateOneGame(dataJson);
-    } else if (matchmakingTypeGuards.isClientCreateGame(dataJson)) {
-      this.handleServerCreateGame(dataJson);
-    } else if (matchmakingTypeGuards.isClientLeaveGame(dataJson)) {
-      this.handleServerLeaveGame(dataJson);
-    } else {
-      jlog(dataJson);
-      throw new Error(
-        "Client received unknown message from matchmaking server!"
-      );
+    colog(dataJson);
+    if (chatServiceTypeGuards.isServerSendUserList(dataJson)) {
+      this.handleServerSendUserList(dataJson);
+    }
+    // } else if (matchmakingTypeGuards.isClientDeleteGame(dataJson)) {
+    //   this.handleServerDeleteGame(dataJson);
+    // } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
+    //   this.handleServerStartGame(dataJson);
+    // } else if (matchmakingTypeGuards.isServerUpdateOneGame(dataJson)) {
+    //   this.handleServerUpdateOneGame(dataJson);
+    // } else if (matchmakingTypeGuards.isClientCreateGame(dataJson)) {
+    //   this.handleServerCreateGame(dataJson);
+    // } else if (matchmakingTypeGuards.isClientLeaveGame(dataJson)) {
+    //   this.handleServerLeaveGame(dataJson);
+    else {
+      colog("UNKNOWN DATA");
+      // throw new Error(
+      //   "Client received unknown message from matchmaking server!"
+      // );
     }
   }
 
-  static handleServerUpdatedGames(
-    dataJson: MatchMakingTypes.ServerUpdateGames
+  static handleServerSendUserList(
+    dataJson: ChatServiceTypes.ServerSendUserList
   ) {
-    window.store.matchmakingStore.updateFromAllMatches(dataJson.data);
+    colog("IPDATING USER LIST");
+    window.store.chatUserStore.updateUserListFromArray(dataJson.data.chatUsers);
   }
 
   static handleServerDeleteGame(dataJson: MatchMakingTypes.ClientDeleteGame) {
@@ -86,7 +130,8 @@ class ChatInterface {
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    const isSelfHosted = dataJson.data.hostId === window.store.userStore.get().id;
+    const isSelfHosted =
+      dataJson.data.hostId === window.store.userStore.get().id;
     window.store.gameStore.updateMatchMakingSuccessful({
       hostId: dataJson.data.hostId,
       oponentId: dataJson.data.oponentId,

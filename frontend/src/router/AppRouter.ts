@@ -26,6 +26,7 @@ import { createHtmlElementFromString, deepCopyObj } from "../utils/utils.ts";
 import { NotificationModal } from "../pages/NotificationModal.ts";
 import { Navbar } from "./Navbar.ts";
 import { ChangeLanguageButton } from "../pages/ChangeLanguageButton.ts";
+import { ChatInterface } from "../backendInterface/chatInterface.ts";
 
 class AppRouter extends HTMLElement {
   routes: Record<string, Page>;
@@ -70,6 +71,8 @@ class AppRouter extends HTMLElement {
     this.appendChild(this.wrapperDivLogin);
     this.appendChild(this.wrapperDivApp);
     this.appendChild(this.notificationModal);
+    // ChatInterface.test();
+    ChatInterface.connect();
     // this.innerHTML = `
     //   <div class='block w-full h-screen'></div>
     //   <div class="flex flex-row h-screen">
@@ -80,6 +83,10 @@ class AppRouter extends HTMLElement {
     // `;
     window.addEventListener("popstate", () => this.handleRouteChange());
     this.handleRouteChange();
+  }
+
+  disconnectedCallback() {
+    ChatInterface.disconnect();
   }
 
   addRoute(path: string, component: Page) {
