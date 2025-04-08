@@ -28,6 +28,7 @@ import {
 } from "./sharedFunctions.js";
 import { matchmakingTypeGuards } from "./matchmakingTypes.js";
 import { gameServiceTypeGuards } from "./gameServiceTypes.js";
+import { chatServiceTypeGuards } from "./chatTypes.js";
 
 export {
   isTypedObject,
@@ -39,4 +40,5 @@ export {
   gameServiceTypeGuards,
   gameSettings,
   transNetworkSettings,
+  chatServiceTypeGuards
 };
