@@ -28,7 +28,7 @@ declare namespace ChatServiceTypes {
   // client delete friend
   // client invite to play
   // client send message
-  // 
+  //
 
   type AllChatMessageTypes = ServerSendUserList;
 
@@ -39,6 +39,11 @@ declare namespace ChatServiceTypes {
   type ServerSendUserList = {
     type: "serverSendUserList";
     data: DataServerSendUserList;
+  };
+
+  type ServerSendChatHistory = {
+    type: "serverSendChatHistory";
+    data: Message[];
   };
 }
 
