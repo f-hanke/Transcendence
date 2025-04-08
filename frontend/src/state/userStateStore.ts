@@ -12,7 +12,7 @@ class UserStateStore {
   }
 
   init() {
-    const test_user_id = `userid_${sessionStorage.getItem("transTestId")}`;
+    const test_user_id = `${sessionStorage.getItem("transTestId")}`;
     this.state = {
       image: exampleImage,
       displayName: "TEST_USER",

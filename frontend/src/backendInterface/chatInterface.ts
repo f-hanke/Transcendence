@@ -100,8 +100,9 @@ class ChatInterface {
     if (chatServiceTypeGuards.isServerSendUserList(dataJson)) {
       this.handleServerSendUserList(dataJson);
     }
-    // } else if (matchmakingTypeGuards.isClientDeleteGame(dataJson)) {
-    //   this.handleServerDeleteGame(dataJson);
+    else if (chatServiceTypeGuards.isServerSentMessage(dataJson)) {
+      this.handleServerSentMessage(dataJson);
+    }
     // } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
     //   this.handleServerStartGame(dataJson);
     // } else if (matchmakingTypeGuards.isServerUpdateOneGame(dataJson)) {
@@ -125,8 +126,10 @@ class ChatInterface {
     window.store.chatUserStore.updateUserListFromArray(dataJson.data.chatUsers);
   }
 
-  static handleServerDeleteGame(dataJson: MatchMakingTypes.ClientDeleteGame) {
-    window.store.matchmakingStore.deleteGame(dataJson.data);
+  static handleServerSentMessage(dataJson: ChatServiceTypes.ServerSentMessage) {
+    const authorId = dataJson.data.authorId;
+    window.store.chatUserStore.updateChangeUserLastMessageAndUnreadMessageStatus(authorId, dataJson.data.message);
+    window.store.chatMessageStore.addMessage(authorId, dataJson.data);
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
@@ -159,7 +162,7 @@ class ChatInterface {
   }
 
   static sendMessageToServer(
-    message: MatchMakingTypes.AllMatchMakingMessageTypes
+    message: ChatServiceTypes.AllChatMessageTypes
   ) {
     console.log(this.websocket);
     if (
