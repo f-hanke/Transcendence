@@ -1,4 +1,4 @@
-import { isDefined } from "transcendence";
+import { ChatServiceTypes, isDefined } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
 import { ChatUserGroups, ChatUserState } from "./chatStateTypes";
 import { StoreCallback } from "./types";
@@ -106,7 +106,17 @@ class ChatUserStateStore {
 
   update(newState: ChatUserState) {
     this.state = deepCopyObj(newState);
-    this.listeners.forEach((callback) => callback());
+    this.updateListenersOnChange();
+  }
+
+  updateUserListFromArray(userList: ChatServiceTypes.ChatUser[])
+  {
+    this.state = new Map();
+    for (const user of userList)
+    {
+      this.state.set(user.recipientId, user);
+    }
+    this.updateListenersOnChange();
   }
 
   updateListenersOnChange() {

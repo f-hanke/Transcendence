@@ -1,4 +1,5 @@
 import { ChatServiceTypes, generateUniqueId } from "transcendence";
+import { ChatInterface } from "../../backendInterface/chatInterface";
 
 class ChatUserComponent extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -10,6 +11,7 @@ class ChatUserComponent extends HTMLElement {
   friend: boolean;
   image: string;
   id: string;
+  recipientId: string;
   constructor() {
     super();
     this.unsubscribeLanguage = null;
@@ -20,6 +22,7 @@ class ChatUserComponent extends HTMLElement {
     this.blocked = false;
     this.friend = false;
     this.image = "";
+    this.recipientId = "";
     this.id = generateUniqueId();
   }
 
@@ -46,7 +49,7 @@ class ChatUserComponent extends HTMLElement {
     const friend = this.friend ? unfriend : "🧑‍🤝‍🧑";
     const onlineClass = this.online ? "shadow-green-500" : "shadow-gray-400";
     this.innerHTML = `
-      <div class="flex items-center justify-between p-3 border-b border-gray-300 bg-gray-700 hover:bg-gray-600 cursor-pointer select-none">
+      <div id="${this.id}_wrapperChatOneUser" class="flex items-center justify-between p-3 border-b border-gray-300 bg-gray-700 hover:bg-gray-600 cursor-pointer select-none">
         <div class="flex items-center space-x-3">
           <div class="flex flex-col">
             <img id="${this.id}_userImage" src="${this.image}" alt="${this.displayName}" class="w-10 h-10 rounded-full shadow-[0_0_0_3px_black] ${onlineClass}">
@@ -98,17 +101,24 @@ class ChatUserComponent extends HTMLElement {
     image.addEventListener("click", () => {
       alert("user profile");
     });
-  
+
+    const wrapperChatOneUser = document.querySelector(`#${this.id}_wrapperChatOneUser`) as HTMLDivElement;
+    wrapperChatOneUser.addEventListener("click", () => {
+      colog("clicked request chat history button!");
+      ChatInterface.requestChatHistory(this.recipientId);
+    });
   }
 
   setData(data: ChatServiceTypes.ChatUser) {
-    this.displayName = data.displayName;
+    // this.displayName = data.displayName;
+    this.displayName = data.recipientId;
     this.lastMessage = data.lastMessage;
     this.unreadMessages = data.unreadMessages;
     this.online = data.online;
     this.friend = data.friend;
     this.blocked = data.blocked;
     this.image = data.image;
+    this.recipientId = data.recipientId;
     this.render();
   }
 }

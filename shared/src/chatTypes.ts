@@ -19,11 +19,18 @@ declare namespace ChatServiceTypes {
   };
 
   // server user came online
+  // client sendet: client connected to websocket
+  // server sendet: an alle clients, client came online
+
   // server user gone offline
+  // client sendet: client disconnected from websocket
+  // server sendet: an alle clients, client gone offline
+
   // server new message
   // server friend request
   // client send friend request
   // client blocked user
+  // client unblocked user
   // client accepted friend request
   // client delete friend
   // client invite to play
@@ -45,6 +52,36 @@ declare namespace ChatServiceTypes {
     type: "serverSendChatHistory";
     data: Message[];
   };
+
+  type ServerClientChangedOnlineStatus = {
+    type: "serverClientChangedOnlineStatus";
+    data: boolean;
+  };
+  type ClientSentMessage = {
+    type: "clientSentMessage";
+    data: Message;
+  };
+
+  type ServerSentMessage = {
+    type: "serverSentMessage";
+    data: Message;
+  };
+
+  type ClientChangeBlockStatus = {
+    type: "clientChangeBlockStatus";
+    data: {
+      recipientId: string;
+      blockedStatus: boolean;
+    };
+  };
+
+  type ClientInviteToPlay = {
+    type: "clientInviteToPlay";
+    data: { recipientId: string };
+  };
+
+  
+
 }
 
 function isChatUser(obj: any): obj is ChatServiceTypes.ChatUser {
@@ -63,11 +100,21 @@ function isChatUser(obj: any): obj is ChatServiceTypes.ChatUser {
   );
 }
 
-function isServerSendUserList( message: any): message is ChatServiceTypes.ServerSendUserList
-{
+function isServerSendUserList(
+  message: any
+): message is ChatServiceTypes.ServerSendUserList {
   return (
-    message?.type === "serverSendUserList" &&
-    message?.data 
+    message?.type === "serverSendUserList" && message?.data
+    // && Array.isArray(message.data)
+    //  &&isChatUser(message.data[0])
+  );
+}
+
+function isServerSendChatHistory(
+  message: any
+): message is ChatServiceTypes.ServerSendChatHistory {
+  return (
+    message?.type === "serverSendChatHistory" && message?.data
     // && Array.isArray(message.data)
     //  &&isChatUser(message.data[0])
   );
@@ -75,9 +122,10 @@ function isServerSendUserList( message: any): message is ChatServiceTypes.Server
 
 const chatServiceTypeGuards = {
   isServerSendUserList,
-  isChatUser
+  isChatUser,
+  isServerSendChatHistory,
 } as const;
 
-export {chatServiceTypeGuards}
+export { chatServiceTypeGuards };
 
 export { ChatServiceTypes };
