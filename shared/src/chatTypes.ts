@@ -37,7 +37,7 @@ declare namespace ChatServiceTypes {
   };
 
   type ServerSendUserList = {
-    type: "updateOneGame";
+    type: "serverSendUserList";
     data: DataServerSendUserList;
   };
 
@@ -47,6 +47,37 @@ declare namespace ChatServiceTypes {
   };
 }
 
-const chatServiceTypeGuards = {} as const;
+function isChatUser(obj: any): obj is ChatServiceTypes.ChatUser {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    typeof obj.recipientId === "string" &&
+    typeof obj.displayName === "string" &&
+    typeof obj.image === "string" &&
+    typeof obj.friend === "boolean" &&
+    typeof obj.online === "boolean" &&
+    typeof obj.blocked === "boolean" &&
+    typeof obj.email === "string" &&
+    typeof obj.lastMessage === "string" &&
+    typeof obj.unreadMessages === "boolean"
+  );
+}
+
+function isServerSendUserList( message: any): message is ChatServiceTypes.ServerSendUserList
+{
+  return (
+    message?.type === "serverSendUserList" &&
+    message?.data 
+    // && Array.isArray(message.data)
+    //  &&isChatUser(message.data[0])
+  );
+}
+
+const chatServiceTypeGuards = {
+  isServerSendUserList,
+  isChatUser
+} as const;
+
+export {chatServiceTypeGuards}
 
 export { ChatServiceTypes };
