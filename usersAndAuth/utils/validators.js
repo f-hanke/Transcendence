@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const authTypesCopy_1 = require("../authTypesCopy");
 const validators = {
     /**
-     * Validate email format
+     * Validate email format => unneeded due to schema's "format: email" ?
      * @param {string} email Email to validate
      * @returns {boolean} True if email is valid
      */
@@ -20,11 +20,12 @@ const validators = {
         const passwordUpperRegex = /[A-Z]/;
         const passwordLowerRegex = /[a-z]/;
         const passwordDigitRegex = /[0-9]/;
+        const passwordSpecialRegex = /[!@#$%^&*()_+-=\[\]{};:"\|,.<>\?]/;
         if (password.length < 8)
             return authTypesCopy_1.AuthErrors.PasswordTooShort;
         if (password.length > 256)
             return authTypesCopy_1.AuthErrors.PasswordTooLong;
-        else if ((!passwordUpperRegex.test(password)) || (!passwordLowerRegex.test(password)) || (!passwordDigitRegex.test(password)))
+        else if ((!passwordUpperRegex.test(password)) || (!passwordLowerRegex.test(password)) || (!passwordDigitRegex.test(password)) || (!passwordDigitRegex.test(password)))
             return authTypesCopy_1.AuthErrors.PasswordNotAccGuideline;
         return null;
     }

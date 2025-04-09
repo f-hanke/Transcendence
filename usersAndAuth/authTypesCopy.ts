@@ -5,8 +5,15 @@ export enum AuthErrors {
   PasswordTooShort,
   PasswordTooLong,
   PasswordNotAccGuideline,
+  LackingAuthorizationHeader,
+  Unauthorized,
   BackendError
 }
+
+export type JwtType = {
+  userId: number;
+  expiresIn: string;
+};
 
 declare namespace AuthServiceTypes {
   type RegSubmissionBody = {
@@ -14,6 +21,18 @@ declare namespace AuthServiceTypes {
     displayName: string;
     password: string;
     // confirmPassword: string;
+  };
+
+  type LoginSubmissionBody = {
+    email: string;
+    password: string;
+  };
+
+  type UpdateBody = {
+    email: string;
+    displayName: string;
+    password: string;
+    image: string;
   };
 
   type ErrorResponseBody = {

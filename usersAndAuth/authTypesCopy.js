@@ -9,7 +9,9 @@ var AuthErrors;
     AuthErrors[AuthErrors["PasswordTooShort"] = 3] = "PasswordTooShort";
     AuthErrors[AuthErrors["PasswordTooLong"] = 4] = "PasswordTooLong";
     AuthErrors[AuthErrors["PasswordNotAccGuideline"] = 5] = "PasswordNotAccGuideline";
-    AuthErrors[AuthErrors["BackendError"] = 6] = "BackendError";
+    AuthErrors[AuthErrors["LackingAuthorizationHeader"] = 6] = "LackingAuthorizationHeader";
+    AuthErrors[AuthErrors["Unauthorized"] = 7] = "Unauthorized";
+    AuthErrors[AuthErrors["BackendError"] = 8] = "BackendError";
 })(AuthErrors || (exports.AuthErrors = AuthErrors = {}));
 // POST /api/auth/register   - For new user registration
 // POST /api/auth/login      - For user authentication

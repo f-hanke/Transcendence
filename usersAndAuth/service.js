@@ -5,9 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fastify_1 = __importDefault(require("fastify"));
 const validators = require('./utils/validators');
+const passwordUtils = require('./utils/password');
 const RegSubmissionBodySchema = require('./schemas/schemas');
+const LoginSubmissionBodySchema = require('./schemas/schemas');
 const User = require('./orm/user');
 const Match = require('./orm/match');
+const authTypesCopy_1 = require("./authTypesCopy");
 const server = (0, fastify_1.default)({
     logger: {
         transport: {
@@ -18,6 +21,9 @@ const server = (0, fastify_1.default)({
             },
         },
     },
+});
+server.register(require('@fastify/jwt'), {
+    secret: 'supersecret'
 });
 server.get('/ping', async (request, reply) => {
     // the more "automatic" way of fastify handling the entire response
@@ -34,14 +40,46 @@ server.post('/api/auth/register', { schema: RegSubmissionBodySchema }, async (re
     // schema is evaluated before the code below is ever looked at, so schema-responses are handled as pre-process
     const passwordError = validators.identifyPasswordError(request.body.password);
     if (passwordError !== null)
-        reply.code(400).send(passwordError);
+        return reply.code(400).send(passwordError);
     try {
         await User.create(request.body);
-        reply.code(201).send();
+        return reply.code(201).send();
     }
     catch (e) {
         console.error(e);
-        reply.code(500).send();
+        return reply.code(500).send();
+    }
+});
+server.post('/api/auth/login', { schema: LoginSubmissionBodySchema }, async (request, reply) => {
+    try {
+        const user = await User.findByEmail(request.body.email);
+        if (!user)
+            return reply.code(400).send({ reason: authTypesCopy_1.AuthErrors.UnknownEmail });
+        console.log(user);
+        const isPasswordValid = await passwordUtils.comparePassword(request.body.password, user.pw_hash);
+        if (!isPasswordValid)
+            return reply.code(400).send({ reason: authTypesCopy_1.AuthErrors.InvalidPassword });
+        const token = server.jwt.sign({ userId: user.id, expiresIn: '12h' });
+        User.updateOnlineStatus(user.id, 1);
+        User.incrementLoginCount(user.id);
+        return reply.send({ clientId: user.id, jwtToken: token });
+    }
+    catch (db_error) {
+        console.error(db_error);
+        return reply.code(500).send({ reason: authTypesCopy_1.AuthErrors.BackendError });
+    }
+});
+server.get('/api/auth/verify-jwt', async (request, reply) => {
+    try {
+        if (!request.headers.authorization)
+            return reply.code(400).send({ reason: authTypesCopy_1.AuthErrors.LackingAuthorizationHeader });
+        const token = request.headers.authorization.split(' ')[1];
+        const decoded = await server.jwt.verify(token);
+        reply.code(200).send({ userId: decoded.userId });
+    }
+    catch (error) {
+        console.error(error);
+        reply.code(401).send({ reason: authTypesCopy_1.AuthErrors.Unauthorized });
     }
 });
 server.setNotFoundHandler((req, res) => {

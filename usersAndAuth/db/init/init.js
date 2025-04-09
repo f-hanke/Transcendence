@@ -1,12 +1,12 @@
 /**
- * Initial database migration script
+ * Database init script
  */
 'use strict';
 
 const db = require('../db');
 
-// Run migrations
-(function runMigrations() {
+// Run initialization
+(function runInit() {
   try {
     console.log('Running database migrations...');
 

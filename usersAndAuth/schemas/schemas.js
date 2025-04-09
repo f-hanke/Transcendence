@@ -16,4 +16,18 @@ const RegSubmissionBodySchema = {
         },
     }
 };
+const LoginSubmissionBodySchema = {
+    body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+            email: { type: 'string', format: 'email' },
+            password: {
+                type: 'string',
+                minLength: 8,
+            }
+        }
+    }
+};
 module.exports = RegSubmissionBodySchema;
+module.exports = LoginSubmissionBodySchema;
