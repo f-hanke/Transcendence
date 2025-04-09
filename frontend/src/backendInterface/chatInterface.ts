@@ -31,7 +31,7 @@ class ChatInterface {
           "Content-Type": "application/json",
         },
       });
-      const responseJson =await  response.json();
+      const responseJson = await response.json();
       colog(responseJson);
       if (chatServiceTypeGuards.isServerSendChatHistory(responseJson)) {
         window.store.chatMessageStore.update({
@@ -99,8 +99,7 @@ class ChatInterface {
     colog(dataJson);
     if (chatServiceTypeGuards.isServerSendUserList(dataJson)) {
       this.handleServerSendUserList(dataJson);
-    }
-    else if (chatServiceTypeGuards.isServerSentMessage(dataJson)) {
+    } else if (chatServiceTypeGuards.isServerSentMessage(dataJson)) {
       this.handleServerSentMessage(dataJson);
     }
     // } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
@@ -124,11 +123,15 @@ class ChatInterface {
   ) {
     colog("IPDATING USER LIST");
     window.store.chatUserStore.updateUserListFromArray(dataJson.data.chatUsers);
+    this.requestChatHistory(dataJson.data.chatUsers[0].recipientId);
   }
 
   static handleServerSentMessage(dataJson: ChatServiceTypes.ServerSentMessage) {
     const authorId = dataJson.data.authorId;
-    window.store.chatUserStore.updateChangeUserLastMessageAndUnreadMessageStatus(authorId, dataJson.data.message);
+    window.store.chatUserStore.updateChangeUserLastMessageAndUnreadMessageStatus(
+      authorId,
+      dataJson.data.message
+    );
     window.store.chatMessageStore.addMessage(authorId, dataJson.data);
   }
 
@@ -161,9 +164,16 @@ class ChatInterface {
     window.store.matchmakingStore.deleteGame(dataJson.data);
   }
 
-  static sendMessageToServer(
-    message: ChatServiceTypes.AllChatMessageTypes
-  ) {
+  static sendClientSentMessage(message: ChatServiceTypes.ClientSentMessage) {
+    window.store.chatMessageStore.addMessage(message.data.recipientId, message.data);
+    window.store.chatUserStore.updateChangeUserLastMessage(
+      message.data.recipientId,
+      message.data.message
+    );
+    this.sendMessageToServer(message);
+  }
+
+  static sendMessageToServer(message: ChatServiceTypes.AllChatMessageTypes) {
     console.log(this.websocket);
     if (
       isDefined(this.websocket) &&

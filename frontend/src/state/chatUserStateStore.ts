@@ -15,19 +15,19 @@ class ChatUserStateStore {
   init() {
     this.state = new Map() as ChatUserState;
 
-    for (let i = 0; i < 20; i++) {
-      this.state.set(`user_${i}`, {
-        blocked: Math.random() < 0.5,
-        friend: Math.random() < 0.5,
-        online: Math.random() < 0.5,
-        unreadMessages: Math.random() < 0.5,
-        displayName: "DisplayName",
-        recipientId: String(i),
-        email: "test@email.com",
-        image: exampleImage,
-        lastMessage: "This was the last message!",
-      });
-    }
+    // for (let i = 0; i < 20; i++) {
+    //   this.state.set(`user_${i}`, {
+    //     blocked: Math.random() < 0.5,
+    //     friend: Math.random() < 0.5,
+    //     online: Math.random() < 0.5,
+    //     unreadMessages: Math.random() < 0.5,
+    //     displayName: "DisplayName",
+    //     recipientId: String(i),
+    //     email: "test@email.com",
+    //     image: exampleImage,
+    //     lastMessage: "This was the last message!",
+    //   });
+    // }
 
     return this.state;
   }
