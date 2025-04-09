@@ -1,3 +1,13 @@
+export enum AuthErrors {
+  DuplicateEmail,
+  InvalidPassword,
+  UnknownEmail,
+  PasswordTooShort,
+  PasswordTooLong,
+  PasswordNotAccGuideline,
+  BackendError
+}
+
 declare namespace AuthServiceTypes {
   type RegSubmissionBody = {
     email: string;
@@ -5,17 +15,6 @@ declare namespace AuthServiceTypes {
     password: string;
     // confirmPassword: string;
   };
-
-
-  enum AuthErrors {
-    DuplicateEmail,
-    InvalidPassword,
-    UnknownEmail,
-    PasswordTooShort,
-    PasswordTooLong,
-    PasswordNotAccGuideline,
-    BackendError
-  }
 
   type ErrorResponseBody = {
     reason: AuthErrors;
