@@ -21,6 +21,7 @@ class ChatInterface {
       route: "/chat-history/",
       queryData: {
         recipientId: recipientId,
+        clientId: window.store.userStore.get().id,
       },
     });
     colog(address);
