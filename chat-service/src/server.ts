@@ -12,17 +12,9 @@ const fastify = Fastify();
 fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
 
-type ChatUser = ChatServiceTypes.ChatUser;
-//type Message = ChatServiceTypes.Message;
-
-type Message = {
-    authorId: string;
-    recipientId: string;
-    message: string;
-    date: string;
-}
-
 const db = new sqlite3.Database('./test_users_database.db');
+const socketToClientId = new Map<WebSocket, string>();
+const clientIdToSocket = new Map<string, WebSocket>();
 
 type MatchMakingFastifyRequest = FastifyRequest<{
 	Querystring: SharedTypes.ClientQueryParamMatchMaking;
@@ -50,7 +42,9 @@ type MatchMakingFastifyRequest = FastifyRequest<{
 fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
 	console.log("Chat history request received");
 
-	const { clientId, recipientId } = req.query;
+	// const { clientId, recipientId } = req.query; --> todo "clientId has also to be in query"
+	const recipientId = req.query?.recipientId;
+	const clientId = "1";
 	if (!clientId || !recipientId) {
 		const msg = "Missing authorId or recipientId in query string!";
 		console.log(msg);
@@ -67,65 +61,6 @@ fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
 		return reply.status(500).send({ error: "Failed to fetch chat history" });
 	}
 });
-
-async function getUsers() {
-	const users: ChatUser[] = [];
-
-	return new Promise<{ type: string; data: { chatUsers: ChatUser[] } }>((resolve, reject) => {
-		db.all("SELECT * FROM users", [], (err, rows: { username: string; id: string; lastMessage: string; online: boolean}[]) => {
-			if (err) {
-				reject(err);
-			}
-			else {
-				rows.forEach((row) => {
-					users.push({
-						blocked: Math.random() < 0.5,
-						friend: Math.random() < 0.5,
-						online: row.online,
-						unreadMessages: true,
-						displayName: row.username,
-						recipientId: row.id,
-						email: `${row.username}@test.com`,
-						image: "test",
-						lastMessage: row.lastMessage,
-					});
-				});
-				resolve({
-					type: "serverSendUserList",
-					data: {
-						chatUsers: users,
-					},
-				});
-			}
-		});
-	});
-}
-
-function getChatHistory(user1: string, user2: string): Promise<Message[]> {
-	return new Promise((resolve, reject) => {
-		const query = `
-			SELECT authorId, recipientId, message, date
-			FROM messages
-			WHERE
-				(authorId = ? AND recipientId = ?) OR
-				(authorId = ? AND recipientId = ?)
-			ORDER BY date ASC
-		`;
-
-		db.all(query, [user1, user2, user2, user1], (err, rows: Message[]) => {
-			if (err) {
-				console.error("DB error fetching chat history:", err);
-				reject(err);
-			} else {
-				resolve(rows);
-			}
-		});
-	});
-}
-
-
-const socketToClientId = new Map<WebSocket, string>();
-const clientIdToSocket = new Map<string, WebSocket>();
 
 fastify.register(async function (fastify) {
 	fastify.get("/ws", { websocket: true }, async (socket, req) => {
@@ -169,46 +104,98 @@ function registerClient(req: FastifyRequest, socket: WebSocket) {
 
 function handleClientSentMessage(dataJson: ChatServiceTypes.ClientSentMessage) {
 	console.log(dataJson);
-	console.log(`${dataJson.data.authorId} sent a msg to ${dataJson.data.recipientId}`)
-	if (clientIdToSocket.has((dataJson.data.recipientId))) { //to String ??? data sent to server  -->    authorId: '2', recipientId: 1,
-		console.log(`-----> recipient online`);
-		const recipientSocket = clientIdToSocket.get(dataJson.data.recipientId);
-		recipientSocket?.send(JSON.stringify({
-			type: "serverSentMessage",
-			data: dataJson.data,
-		}));
-	}
-	else
-		console.log(`-----> recipient offline`);
-	// const { authorId, recipientId, message } = data.data;
-	// const date = new Date().toISOString();
-
-	// const newMessage: Message = {
-	// 	authorId,
-	// 	recipientId,
-	// 	message,
-	// 	date,
-	// };
-
-	// db.run(
-	// 	"INSERT INTO messages (authorId, recipientId, message, date) VALUES (?, ?, ?, ?)",
-	// 	[authorId, recipientId, message, date],
-	// 	function (err) {
-	// 		if (err) {
-	// 			console.error("DB error inserting message:", err);
-	// 		} else {
-	// 			console.log("Message inserted successfully");
-	// 			const response = {
-	// 				type: "serverSentMessage",
-	// 				data: newMessage,
-	// 			};
-	// 			const recipientSocket = clientIdToSocket.get(recipientId);
-	// 			if (recipientSocket) {
-	// 				recipientSocket.send(JSON.stringify(response));
-	// 			}
-	// 		}
+	// console.log(`${dataJson.data.authorId} sent a msg to ${dataJson.data.recipientId}`)
+	// if (clientIdToSocket.has((dataJson.data.recipientId))) { //to String ??? data sent to server  -->    authorId: '2', recipientId: 1, --> todo
+	// 	console.log(`-----> recipient online ${dataJson.data.recipientId}`);
+	// 	const recipientSocket = clientIdToSocket.get(dataJson.data.recipientId);
+	// 	if (recipientSocket){
+	// 		console.log("message sent");
+	// 		recipientSocket.send(JSON.stringify({
+	// 			type: "serverSentMessage",
+	// 			data: dataJson.data,
+	// 		}));
 	// 	}
-	// );
+	// }
+	// else
+	// 	console.log(`-----> recipient offline`);
+	const { authorId, recipientId, message, date } = dataJson.data;
+
+	db.run(
+		"INSERT INTO messages (authorId, recipientId, message, date) VALUES (?, ?, ?, ?)",
+		[authorId, recipientId, message, date],
+		function (err) {
+			if (err) {
+				console.error("DB error inserting message:", err);
+			} else {
+				console.log("Message inserted successfully");
+				const response = {
+					type: "serverSentMessage",
+					data: dataJson.data,
+				};
+				const recipientSocket = clientIdToSocket.get(recipientId);
+				if (recipientSocket) {
+					recipientSocket.send(JSON.stringify(response));
+				}
+			}
+		}
+	);
+}
+
+//Database requests
+async function getUsers() {
+	const users: ChatServiceTypes.ChatUser[] = [];
+
+	return new Promise<{ type: string; data: { chatUsers: ChatServiceTypes.ChatUser[] } }>((resolve, reject) => {
+		db.all("SELECT * FROM users", [], (err, rows: { username: string; id: number; lastMessage: string; online: boolean}[]) => {
+			if (err) {
+				reject(err);
+			}
+			else {
+				rows.forEach((row) => {
+					users.push({
+						blocked: Math.random() < 0.5,
+						friend: Math.random() < 0.5,
+						online: row.online,
+						unreadMessages: true,
+						displayName: row.username,
+						recipientId: row.id.toString(),
+						email: `${row.username}@test.com`,
+						image: "test",
+						lastMessage: row.lastMessage,
+					});
+				});
+				resolve({
+					type: "serverSendUserList",
+					data: {
+						chatUsers: users,
+					},
+				});
+			}
+		});
+	});
+}
+
+async function getChatHistory(authorId: string, recipientId: string): Promise<ChatServiceTypes.Message[]> {
+	return new Promise((resolve, reject) => {
+		const query = `
+			SELECT authorId, recipientId, message, date
+			FROM messages
+			WHERE
+				(authorId = ? AND recipientId = ?) OR
+				(authorId = ? AND recipientId = ?)
+			ORDER BY date ASC
+		`;
+
+		db.all(query, [authorId, recipientId, recipientId, authorId], (err, rows: ChatServiceTypes.Message[]) => {
+			if (err) {
+				console.error("DB error fetching chat history:", err);
+				reject(err);
+			} else {
+				console.log(`Chat history successfully fetched`);
+				resolve(rows);
+			}
+		});
+	});
 }
 
 fastify.listen({ port: transNetworkSettings.chatService.port, host: "0.0.0.0" }, (err) => {
