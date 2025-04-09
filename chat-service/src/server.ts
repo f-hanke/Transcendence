@@ -95,6 +95,18 @@ function updateUserStatus(userId: string, isOnline: boolean): Promise<void> {
 				console.warn(`No user found with id ${userId}`);
 			} else {
 				console.log(`Updated user ${userId} online status to ${isOnline}`);
+				fastify.websocketServer.clients.forEach((client) => {
+					if (client !== clientIdToSocket.get(userId)){
+						const ServerClientChangedOnlineStatus = {
+							type: "serverClientChangedOnlineStatus",
+							data: {
+								recipientId: userId,
+								onlineStatus: isOnline,
+							},
+						}
+						client.send(JSON.stringify(ServerClientChangedOnlineStatus));
+					}
+				});
 			}
 			resolve();
 		});

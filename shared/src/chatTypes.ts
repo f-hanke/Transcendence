@@ -60,7 +60,10 @@ declare namespace ChatServiceTypes {
 
   type ServerClientChangedOnlineStatus = {
     type: "serverClientChangedOnlineStatus";
-    data: boolean;
+    data: {
+      recipientId: string;
+      onlineStatus: boolean;
+    };
   };
   type ClientSentMessage = {
     type: "clientSentMessage";
