@@ -122,6 +122,16 @@ function isServerSentMessage(
   );
 }
 
+function isClientSentMessage(
+  message: any
+): message is ChatServiceTypes.ClientSentMessage {
+  return (
+    message?.type === "clientSentMessage" && message?.data
+    // && Array.isArray(message.data)
+    //  &&isChatUser(message.data[0])
+  );
+}
+
 function isServerSendChatHistory(
   message: any
 ): message is ChatServiceTypes.ServerSendChatHistory {
@@ -137,6 +147,7 @@ const chatServiceTypeGuards = {
   isChatUser,
   isServerSendChatHistory,
   isServerSentMessage,
+  isClientSentMessage,
 } as const;
 
 export { chatServiceTypeGuards };
