@@ -138,6 +138,15 @@ function handleClientSentMessage(dataJson: ChatServiceTypes.ClientSentMessage) {
 	);
 }
 
+function updateLastMessageForUsers(authorId: string, recipientId: string, message: string) {
+	const stmt = db.prepare("UPDATE users SET lastMessage = ? WHERE id = ?");
+
+	stmt.run(message, authorId);
+	stmt.run(message, recipientId);
+
+	stmt.finalize();
+}
+
 //Database requests
 async function getUsers(socket: WebSocket) {
 	const clientId = socketToClientId?.get(socket);
