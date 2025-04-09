@@ -104,6 +104,9 @@ class ChatInterface {
     } else if (chatServiceTypeGuards.isServerSentMessage(dataJson)) {
       this.handleServerSentMessage(dataJson);
     }
+   else if (chatServiceTypeGuards.isServerClientChangedOnlineStatus(dataJson)) {
+      this.handleServerClientChangedOnlineStatus(dataJson);
+    }
     // } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
     //   this.handleServerStartGame(dataJson);
     // } else if (matchmakingTypeGuards.isServerUpdateOneGame(dataJson)) {
@@ -118,6 +121,13 @@ class ChatInterface {
       //   "Client received unknown message from matchmaking server!"
       // );
     }
+  }
+
+  static handleServerClientChangedOnlineStatus(
+    dataJson: ChatServiceTypes.ServerClientChangedOnlineStatus
+  ) {
+    colog("RECEIVED CHANGE ONLINE STATUS MESSAGE!");
+    window.store.chatUserStore.updateChangeUserOnlineStatus(dataJson.data.recipientId, dataJson.data.onlineStatus);
   }
 
   static handleServerSendUserList(

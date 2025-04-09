@@ -145,12 +145,23 @@ function isServerSendChatHistory(
   );
 }
 
+function isServerClientChangedOnlineStatus(
+  message: any
+): message is ChatServiceTypes.ServerClientChangedOnlineStatus {
+  return (
+    message?.type === "serverClientChangedOnlineStatus" && message?.data
+    // && Array.isArray(message.data)
+    //  &&isChatUser(message.data[0])
+  );
+}
+
 const chatServiceTypeGuards = {
   isServerSendUserList,
   isChatUser,
   isServerSendChatHistory,
   isServerSentMessage,
   isClientSentMessage,
+  isServerClientChangedOnlineStatus,
 } as const;
 
 export { chatServiceTypeGuards };
