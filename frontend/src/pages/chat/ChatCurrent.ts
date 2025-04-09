@@ -61,7 +61,7 @@ class ChatCurrent extends HTMLElement {
       "#chatSendButton"
     ) as HTMLButtonElement;
     chatSendButton.addEventListener("click", () => {
-      ChatInterface.sendMessageToServer({
+      ChatInterface.sendClientSentMessage({
         type: "clientSentMessage",
         data: {
           authorId: window.store.userStore.get().id,
@@ -74,8 +74,9 @@ class ChatCurrent extends HTMLElement {
   }
 
   createAndAppend(container: HTMLDivElement, msg: ChatServiceTypes.Message) {
-    const isOwnMsg = i % 2 == 0 ? true : false;
-    i++;
+    // const isOwnMsg = i % 2 == 0 ? true : false;
+    // i++;
+    const isOwnMsg = window.store.userStore.get().id === msg.authorId;
     const styleOwnMsg = "self-end border-green-300";
     const styleOtherMsg = "self-start border-blue-300";
     const elem = createHtmlElementFromString(

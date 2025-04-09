@@ -12,6 +12,7 @@ class ChatUserComponent extends HTMLElement {
   image: string;
   id: string;
   recipientId: string;
+  focussed: boolean;
   constructor() {
     super();
     this.unsubscribeLanguage = null;
@@ -21,6 +22,7 @@ class ChatUserComponent extends HTMLElement {
     this.online = false;
     this.blocked = false;
     this.friend = false;
+    this.focussed = false;
     this.image = "";
     this.recipientId = "";
     this.id = generateUniqueId();
@@ -48,8 +50,15 @@ class ChatUserComponent extends HTMLElement {
     `;
     const friend = this.friend ? unfriend : "🧑‍🤝‍🧑";
     const onlineClass = this.online ? "shadow-green-500" : "shadow-gray-400";
+    this.focussed =
+      window.store.chatMessageStore.get().recipientId === this.recipientId;
+    const focussedStyle = this.focussed
+      ? "shadow-[inset_0_0_0_4px] shadow-blue-500"
+      : "";
+
+    const unreadMessagesStyle = this.unreadMessages ? "shadow-[inset_0_0_0_2px] shadow-white": "bg-gray-700"
     this.innerHTML = `
-      <div id="${this.id}_wrapperChatOneUser" class="flex items-center justify-between p-3 border-b border-gray-300 bg-gray-700 hover:bg-gray-600 cursor-pointer select-none">
+      <div id="${this.id}_wrapperChatOneUser" class="flex items-center justify-between p-3  hover:bg-gray-600 cursor-pointer select-none ${focussedStyle} ${unreadMessagesStyle}">
         <div class="flex items-center space-x-3">
           <div class="flex flex-col">
             <img id="${this.id}_userImage" src="${this.image}" alt="${this.displayName}" class="w-10 h-10 rounded-full shadow-[0_0_0_3px_black] ${onlineClass}">
@@ -87,25 +96,33 @@ class ChatUserComponent extends HTMLElement {
       alert("invited to play");
     });
 
-    const blockBtn = document.querySelector(`#${this.id}_blockBtn`) as HTMLButtonElement;
+    const blockBtn = document.querySelector(
+      `#${this.id}_blockBtn`
+    ) as HTMLButtonElement;
     blockBtn.addEventListener("click", () => {
       alert("blocked");
     });
 
-    const friendBtn = document.querySelector(`#${this.id}_friendBtn`) as HTMLButtonElement;
+    const friendBtn = document.querySelector(
+      `#${this.id}_friendBtn`
+    ) as HTMLButtonElement;
     friendBtn.addEventListener("click", () => {
       alert("friend");
     });
 
-    const image = document.querySelector(`#${this.id}_userImage`) as HTMLButtonElement;
+    const image = document.querySelector(
+      `#${this.id}_userImage`
+    ) as HTMLButtonElement;
     image.addEventListener("click", () => {
       alert("user profile");
     });
 
-    const wrapperChatOneUser = document.querySelector(`#${this.id}_wrapperChatOneUser`) as HTMLDivElement;
+    const wrapperChatOneUser = document.querySelector(
+      `#${this.id}_wrapperChatOneUser`
+    ) as HTMLDivElement;
     wrapperChatOneUser.addEventListener("click", () => {
-      colog("clicked request chat history button!");
       ChatInterface.requestChatHistory(this.recipientId);
+      window.store.chatUserStore.updateChangeUserUnreadMessageStatus(this.recipientId, false);
     });
   }
 

@@ -5,10 +5,12 @@ import { ChatUserComponent } from "./ChatUserComponent";
 class ChatList extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
   unsubscribeChatUserState: null | (() => void);
+  unsubscribeChatMessageState: null | (() => void);
   constructor() {
     super();
     this.unsubscribeLanguage = null;
     this.unsubscribeChatUserState = null;
+    this.unsubscribeChatMessageState = null;
   }
 
   connectedCallback() {
@@ -18,12 +20,16 @@ class ChatList extends HTMLElement {
     this.unsubscribeChatUserState = window.store.chatUserStore.subscribe(
       this.render.bind(this)
     );
+    this.unsubscribeChatMessageState = window.store.chatMessageStore.subscribe(
+      this.render.bind(this)
+    );
     this.render();
   }
 
   disconnectedCallback() {
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     if (this.unsubscribeChatUserState) this.unsubscribeChatUserState();
+    if (this.unsubscribeChatMessageState) this.unsubscribeChatMessageState();
   }
 
   render() {

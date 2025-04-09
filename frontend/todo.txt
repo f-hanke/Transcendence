@@ -18,3 +18,9 @@ Chat requirements:
 - oponent ip etc. doesn't get send correctly when creating remote game
 - generally set up remote game, correctly update player paddle positions etc.
 - use values from game settings for paddle x position
+
+
+- highligth selected chat
+- add own message to state after sending to server
+- layout own other messages correctly
+- highlight chats with new messages, white, red point
