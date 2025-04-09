@@ -48,10 +48,12 @@ class ChatUserStateStore {
       friends: [],
       online: [],
       offline: [],
+      blocked: [],
     };
     this.state.forEach((userObj, userId) => {
       const userCopy = deepCopyObj(userObj);
-      if (userObj.friend) groups.friends.push(userCopy);
+      if (userObj.blocked) groups.blocked.push(userCopy);
+      else if (userObj.friend) groups.friends.push(userCopy);
       else if (userObj.online) groups.online.push(userCopy);
       else if (!userObj.online) groups.offline.push(userCopy);
       else throw new Error("User not assigned to any group!");

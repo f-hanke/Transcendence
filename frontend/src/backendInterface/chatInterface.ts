@@ -2,6 +2,7 @@ import {
   chatServiceTypeGuards,
   ChatServiceTypes,
   colog,
+  generateUniqueId,
   isDefined,
   MatchMakingTypes,
 } from "transcendence";
@@ -103,8 +104,9 @@ class ChatInterface {
       this.handleServerSendUserList(dataJson);
     } else if (chatServiceTypeGuards.isServerSentMessage(dataJson)) {
       this.handleServerSentMessage(dataJson);
-    }
-   else if (chatServiceTypeGuards.isServerClientChangedOnlineStatus(dataJson)) {
+    } else if (
+      chatServiceTypeGuards.isServerClientChangedOnlineStatus(dataJson)
+    ) {
       this.handleServerClientChangedOnlineStatus(dataJson);
     }
     // } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
@@ -127,7 +129,10 @@ class ChatInterface {
     dataJson: ChatServiceTypes.ServerClientChangedOnlineStatus
   ) {
     colog("RECEIVED CHANGE ONLINE STATUS MESSAGE!");
-    window.store.chatUserStore.updateChangeUserOnlineStatus(dataJson.data.recipientId, dataJson.data.onlineStatus);
+    window.store.chatUserStore.updateChangeUserOnlineStatus(
+      dataJson.data.recipientId,
+      dataJson.data.onlineStatus
+    );
   }
 
   static handleServerSendUserList(
@@ -144,6 +149,10 @@ class ChatInterface {
       authorId,
       dataJson.data.message
     );
+    window.store.notificationStore.updateAddNotification({
+      id: generateUniqueId(),
+      message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
+    });
     window.store.chatMessageStore.addMessage(authorId, dataJson.data);
   }
 
@@ -177,7 +186,10 @@ class ChatInterface {
   }
 
   static sendClientSentMessage(message: ChatServiceTypes.ClientSentMessage) {
-    window.store.chatMessageStore.addMessage(message.data.recipientId, message.data);
+    window.store.chatMessageStore.addMessage(
+      message.data.recipientId,
+      message.data
+    );
     window.store.chatUserStore.updateChangeUserLastMessage(
       message.data.recipientId,
       message.data.message

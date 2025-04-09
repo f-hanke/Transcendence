@@ -79,9 +79,9 @@ class ChatCurrent extends HTMLElement {
     const styleMsgOwner = window.store.userStore.get().id === msg.authorId ? "self-end border-green-300" :"self-start border-blue-300"; 
     const elem = createHtmlElementFromString(
       `
-      <div class="flex flex-col space-y-1 ${styleMsgOwner} w-3/4">
+      <div class="flex flex-col space-y-1 ${styleMsgOwner} w-3/4 max-w-5xl">
         <span class="text-xs text-gray-400 ml-1">${msg.date}</span>
-        <div class="w-full bg-white border-2 rounded-lg p-2 ${styleMsgOwner}">
+        <div class="w-full bg-white border-2 rounded-lg p-2 ${styleMsgOwner} overflow-x-auto">
           ${msg.message}
         </div>
       </div>
