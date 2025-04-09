@@ -42,9 +42,7 @@ type MatchMakingFastifyRequest = FastifyRequest<{
 fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
 	console.log("Chat history request received");
 
-	// const { clientId, recipientId } = req.query; --> todo "clientId has also to be in query"
-	const recipientId = req.query?.recipientId;
-	const clientId = "1";
+	const { clientId, recipientId } = req.query;
 	if (!clientId || !recipientId) {
 		const msg = "Missing authorId or recipientId in query string!";
 		console.log(msg);
