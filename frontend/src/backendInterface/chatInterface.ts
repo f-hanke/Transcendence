@@ -32,6 +32,7 @@ class ChatInterface {
           "Content-Type": "application/json",
         },
       });
+      colog(response);
       const responseJson = await response.json();
       colog(responseJson);
       if (chatServiceTypeGuards.isServerSendChatHistory(responseJson)) {

@@ -76,16 +76,14 @@ class ChatCurrent extends HTMLElement {
   createAndAppend(container: HTMLDivElement, msg: ChatServiceTypes.Message) {
     // const isOwnMsg = i % 2 == 0 ? true : false;
     // i++;
-    const isOwnMsg = window.store.userStore.get().id === msg.authorId;
-    const styleOwnMsg = "self-end border-green-300";
-    const styleOtherMsg = "self-start border-blue-300";
+    const styleMsgOwner = window.store.userStore.get().id === msg.authorId ? "self-end border-green-300" :"self-start border-blue-300"; 
     const elem = createHtmlElementFromString(
       `
-      <div class="my-2 border-2 rounded-lg w-3/4  ${
-        isOwnMsg ? styleOwnMsg : styleOtherMsg
-      }">
-        <div>${msg.date}</div>
-        <div>${msg.message}</div>
+      <div class="flex flex-col space-y-1 ${styleMsgOwner} w-3/4">
+        <span class="text-xs text-gray-400 ml-1">${msg.date}</span>
+        <div class="w-full bg-white border-2 rounded-lg p-2 ${styleMsgOwner}">
+          ${msg.message}
+        </div>
       </div>
       `
     ) as HTMLDivElement;
