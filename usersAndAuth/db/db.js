@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const sqlite3 = require('better-sqlite3').verbose();
+const sqlite3 = require('better-sqlite3');
 const config = require('../config/config');
 const fs = require('fs');
 const path = require('path');

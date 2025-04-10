@@ -10,6 +10,7 @@ const User = require('./orm/user');
 const Match = require('./orm/match');
 
 import { AuthServiceTypes, JwtType, AuthErrors } from './authTypesCopy'
+import { transNetworkSettings } from 'transcendence'
 import { error } from 'console'
 import fastifyJwt from '@fastify/jwt'
 
@@ -112,10 +113,13 @@ server.setNotFoundHandler((req, res) => {
   res.code(404).send({ route: req.url, method: req.method });
 });
 
-server.listen({ port: 8080, host: '10.15.204.2' }, (err, address) => {
-  if (err) {
-    console.error(err)
-    process.exit(1)
-  }
-    console.log(`Server listening at ${address}`)
+server.listen({
+  port: transNetworkSettings.authService.port,
+  host: transNetworkSettings.authService.ip
+  }, (err, address) => {
+    if (err) {
+      console.error(err)
+      process.exit(1)
+    }
+      console.log(`Server listening at ${address}`)
 })

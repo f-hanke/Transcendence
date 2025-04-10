@@ -12,6 +12,7 @@ const LoginSubmissionBodySchema = require('./schemas/schemas');
 const User = require('./orm/user');
 const Match = require('./orm/match');
 const authTypesCopy_1 = require("./authTypesCopy");
+const transcendence_1 = require("transcendence");
 const server = (0, fastify_1.default)({
     logger: {
         transport: {
@@ -88,7 +89,11 @@ server.get('/api/auth/verify-jwt', async (request, reply) => {
 server.setNotFoundHandler((req, res) => {
     res.code(404).send({ route: req.url, method: req.method });
 });
-server.listen({ port: 8080, host: '10.15.204.2' }, (err, address) => {
+server.listen({
+    port: transcendence_1.transNetworkSettings.authService.port,
+    host: transcendence_1.transNetworkSettings.authService.ip
+}, (err, address) => {
+    console.log(address);
     if (err) {
         console.error(err);
         process.exit(1);

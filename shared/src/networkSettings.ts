@@ -27,9 +27,9 @@ const transNetworkSettings: TransNetworkSettings = {
     port: 3002
   },
   authService: {
-    ip: "10.15.204.2",
+    ip: "10.11.3.1",
     // ip: "localhost",
-    port: 8080
+    port: 3003
   },
 };
 

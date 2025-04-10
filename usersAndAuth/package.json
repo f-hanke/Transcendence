@@ -5,8 +5,8 @@
   "main": "service.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node service.js",
-    "db_init": "node db/init/init.js"
+    "dev": "node service.js",
+    "db": "node db/init/init.js"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "transcendence": "file:../shared"
   }
 }
