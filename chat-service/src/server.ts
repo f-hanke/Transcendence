@@ -4,7 +4,7 @@ import cors from '@fastify/cors';
 import { WebSocket } from 'ws';
 import { chatServiceTypeGuards, ChatServiceTypes, SharedTypes, transNetworkSettings } from 'transcendence';
 import { FastifyRequest } from 'fastify/types/request';
-import sqlite3 from 'sqlite3';
+import Database from 'better-sqlite3';
 import { parse } from 'path';
 import { get } from 'http';
 
@@ -12,9 +12,9 @@ const fastify = Fastify();
 fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
 
-const db = new sqlite3.Database('./test_users_database.db');
+const db = new Database('./test_users_database.db');
 const socketToClientId = new Map<WebSocket, string>();
-const clientIdToSocket = new Map<string, WebSocket>();
+const clientIdToSocket = new Map<string, WebSocket>(); //todo websocket[] array to allow connections over multiple tabs
 
 type MatchMakingFastifyRequest = FastifyRequest<{
 	Querystring: SharedTypes.ClientQueryParamMatchMaking;
@@ -31,7 +31,7 @@ fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
 	}
 
 	try {
-		const messages = await getChatHistory(clientId, recipientId);
+		const messages = getChatHistory(clientId, recipientId);
 		return reply.send({
 			type: "serverSendChatHistory",
 			data: messages,
@@ -62,7 +62,7 @@ fastify.register(async function (fastify) {
 			socketToClientId.delete(socket);
 			clientIdToSocket.delete(clientId);
 			console.log(`Client disconnected: ${clientId}`);
-			updateUserStatus(clientId, false);
+			updateUserOnlineStatus(clientId, false);
 		});
 		socket.on("error", (err) => {
 			console.error("WebSocket error:", err);
@@ -80,132 +80,137 @@ function registerClient(req: FastifyRequest, socket: WebSocket) {
 	socketToClientId.set(socket, clientId);
 	clientIdToSocket.set(clientId, socket);
 	console.log(`Client connected: ${clientId}`);
-	updateUserStatus(clientId, true);
+	updateUserOnlineStatus(clientId, true);
 }
 
-function updateUserStatus(userId: string, isOnline: boolean): Promise<void> {
-	return new Promise((resolve, reject) => {
-		const query = `UPDATE users SET online = ? WHERE id = ?`;
-		db.run(query, [isOnline, userId], function (err) {
-			if (err) {
-				console.error(`Failed to update user status:`, err.message);
-				return reject(err);
-			}
-			if (this.changes === 0) {
-				console.warn(`No user found with id ${userId}`);
-			} else {
-				console.log(`Updated user ${userId} online status to ${isOnline}`);
-				fastify.websocketServer.clients.forEach((client) => {
-					if (client !== clientIdToSocket.get(userId)){
-						const ServerClientChangedOnlineStatus = {
-							type: "serverClientChangedOnlineStatus",
-							data: {
-								recipientId: userId,
-								onlineStatus: isOnline,
-							},
-						}
-						client.send(JSON.stringify(ServerClientChangedOnlineStatus));
+function updateUserOnlineStatus(userId: string, isOnline: boolean): void {
+	const query = `UPDATE users SET online = ? WHERE id = ?`;
+	try {
+		const stmt = db.prepare(query);
+		const result = stmt.run(isOnline ? 1 : 0, userId);
+
+		if (result.changes === 0) {
+			console.warn(`No user found with id ${userId}`);
+		} else {
+			console.log(`Updated user ${userId} online status to ${isOnline}`);
+			fastify.websocketServer.clients.forEach((client) => {
+				if (client !== clientIdToSocket.get(userId)){
+					const ServerClientChangedOnlineStatus = {
+						type: "serverClientChangedOnlineStatus",
+						data: {
+							recipientId: userId,
+							onlineStatus: isOnline,
+						},
 					}
-				});
-			}
-			resolve();
-		});
-	});
+					client.send(JSON.stringify(ServerClientChangedOnlineStatus));
+				}
+			});
+		}
+	} catch (err) {
+		console.error(`Failed to update user status:`, err);
+		throw err;
+	}
 }
 
 function handleClientSentMessage(dataJson: ChatServiceTypes.ClientSentMessage) {
 	console.log(dataJson);
 	const { authorId, recipientId, message, date } = dataJson.data;
 
-	db.run(
-		"INSERT INTO messages (authorId, recipientId, message, date) VALUES (?, ?, ?, ?)",
-		[authorId, recipientId, message, date],
-		function (err) {
-			if (err) {
-				console.error("DB error inserting message:", err);
-			} else {
-				console.log("Message inserted successfully");
-				const response = {
-					type: "serverSentMessage",
-					data: dataJson.data,
-				};
-				const recipientSocket = clientIdToSocket.get(recipientId);
-				if (recipientSocket) {
-					recipientSocket.send(JSON.stringify(response));
-				}
-			}
+	try {
+		const stmt = db.prepare(
+			"INSERT INTO messages (authorId, recipientId, message, date) VALUES (?, ?, ?, ?)"
+		);
+		stmt.run(authorId, recipientId, message, date);
+
+		console.log("Message inserted successfully");
+		updateUnreadMessages(recipientId, true);
+		const response = {
+			type: "serverSentMessage",
+			data: dataJson.data,
+		};
+		const recipientSocket = clientIdToSocket.get(recipientId);
+		const authorSocket = clientIdToSocket.get(authorId);
+		if (authorSocket) {
+			authorSocket.send(JSON.stringify(response));
+			//todo : if websocket[] send to all sockets
 		}
-	);
+		if (recipientSocket)
+			recipientSocket.send(JSON.stringify(response));
+	} catch (err) {
+		console.error("DB error inserting message:", err);
+	}
 }
 
-function updateLastMessageForUsers(authorId: string, recipientId: string, message: string) {
-	const stmt = db.prepare("UPDATE users SET lastMessage = ? WHERE id = ?");
-
-	stmt.run(message, authorId);
-	stmt.run(message, recipientId);
-
-	stmt.finalize();
-}
-
-//Database requests
-async function getUsers(socket: WebSocket) {
-	const clientId = socketToClientId?.get(socket);
+function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatServiceTypes.ChatUser[] } } | undefined {
+	const clientId = socketToClientId.get(socket);
+	if (!clientId) {
+		console.log("No clientId found for socket");
+		return undefined;
+	}
 	const users: ChatServiceTypes.ChatUser[] = [];
 
-	return new Promise<{ type: string; data: { chatUsers: ChatServiceTypes.ChatUser[] } }>((resolve, reject) => {
-		db.all("SELECT * FROM users", [], (err, rows: { username: string; id: string; lastMessage: string; online: boolean}[]) => {
-			if (err) {
-				reject(err);
-			}
-			else {
-				rows.forEach((row) => {
-					if (row.id === clientId)
-						return ;
-					users.push({
-						blocked: Math.random() < 0.5,
-						friend: Math.random() < 0.5,
-						online: row.online,
-						unreadMessages: Math.random() < 0.5,
-						displayName: row.username,
-						recipientId: row.id,
-						email: `${row.username}@test.com`,
-						image: "test",
-						lastMessage: row.lastMessage,
-					});
-				});
-				resolve({
-					type: "serverSendUserList",
-					data: {
-						chatUsers: users,
-					},
-				});
-			}
+	try {
+		const stmt = db.prepare("SELECT username, id, online, unreadMessages FROM users");
+		const rows = stmt.all() as { username: string; id: string; online: boolean; unreadMessages: boolean }[];
+
+		rows.forEach((row) => {
+			if (row.id === clientId) return;
+			users.push({
+				blocked: Math.random() < 0.5,
+				friend: Math.random() < 0.5,
+				online: row.online,
+				unreadMessages: row.unreadMessages,
+				displayName: row.username,
+				recipientId: row.id,
+				email: `${row.username}@test.com`,
+				image: "test",
+				lastMessage: "start a conversation",
+			});
 		});
-	});
+
+		return {
+			type: "serverSendUserList",
+			data: {
+				chatUsers: users,
+			},
+		};
+	} catch (err) {
+		console.error("DB error fetching users:", err);
+		return undefined;
+	}
+}
+//todo ClientChangeBlockStatus, ClientInviteToPlay
+
+function updateUnreadMessages(recipientId: string, unreadMessages: boolean): void {
+	try {
+		const stmt = db.prepare("UPDATE users SET unreadMessages = ? WHERE id = ?");
+		stmt.run(unreadMessages ? 1 : 0, recipientId);
+	} catch (err) {
+		console.error("DB error updating unread messages:", err);
+	}
 }
 
-async function getChatHistory(authorId: string, recipientId: string): Promise<ChatServiceTypes.Message[]> {
-	//unread update user !!!
-	return new Promise((resolve, reject) => {
-		const query = `
-			SELECT authorId, recipientId, message, date
-			FROM messages
-			WHERE
-				(authorId = ? AND recipientId = ?) OR
-				(authorId = ? AND recipientId = ?)
-			ORDER BY date ASC
-		`;
+function getChatHistory(authorId: string, recipientId: string): ChatServiceTypes.Message[] {
+	const query = `
+		SELECT authorId, recipientId, message, date
+		FROM messages
+		WHERE
+			(authorId = ? AND recipientId = ?) OR
+			(authorId = ? AND recipientId = ?)
+		ORDER BY date ASC
+	`;
 
-		db.all(query, [authorId, recipientId, recipientId, authorId], (err, rows: ChatServiceTypes.Message[]) => {
-			if (err) {
-				console.error("DB error fetching chat history:", err);
-				reject(err);
-			} else {
-				console.log(`Chat history successfully fetched author: ${authorId} recipient: ${recipientId}`);
-				resolve(rows);
-			}
-		});
-	});
+	try {
+		const stmt = db.prepare(query);
+		const rows = stmt.all(authorId, recipientId, recipientId, authorId) as ChatServiceTypes.Message[];
+
+		console.log(`Chat history successfully fetched authorId: ${authorId} recipientId: ${recipientId}`);
+		updateUnreadMessages(authorId, false);
+		return rows;
+	} catch (err) {
+		console.error("DB error fetching chat history:", err);
+		throw err;
+	}
 }
 
 fastify.listen({ port: transNetworkSettings.chatService.port, host: "0.0.0.0" }, (err) => {
