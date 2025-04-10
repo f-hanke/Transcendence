@@ -6,17 +6,6 @@ declare namespace AuthServiceTypes {
     // confirmPassword: string;
   };
 
-
-  enum AuthErrors {
-    DuplicateEmail,
-    InvalidPassword,
-    UnknownEmail,
-    PasswordTooShort,
-    PasswordTooLong,
-    PasswordNotAccGuideline,
-    BackendError
-  }
-
   type ErrorResponseBody = {
     reason: AuthErrors;
   };
@@ -37,27 +26,56 @@ declare namespace AuthServiceTypes {
 
 }
 
+enum AuthErrors {
+  DuplicateEmail,
+  InvalidPassword,
+  UnknownEmail,
+  PasswordTooShort,
+  PasswordTooLong,
+  PasswordNotAccGuideline,
+  BackendError
+}
+
+const authErrorsToMsgMap: Record<AuthErrors, string> = {
+  [AuthErrors.DuplicateEmail]: "That email is already taken. Try logging in or use a different one.",
+  [AuthErrors.InvalidPassword]: "Hmm... that password doesn’t look right. Try again?",
+  [AuthErrors.UnknownEmail]: "We couldn’t find an account with that email.",
+  [AuthErrors.PasswordTooShort]: "Your password is a bit too short. Add a few more characters.",
+  [AuthErrors.PasswordTooLong]: "That’s a mighty long password! Try shortening it a bit.",
+  [AuthErrors.PasswordNotAccGuideline]: "Your password must meet our security guidelines.",
+  [AuthErrors.BackendError]: "Oops! Something went wrong on our end. Please try again later.",
+}
+
 // POST /api/auth/register   - For new user registration
 // POST /api/auth/login      - For user authentication
 // POST /api/auth/logout     - For ending sessions (only if logged in)
 // POST /api/auth/refresh    - For extending (only if logged in)
 
-const authServiceTypeGuards = {} as const;
-
-export { AuthServiceTypes };
-
-
-function isRegisterStateSubmit(
-  message: any
-): message is AuthServiceTypes.RegisterStateSubmit {
+function isErrorResponseBody(obj: any): obj is AuthServiceTypes.ErrorResponseBody
+{
   return (
-    message?.email &&
-    message?.email &&
-    message?.displayName &&
-    message?.password &&
-    message?.confirmPassword &&
-    typeof message.data.matchId == "string"
-  );
+    typeof obj === 'object' &&
+    obj !== null &&
+    'reason' in obj &&
+    typeof (obj as any).reason === 'number' &&
+    Object.values(AuthErrors).includes((obj as any).reason)
+  ); 
 }
+
+const authServiceTypeGuards = {
+  isErrorResponseBody
+} as const;
+
+export type { 
+  AuthServiceTypes 
+};
+
+export {
+  authServiceTypeGuards,
+  authErrorsToMsgMap
+}
+
+
+
 
 
