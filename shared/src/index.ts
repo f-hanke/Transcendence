@@ -2,7 +2,7 @@ import { GameServiceTypes } from "./gameServiceTypes.js";
 import { MatchMakingTypes } from "./matchmakingTypes.js";
 import { SharedTypes } from "./sharedTypes.js";
 import { GameSettings, gameSettings } from "./gameSettings.js";
-import { AuthServiceTypes } from "./authTypes.js";
+import { AuthServiceTypes, authServiceTypeGuards, authErrorsToMsgMap } from "./authTypes.js";
 import { ChatServiceTypes } from "./chatTypes.js";
 import {
   TransNetworkSettings,
@@ -40,5 +40,7 @@ export {
   gameServiceTypeGuards,
   gameSettings,
   transNetworkSettings,
-  chatServiceTypeGuards
+  chatServiceTypeGuards,
+  authServiceTypeGuards,
+  authErrorsToMsgMap
 };

@@ -1,3 +1,4 @@
+import { AuthInterface } from "../../backendInterface/authInterface";
 import { RegisterState } from "../../state/registerStateTypes";
 import { navigateToSite } from "../../utils/utils";
 
@@ -34,10 +35,14 @@ class RegisterPage extends HTMLElement {
           <h2 class="text-xl font-bold mb-4 text-center">Register</h2>
 
           <label class="block mb-2 text-gray-700">Email</label>
-          <input id="registerEmail" type="email" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required value=${window.store.registerStore.get().email}>
+          <input id="registerEmail" type="email" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required value=${
+            window.store.registerStore.get().email
+          }>
 
           <label class="block mb-2 text-gray-700">Display Name</label>
-          <input id="registerDisplayName" type="text" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required value=${window.store.registerStore.get().displayName}>
+          <input id="registerDisplayName" type="text" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required value=${
+            window.store.registerStore.get().displayName
+          }>
 
           <label class="block mb-2 text-gray-700">Password</label>
           <input id="registerPassword" type="password" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required>
@@ -56,13 +61,14 @@ class RegisterPage extends HTMLElement {
       </div>
     `;
 
-    (this.querySelector("#registerGoToLogin") as HTMLButtonElement).addEventListener("click", () => {
+    (
+      this.querySelector("#registerGoToLogin") as HTMLButtonElement
+    ).addEventListener("click", () => {
       navigateToSite("/loginPage");
-    })
+    });
 
     this.addUpdateStateEventListener("registerEmail", "email");
     this.addUpdateStateEventListener("registerDisplayName", "displayName");
-
   }
 
   addUpdateStateEventListener(elemId: string, stateKey: keyof RegisterState) {
@@ -86,10 +92,8 @@ class RegisterPage extends HTMLElement {
     // inputElem.focus();
   }
 
-  handleSubmit(event: Event) {
+  async handleSubmit(event: Event) {
     event.preventDefault();
-    window.colog("SUBMITTED THE FOLLOWING STATE");
-    window.colog(window.store.registerStore);
     const errorMessage = document.querySelector(
       "#registerErrorMessage"
     ) as HTMLParagraphElement;
@@ -99,6 +103,15 @@ class RegisterPage extends HTMLElement {
     const registerConfirmPassword = document.querySelector(
       "#registerConfirmPassword"
     ) as HTMLInputElement;
+    const details = {
+      email: window.store.registerStore.get().email,
+      displayName: window.store.registerStore.get().displayName,
+      password: registerPassword.value,
+    }
+    window.colog("SUBMITTED THE FOLLOWING STATE");
+    window.colog(details);
+    const res = await AuthInterface.registerClient(details);
+    window.brepo(res);
   }
 }
 

@@ -20,7 +20,7 @@ Chat requirements:
 - use values from game settings for paddle x position
 
 
-- highligth selected chat
-- add own message to state after sending to server
-- layout own other messages correctly
-- highlight chats with new messages, white, red point
+- continue blocked user list
+- notification on message receival
+- integrate milos work
+- add tab for pending friend requests
