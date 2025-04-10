@@ -102,7 +102,7 @@ class ChatInterface {
     colog(dataJson);
     if (chatServiceTypeGuards.isServerSendUserList(dataJson)) {
       this.handleServerSendUserList(dataJson);
-    } else if (chatServiceTypeGuards.isServerSentMessage(dataJson)) {
+    } else if (chatServiceTypeGuards.isSentMessage(dataJson)) {
       this.handleServerSentMessage(dataJson);
     } else if (
       chatServiceTypeGuards.isServerClientChangedOnlineStatus(dataJson)
@@ -143,7 +143,7 @@ class ChatInterface {
     this.requestChatHistory(dataJson.data.chatUsers[0].recipientId);
   }
 
-  static handleServerSentMessage(dataJson: ChatServiceTypes.ServerSentMessage) {
+  static handleServerSentMessage(dataJson: ChatServiceTypes.SentMessage) {
     const authorId = dataJson.data.authorId;
     window.store.chatUserStore.updateChangeUserLastMessageAndUnreadMessageStatus(
       authorId,
@@ -185,7 +185,7 @@ class ChatInterface {
     window.store.matchmakingStore.deleteGame(dataJson.data);
   }
 
-  static sendClientSentMessage(message: ChatServiceTypes.ClientSentMessage) {
+  static sendClientSentMessage(message: ChatServiceTypes.SentMessage) {
     window.store.chatMessageStore.addMessage(
       message.data.recipientId,
       message.data
