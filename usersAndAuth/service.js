@@ -61,7 +61,7 @@ server.post('/api/auth/login', { schema: LoginSubmissionBodySchema }, async (req
         const isPasswordValid = await passwordUtils.comparePassword(request.body.password, user.pw_hash);
         if (!isPasswordValid)
             return reply.code(400).send({ reason: authTypesCopy_1.AuthErrors.InvalidPassword });
-        const token = server.jwt.sign({ userId: user.id, expiresIn: '10m' });
+        const token = server.jwt.sign({ userId: user.id, expiresIn: '12h' });
         User.updateOnlineStatus(user.id, 1);
         User.incrementLoginCount(user.id);
         return reply.send({ clientId: user.id, jwtToken: token });

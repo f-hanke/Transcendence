@@ -48,10 +48,6 @@ declare namespace AuthServiceTypes {
     reason: AuthErrors;
   };
 
-  type ErrorDuck = {
-    reason: AuthErrors;
-  };
-
   type RegSuccessResponseBody = {
     // status code 201
   };

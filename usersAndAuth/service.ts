@@ -58,7 +58,7 @@ server.post<{
   // schema is evaluated before the code below is ever looked at, so schema-responses are handled as pre-process
   const passwordError = validators.identifyPasswordError(request.body.password);
   if (passwordError !== null)
-    return reply.code(400).send({ reason: passwordError } satisfies AuthServiceTypes.ErrorDuck );
+    return reply.code(400).send({ reason: passwordError } satisfies AuthServiceTypes.ErrorResponseBody );
   try {
     await User.create(request.body);
     return reply.code(201).send();
