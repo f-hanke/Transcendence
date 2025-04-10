@@ -9,7 +9,7 @@ export class Ball {
         this.x = 400;
         this.y = 200;
         this.speedX = 5;
-        this.speedY = Math.round(Math.random() * 3);
+        this.speedY = 3;
         this.radius = gameSettings.ballRadius;
     }
     move(screenWidth, screenHeight) {
@@ -19,7 +19,7 @@ export class Ball {
     reset() {
         this.x = 400;
         this.y = 200;
-        this.speedX = 5;
-        this.speedY = Math.round(Math.random() * 3);
+        this.speedX = 2;
+        this.speedY = 3;
     }
 }
