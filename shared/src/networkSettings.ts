@@ -12,13 +12,13 @@ type TransNetworkSettings = {
 
 const transNetworkSettings: TransNetworkSettings = {
   matchmakingService: {
-    // ip: "10.15.202.2",
-    ip: "localhost",
+    // ip: "10.15.204.1",
+    ip: "10.15.204.1",
     port: 3000,
   },
   gameService: {
     // ip: "10.15.202.2",
-    ip: "localhost",
+    ip: "10.15.204.1",
     port: 3001
   },
   chatService: {
