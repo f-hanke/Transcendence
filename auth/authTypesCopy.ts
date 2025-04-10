@@ -11,7 +11,6 @@ declare namespace AuthServiceTypes {
     DuplicateEmail,
     InvalidPassword,
     UnknownEmail,
-    PasswordTooShort,
     PasswordTooLong,
     PasswordNotAccGuideline,
     BackendError
@@ -22,7 +21,7 @@ declare namespace AuthServiceTypes {
   };
 
   type RegSuccessResponseBody = {
-    // status code 201
+    // status code 200
   };
 
   type AuthSuccessResponseBody = {
@@ -45,19 +44,3 @@ declare namespace AuthServiceTypes {
 const authServiceTypeGuards = {} as const;
 
 export { AuthServiceTypes };
-
-
-function isRegisterStateSubmit(
-  message: any
-): message is AuthServiceTypes.RegisterStateSubmit {
-  return (
-    message?.email &&
-    message?.email &&
-    message?.displayName &&
-    message?.password &&
-    message?.confirmPassword &&
-    typeof message.data.matchId == "string"
-  );
-}
-
-

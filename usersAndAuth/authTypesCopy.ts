@@ -1,3 +1,20 @@
+export enum AuthErrors {
+  DuplicateEmail,
+  InvalidPassword,
+  UnknownEmail,
+  PasswordTooShort,
+  PasswordTooLong,
+  PasswordNotAccGuideline,
+  LackingAuthorizationHeader,
+  Unauthorized,
+  BackendError
+}
+
+export type JwtType = {
+  userId: number;
+  expiresIn: string;
+};
+
 declare namespace AuthServiceTypes {
   type RegSubmissionBody = {
     email: string;
@@ -6,16 +23,17 @@ declare namespace AuthServiceTypes {
     // confirmPassword: string;
   };
 
+  type LoginSubmissionBody = {
+    email: string;
+    password: string;
+  };
 
-  enum AuthErrors {
-    DuplicateEmail,
-    InvalidPassword,
-    UnknownEmail,
-    PasswordTooShort,
-    PasswordTooLong,
-    PasswordNotAccGuideline,
-    BackendError
-  }
+  type UpdateBody = {
+    email: string;
+    displayName: string;
+    password: string;
+    image: string;
+  };
 
   type ErrorResponseBody = {
     reason: AuthErrors;
@@ -45,19 +63,3 @@ declare namespace AuthServiceTypes {
 const authServiceTypeGuards = {} as const;
 
 export { AuthServiceTypes };
-
-
-function isRegisterStateSubmit(
-  message: any
-): message is AuthServiceTypes.RegisterStateSubmit {
-  return (
-    message?.email &&
-    message?.email &&
-    message?.displayName &&
-    message?.password &&
-    message?.confirmPassword &&
-    typeof message.data.matchId == "string"
-  );
-}
-
-

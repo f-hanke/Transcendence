@@ -1,0 +1,37 @@
+<h1 class="page-title">My Friends</h1>
+
+<div class="section">
+  <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h3>Friends</h3>
+    <div>
+      <a href="/friends/requests" class="form-button">Friend Requests</a>
+      <a href="/friends/blocked" class="form-button" style="margin-left: 10px;">Blocked Users</a>
+    </div>
+  </div>
+  
+  {{#if friends.length}}
+    <div class="user-list">
+      {{#each friends}}
+        <div class="card user-card">
+          <img src="{{this.image}}" alt="{{this.display_name}}" class="user-avatar">
+          <h3 class="user-name">{{this.display_name}}</h3>
+          <span class="user-status {{#if this.online_status}}status-online{{else}}status-offline{{/if}}">
+            {{#if this.online_status}}Online{{else}}Offline{{/if}}
+          </span>
+          <div class="user-actions">
+            <a href="/users/{{this.id}}" class="form-button">View Profile</a>
+            <form action="/friends/remove" method="POST" style="display: inline;">
+              <input type="hidden" name="friend_id" value="{{this.id}}">
+              <button type="submit" class="form-button" style="background-color: #e74c3c;">Remove</button>
+            </form>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  {{else}}
+    <div style="text-align: center; padding: 30px;">
+      <p>You haven't added any friends yet.</p>
+      <a href="/users" class="form-button" style="margin-top: 20px;">Find Users</a>
+    </div>
+  {{/if}}
+</div>
