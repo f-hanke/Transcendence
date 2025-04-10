@@ -102,7 +102,7 @@ class ChatInterface {
     colog(dataJson);
     if (chatServiceTypeGuards.isServerSendUserList(dataJson)) {
       this.handleServerSendUserList(dataJson);
-    } else if (chatServiceTypeGuards.isServerSentMessage(dataJson)) {
+    } else if (chatServiceTypeGuards.isSentMessage(dataJson)) {
       this.handleServerSentMessage(dataJson);
     } else if (
       chatServiceTypeGuards.isServerClientChangedOnlineStatus(dataJson)
@@ -143,57 +143,30 @@ class ChatInterface {
     this.requestChatHistory(dataJson.data.chatUsers[0].recipientId);
   }
 
-  static handleServerSentMessage(dataJson: ChatServiceTypes.ServerSentMessage) {
+  static handleServerSentMessage(dataJson: ChatServiceTypes.SentMessage) {
     const authorId = dataJson.data.authorId;
     window.store.chatUserStore.updateChangeUserLastMessageAndUnreadMessageStatus(
       authorId,
       dataJson.data.message
     );
-    window.store.notificationStore.updateAddNotification({
-      id: generateUniqueId(),
-      message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
-    });
+    if (window.store.userStore.get().id !== dataJson.data.authorId) {
+      window.store.notificationStore.updateAddNotification({
+        id: generateUniqueId(),
+        message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
+      });
+    }
     window.store.chatMessageStore.addMessage(authorId, dataJson.data);
   }
 
-  static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    const isSelfHosted =
-      dataJson.data.hostId === window.store.userStore.get().id;
-    window.store.gameStore.updateMatchMakingSuccessful({
-      hostId: dataJson.data.hostId,
-      oponentId: dataJson.data.oponentId,
-      selfHosted: isSelfHosted,
-      matchId: dataJson.data.matchId,
-      playerLeftPaddleId: dataJson.data.hostId,
-      playerRightPaddleId: dataJson.data.oponentId,
-    });
-    window.store.gameStore.updateGameStateTypeOfGame("remote");
-    window.store.gameStore.updateGameStateState("matchmakingSuccessful");
-  }
-
-  static handleServerUpdateOneGame(
-    dataJson: MatchMakingTypes.ServerUpdateOneGame
-  ) {
-    window.store.matchmakingStore.updateOneGame(dataJson.data);
-  }
-
-  static handleServerCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
-    window.store.matchmakingStore.createGame(dataJson.data);
-  }
-
-  static handleServerLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
-    window.store.matchmakingStore.deleteGame(dataJson.data);
-  }
-
-  static sendClientSentMessage(message: ChatServiceTypes.ClientSentMessage) {
-    window.store.chatMessageStore.addMessage(
-      message.data.recipientId,
-      message.data
-    );
-    window.store.chatUserStore.updateChangeUserLastMessage(
-      message.data.recipientId,
-      message.data.message
-    );
+  static sendClientSentMessage(message: ChatServiceTypes.SentMessage) {
+    // window.store.chatMessageStore.addMessage(
+    //   message.data.recipientId,
+    //   message.data
+    // );
+    // window.store.chatUserStore.updateChangeUserLastMessage(
+    //   message.data.recipientId,
+    //   message.data.message
+    // );
     this.sendMessageToServer(message);
   }
 

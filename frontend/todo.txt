@@ -21,6 +21,8 @@ Chat requirements:
 
 
 - continue blocked user list
+- do friends request list
 - notification on message receival
 - integrate milos work
 - add tab for pending friend requests
+- login, logout, register, refresh
