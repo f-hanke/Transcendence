@@ -42,7 +42,7 @@ declare namespace ChatServiceTypes {
     | ServerSendChatHistory
     | ServerClientChangedOnlineStatus
     | ServerClientChangedOnlineStatus
-    | ClientSentMessage;
+    | SentMessage;
 
   type DataServerSendUserList = {
     chatUsers: ChatUser[];
@@ -65,16 +65,10 @@ declare namespace ChatServiceTypes {
       onlineStatus: boolean;
     };
   };
-  type ClientSentMessage = {
-    type: "clientSentMessage";
+  type SentMessage = {
+    type: "sentMessage";
     data: Message;
   };
-
-  type ServerSentMessage = {
-    type: "serverSentMessage";
-    data: Message;
-  };
-
   type ClientChangeBlockStatus = {
     type: "clientChangeBlockStatus";
     data: {
@@ -115,21 +109,11 @@ function isServerSendUserList(
   );
 }
 
-function isServerSentMessage(
+function isSentMessage(
   message: any
-): message is ChatServiceTypes.ServerSentMessage {
+): message is ChatServiceTypes.SentMessage {
   return (
-    message?.type === "serverSentMessage" && message?.data
-    // && Array.isArray(message.data)
-    //  &&isChatUser(message.data[0])
-  );
-}
-
-function isClientSentMessage(
-  message: any
-): message is ChatServiceTypes.ClientSentMessage {
-  return (
-    message?.type === "clientSentMessage" && message?.data
+    message?.type === "sentMessage" && message?.data
     // && Array.isArray(message.data)
     //  &&isChatUser(message.data[0])
   );
@@ -159,8 +143,7 @@ const chatServiceTypeGuards = {
   isServerSendUserList,
   isChatUser,
   isServerSendChatHistory,
-  isServerSentMessage,
-  isClientSentMessage,
+  isSentMessage,
   isServerClientChangedOnlineStatus,
 } as const;
 

@@ -7,6 +7,7 @@ import { FastifyRequest } from 'fastify/types/request';
 import Database from 'better-sqlite3';
 import { parse } from 'path';
 import { get } from 'http';
+import { send } from 'process';
 
 const fastify = Fastify();
 fastify.register(fastifyWebsocket);
@@ -14,7 +15,7 @@ fastify.register(cors, { origin: "*" });
 
 const db = new Database('./test_users_database.db');
 const socketToClientId = new Map<WebSocket, string>();
-const clientIdToSocket = new Map<string, WebSocket>(); //todo websocket[] array to allow connections over multiple tabs
+const clientIdToSocket = new Map<string, WebSocket[]>(); //todo websocket[] array to allow connections over multiple tabs
 
 type MatchMakingFastifyRequest = FastifyRequest<{
 	Querystring: SharedTypes.ClientQueryParamMatchMaking;
@@ -52,7 +53,7 @@ fastify.register(async function (fastify) {
 		socket.on('message', (message) => {
 			const data = message.toString("utf-8");
 			const dataJson = JSON.parse(data);
-			if (chatServiceTypeGuards.isClientSentMessage(dataJson)) {
+			if (chatServiceTypeGuards.isSentMessage(dataJson)) {
 				handleClientSentMessage(dataJson);
 			}
 		});
@@ -60,8 +61,7 @@ fastify.register(async function (fastify) {
 		socket.on('close', () => {
 			const clientId = socketToClientId.get(socket) as string;
 			socketToClientId.delete(socket);
-			clientIdToSocket.delete(clientId);
-			console.log(`Client disconnected: ${clientId}`);
+			removeSocketFromClient(clientId, socket)
 			updateUserOnlineStatus(clientId, false);
 		});
 		socket.on("error", (err) => {
@@ -78,9 +78,49 @@ function registerClient(req: FastifyRequest, socket: WebSocket) {
 		return;
 	}
 	socketToClientId.set(socket, clientId);
-	clientIdToSocket.set(clientId, socket);
-	console.log(`Client connected: ${clientId}`);
+	addSocketToClient(clientId, socket);
 	updateUserOnlineStatus(clientId, true);
+}
+
+function addSocketToClient(clientId: string, socket: WebSocket){
+	if (!clientIdToSocket.has(clientId)){
+		clientIdToSocket.set(clientId, []);
+	}
+	clientIdToSocket.get(clientId)?.push(socket);
+	console.log(`[Connected] Socket added to client ${clientId}`);
+}
+
+function removeSocketFromClient(clientId: string, socket: WebSocket){
+	const sockets = clientIdToSocket.get(clientId);
+	if (!sockets)
+		return ;
+	const index = sockets.indexOf(socket);
+	if (index !== -1)
+		sockets.splice(index, 1);
+
+	if (sockets.length === 0) {
+		clientIdToSocket.delete(clientId);
+		console.log(`[Disconnected] client ${clientId}`);
+	}
+	else
+		console.log(`Socket removed client ${clientId}`)
+}
+
+function sendToClient(clientId: string, message: ChatServiceTypes.AllChatMessageTypes){
+	const sockets = clientIdToSocket.get(clientId);
+
+	fastify.websocketServer.clients.forEach((client) => {
+		if (sockets?.includes(client))
+			client.send(JSON.stringify(message));
+	});
+}
+
+function sendToAllClientsExcept(clientIdToExclude: string, message: ChatServiceTypes.AllChatMessageTypes) {
+	fastify.websocketServer.clients.forEach((client) => {
+		if (socketToClientId.get(client) !== clientIdToExclude) {
+			client.send(JSON.stringify(message));
+		}
+	});
 }
 
 function updateUserOnlineStatus(userId: string, isOnline: boolean): void {
@@ -93,18 +133,7 @@ function updateUserOnlineStatus(userId: string, isOnline: boolean): void {
 			console.warn(`No user found with id ${userId}`);
 		} else {
 			console.log(`Updated user ${userId} online status to ${isOnline}`);
-			fastify.websocketServer.clients.forEach((client) => {
-				if (client !== clientIdToSocket.get(userId)){
-					const ServerClientChangedOnlineStatus = {
-						type: "serverClientChangedOnlineStatus",
-						data: {
-							recipientId: userId,
-							onlineStatus: isOnline,
-						},
-					}
-					client.send(JSON.stringify(ServerClientChangedOnlineStatus));
-				}
-			});
+			sendToAllClientsExcept(userId, { type: "serverClientChangedOnlineStatus", data: { recipientId: userId, onlineStatus: isOnline } })
 		}
 	} catch (err) {
 		console.error(`Failed to update user status:`, err);
@@ -112,7 +141,7 @@ function updateUserOnlineStatus(userId: string, isOnline: boolean): void {
 	}
 }
 
-function handleClientSentMessage(dataJson: ChatServiceTypes.ClientSentMessage) {
+function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 	console.log(dataJson);
 	const { authorId, recipientId, message, date } = dataJson.data;
 
@@ -124,18 +153,16 @@ function handleClientSentMessage(dataJson: ChatServiceTypes.ClientSentMessage) {
 
 		console.log("Message inserted successfully");
 		updateUnreadMessages(recipientId, true);
-		const response = {
-			type: "serverSentMessage",
-			data: dataJson.data,
-		};
-		const recipientSocket = clientIdToSocket.get(recipientId);
-		const authorSocket = clientIdToSocket.get(authorId);
-		if (authorSocket) {
-			authorSocket.send(JSON.stringify(response));
-			//todo : if websocket[] send to all sockets
-		}
-		if (recipientSocket)
-			recipientSocket.send(JSON.stringify(response));
+		sendToClient(authorId, { type: "sentMessage", data: dataJson.data });
+
+		// const recipientSocket = clientIdToSocket.get(recipientId);
+		// const authorSocket = clientIdToSocket.get(authorId);
+		// if (authorSocket) {
+		// 	authorSocket.send(JSON.stringify(response));
+		// 	//todo : if websocket[] send to all sockets
+		// }
+		// if (recipientSocket)
+		// 	recipientSocket.send(JSON.stringify(response));
 	} catch (err) {
 		console.error("DB error inserting message:", err);
 	}
@@ -151,12 +178,12 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 
 	try {
 		const stmt = db.prepare("SELECT username, id, online, unreadMessages FROM users");
-		const rows = stmt.all() as { username: string; id: string; online: boolean; unreadMessages: boolean }[];
+		const rows = stmt.all() as { id: string; username: string; online: boolean; unreadMessages: boolean }[];
 
 		rows.forEach((row) => {
 			if (row.id === clientId) return;
 			users.push({
-				blocked: Math.random() < 0.5,
+				blocked: false,
 				friend: Math.random() < 0.5,
 				online: row.online,
 				unreadMessages: row.unreadMessages,
