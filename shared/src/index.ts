@@ -2,8 +2,12 @@ import { GameServiceTypes } from "./gameServiceTypes.js";
 import { MatchMakingTypes } from "./matchmakingTypes.js";
 import { SharedTypes } from "./sharedTypes.js";
 import { GameSettings, gameSettings } from "./gameSettings.js";
-import { AuthServiceTypes } from "./authTypes.js";
+import { AuthServiceTypes, authServiceTypeGuards, authErrorsToMsgMap } from "./authTypes.js";
 import { ChatServiceTypes } from "./chatTypes.js";
+import {
+  TransNetworkSettings,
+  transNetworkSettings,
+} from "./networkSettings.js";
 
 export type {
   AuthServiceTypes,
@@ -12,6 +16,7 @@ export type {
   SharedTypes,
   GameSettings,
   ChatServiceTypes,
+  TransNetworkSettings,
 };
 
 import {
@@ -23,6 +28,7 @@ import {
 } from "./sharedFunctions.js";
 import { matchmakingTypeGuards } from "./matchmakingTypes.js";
 import { gameServiceTypeGuards } from "./gameServiceTypes.js";
+import { chatServiceTypeGuards } from "./chatTypes.js";
 
 export {
   isTypedObject,
@@ -33,4 +39,8 @@ export {
   jlog,
   gameServiceTypeGuards,
   gameSettings,
+  transNetworkSettings,
+  chatServiceTypeGuards,
+  authServiceTypeGuards,
+  authErrorsToMsgMap
 };

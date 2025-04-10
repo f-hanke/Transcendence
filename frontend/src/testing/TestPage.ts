@@ -6,6 +6,7 @@ import {
 } from "../utils/utils";
 import { GameServiceInterface } from "../backendInterface/gameServiceInterface";
 import { CentralModalListeners } from "../pages/CentralModalListeners";
+import { ChatInterface } from "../backendInterface/chatInterface";
 
 class TestPage extends HTMLElement {
   constructor() {
@@ -13,6 +14,29 @@ class TestPage extends HTMLElement {
   }
 
   connectedCallback() {
+
+    const test = {
+      prop1: 1,
+      prop2: 2,
+    }
+
+    const org = {
+      ref1: test,
+      ref2: test,
+      map: new Map(),
+    }
+
+    org.map.set("ref1", test);
+    org.map.set("ref2", test);
+
+    const clone = structuredClone(org);
+
+    colog(org.ref1 === org.ref2);
+    colog(clone.ref1 === clone.ref2);
+
+    clone.ref1.prop1 = 5;
+    colog(clone);
+
     // const modal = createHtmlElementFromString(`<central-modal>
     //   <h2 class="text-xl font-bold">Confirm Action</h2>
     //   <p>Are you sure you want to proceed?</p>
@@ -50,6 +74,9 @@ class TestPage extends HTMLElement {
     this.innerHTML = `
       <chat-layout></chat-layout>
     `;
+    // this.innerHTML = `
+    //   <match-score></match-score>
+    // `;
     // this.innerHTML = `
     // <div class="bg-black h-full w-full">
 

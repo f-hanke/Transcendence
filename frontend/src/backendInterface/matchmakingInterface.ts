@@ -15,33 +15,35 @@ class MatchMakingInterface {
   static websocket: WebSocket | null = null;
 
   static connect(): Promise<void> {
-    const address = buildBackendRoute({
-      websocketOrApi: "ws",
-      service: "matchmakingService",
-      route: "",
-      addClientIdAsQueryParam: true,
-    });
-    return new Promise((resolve, reject) => {
-      this.websocket = new WebSocket(address);
-      this.websocket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        reject(new Error("WebSocket connection failed"));
-      };
+    if (!isDefined(this.websocket)) {
+      const address = buildBackendRoute({
+        websocketOrApi: "ws",
+        service: "matchmakingService",
+        route: "",
+        addClientIdAsQueryParam: true,
+      });
+      return new Promise((resolve, reject) => {
+        this.websocket = new WebSocket(address);
+        this.websocket.onerror = (error) => {
+          console.error("WebSocket error:", error);
+          reject(new Error("WebSocket connection failed"));
+        };
 
-      this.websocket.onopen = () => {
-        console.log("WebSocket connected successfully!");
-        resolve();
-      };
+        this.websocket.onopen = () => {
+          console.log("WebSocket connected successfully!");
+          resolve();
+        };
 
-      this.websocket.onclose = () => {
-        console.log("WebSocket closed!");
-        this.websocket = null;
-      };
+        this.websocket.onclose = () => {
+          console.log("WebSocket closed!");
+          this.websocket = null;
+        };
 
-      this.websocket.onmessage = (event) => {
-        this.handleMessage(event);
-      };
-    });
+        this.websocket.onmessage = (event) => {
+          this.handleMessage(event);
+        };
+      });
+    } else return Promise.resolve();
   }
 
   static disconnect() {
@@ -94,10 +96,15 @@ class MatchMakingInterface {
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    window.store.gameStore.updateAssignPaddles(
-      dataJson.data.hostId,
-      dataJson.data.oponentId
-    );
+    const isSelfHosted = dataJson.data.hostId === window.store.userStore.get().id;
+    window.store.gameStore.updateMatchMakingSuccessful({
+      hostId: dataJson.data.hostId,
+      oponentId: dataJson.data.oponentId,
+      selfHosted: isSelfHosted,
+      matchId: dataJson.data.matchId,
+      playerLeftPaddleId: dataJson.data.hostId,
+      playerRightPaddleId: dataJson.data.oponentId,
+    });
     window.store.gameStore.updateGameStateTypeOfGame("remote");
     window.store.gameStore.updateGameStateState("matchmakingSuccessful");
   }

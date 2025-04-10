@@ -21,7 +21,7 @@ class ChatLayout extends HTMLElement {
     this.innerHTML = `
       <div class="flex h-full w-full">
         <chat-list></chat-list>
-        <chat-current></chat-current>
+        <chat-current class="flex-grow"></chat-current>
       </div>
     `;
   }

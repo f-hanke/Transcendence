@@ -7,4 +7,11 @@ type ChatMessageState = {
 
 type ChatUserState = Map<string, ChatServiceTypes.ChatUser>;
 
-export type { ChatUserState, ChatMessageState };
+type ChatUserGroups = {
+  friends: ChatServiceTypes.ChatUser[],
+  online: ChatServiceTypes.ChatUser[],
+  offline: ChatServiceTypes.ChatUser[],
+  blocked: ChatServiceTypes.ChatUser[],
+}
+
+export type { ChatUserState, ChatMessageState,ChatUserGroups };
