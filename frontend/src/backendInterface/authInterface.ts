@@ -19,7 +19,7 @@ class AuthInterface {
     const address = buildBackendRoute({
       websocketOrApi: "api",
       service: "authService",
-      route: "auth/register",
+      route: "/api/auth/register",
     });
     try {
       const response = await fetch(address, {

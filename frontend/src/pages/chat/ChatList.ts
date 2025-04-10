@@ -2,7 +2,7 @@ import { ChatServiceTypes } from "transcendence";
 import { createHtmlElementFromString } from "../../utils/utils";
 import { ChatUserComponent } from "./ChatUserComponent";
 
-type Tabs = "userList" | "blocked";
+type Tabs = "userList" | "blocked" | "friendRequests";
 
 class ChatList extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -37,14 +37,14 @@ class ChatList extends HTMLElement {
   }
 
   render() {
-    const classBtn = "rounded border-2 mx-2 outline-none p-2 hover:bg-gray-600";
+    const classBtn = "flex-1 rounded border-2 outline-none p-1 hover:bg-gray-600";
     const classBtnSelected = `${classBtn} border-white`;
     const classBtnNotSelected = `${classBtn} border-gray-700 text-gray-700`;
 
     this.innerHTML = `
-      <div class="w-72 h-full bg-gray-800 text-white p-4 overflow-y-auto">
+      <div class="w-72 h-full bg-gray-800 text-white py-2 overflow-y-auto">
         <!-- Tabs -->
-        <div class="flex justify-start">
+        <div class="flex justify-start mx-2">
           <button id="chatUserTabBtn" class="${
             this.selectedTab === "userList"
               ? classBtnSelected
@@ -55,6 +55,11 @@ class ChatList extends HTMLElement {
               ? classBtnSelected
               : classBtnNotSelected
           }">Blocked</button>
+          <button id="chatFriendRequestTabBtn" class="${
+            this.selectedTab === "friendRequests"
+              ? classBtnSelected
+              : classBtnNotSelected
+          }">Friend Requests</button>
         </div>
 
         <!-- Friends Tab Content -->
@@ -81,6 +86,14 @@ class ChatList extends HTMLElement {
             <h2 class="text-lg font-bold py-4">Blocked Users</h2>
           </div>
         </div>
+
+        <div id="friendRequestTab" class="tab-content ${
+          this.selectedTab === "friendRequests" ? "" : "hidden"
+        }">
+          <div id="chatFriendRequestList">
+            <h2 class="text-lg font-bold py-4">Friend Requests</h2>
+          </div>
+        </div>
       </div>
     `;
 
@@ -100,8 +113,17 @@ class ChatList extends HTMLElement {
       this.switchTab("blocked");
     });
 
+    const chatFriendRequestTabBtn = this.querySelector(
+      "#chatFriendRequestTabBtn"
+    ) as HTMLButtonElement;
+
+    chatFriendRequestTabBtn.addEventListener("click", () => {
+      this.switchTab("friendRequests");
+    });
+
     if (this.selectedTab === "userList") this.renderUserList();
     if (this.selectedTab === "blocked") this.renderBlockedList();
+    if (this.selectedTab === "friendRequests") this.renderFriendRequestList();
   }
 
   createAndAppend(container: HTMLDivElement, user: ChatServiceTypes.ChatUser) {
@@ -121,6 +143,17 @@ class ChatList extends HTMLElement {
     for (const user of userGroups.blocked) {
       this.createAndAppend(chatBlockedUsersList, user);
     }
+  }
+
+  renderFriendRequestList() {
+    const userGroups = window.store.chatUserStore.getUserGroups();
+    const chatchatFriendRequestList = this.querySelector(
+      "#chatFriendRequestList"
+    ) as HTMLDivElement;
+    
+    // for (const user of userGroups.blocked) {
+    //   this.createAndAppend(chatchatFriendRequestList, user);
+    // }
   }
 
   renderUserList() {

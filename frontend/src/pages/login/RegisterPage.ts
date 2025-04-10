@@ -1,6 +1,7 @@
+import { colog } from "transcendence";
 import { AuthInterface } from "../../backendInterface/authInterface";
 import { RegisterState } from "../../state/registerStateTypes";
-import { navigateToSite } from "../../utils/utils";
+import { buildBackendRoute, navigateToSite } from "../../utils/utils";
 
 class RegisterPage extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -111,7 +112,18 @@ class RegisterPage extends HTMLElement {
     window.colog("SUBMITTED THE FOLLOWING STATE");
     window.colog(details);
     const res = await AuthInterface.registerClient(details);
-    window.brepo(res);
+    // const address = buildBackendRoute({
+    //   websocketOrApi: "api",
+    //   service: "authService",
+    //   route: "/ping",
+    // });
+    // const res = await fetch(address, {
+    //   method: "GET",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
+    colog(res);
   }
 }
 
