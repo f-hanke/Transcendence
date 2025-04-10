@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fastify_1 = __importDefault(require("fastify"));
 const validators = require('./utils/validators');
 const passwordUtils = require('./utils/password');
+const cors = require('@fastify/cors');
 const RegSubmissionBodySchema = require('./schemas/schemas');
 const LoginSubmissionBodySchema = require('./schemas/schemas');
 const User = require('./orm/user');
@@ -25,6 +26,7 @@ const server = (0, fastify_1.default)({
 server.register(require('@fastify/jwt'), {
     secret: 'supersecret'
 });
+server.register(cors, { origin: "*" });
 server.get('/ping', async (request, reply) => {
     // the more "automatic" way of fastify handling the entire response
     return 'pong\n';
@@ -40,14 +42,14 @@ server.post('/api/auth/register', { schema: RegSubmissionBodySchema }, async (re
     // schema is evaluated before the code below is ever looked at, so schema-responses are handled as pre-process
     const passwordError = validators.identifyPasswordError(request.body.password);
     if (passwordError !== null)
-        return reply.code(400).send(passwordError);
+        return reply.code(400).send({ reason: passwordError });
     try {
         await User.create(request.body);
         return reply.code(201).send();
     }
     catch (e) {
         console.error(e);
-        return reply.code(500).send();
+        return reply.code(500).send({ reason: authTypesCopy_1.AuthErrors.BackendError });
     }
 });
 server.post('/api/auth/login', { schema: LoginSubmissionBodySchema }, async (request, reply) => {
@@ -59,7 +61,7 @@ server.post('/api/auth/login', { schema: LoginSubmissionBodySchema }, async (req
         const isPasswordValid = await passwordUtils.comparePassword(request.body.password, user.pw_hash);
         if (!isPasswordValid)
             return reply.code(400).send({ reason: authTypesCopy_1.AuthErrors.InvalidPassword });
-        const token = server.jwt.sign({ userId: user.id, expiresIn: '12h' });
+        const token = server.jwt.sign({ userId: user.id, expiresIn: '10m' });
         User.updateOnlineStatus(user.id, 1);
         User.incrementLoginCount(user.id);
         return reply.send({ clientId: user.id, jwtToken: token });
@@ -69,6 +71,7 @@ server.post('/api/auth/login', { schema: LoginSubmissionBodySchema }, async (req
         return reply.code(500).send({ reason: authTypesCopy_1.AuthErrors.BackendError });
     }
 });
+// Authorization: Bearer <token_without_quotes>
 server.get('/api/auth/verify-jwt', async (request, reply) => {
     try {
         if (!request.headers.authorization)
@@ -85,7 +88,7 @@ server.get('/api/auth/verify-jwt', async (request, reply) => {
 server.setNotFoundHandler((req, res) => {
     res.code(404).send({ route: req.url, method: req.method });
 });
-server.listen({ port: 8080 }, (err, address) => {
+server.listen({ port: 8080, host: '10.15.204.2' }, (err, address) => {
     if (err) {
         console.error(err);
         process.exit(1);

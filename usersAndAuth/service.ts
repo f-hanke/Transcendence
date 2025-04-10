@@ -2,6 +2,7 @@ import fastify from 'fastify'
 
 const validators = require('./utils/validators')
 const passwordUtils = require('./utils/password')
+const cors = require('@fastify/cors')
 const RegSubmissionBodySchema = require('./schemas/schemas')
 const LoginSubmissionBodySchema = require('./schemas/schemas')
 
@@ -27,6 +28,7 @@ const server = fastify({
 server.register(require('@fastify/jwt'), {
   secret: 'supersecret'
 })
+server.register(cors, { origin: "*" });
 
 
 server.get('/ping', async (request, reply) => {
@@ -49,20 +51,20 @@ server.post<{
   Body: AuthServiceTypes.RegSubmissionBody;
   Reply: {
     201: AuthServiceTypes.RegSuccessResponseBody;
-    400: { passwordError: AuthErrors };
-    500: { passwordError: AuthErrors.BackendError };
+    400: AuthServiceTypes.ErrorResponseBody;
+    500: AuthServiceTypes.ErrorResponseBody;
   }
 }>('/api/auth/register', { schema: RegSubmissionBodySchema }, async (request, reply) => {
   // schema is evaluated before the code below is ever looked at, so schema-responses are handled as pre-process
   const passwordError = validators.identifyPasswordError(request.body.password);
   if (passwordError !== null)
-    return reply.code(400).send(passwordError);
+    return reply.code(400).send({ reason: passwordError } satisfies AuthServiceTypes.ErrorDuck );
   try {
     await User.create(request.body);
     return reply.code(201).send();
   } catch (e) {
     console.error(e);
-    return reply.code(500).send();
+    return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies AuthServiceTypes.ErrorResponseBody );
   }
 })
 
@@ -110,7 +112,7 @@ server.setNotFoundHandler((req, res) => {
   res.code(404).send({ route: req.url, method: req.method });
 });
 
-server.listen({ port: 8080 }, (err, address) => {
+server.listen({ port: 8080, host: '10.15.204.2' }, (err, address) => {
   if (err) {
     console.error(err)
     process.exit(1)

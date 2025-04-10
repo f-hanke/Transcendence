@@ -10,8 +10,7 @@ const RegSubmissionBodySchema = {
             displayName: { type: 'string', minLength: 2 },
             password: {
                 type: 'string',
-                minLength: 8,
-                // pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};:"\\\\|,.<>\\/?]).+$'  // or, do such checks manually in a Util
+                minLength: 8
             }
         },
     }
