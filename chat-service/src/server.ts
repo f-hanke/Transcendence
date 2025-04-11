@@ -15,7 +15,7 @@ fastify.register(cors, { origin: "*" });
 
 const db = new Database('./test_users_database.db');
 const socketToClientId = new Map<WebSocket, string>();
-const clientIdToSocket = new Map<string, WebSocket[]>(); //todo websocket[] array to allow connections over multiple tabs
+const clientIdToSocket = new Map<string, WebSocket[]>();
 
 type MatchMakingFastifyRequest = FastifyRequest<{
 	Querystring: SharedTypes.ClientQueryParamMatchMaking;
@@ -53,6 +53,7 @@ fastify.register(async function (fastify) {
 		socket.on('message', (message) => {
 			const data = message.toString("utf-8");
 			const dataJson = JSON.parse(data);
+			console.log(dataJson);
 			if (chatServiceTypeGuards.isSentMessage(dataJson)) {
 				handleClientSentMessage(dataJson);
 			}
@@ -154,6 +155,7 @@ function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 		console.log("Message inserted successfully");
 		updateUnreadMessages(recipientId, true);
 		sendToClient(authorId, { type: "sentMessage", data: dataJson.data });
+		sendToClient(recipientId, { type: "sentMessage", data: dataJson.data });
 
 		// const recipientSocket = clientIdToSocket.get(recipientId);
 		// const authorSocket = clientIdToSocket.get(authorId);
