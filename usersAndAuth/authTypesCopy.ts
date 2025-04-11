@@ -1,6 +1,8 @@
 export enum AuthErrors {
-  DuplicateEmail = 30,
+  BadBodyFormat = 1,
+  DuplicateEmail,
   InvalidPassword,
+  InvalidEmailFormat,
   UnknownEmail,
   PasswordTooShort,
   PasswordTooLong,
@@ -11,7 +13,7 @@ export enum AuthErrors {
 }
 
 export type JwtType = {
-  userId: number;
+  userId: string;
   expiresIn: string;
 };
 
@@ -21,6 +23,25 @@ function isErrorResponseBody(arg: any): arg is AuthServiceTypes.ErrorResponseBod
     arg !== null &&
     "reason" in arg &&
     Object.values(AuthErrors).includes(((arg as any).reason))
+  )
+}
+
+function isRegSubmissionBody(arg: any): arg is AuthServiceTypes.RegSubmissionBody {
+  return (
+    typeof arg === "object" &&
+    arg !== null &&
+    typeof arg.email === "string" &&
+    typeof arg.password === "string" &&
+    typeof arg.displayName === "string"
+  )
+}
+
+function isLoginSubmissionBody(arg: any): arg is AuthServiceTypes.RegSubmissionBody {
+  return (
+    typeof arg === "object" &&
+    arg !== null &&
+    typeof arg.email === "string" &&
+    typeof arg.password === "string"
   )
 }
 
@@ -48,20 +69,11 @@ declare namespace AuthServiceTypes {
     reason: AuthErrors;
   };
 
-  type RegSuccessResponseBody = {
-    // status code 201
-  };
-
   type AuthSuccessResponseBody = {
     // both for Login and for Refresh
     clientId: string;
     jwtToken: string;
   }
-
-  type LogoutSuccessResponseBody = {
-    // status code 200
-  }
-
 }
 
 // POST /api/auth/register   - For new user registration
@@ -71,4 +83,4 @@ declare namespace AuthServiceTypes {
 
 const authServiceTypeGuards = {} as const;
 
-export { AuthServiceTypes };
+export { AuthServiceTypes, isErrorResponseBody, isRegSubmissionBody, isLoginSubmissionBody };

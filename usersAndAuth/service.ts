@@ -3,13 +3,11 @@ import fastify from 'fastify'
 const validators = require('./utils/validators')
 const passwordUtils = require('./utils/password')
 const cors = require('@fastify/cors')
-const RegSubmissionBodySchema = require('./schemas/schemas')
-const LoginSubmissionBodySchema = require('./schemas/schemas')
 
 const User = require('./orm/user');
 const Match = require('./orm/match');
 
-import { AuthServiceTypes, JwtType, AuthErrors } from './authTypesCopy'
+import { AuthServiceTypes, JwtType, AuthErrors, isRegSubmissionBody, isLoginSubmissionBody } from './authTypesCopy'
 import { transNetworkSettings } from 'transcendence'
 import { error } from 'console'
 import fastifyJwt from '@fastify/jwt'
@@ -51,12 +49,15 @@ server.get<{
 server.post<{
   Body: AuthServiceTypes.RegSubmissionBody;
   Reply: {
-    201: AuthServiceTypes.RegSuccessResponseBody;
+    201: Number;
     400: AuthServiceTypes.ErrorResponseBody;
     500: AuthServiceTypes.ErrorResponseBody;
   }
-}>('/api/auth/register', { schema: RegSubmissionBodySchema }, async (request, reply) => {
-  // schema is evaluated before the code below is ever looked at, so schema-responses are handled as pre-process
+}>('/api/auth/register', async (request, reply) => {
+  if (!isRegSubmissionBody(request.body))
+    return reply.code(400).send({ reason: AuthErrors.BadBodyFormat} satisfies AuthServiceTypes.ErrorResponseBody );
+  if (!validators.isValidEmail(request.body.email))
+    return reply.code(400).send({ reason: AuthErrors.InvalidEmailFormat} satisfies AuthServiceTypes.ErrorResponseBody );
   const passwordError = validators.identifyPasswordError(request.body.password);
   if (passwordError !== null)
     return reply.code(400).send({ reason: passwordError } satisfies AuthServiceTypes.ErrorResponseBody );
@@ -71,8 +72,14 @@ server.post<{
 
 server.post<{
   Body: AuthServiceTypes.LoginSubmissionBody;
-}>('/api/auth/login', { schema: LoginSubmissionBodySchema }, async (request, reply) => {
-
+  Reply: {
+    201: AuthServiceTypes.AuthSuccessResponseBody;
+    400: AuthServiceTypes.ErrorResponseBody;
+    500: AuthServiceTypes.ErrorResponseBody;
+  }
+}>('/api/auth/login', async (request, reply) => {
+  if (!isLoginSubmissionBody(request.body))
+    return reply.code(400).send({ reason: AuthErrors.BadBodyFormat} satisfies AuthServiceTypes.ErrorResponseBody );
   try {
     const user = await User.findByEmail(request.body.email);
     if (!user)
@@ -87,7 +94,7 @@ server.post<{
     
     User.updateOnlineStatus(user.id, 1);
     User.incrementLoginCount(user.id);
-    return reply.send({ clientId: user.id, jwtToken: token } satisfies AuthServiceTypes.AuthSuccessResponseBody);
+    return reply.code(201).send({ clientId: user.id, jwtToken: token } satisfies AuthServiceTypes.AuthSuccessResponseBody);
   } catch (db_error) {
     console.error(db_error);
     return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies AuthServiceTypes.ErrorResponseBody);
@@ -95,18 +102,61 @@ server.post<{
 });
 
 // Authorization: Bearer <token_without_quotes>
-server.get('/api/auth/verify-jwt', async (request, reply) => {
+server.get<{
+  Headers: {'authorization': string};
+}>('/api/auth/verify-jwt', async (request, reply) => {
   try {
     if (!request.headers.authorization)
       return reply.code(400).send({ reason: AuthErrors.LackingAuthorizationHeader } satisfies AuthServiceTypes.ErrorResponseBody);
     const token = request.headers.authorization.split(' ')[1];
     const decoded = await server.jwt.verify(token) as JwtType;
+    
     reply.code(200).send({ userId: decoded.userId });
   } catch (error) {
     console.error(error);
     reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies AuthServiceTypes.ErrorResponseBody);
   }
 });
+
+server.get<{
+  Headers: {'authorization': string};
+}>('/api/auth/refresh', async (request, reply) => {
+  if (!request.headers.authorization)
+    return reply.code(400).send({ reason: AuthErrors.LackingAuthorizationHeader } satisfies AuthServiceTypes.ErrorResponseBody);
+  try {
+    const oldToken = request.headers.authorization.split(' ')[1];
+    const decoded = await server.jwt.verify(oldToken) as JwtType;
+
+    const newToken = server.jwt.sign({ userId: decoded.userId, expiresIn: '12h' } satisfies JwtType);
+    return reply.send({ clientId: decoded.userId, jwtToken: newToken } satisfies AuthServiceTypes.AuthSuccessResponseBody);
+  } catch (error) {
+    console.error(error);
+    reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies AuthServiceTypes.ErrorResponseBody);
+  }
+})
+
+server.get<{
+  Headers: {'authorization': string};
+}>('/api/auth/logout', async (request, reply) => {
+  if (!request.headers.authorization)
+    return reply.code(400).send({ reason: AuthErrors.LackingAuthorizationHeader } satisfies AuthServiceTypes.ErrorResponseBody);
+  try {
+    const oldToken = request.headers.authorization.split(' ')[1];
+    const decoded = await server.jwt.verify(oldToken) as JwtType;
+
+    const user = await User.findById(decoded.userId);
+    if (user === null)
+      return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies AuthServiceTypes.ErrorResponseBody);
+    // if (user.online_status == 0)
+    //   reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies AuthServiceTypes.ErrorResponseBody);
+
+    User.updateOnlineStatus(user.id, 0);
+    return reply.code(200).send();
+  } catch (error) {
+    console.error(error);
+    reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies AuthServiceTypes.ErrorResponseBody);
+  }
+})
   
 
 server.setNotFoundHandler((req, res) => {
