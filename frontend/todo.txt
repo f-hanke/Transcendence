@@ -26,3 +26,8 @@ Chat requirements:
 - integrate milos work
 - add tab for pending friend requests
 - login, logout, register, refresh
+
+
+- component for friend invites
+- component for blocked to unblock
+- integrate login logout refresh

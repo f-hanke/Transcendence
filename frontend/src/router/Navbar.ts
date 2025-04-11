@@ -1,5 +1,5 @@
-
 import { generateUniqueId } from "transcendence";
+import { AuthInterface } from "../backendInterface/authInterface";
 
 class Navbar extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -31,8 +31,8 @@ class Navbar extends HTMLElement {
           window.store.userStore.get().image
         }" alt="Profile" class="w-32 h-32 rounded-full" />
         <div>
-          <a href="/profile" class="text-lg font-semibold hover:underline">${
-            window.store.userStore.get().displayName
+          <a href="/profile" class="text-lg font-semibold hover:underline">id = ${
+            window.store.userStore.get().id
           }</a>
         </div>
       </div>
@@ -69,17 +69,17 @@ class Navbar extends HTMLElement {
           <li>
             <a href="/testpage" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ Testpage</a>
           </li>
-          <li>
+          <!-- <li>
             <a href="/loginPage" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ Login</a>
           </li>
           <li>
             <a href="/registerPage" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ Register</a>
-          </li>
-          <li>${window.store.userStore.get().id}</li>
+          </li> -->
+          <!-- <li>${window.store.userStore.get().id}</li>
           <li>
             <input id="setIdInput" class="text-black" type="text">
             <button id="setIdButton">SET ID</button>
-          </li>
+          </li> -->
         </ul>
       </nav>
       
@@ -87,7 +87,7 @@ class Navbar extends HTMLElement {
             🚪 notify
         </button>
       <div class="p-4 border-t border-gray-700">
-        <button class="w-full p-2 bg-red-600 rounded-lg hover:bg-red-700">🚪 ${
+        <button id="logoutBtn" class="w-full p-2 bg-red-600 rounded-lg hover:bg-red-700">🚪 ${
           window.store.languageStore.state.navbar.logout
         }</button>
       </div>
@@ -104,14 +104,21 @@ class Navbar extends HTMLElement {
       ]);
     });
 
-    const inputId = document.querySelector("#setIdInput") as HTMLInputElement;
-    const btnSetId = document.querySelector(
-      "#setIdButton"
-    ) as HTMLButtonElement;
+    // const inputId = document.querySelector("#setIdInput") as HTMLInputElement;
+    // const btnSetId = document.querySelector(
+    //   "#setIdButton"
+    // ) as HTMLButtonElement;
 
-    btnSetId.addEventListener("click", () => {
-      const idVal = inputId.value;
-      sessionStorage.setItem("transTestId", idVal);
+    // btnSetId.addEventListener("click", () => {
+    //   const idVal = inputId.value;
+    //   sessionStorage.setItem("transTestId", idVal);
+    // });
+
+    const lopgoutBtn = document.querySelector(
+      `#logoutBtn`
+    ) as HTMLButtonElement;
+    lopgoutBtn.addEventListener("click", () => {
+      AuthInterface.logout();
     });
   }
 }

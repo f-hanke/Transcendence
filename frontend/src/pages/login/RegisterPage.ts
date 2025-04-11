@@ -1,4 +1,4 @@
-import { colog } from "transcendence";
+import {  colog, testUserConfig } from "transcendence";
 import { AuthInterface } from "../../backendInterface/authInterface";
 import { RegisterState } from "../../state/registerStateTypes";
 import { buildBackendRoute, navigateToSite } from "../../utils/utils";
@@ -59,6 +59,9 @@ class RegisterPage extends HTMLElement {
         <button id="registerGoToLogin" class="w-96 bg-blue-500 text-white p-2 my-8 rounded hover:bg-blue-600">
               Already registered?
         </button>
+        <button id="registerTestUserX" class="w-96 bg-blue-500 text-white p-2 my-8 rounded hover:bg-blue-600">
+              Register Test_Users
+        </button>
       </div>
     `;
 
@@ -70,6 +73,8 @@ class RegisterPage extends HTMLElement {
 
     this.addUpdateStateEventListener("registerEmail", "email");
     this.addUpdateStateEventListener("registerDisplayName", "displayName");
+
+    this.addRegisterTestUser();
   }
 
   addUpdateStateEventListener(elemId: string, stateKey: keyof RegisterState) {
@@ -124,6 +129,23 @@ class RegisterPage extends HTMLElement {
     //   },
     // });
     colog(res);
+  }
+
+  async addRegisterTestUser()
+  {
+    const registerTestUserX = document.querySelector(
+      "#registerTestUserX"
+    ) as HTMLButtonElement;
+    registerTestUserX.addEventListener("click", () => {
+      colog(testUserConfig);
+      testUserConfig.map(async (user) => {
+        colog(user);
+        const res = await AuthInterface.registerClient(user);
+        colog(`${user.displayName}`);
+        colog(res);
+      });
+    })
+
   }
 }
 

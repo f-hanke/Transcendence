@@ -48,7 +48,7 @@ class UserStateStore {
   }
 
   updateUserSettings(
-    updatedState: Partial<Pick<UserState, "image" | "displayName" | "email">>
+    updatedState: Partial<Pick<UserState, "image" | "displayName" | "email" | "id">>
   ) {
     this.state = deepCopyObj({ ...this.state, ...updatedState });
     this.listeners.forEach((callback) => callback());

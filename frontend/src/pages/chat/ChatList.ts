@@ -1,6 +1,6 @@
 import { ChatServiceTypes } from "transcendence";
 import { createHtmlElementFromString } from "../../utils/utils";
-import { ChatUserComponent } from "./ChatUserComponent";
+import { ChatUserComponent, UserComponentType } from "./ChatUserComponent";
 
 type Tabs = "userList" | "blocked" | "friendRequests";
 
@@ -37,7 +37,8 @@ class ChatList extends HTMLElement {
   }
 
   render() {
-    const classBtn = "flex-1 rounded border-2 outline-none p-1 hover:bg-gray-600";
+    const classBtn =
+      "flex-1 rounded border-2 outline-none p-1 hover:bg-gray-600";
     const classBtnSelected = `${classBtn} border-white`;
     const classBtnNotSelected = `${classBtn} border-gray-700 text-gray-700`;
 
@@ -90,8 +91,11 @@ class ChatList extends HTMLElement {
         <div id="friendRequestTab" class="tab-content ${
           this.selectedTab === "friendRequests" ? "" : "hidden"
         }">
-          <div id="chatFriendRequestList">
-            <h2 class="text-lg font-bold py-4">Friend Requests</h2>
+          <div id="chatFriendRequestListAnswer">
+            <h2 class="text-lg font-bold py-4">Answer required </h2>
+          </div>
+          <div id="chatFriendRequestListPending">
+            <h2 class="text-lg font-bold py-4">Own Pending</h2>
           </div>
         </div>
       </div>
@@ -126,12 +130,16 @@ class ChatList extends HTMLElement {
     if (this.selectedTab === "friendRequests") this.renderFriendRequestList();
   }
 
-  createAndAppend(container: HTMLDivElement, user: ChatServiceTypes.ChatUser) {
+  createAndAppend(
+    container: HTMLDivElement,
+    user: ChatServiceTypes.ChatUser,
+    type: UserComponentType
+  ) {
     const elem = createHtmlElementFromString(
       `<chat-user-component></chat-user-component>`
     ) as ChatUserComponent;
     container.appendChild(elem);
-    elem.setData(user);
+    elem.setData(user, type);
   }
 
   renderBlockedList() {
@@ -139,18 +147,21 @@ class ChatList extends HTMLElement {
     const chatBlockedUsersList = this.querySelector(
       "#chatBlockedUsersList"
     ) as HTMLDivElement;
-    
+
     for (const user of userGroups.blocked) {
-      this.createAndAppend(chatBlockedUsersList, user);
+      this.createAndAppend(chatBlockedUsersList, user, "blocked");
     }
   }
 
   renderFriendRequestList() {
     const userGroups = window.store.chatUserStore.getUserGroups();
-    const chatchatFriendRequestList = this.querySelector(
-      "#chatFriendRequestList"
+    const chatFriendRequestListAnswer = this.querySelector(
+      "#chatFriendRequestListAnswer"
     ) as HTMLDivElement;
-    
+    const chatFriendRequestListPending = this.querySelector(
+      "#chatFriendRequestListPending"
+    ) as HTMLDivElement;
+
     // for (const user of userGroups.blocked) {
     //   this.createAndAppend(chatchatFriendRequestList, user);
     // }
@@ -170,13 +181,13 @@ class ChatList extends HTMLElement {
     const userGroups = window.store.chatUserStore.getUserGroups();
 
     for (const user of userGroups.friends) {
-      this.createAndAppend(friendsContainer, user);
+      this.createAndAppend(friendsContainer, user, "friendRequestPending");
     }
     for (const user of userGroups.online) {
-      this.createAndAppend(onlineContainer, user);
+      this.createAndAppend(onlineContainer, user, "friendRequestToAnswer");
     }
     for (const user of userGroups.offline) {
-      this.createAndAppend(offlineContainer, user);
+      this.createAndAppend(offlineContainer, user, "friendRequestToAnswer");
     }
   }
 

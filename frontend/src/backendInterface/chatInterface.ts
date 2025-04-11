@@ -144,30 +144,33 @@ class ChatInterface {
   }
 
   static handleServerSentMessage(dataJson: ChatServiceTypes.SentMessage) {
+    const isOwnMessage =
+      window.store.userStore.get().id === dataJson.data.authorId;
+    if (isOwnMessage) this.handleServerSentOwnMessage(dataJson);
+    else this.handleServerSentOthersMessage(dataJson);
+  }
+
+  static handleServerSentOwnMessage(dataJson: ChatServiceTypes.SentMessage) {
+    colog("SENT OWN MESSAGE");
+    colog(dataJson);
+    window.store.chatUserStore.updateChangeUserLastMessage(
+      dataJson.data.recipientId,
+      dataJson.data.message
+    );
+    window.store.chatMessageStore.addMessage(dataJson.data.recipientId, dataJson.data);
+  }
+
+  static handleServerSentOthersMessage(dataJson: ChatServiceTypes.SentMessage) {
     const authorId = dataJson.data.authorId;
     window.store.chatUserStore.updateChangeUserLastMessageAndUnreadMessageStatus(
       authorId,
       dataJson.data.message
     );
-    if (window.store.userStore.get().id !== dataJson.data.authorId) {
-      window.store.notificationStore.updateAddNotification({
-        id: generateUniqueId(),
-        message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
-      });
-    }
+    window.store.notificationStore.updateAddNotification({
+      id: generateUniqueId(),
+      message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
+    });
     window.store.chatMessageStore.addMessage(authorId, dataJson.data);
-  }
-
-  static sendClientSentMessage(message: ChatServiceTypes.SentMessage) {
-    // window.store.chatMessageStore.addMessage(
-    //   message.data.recipientId,
-    //   message.data
-    // );
-    // window.store.chatUserStore.updateChangeUserLastMessage(
-    //   message.data.recipientId,
-    //   message.data.message
-    // );
-    this.sendMessageToServer(message);
   }
 
   static sendMessageToServer(message: ChatServiceTypes.AllChatMessageTypes) {
