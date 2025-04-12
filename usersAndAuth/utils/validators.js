@@ -20,12 +20,12 @@ const validators = {
         const passwordUpperRegex = /[A-Z]/;
         const passwordLowerRegex = /[a-z]/;
         const passwordDigitRegex = /[0-9]/;
-        const passwordSpecialRegex = /[!@#$%^&*()_+-=\[\]{};:"\|,.<>\?]/;
+        const passwordSpecialRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
         if (password.length < 8)
             return authTypesCopy_1.AuthErrors.PasswordTooShort;
         if (password.length > 256)
             return authTypesCopy_1.AuthErrors.PasswordTooLong;
-        else if ((!passwordUpperRegex.test(password)) || (!passwordLowerRegex.test(password)) || (!passwordDigitRegex.test(password)) || (!passwordDigitRegex.test(password)))
+        else if ((!passwordUpperRegex.test(password)) || (!passwordLowerRegex.test(password)) || (!passwordDigitRegex.test(password)) || (!passwordSpecialRegex.test(password)))
             return authTypesCopy_1.AuthErrors.PasswordNotAccGuideline;
         return null;
     }

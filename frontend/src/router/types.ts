@@ -6,6 +6,7 @@ type Page =
   | "manage-match"
   | "login-page"
   | "register-page"
+  | "home-page"
   ;
 
 export type { Page };

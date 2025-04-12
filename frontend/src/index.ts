@@ -29,15 +29,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const appRouter = document.createElement("app-router") as AppRouter;
 
+  document.body.appendChild(appRouter);
+
   appRouter.addRoute("/matchmaking", "match-making");
   appRouter.addRoute("/testpage", "test-page");
   appRouter.addRoute("/oneVOneLocal", "onevone-local");
   appRouter.addRoute("/userSettings", "user-settings");
   appRouter.addRoute("/manageMatch", "manage-match");
-  appRouter.addRoute("/loginPage", "login-page");
-  appRouter.addRoute("/registerPage", "register-page");
+  appRouter.addRoute("/loginPage", "login-page", false);
+  appRouter.addRoute("/registerPage", "register-page", false);
+  appRouter.addRoute("/home", "home-page");
+  appRouter.addRoute("/", "home-page");
 
-  appRouter.setProtectedRoutes(["user-settings"]);
-
-  document.body.appendChild(appRouter);
+  appRouter.handleRouteChange();
 });

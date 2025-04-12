@@ -5,14 +5,15 @@
   "main": "service.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node service.js",
-    "db_init": "node db/init/init.js"
+    "dev": "node service.js",
+    "db": "node db/init/init.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@fastify/cors": "^11.0.1",
     "@fastify/jwt": "^9.1.0",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^11.9.1",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "transcendence": "file:../shared",
     "typescript": "^5.8.3"
   }
 }

@@ -61,7 +61,7 @@ class ChatCurrent extends HTMLElement {
       "#chatSendButton"
     ) as HTMLButtonElement;
     chatSendButton.addEventListener("click", () => {
-      ChatInterface.sendClientSentMessage({
+      ChatInterface.sendMessageToServer({
         type: "sentMessage",
         data: {
           authorId: window.store.userStore.get().id,

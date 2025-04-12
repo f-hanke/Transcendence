@@ -15,7 +15,34 @@ class ChatInterface {
 
   static websocket: WebSocket | null = null;
 
+  static async sendFriendRequest(
+    data: ChatServiceTypes.SendFriendRequestBody
+  ) {
+    const address = buildBackendRoute({
+      websocketOrApi: "api",
+      service: "chatService",
+      route: "/send-friend-request",
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      colog(response);
+      colog(await response.json());
+      if (!response.ok) {
+        throw new Error(`Couldn't send friend request via API!`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
   static async requestChatHistory(recipientId: string) {
+    colog("REQUEST CHAT HISTORY!");
     const address = buildBackendRoute({
       websocketOrApi: "api",
       service: "chatService",
@@ -144,30 +171,33 @@ class ChatInterface {
   }
 
   static handleServerSentMessage(dataJson: ChatServiceTypes.SentMessage) {
+    const isOwnMessage =
+      window.store.userStore.get().id === dataJson.data.authorId;
+    if (isOwnMessage) this.handleServerSentOwnMessage(dataJson);
+    else this.handleServerSentOthersMessage(dataJson);
+  }
+
+  static handleServerSentOwnMessage(dataJson: ChatServiceTypes.SentMessage) {
+    colog("SENT OWN MESSAGE");
+    colog(dataJson);
+    window.store.chatUserStore.updateChangeUserLastMessage(
+      dataJson.data.recipientId,
+      dataJson.data.message
+    );
+    window.store.chatMessageStore.addMessage(dataJson.data.recipientId, dataJson.data);
+  }
+
+  static handleServerSentOthersMessage(dataJson: ChatServiceTypes.SentMessage) {
     const authorId = dataJson.data.authorId;
     window.store.chatUserStore.updateChangeUserLastMessageAndUnreadMessageStatus(
       authorId,
       dataJson.data.message
     );
-    if (window.store.userStore.get().id !== dataJson.data.authorId) {
-      window.store.notificationStore.updateAddNotification({
-        id: generateUniqueId(),
-        message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
-      });
-    }
+    window.store.notificationStore.updateAddNotification({
+      id: generateUniqueId(),
+      message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
+    });
     window.store.chatMessageStore.addMessage(authorId, dataJson.data);
-  }
-
-  static sendClientSentMessage(message: ChatServiceTypes.SentMessage) {
-    // window.store.chatMessageStore.addMessage(
-    //   message.data.recipientId,
-    //   message.data
-    // );
-    // window.store.chatUserStore.updateChangeUserLastMessage(
-    //   message.data.recipientId,
-    //   message.data.message
-    // );
-    this.sendMessageToServer(message);
   }
 
   static sendMessageToServer(message: ChatServiceTypes.AllChatMessageTypes) {

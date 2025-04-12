@@ -10,6 +10,7 @@ const fastify = Fastify({ logger: true });
 const games = new Map();
 const clients = new Map();
 const clientsGames = new Map(); //clientId -> matchId
+const readyClients = new Map();
 fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
 export function sendMessage(socket, msg) {
@@ -28,7 +29,7 @@ fastify.post("/api/game/start", async (request, reply) => {
 fastify.register(async function (fastify) {
     fastify.get("/ws", { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
         const urlParams = new URLSearchParams(req.url.split("?")[1]);
-        console.log(req?.query);
+        //console.log(req?.query);
         const clientId = urlParams.get("clientId") || "anonymous";
         console.log(chalk.green(`A client with ID: ${clientId} connected via WebSocket`));
         clients.set(clientId, socket);
@@ -36,28 +37,93 @@ fastify.register(async function (fastify) {
         socket.on("message", (message) => {
             const data = message.toString("utf-8");
             const dataJson = JSON.parse(data);
-            if (gameServiceTypeGuards.isClientIsReady(dataJson)) {
-                console.log(chalk.green(` ${clientId} is ready`));
-                setTimeout(() => sendMessage(socket, {
-                    type: "serverGameStarted",
-                    data: {
-                        matchId: dataJson.data.matchId,
-                    },
-                }), 3000);
-                games.get(dataJson.data.matchId).websocket = socket;
-                //if local or AI => start game
-                games.get(dataJson.data.matchId)?.startGame();
-                //if remote , wait for both
+            console.log("Received message:", dataJson);
+            const current_game = games.get(dataJson.data.matchId);
+            // console.log("Current game:", current_game);
+            if (!current_game) {
+                console.log("Error or game not created");
             }
-            if (gameServiceTypeGuards.isClientUpdatePaddlePosition(dataJson)) {
-                games
-                    .get(dataJson.data.matchId)
-                    ?.updatePaddlePosition(dataJson.data);
+            else if (current_game.typeOfGame == "remote") {
+                const hostId = current_game.player1.id;
+                const oponentId = current_game.player2.id;
+                const { matchId } = dataJson.data;
+                const clientId = urlParams.get("clientId");
+                console.log(chalk.yellow(`Handling remote game for matchId: ${matchId}`));
+                console.log(chalk.yellow(`Initializing match with hostId: ${hostId}, oponentId: ${oponentId}`));
+                console.log(chalk.yellow(`Client ${clientId} connected to match ${matchId}`));
+                if (!readyClients.has(matchId)) {
+                    const newReadyClient = {
+                        hostIdReady: false,
+                        oponentIdReady: false,
+                        sockets: new Map()
+                    };
+                    readyClients.set(matchId, newReadyClient);
+                    current_game.remoteWebsockets = newReadyClient.sockets;
+                }
+                const match = readyClients.get(matchId);
+                console.log(`Current match status: hostIdReady: ${match.hostIdReady}, oponentIdReady: ${match.oponentIdReady}`);
+                if (gameServiceTypeGuards.isClientIsReady(dataJson)) {
+                    console.log(chalk.green(`${clientId} is ready`));
+                    match.sockets.set(dataJson.data.clientId, socket);
+                    if (clientId === hostId) {
+                        match.hostIdReady = true;
+                        console.log(chalk.yellow(`${hostId} is marked as ready`));
+                        current_game.websocketplayer1 = socket;
+                    }
+                    else if (clientId === oponentId) {
+                        match.oponentIdReady = true;
+                        current_game.websocketplayer2 = socket;
+                        console.log(chalk.yellow(`${oponentId} is marked as ready`));
+                    }
+                    //console.log(`Update current match status: hostIdReady: ${match.hostIdReady}, oponentIdReady: ${match.oponentIdReady}`);
+                    if (current_game.isGameOver === false) {
+                        console.log("Game already running!");
+                        return;
+                    }
+                    if (match.hostIdReady && match.oponentIdReady) {
+                        console.log(chalk.yellow(`Both players ready for match ${matchId}. Starting game...`));
+                        for (const [id, socket] of match.sockets.entries()) {
+                            sendMessage(socket, {
+                                type: "serverGameStarted",
+                                data: {
+                                    matchId: dataJson.data.matchId,
+                                }
+                            });
+                        }
+                        games.get(dataJson.data.matchId).websocket = socket;
+                        games.get(dataJson.data.matchId)?.startGame();
+                        readyClients.delete(dataJson.data.matchId);
+                    }
+                }
+                if (gameServiceTypeGuards.isClientUpdatePaddlePosition(dataJson)) {
+                    games
+                        .get(dataJson.data.matchId)
+                        ?.updatePaddlePositionRemote(dataJson.data);
+                }
+            }
+            else if (current_game.typeOfGame == "localPvP") {
+                if (gameServiceTypeGuards.isClientIsReady(dataJson)) {
+                    console.log(chalk.green(` ${clientId} is ready`));
+                    setTimeout(() => sendMessage(socket, {
+                        type: "serverGameStarted",
+                        data: {
+                            matchId: dataJson.data.matchId,
+                        },
+                    }), 1000);
+                    games.get(dataJson.data.matchId).websocket = socket;
+                    games.get(dataJson.data.matchId)?.startGame();
+                }
+                if (gameServiceTypeGuards.isClientUpdatePaddlePosition(dataJson)) {
+                    games
+                        .get(dataJson.data.matchId)
+                        ?.updatePaddlePosition(dataJson.data);
+                }
             }
             /*Not sure*/
             if (gameServiceTypeGuards.isClientLeftGame(dataJson)) {
                 const game = games.get(dataJson.data.matchId);
                 game?.stopGame("playerLeftGame");
+                // games.delete(dataJson.data.matchId);
             }
         });
         /*------------------------------------------------------------*/

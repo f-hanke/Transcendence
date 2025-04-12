@@ -30,7 +30,7 @@ const gameSettings: GameSettings = {
   // bumpers are drawn in addition to playable field
   bumperHeight: 10,
   ballRadius: 5,
-  maxScore: 200,
+  maxScore: 5,
   ballSpeed: 3,
   paddleSpeed: 3,
   canvasHeight: -1,
@@ -43,24 +43,11 @@ const gameSettings: GameSettings = {
 gameSettings.canvasHeight =
   gameSettings.pongTableHeight + 2 * gameSettings.bumperHeight;
 
-gameSettings.paddleMaxY =
-  gameSettings.pongTableHeight +
-  gameSettings.bumperHeight -
-  gameSettings.paddleHeight / 2;
-gameSettings.paddleMinY =
-  gameSettings.bumperHeight + gameSettings.paddleHeight / 2;
-gameSettings.playerYStart = Math.round(
-  (gameSettings.paddleMaxY - gameSettings.paddleMinY) / 2 +
-    gameSettings.paddleMinY
-);
-
-gameSettings.player1XStart = gameSettings.paddleWidth / 2;
-gameSettings.player2XStart =
-  gameSettings.pongTableWidth - gameSettings.paddleWidth / 2;
-
-gameSettings.ballXStart = gameSettings.pongTableWidth / 2;
-gameSettings.ballYStart =
-  gameSettings.pongTableHeight / 2 + gameSettings.bumperHeight;
+gameSettings.paddleMaxY = gameSettings.pongTableHeight + gameSettings.bumperHeight - gameSettings.paddleHeight / 2;
+gameSettings.paddleMinY = gameSettings.bumperHeight + gameSettings.paddleHeight / 2;
+gameSettings.playerYStart = ( gameSettings.paddleMaxY - gameSettings.paddleMinY ) / 2 + gameSettings.paddleMinY;
+gameSettings.player1XStart =  gameSettings.paddleWidth/2;
+gameSettings.player2XStart = gameSettings.pongTableWidth - gameSettings.paddleWidth/2;
 
 export { gameSettings };
 
