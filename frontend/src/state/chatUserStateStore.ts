@@ -44,8 +44,19 @@ class ChatUserStateStore {
   }
 
   getIsBlocked(recipientId: string): boolean {
-    const blocked = this.state.get(recipientId)?.blocked; 
+    const blocked = this.state.get(recipientId)?.blocked;
     return blocked ? blocked : false;
+  }
+
+  getFirstUnblocked(): string | null {
+    const groups = this.getUserGroups();
+    let val = groups.friends[0]?.recipientId;
+    if (val) return val;
+    val = groups.online[0]?.recipientId;
+    if (val) return val;
+    val = groups.offline[0]?.recipientId;
+    if (val) return val;
+    return null;
   }
 
   getUserGroups(): ChatUserGroups {
@@ -154,7 +165,12 @@ class ChatUserStateStore {
 
   updateUserListFromArray(userList: ChatServiceTypes.ChatUser[]) {
     this.state = new Map();
+    colog("56789");
+    colog(userList);
     for (const user of userList) {
+      colog("HERRE");
+      colog(user);
+      colog(user.recipientId);
       this.state.set(user.recipientId, user);
     }
     this.updateListenersOnChange();

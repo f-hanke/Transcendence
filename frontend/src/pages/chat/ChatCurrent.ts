@@ -29,9 +29,10 @@ class ChatCurrent extends HTMLElement {
   }
 
   render() {
+    const recipientIdIsDefined = window.store.chatMessageStore.get().recipientId.length > 0;
     this.innerHTML = `
           <!-- Right Panel: Chat Window -->
-          <div class="h-full flex flex-col bg-gray-100 p-4">
+          <div class="h-full flex flex-col bg-gray-100 p-4 ${recipientIdIsDefined ? "" : "hidden"}">
             <h2 class="text-lg font-bold mb-2">Chat</h2>
 
             <!-- Messages Container -->

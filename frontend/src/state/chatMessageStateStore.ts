@@ -2,6 +2,7 @@ import { ChatServiceTypes } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
 import { ChatMessageState } from "./chatStateTypes";
 import { StoreCallback } from "./types";
+import { ChatInterface } from "../backendInterface/chatInterface";
 
 class ChatMessageStateStore {
   listeners: Set<StoreCallback>;
@@ -35,6 +36,16 @@ class ChatMessageStateStore {
     //   }
     // }
     return this.state;
+  }
+
+  reset() {
+    const firstUnblocked = window.store.chatUserStore.getFirstUnblocked();
+    if (firstUnblocked) {
+      ChatInterface.requestChatHistory(firstUnblocked);
+    } else {
+      this.init();
+    }
+    this.updateListenersOnChange();
   }
 
   subscribe(callback: StoreCallback): () => void {

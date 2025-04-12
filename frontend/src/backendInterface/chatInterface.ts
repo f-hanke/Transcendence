@@ -40,6 +40,7 @@ class ChatInterface {
           data.recipientId,
           data.blockedStatus,
         );
+        window.store.chatMessageStore.reset();
       }
       if (!response.ok) {
         throw new Error(`Couldn't send friend request via API!`);
@@ -219,8 +220,10 @@ class ChatInterface {
     dataJson: ChatServiceTypes.ServerSendUserList
   ) {
     colog("IPDATING USER LIST");
+    colog("12345");
+    colog(dataJson.data.chatUsers);
     window.store.chatUserStore.updateUserListFromArray(dataJson.data.chatUsers);
-    this.requestChatHistory(dataJson.data.chatUsers[0].recipientId);
+    // this.requestChatHistory(dataJson.data.chatUsers[0].recipientId);
   }
 
   static handleServerSentMessage(dataJson: ChatServiceTypes.SentMessage) {
