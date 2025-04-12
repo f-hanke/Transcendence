@@ -42,6 +42,49 @@ fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
 	}
 });
 
+fastify.post('/send-friend-request', async (req, reply) => {
+	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
+		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
+	const { authorId, recipientId } = req.body;
+
+	console.log("Friend request received");
+	if (!authorId || !recipientId)
+		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
+
+	try {
+		// Check if they are already friends
+		const existingFriendship = db.prepare(`
+			SELECT * FROM friends
+			WHERE (user_id1 = ? AND user_id2 = ? AND status = 'accepted')
+			OR (user_id1 = ? AND user_id2 = ? AND status = 'accepted')
+		`).get(authorId, recipientId, recipientId, authorId);
+
+		if (existingFriendship)
+			return reply.status(400).send({ error: 'You are already friends.' });
+
+		// Check if there is already a pending request
+		const existingRequest = db.prepare(`
+			SELECT * FROM friends
+			WHERE (user_id1 = ? AND user_id2 = ? AND status = 'pending')
+			OR (user_id1 = ? AND user_id2 = ? AND status = 'pending')
+		`).get(authorId, recipientId, recipientId, authorId);
+
+		if (existingRequest)
+			return reply.status(400).send({ error: 'Friend request already exists or is pending.' });
+
+		// Insert the request with 'pending' status
+		db.prepare(`
+			INSERT INTO friends (user_id1, user_id2, status)
+			VALUES (?, ?, 'pending')
+		`).run(authorId, recipientId);
+		return reply.send({ message: 'Friend request sent successfully.' });
+	}
+	catch (err) {
+		console.error("Error sending friend request:", err);
+		return reply.status(500).send({ error: 'Failed to send friend request' });
+	}
+});
+
 fastify.register(async function (fastify) {
 	fastify.get("/ws", { websocket: true }, async (socket, req) => {
 		registerClient(req, socket);
@@ -156,15 +199,6 @@ function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 		updateUnreadMessages(recipientId, true);
 		sendToClient(authorId, { type: "sentMessage", data: dataJson.data });
 		sendToClient(recipientId, { type: "sentMessage", data: dataJson.data });
-
-		// const recipientSocket = clientIdToSocket.get(recipientId);
-		// const authorSocket = clientIdToSocket.get(authorId);
-		// if (authorSocket) {
-		// 	authorSocket.send(JSON.stringify(response));
-		// 	//todo : if websocket[] send to all sockets
-		// }
-		// if (recipientSocket)
-		// 	recipientSocket.send(JSON.stringify(response));
 	} catch (err) {
 		console.error("DB error inserting message:", err);
 	}
@@ -193,7 +227,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 				recipientId: row.id,
 				email: `${row.username}@test.com`,
 				image: "test",
-				lastMessage: "start a conversation",
+				lastMessage: "",
 			});
 		});
 
