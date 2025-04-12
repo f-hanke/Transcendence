@@ -11,11 +11,6 @@ declare namespace ChatServiceTypes {
     | "pendingClientInvite"
     | "pendingRecipientInvite";
 
-  type UpdateFriendRequest = {
-    type: "new" | "declined" | "accepted";
-    recipientId: string;
-  };
-
   type ChatUser = {
     recipientId: string;
     displayName: string;
