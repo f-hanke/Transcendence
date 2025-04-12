@@ -154,11 +154,38 @@ fastify.post('/update-friend-request', async (req, reply) => {
 	}
 });
 
-fastify.post('/update-friend-request', async (req, reply) => {
-	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
+fastify.post('/update-blocking-status', async (req, reply) => {
+	console.log("trying to block user");
+	console.log(req.body);
+	if (!chatServiceTypeGuards.isClientChangeBlockStatus(req.body))
 		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
-	const { type, authorId, recipientId } = req.body;
-}
+	const { clientId, recipientId, blockedStatus } = req.body;
+
+	console.log(req.body);
+	try {
+		if (blockedStatus === false) {
+			const result = db.prepare(`
+				DELETE FROM blockings
+				WHERE (user_id1 = ? AND user_id2 = ?)
+			`).run(clientId, recipientId);
+			if (result!.changes === 0)
+				return [400, { reason: 'No blockings found' }] as const;
+		} else{
+			db.prepare(`
+				INSERT INTO blockings (user_id1, user_id2)
+				VALUES (?, ?)
+			`).run(clientId, recipientId);
+		}
+
+		// Notify users via WebSocket
+		console.log("blocking was successfull");
+		return [200, null] as const;
+	}
+	catch (err) {
+		console.error("Error blocking user:", err);
+		return [500, { reason: 'Failed to block user' }] as const;
+	}
+});
 
 fastify.register(async function (fastify) {
 	fastify.get("/ws", { websocket: true }, async (socket, req) => {

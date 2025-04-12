@@ -177,11 +177,11 @@ function isClientChangeBlockStatus(
 ): message is ChatServiceTypes.ClientChangeBlockStatus {
   return (
     message?.recipientId &&
-    message?.authorId &&
-    message?.status &&
-    typeof message.authorId === "string" &&
+    message?.clientId &&
+    (message?.blockedStatus || message?.blockedStatus === false) &&
+    typeof message.clientId === "string" &&
     typeof message.recipientId === "string" &&
-    typeof message.status === 'boolean'
+    typeof message.blockedStatus === 'boolean'
   );
 }
 
