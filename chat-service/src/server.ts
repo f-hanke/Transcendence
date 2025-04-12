@@ -43,11 +43,12 @@ fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
 });
 
 fastify.post('/send-friend-request', async (req, reply) => {
+	console.log("Friend request received");
+	console.log(req.body);
 	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
 		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
 	const { authorId, recipientId } = req.body;
 
-	console.log("Friend request received");
 	if (!authorId || !recipientId)
 		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
 
@@ -77,7 +78,7 @@ fastify.post('/send-friend-request', async (req, reply) => {
 			INSERT INTO friends (user_id1, user_id2, status)
 			VALUES (?, ?, 'pending')
 		`).run(authorId, recipientId);
-		return reply.send({ message: 'Friend request sent successfully.' });
+		return reply.status(200).send();
 	}
 	catch (err) {
 		console.error("Error sending friend request:", err);
