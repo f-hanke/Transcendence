@@ -91,11 +91,12 @@ declare namespace ChatServiceTypes {
   };
 
   type UpdateFriendRequest = {
-    type: "new" | "declined" | "accepted" | "unfriend";
+    type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
     recipientId: string;
   }
 
   type SendFriendRequestBody = {
+    type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
     authorId: string;
     recipientId: string;
   };

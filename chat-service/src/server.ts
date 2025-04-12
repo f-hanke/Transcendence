@@ -42,62 +42,7 @@ fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
 	}
 });
 
-fastify.post('/send-friend-request', async (req, reply) => {
-	console.log("Friend request received");
-	console.log(req.body);
-	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
-		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
-	const { authorId, recipientId } = req.body;
-
-	if (!authorId || !recipientId)
-		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
-
-	try {
-		// Check if they are already friends
-		const existingFriendship = db.prepare(`
-			SELECT * FROM friends
-			WHERE (user_id1 = ? AND user_id2 = ? AND status = 'accepted')
-			OR (user_id1 = ? AND user_id2 = ? AND status = 'accepted')
-		`).get(authorId, recipientId, recipientId, authorId);
-
-		if (existingFriendship)
-			return reply.status(400).send({ error: 'You are already friends.' });
-
-		// Check if there is already a pending request
-		const existingRequest = db.prepare(`
-			SELECT * FROM friends
-			WHERE (user_id1 = ? AND user_id2 = ? AND status = 'pending')
-			OR (user_id1 = ? AND user_id2 = ? AND status = 'pending')
-		`).get(authorId, recipientId, recipientId, authorId);
-
-		if (existingRequest)
-			return reply.status(400).send({ error: 'Friend request already exists or is pending.' });
-
-		// Insert the request with 'pending' status
-		db.prepare(`
-			INSERT INTO friends (user_id1, user_id2, status)
-			VALUES (?, ?, 'pending')
-		`).run(authorId, recipientId);
-		console.log("friend request successfully sent");
-		sendToClient(recipientId, { type: "new", recipientId: authorId})
-		return reply.status(200).send();
-	}
-	catch (err) {
-		console.error("Error sending friend request:", err);
-		return reply.status(500).send({ error: 'Failed to send friend request' });
-	}
-});
-
-// Accept a Friend Request
-fastify.post('/accept-friend-request', async (req, reply) => {
-	console.log("friend request accepted");
-	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
-		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
-	const { authorId, recipientId } = req.body;
-
-	if (!authorId || !recipientId)
-		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
-
+function	acceptFriendRequest(authorId: string, recipientId: string, type: string){
 	try {
 		const result = db.prepare(`
 			UPDATE friends
@@ -107,28 +52,57 @@ fastify.post('/accept-friend-request', async (req, reply) => {
 		`).run(authorId, recipientId, recipientId, authorId);
 
 		if (result.changes === 0)
-			return reply.status(400).send({ error: 'Friend request not found or already accepted.' });
+			return [400, { reason: 'Friend request not found or already accepted.' }] as const;
 
 		// Notify users via WebSocket
 		console.log("friend request successfully accepted");
-		sendToClient(recipientId, { type: 'accepted', recipientId: authorId} );
-		return reply.status(200).send();
+		sendToClient(recipientId, { type: 'accept', recipientId: authorId} );
+		return [200, null] as const;
 	}
 	catch (err) {
 		console.error("Error accepting friend request:", err);
-		return reply.status(500).send({ error: 'Failed to accept friend request' });
+		return [500, { reason: 'Failed to accept friend request' }] as const;
 	}
-});
+}
 
-// // Reject a Friend Request
-fastify.post('/reject-friend-request', async (req, reply) => {
-	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
-		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
-	const { authorId, recipientId } = req.body;
+function	sendFriendRequest(authorId: string, recipientId: string, type: string){
+	try {
+		// Check if they are already friends
+		const existingFriendship = db.prepare(`
+			SELECT * FROM friends
+			WHERE (user_id1 = ? AND user_id2 = ? AND status = 'accepted')
+			OR (user_id1 = ? AND user_id2 = ? AND status = 'accepted')
+		`).get(authorId, recipientId, recipientId, authorId);
 
-	if (!authorId || !recipientId)
-		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
+		if (existingFriendship)
+			return [400, { reason: 'You are already friends.' }] as const;
 
+		// Check if there is already a pending request
+		const existingRequest = db.prepare(`
+			SELECT * FROM friends
+			WHERE (user_id1 = ? AND user_id2 = ? AND status = 'pending')
+			OR (user_id1 = ? AND user_id2 = ? AND status = 'pending')
+		`).get(authorId, recipientId, recipientId, authorId);
+
+		if (existingRequest)
+			return [400, { reason: 'Friend request already exists or is pending.' }] as const;
+
+		// Insert the request with 'pending' status
+		db.prepare(`
+			INSERT INTO friends (user_id1, user_id2, status)
+			VALUES (?, ?, 'pending')
+		`).run(authorId, recipientId);
+		console.log("friend request successfully sent");
+		sendToClient(recipientId, { type: "send", recipientId: authorId})
+		return [200, null] as const;
+	}
+	catch (err) {
+		console.error("Error sending friend request:", err);
+		return [500, { reason: 'Failed to send friend request' }] as const;
+	}
+}
+
+function	removeFriendRequest(authorId: string, recipientId: string, type: ChatServiceTypes.UpdateFriendRequest["type"]){
 	try {
 		const result = db.prepare(`
 			DELETE FROM friends
@@ -137,46 +111,46 @@ fastify.post('/reject-friend-request', async (req, reply) => {
 		`).run(authorId, recipientId, recipientId, authorId);
 
 		if (result.changes === 0)
-			return reply.status(400).send({ error: 'Friend request not found.' });
+			return [400, { reason: 'Friend request not found.' }] as const;
 
 		// Notify users via WebSocket
-		console.log("friend request successfully declined");
-		sendToClient(recipientId, { type: 'declined', recipientId: authorId});
-		return reply.status(200).send();
+		console.log(`friend request successfully ${type}`);
+		sendToClient(recipientId, { type: type, recipientId: authorId});
+		return [200, null] as const;
 	}
 	catch (err) {
-		console.error("Error rejecting friend request:", err);
-		return reply.status(500).send({ error: 'Failed to reject friend request' });
+		console.error(`[Error] for friend request ${type}`, err);
+		return [500, { reason: 'Failed to reject friend request' }] as const;
 	}
-});
+}
 
 // // Reject a Friend Request
-fastify.post('/unfriend-friend-request', async (req, reply) => {
+fastify.post('/update-friend-request', async (req, reply) => {
 	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
 		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
-	const { authorId, recipientId } = req.body;
+	const { type, authorId, recipientId } = req.body;
 
+	console.log(`Updating friendrequest tpye: ${type}`);
 	if (!authorId || !recipientId)
 		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
 
-	try {
-		const result = db.prepare(`
-			DELETE FROM friends
-			WHERE (user_id1 = ? AND user_id2 = ?)
-			OR (user_id1 = ? AND user_id2 = ?)
-		`).run(authorId, recipientId, recipientId, authorId);
-
-		if (result.changes === 0)
-			return reply.status(400).send({ error: 'Friend request not found.' });
-
-		// Notify users via WebSocket
-		console.log("friend request successfully declined");
-		sendToClient(recipientId, { type: 'unfriend', recipientId: authorId});
-		return reply.status(200).send();
-	}
-	catch (err) {
-		console.error("Error rejecting friend request:", err);
-		return reply.status(500).send({ error: 'Failed to reject friend request' });
+	let status: number, error: ChatServiceTypes.ErrorResponseBody | null;
+	switch (type){
+		case "send":
+			[status, error] = sendFriendRequest(authorId, recipientId, type);
+			return reply.status(status).send(error);
+		case "accept":
+			[status, error] = acceptFriendRequest(authorId, recipientId, type);
+			return reply.status(status).send(error);
+		case "declined":
+			[status, error] = removeFriendRequest(authorId, recipientId, type);
+			return reply.status(status).send(error);
+		case "withdrawn":
+			[status, error] = removeFriendRequest(authorId, recipientId, type);
+			return reply.status(status).send(error);
+		case "unfriended":
+			[status, error] = removeFriendRequest(authorId, recipientId, type);
+			return reply.status(status).send(error);
 	}
 });
 
