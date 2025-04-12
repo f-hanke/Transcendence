@@ -138,7 +138,13 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLButtonElement;
     withdrawBtn.addEventListener("click", (event) => {
       event.stopPropagation();
-      alert("withdraw");
+      ChatInterface.sendFriendRequest(
+        {
+          authorId: window.store.userStore.get().id,
+          recipientId: this.recipientId,
+        },
+        "reject"
+      );
     });
   }
 
