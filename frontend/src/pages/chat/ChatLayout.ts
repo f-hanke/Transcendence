@@ -1,3 +1,5 @@
+import { ChatInterface } from "../../backendInterface/chatInterface";
+
 class ChatLayout extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
 
@@ -10,11 +12,13 @@ class ChatLayout extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(
       this.render.bind(this)
     );
+    ChatInterface.connect();
     this.render();
   }
 
   disconnectedCallback() {
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
+    ChatInterface.disconnect();
   }
 
   render() {

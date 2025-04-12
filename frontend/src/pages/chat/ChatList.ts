@@ -181,13 +181,13 @@ class ChatList extends HTMLElement {
     const userGroups = window.store.chatUserStore.getUserGroups();
 
     for (const user of userGroups.friends) {
-      this.createAndAppend(friendsContainer, user, "friendRequestPending");
+      this.createAndAppend(friendsContainer, user, "user");
     }
     for (const user of userGroups.online) {
-      this.createAndAppend(onlineContainer, user, "friendRequestToAnswer");
+      this.createAndAppend(onlineContainer, user, "user");
     }
     for (const user of userGroups.offline) {
-      this.createAndAppend(offlineContainer, user, "friendRequestToAnswer");
+      this.createAndAppend(offlineContainer, user, "user");
     }
   }
 

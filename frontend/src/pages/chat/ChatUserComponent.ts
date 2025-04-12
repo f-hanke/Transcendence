@@ -191,15 +191,21 @@ image.addEventListener("click", () => {
     const blockBtn = document.querySelector(
       `#${this.id}_blockBtn`
     ) as HTMLButtonElement;
-    blockBtn.addEventListener("click", () => {
+    blockBtn.addEventListener("click", (event) => {
       alert("blocked");
     });
 
     const friendBtn = document.querySelector(
       `#${this.id}_friendBtn`
     ) as HTMLButtonElement;
-    friendBtn.addEventListener("click", () => {
-      alert("friend");
+    friendBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      ChatInterface.sendFriendRequest(
+        {
+          authorId: window.store.userStore.get().id,
+          recipientId: this.recipientId
+        }
+      );
     });
 
     const wrapperChatOneUser = document.querySelector(

@@ -29,7 +29,7 @@ class AppRouterProtected extends HTMLElement {
   }
 
   disconnectedCallback() {
-    ChatInterface.disconnect();
+    // ChatInterface.disconnect();
   }
 
   addRoute(path: string, component: Page) {

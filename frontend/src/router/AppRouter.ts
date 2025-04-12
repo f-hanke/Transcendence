@@ -74,7 +74,7 @@ class AppRouter extends HTMLElement {
   }
 
   async handleRouteChange() {
-    const isAuthenticated = await AuthInterface.verify();
+    const isAuthenticated = await AuthInterface.verify(true);
     if (this.appRouterProtected.curRouteIsProtected()) {
       this.appRouterProtected.handleRouteChange(isAuthenticated.ok);
       this.showProtectedAppRouter();

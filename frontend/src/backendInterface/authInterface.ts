@@ -154,7 +154,7 @@ class AuthInterface {
   static loginSucessful(body: AuthServiceTypes.AuthSuccessResponseBody) {
     window.colog("login succesful!");
     window.store.userStore.updateUserSettings({
-      id: body.clientId,
+      id: body.clientId.toString(),
     });
     sessionStorage.setItem(this.nameJwtInSessionStorage, body.jwtToken);
     navigateToSite("/");

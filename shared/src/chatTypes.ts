@@ -16,6 +16,7 @@ declare namespace ChatServiceTypes {
     email: string;
     lastMessage: string;
     unreadMessages: boolean;
+    friendRequestStatus: null | "pendingClientInvite" | "pendingRecipientInvite";
   };
 
   // server user came online
