@@ -15,6 +15,30 @@ class ChatInterface {
 
   static websocket: WebSocket | null = null;
 
+  static async sendFriendRequest(
+    data: GameServiceTypes.StaticGameProperties
+  ) {
+    const address = buildBackendRoute({
+      websocketOrApi: "api",
+      service: "gameService",
+      route: "/api/game/start",
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        throw new Error(`Couldn't create match on Server via API!`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
   static async requestChatHistory(recipientId: string) {
     const address = buildBackendRoute({
       websocketOrApi: "api",

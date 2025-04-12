@@ -2,6 +2,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+
 Object.defineProperty(exports, "__esModule", { value: true });
 const fastify_1 = __importDefault(require("fastify"));
 const validators = require('./utils/validators');
@@ -10,7 +11,7 @@ const cors = require('@fastify/cors');
 const User = require('./orm/user');
 const Match = require('./orm/match');
 const authTypesCopy_1 = require("./authTypesCopy");
-const transcendence_1 = require("transcendence");
+// const transcendence_1 = require("transcendence");
 const server = (0, fastify_1.default)({
     logger: {
         transport: {
@@ -125,9 +126,15 @@ server.get('/api/auth/logout', async (request, reply) => {
 server.setNotFoundHandler((req, res) => {
     res.code(404).send({ route: req.url, method: req.method });
 });
+
+const networkSettings = {
+        ip: "localhost",
+        port: 3003
+    }
+
 server.listen({
-    port: transcendence_1.transNetworkSettings.authService.port,
-    host: transcendence_1.transNetworkSettings.authService.ip
+    port: networkSettings.port,
+    host: networkSettings.ip
 }, (err, address) => {
     if (err) {
         console.error(err);
