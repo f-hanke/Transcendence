@@ -43,6 +43,11 @@ class ChatUserStateStore {
     return this.state;
   }
 
+  getIsBlocked(recipientId: string): boolean {
+    const blocked = this.state.get(recipientId)?.blocked; 
+    return blocked ? blocked : false;
+  }
+
   getUserGroups(): ChatUserGroups {
     const groups: ChatUserGroups = {
       friends: [],
@@ -93,22 +98,26 @@ class ChatUserStateStore {
 
   updateChangeUserFriendStatus(
     userId: string,
-    newFriendStatus: ChatServiceTypes.UpdateFriendRequest["type"] | "newAuthor" | "newRecipient"
+    newFriendStatus:
+      | ChatServiceTypes.UpdateFriendRequest["type"]
+      | "newAuthorUpdateFromFrontend"
   ) {
     const user = this.state.get(userId);
     if (isDefined(user)) {
       switch (newFriendStatus) {
-        case "newAuthor":
+        case "newAuthorUpdateFromFrontend":
           user.friendRequestStatus = "pendingClientInvite";
           break;
-        case "newRecipient":
+        case "send":
           user.friendRequestStatus = "pendingRecipientInvite";
           break;
-        case "accepted":
+        case "accept":
           user.friendRequestStatus = null;
           user.friend = true;
           break;
         case "declined":
+        case "withdrawn":
+        case "unfriended":
           user.friendRequestStatus = null;
           user.friend = false;
           break;

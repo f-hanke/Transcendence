@@ -49,8 +49,7 @@ declare namespace ChatServiceTypes {
     | ServerClientChangedOnlineStatus
     | ServerClientChangedOnlineStatus
     | SentMessage
-    | UpdateFriendRequest
-    ;
+    | UpdateFriendRequest;
 
   type DataServerSendUserList = {
     chatUsers: ChatUser[];
@@ -90,13 +89,14 @@ declare namespace ChatServiceTypes {
     data: { recipientId: string };
   };
 
-  type UpdateFriendRequest = {
-    type: "new" | "declined" | "accepted" | "unfriend";
-    recipientId: string;
-  }
-
   type SendFriendRequestBody = {
+    type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
     authorId: string;
+    recipientId: string;
+  };
+
+  type UpdateFriendRequest = {
+    type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
     recipientId: string;
   };
 
@@ -165,7 +165,9 @@ function isSendFriendRequestBody(
   return (
     message?.recipientId &&
     message?.authorId &&
+    message?.type &&
     typeof message.authorId === "string" &&
+    typeof message.type === "string" &&
     typeof message.recipientId === "string"
     // && Array.isArray(message.data)
     //  &&isChatUser(message.data[0])
@@ -177,7 +179,9 @@ function isUpdateFriendRequest(
 ): message is ChatServiceTypes.UpdateFriendRequest {
   return (
     message?.type &&
-    ["new", "accepted", "declined"].includes(message.type) &&
+    ["send", "accept", "declined", "withdrawn", "unfriended"].includes(
+      message.type
+    ) &&
     message?.recipientId &&
     typeof message?.recipientId === "string"
   );
