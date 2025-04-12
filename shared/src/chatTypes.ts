@@ -81,6 +81,15 @@ declare namespace ChatServiceTypes {
     type: "clientInviteToPlay";
     data: { recipientId: string };
   };
+
+  type SendFriendRequestBody = {
+    authorId: string,
+    recipientId: string,
+  }
+
+  type ErrorResponseBody = {
+    reason: string;
+  };
 }
 
 function isChatUser(obj: any): obj is ChatServiceTypes.ChatUser {
@@ -139,7 +148,19 @@ function isServerClientChangedOnlineStatus(
   );
 }
 
+function isSendFriendRequestBody(
+  message: any
+): message is ChatServiceTypes.SendFriendRequestBody {
+  return (
+    message?.recipientId && message?.authorId && typeof(message.authorId) === "string"
+    && typeof(message.recipientId) === "string"
+    // && Array.isArray(message.data)
+    //  &&isChatUser(message.data[0])
+  );
+}
+
 const chatServiceTypeGuards = {
+  isSendFriendRequestBody,
   isServerSendUserList,
   isChatUser,
   isServerSendChatHistory,
