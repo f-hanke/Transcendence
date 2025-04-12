@@ -16,12 +16,15 @@ class ChatInterface {
   static websocket: WebSocket | null = null;
 
 
-  static async sendUpdateBlockStatus(data: ChatServiceTypes.) {
+  static async sendUpdateBlockStatus(data: ChatServiceTypes.ClientChangeBlockStatus) {
     const address = buildBackendRoute({
       websocketOrApi: "api",
       service: "chatService",
       route: "/update-blocking-status",
     });
+    colog("data");
+    colog(data);
+    colog(address);
     try {
       const response = await fetch(address, {
         method: "POST",
@@ -30,10 +33,12 @@ class ChatInterface {
         },
         body: JSON.stringify(data),
       });
+      colog("!!!!!!");
+      colog(response);
       if (response.ok) {
         window.store.chatUserStore.updateChangeUserBlockedStatus(
           data.recipientId,
-          data.status,
+          data.blockedStatus,
         );
       }
       if (!response.ok) {
