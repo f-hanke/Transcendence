@@ -43,7 +43,8 @@ declare namespace ChatServiceTypes {
     | ServerSendChatHistory
     | ServerClientChangedOnlineStatus
     | ServerClientChangedOnlineStatus
-    | SentMessage;
+    | SentMessage
+    | UpdateFriendRequest;
 
   type DataServerSendUserList = {
     chatUsers: ChatUser[];
@@ -83,9 +84,14 @@ declare namespace ChatServiceTypes {
     data: { recipientId: string };
   };
 
+  type UpdateFriendRequest = {
+    type: "new" | "declined" | "accepted" | "unfriend";
+    recipientId: string;
+  }
+
   type SendFriendRequestBody = {
-    authorId: string,
-    recipientId: string,
+    authorId: string;
+    recipientId: string;
   }
 
   type ErrorResponseBody = {

@@ -78,11 +78,105 @@ fastify.post('/send-friend-request', async (req, reply) => {
 			INSERT INTO friends (user_id1, user_id2, status)
 			VALUES (?, ?, 'pending')
 		`).run(authorId, recipientId);
+		console.log("friend request successfully sent");
+		sendToClient(recipientId, { type: "new", recipientId: authorId})
 		return reply.status(200).send();
 	}
 	catch (err) {
 		console.error("Error sending friend request:", err);
 		return reply.status(500).send({ error: 'Failed to send friend request' });
+	}
+});
+
+// Accept a Friend Request
+fastify.post('/accept-friend-request', async (req, reply) => {
+	console.log("friend request accepted");
+	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
+		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
+	const { authorId, recipientId } = req.body;
+
+	if (!authorId || !recipientId)
+		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
+
+	try {
+		const result = db.prepare(`
+			UPDATE friends
+			SET status = 'accepted'
+			WHERE (user_id1 = ? AND user_id2 = ?)
+			OR (user_id1 = ? AND user_id2 = ?)
+		`).run(authorId, recipientId, recipientId, authorId);
+
+		if (result.changes === 0)
+			return reply.status(400).send({ error: 'Friend request not found or already accepted.' });
+
+		// Notify users via WebSocket
+		console.log("friend request successfully accepted");
+		sendToClient(recipientId, { type: 'accepted', recipientId: authorId} );
+		return reply.status(200).send();
+	}
+	catch (err) {
+		console.error("Error accepting friend request:", err);
+		return reply.status(500).send({ error: 'Failed to accept friend request' });
+	}
+});
+
+// // Reject a Friend Request
+fastify.post('/reject-friend-request', async (req, reply) => {
+	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
+		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
+	const { authorId, recipientId } = req.body;
+
+	if (!authorId || !recipientId)
+		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
+
+	try {
+		const result = db.prepare(`
+			DELETE FROM friends
+			WHERE (user_id1 = ? AND user_id2 = ?)
+			OR (user_id1 = ? AND user_id2 = ?)
+		`).run(authorId, recipientId, recipientId, authorId);
+
+		if (result.changes === 0)
+			return reply.status(400).send({ error: 'Friend request not found.' });
+
+		// Notify users via WebSocket
+		console.log("friend request successfully declined");
+		sendToClient(recipientId, { type: 'declined', recipientId: authorId});
+		return reply.status(200).send();
+	}
+	catch (err) {
+		console.error("Error rejecting friend request:", err);
+		return reply.status(500).send({ error: 'Failed to reject friend request' });
+	}
+});
+
+// // Reject a Friend Request
+fastify.post('/unfriend-friend-request', async (req, reply) => {
+	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
+		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
+	const { authorId, recipientId } = req.body;
+
+	if (!authorId || !recipientId)
+		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
+
+	try {
+		const result = db.prepare(`
+			DELETE FROM friends
+			WHERE (user_id1 = ? AND user_id2 = ?)
+			OR (user_id1 = ? AND user_id2 = ?)
+		`).run(authorId, recipientId, recipientId, authorId);
+
+		if (result.changes === 0)
+			return reply.status(400).send({ error: 'Friend request not found.' });
+
+		// Notify users via WebSocket
+		console.log("friend request successfully declined");
+		sendToClient(recipientId, { type: 'unfriend', recipientId: authorId});
+		return reply.status(200).send();
+	}
+	catch (err) {
+		console.error("Error rejecting friend request:", err);
+		return reply.status(500).send({ error: 'Failed to reject friend request' });
 	}
 });
 
@@ -205,6 +299,50 @@ function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 	}
 }
 
+function getFriendRequestStatus(clientId: string, otherUserId: string){
+	try {
+		const result = db.prepare(`
+			SELECT user_id1, user_id2, status FROM friends
+			WHERE (user_id1 = ? AND user_id2 = ?) OR (user_id1 = ? AND user_id2 = ?)
+		`).get(clientId, otherUserId, otherUserId, clientId) as { user_id1: string; user_id2: string; status: string } | undefined;
+
+		if (!result)
+			return [null, false] as const;
+
+		let friend = false;
+		if (result.status === "accepted") {
+			friend = true;
+		} else if (result.status === "pending") {
+			if (result.user_id1 === clientId) {
+				return ["pendingClientInvite", friend] as const;
+			} else {
+				return ["pendingRecipientInvite", friend] as const;
+			}
+		}
+
+		return [null, friend]  as const;
+	} catch (err) {
+		console.error("Error checking friend request status:", err);
+		return [null, false]  as const;
+	}
+}
+
+function getBlockedStatus(clientId: string, recipientId: string){
+	try {
+		const result = db.prepare(`
+			SELECT user_id1, user_id2 FROM blockings
+			WHERE (user_id1 = ? AND user_id2 = ?)
+		`).get(clientId, recipientId) as { user_id1: string; user_id2: string} | undefined;
+
+		if (!result)
+			return false;
+		return true;
+	} catch (err) {
+		console.error("Error checking blocked status:", err);
+		return false;
+	}
+}
+
 function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatServiceTypes.ChatUser[] } } | undefined {
 	const clientId = socketToClientId.get(socket);
 	if (!clientId) {
@@ -218,10 +356,13 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 		const rows = stmt.all() as { id: string; username: string; online: boolean; unreadMessages: boolean }[];
 
 		rows.forEach((row) => {
-			if (row.id === clientId) return;
+			if (row.id === clientId)
+				return;
+			const [friendRequestStatus, friendStatus] = getFriendRequestStatus(clientId, row.id);
+			const blocked = getBlockedStatus(clientId, row.id);
 			users.push({
-				blocked: false,
-				friend: Math.random() < 0.5,
+				blocked: blocked,
+				friend: friendStatus,
 				online: row.online,
 				unreadMessages: row.unreadMessages,
 				displayName: row.username,
@@ -229,6 +370,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 				email: `${row.username}@test.com`,
 				image: "test",
 				lastMessage: "",
+				friendRequestStatus: friendRequestStatus,
 			});
 		});
 
@@ -244,6 +386,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 	}
 }
 //todo ClientChangeBlockStatus, ClientInviteToPlay
+//todo getLastMessage
 
 function updateUnreadMessages(recipientId: string, unreadMessages: boolean): void {
 	try {
@@ -278,10 +421,10 @@ function getChatHistory(authorId: string, recipientId: string): ChatServiceTypes
 }
 
 fastify.listen({ port: transNetworkSettings.chatService.port, host: "0.0.0.0" }, (err) => {
-if (err) {
-	console.log("Server Error!");
-	fastify.log.error(err);
-	process.exit(1);
-}
-console.log(`Server listening on http://localhost:${transNetworkSettings.chatService.port}/`);
+	if (err) {
+		console.log("Server Error!");
+		fastify.log.error(err);
+		process.exit(1);
+	}
+	console.log(`Server listening on http://localhost:${transNetworkSettings.chatService.port}/`);
 });

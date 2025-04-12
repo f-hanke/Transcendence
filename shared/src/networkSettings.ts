@@ -20,7 +20,7 @@ const transNetworkSettings: TransNetworkSettings = {
     port: 3001
   },
   chatService: {
-    ip: "10.15.204.2",
+    ip: "localhost",
     port: 3002
   },
   authService: {
