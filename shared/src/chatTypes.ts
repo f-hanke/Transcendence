@@ -172,6 +172,19 @@ function isSendFriendRequestBody(
   );
 }
 
+function isClientChangeBlockStatus(
+  message: any
+): message is ChatServiceTypes.ClientChangeBlockStatus {
+  return (
+    message?.recipientId &&
+    message?.authorId &&
+    message?.status &&
+    typeof message.authorId === "string" &&
+    typeof message.recipientId === "string" &&
+    typeof message.status === 'boolean'
+  );
+}
+
 function isUpdateFriendRequest(
   message: any
 ): message is ChatServiceTypes.UpdateFriendRequest {
@@ -191,6 +204,7 @@ const chatServiceTypeGuards = {
   isServerSendChatHistory,
   isSentMessage,
   isServerClientChangedOnlineStatus,
+  isClientChangeBlockStatus,
 } as const;
 
 export { chatServiceTypeGuards };

@@ -154,6 +154,12 @@ fastify.post('/update-friend-request', async (req, reply) => {
 	}
 });
 
+fastify.post('/update-friend-request', async (req, reply) => {
+	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
+		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
+	const { type, authorId, recipientId } = req.body;
+}
+
 fastify.register(async function (fastify) {
 	fastify.get("/ws", { websocket: true }, async (socket, req) => {
 		registerClient(req, socket);
