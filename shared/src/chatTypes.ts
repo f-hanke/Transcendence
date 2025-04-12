@@ -77,12 +77,11 @@ declare namespace ChatServiceTypes {
     type: "sentMessage";
     data: Message;
   };
+
   type ClientChangeBlockStatus = {
-    type: "clientChangeBlockStatus";
-    data: {
-      recipientId: string;
-      blockedStatus: boolean;
-    };
+    clientId: string;
+    recipientId: string;
+    blockedStatus: boolean;
   };
 
   type ClientInviteToPlay = {
