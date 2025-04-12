@@ -76,12 +76,11 @@ declare namespace ChatServiceTypes {
     type: "sentMessage";
     data: Message;
   };
+
   type ClientChangeBlockStatus = {
-    type: "clientChangeBlockStatus";
-    data: {
-      recipientId: string;
-      blockedStatus: boolean;
-    };
+    clientId: string;
+    recipientId: string;
+    blockedStatus: boolean;
   };
 
   type ClientInviteToPlay = {
@@ -89,16 +88,17 @@ declare namespace ChatServiceTypes {
     data: { recipientId: string };
   };
 
+  type UpdateFriendRequest = {
+    type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
+    recipientId: string;
+  }
+
   type SendFriendRequestBody = {
     type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
     authorId: string;
     recipientId: string;
   };
 
-  type UpdateFriendRequest = {
-    type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
-    recipientId: string;
-  };
 
   type ErrorResponseBody = {
     reason: string;
@@ -174,6 +174,19 @@ function isSendFriendRequestBody(
   );
 }
 
+function isClientChangeBlockStatus(
+  message: any
+): message is ChatServiceTypes.ClientChangeBlockStatus {
+  return (
+    message?.recipientId &&
+    message?.authorId &&
+    message?.status &&
+    typeof message.authorId === "string" &&
+    typeof message.recipientId === "string" &&
+    typeof message.status === 'boolean'
+  );
+}
+
 function isUpdateFriendRequest(
   message: any
 ): message is ChatServiceTypes.UpdateFriendRequest {
@@ -195,6 +208,7 @@ const chatServiceTypeGuards = {
   isServerSendChatHistory,
   isSentMessage,
   isServerClientChangedOnlineStatus,
+  isClientChangeBlockStatus,
 } as const;
 
 export { chatServiceTypeGuards };
