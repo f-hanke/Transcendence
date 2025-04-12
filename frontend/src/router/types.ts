@@ -7,6 +7,7 @@ type Page =
   | "login-page"
   | "register-page"
   | "home-page"
+  | "chat-layout"
   ;
 
 export type { Page };

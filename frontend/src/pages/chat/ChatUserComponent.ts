@@ -1,7 +1,11 @@
 import { ChatServiceTypes, generateUniqueId } from "transcendence";
 import { ChatInterface } from "../../backendInterface/chatInterface";
 
-type UserComponentType = "user" | "blocked" | "friendRequestToAnswer" | "friendRequestPending";
+type UserComponentType =
+  | "user"
+  | "blocked"
+  | "friendRequestToAnswer"
+  | "friendRequestPending";
 
 class ChatUserComponent extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -16,6 +20,7 @@ class ChatUserComponent extends HTMLElement {
   recipientId: string;
   focussed: boolean;
   type: UserComponentType;
+  friendRequestStatus: ChatServiceTypes.FriendRequestStatus;
   constructor() {
     super();
     this.type = "user";
@@ -29,6 +34,7 @@ class ChatUserComponent extends HTMLElement {
     this.focussed = false;
     this.image = "";
     this.recipientId = "";
+    this.friendRequestStatus = null;
     this.id = generateUniqueId();
   }
 
@@ -56,16 +62,18 @@ class ChatUserComponent extends HTMLElement {
     const onlineClass = this.online ? "shadow-green-500" : "shadow-gray-400";
     this.focussed =
       window.store.chatMessageStore.get().recipientId === this.recipientId;
-    const focussedStyle = this.focussed && this.type=== "user"
-      ? "shadow-[inset_0_0_0_4px] shadow-blue-500"
-      : "";
+    const focussedStyle =
+      this.focussed && this.type === "user"
+        ? "shadow-[inset_0_0_0_4px] shadow-blue-500"
+        : "";
 
-    const unreadMessagesStyle = this.unreadMessages && this.type=== "user"
-      ? "shadow-[inset_0_0_0_2px] shadow-white"
-      : "bg-gray-700";
+    const unreadMessagesStyle =
+      this.unreadMessages && this.type === "user"
+        ? "shadow-[inset_0_0_0_2px] shadow-white"
+        : "bg-gray-700";
 
-    const btnAll = "rounded border-2 p-1"
-    const btnActive = "hover:bg-gray-500"
+    const btnAll = "rounded border-2 p-1";
+    const btnActive = "hover:bg-gray-500";
 
     this.innerHTML = `
       <div id="${this.id}_wrapperChatOneUser" class="flex items-center justify-between p-3  hover:bg-gray-600 cursor-pointer select-none ${focussedStyle} ${unreadMessagesStyle} min-h-[100px]">
@@ -103,28 +111,23 @@ class ChatUserComponent extends HTMLElement {
       </div>
  `;
 
+    const image = document.querySelector(
+      `#${this.id}_userImage`
+    ) as HTMLButtonElement;
+    image.addEventListener("click", (event) => {
+      event.stopPropagation();
+      alert("user profile");
+    });
 
-const image = document.querySelector(
-  `#${this.id}_userImage`
-) as HTMLButtonElement;
-image.addEventListener("click", () => {
-  alert("user profile");
-});
-
-    if(this.type === "user")
-      this.renderUser();
-    if(this.type === "blocked")
-      this.renderBlocked();
-    if(this.type === "friendRequestToAnswer")
+    if (this.type === "user") this.renderUser();
+    if (this.type === "blocked") this.renderBlocked();
+    if (this.type === "friendRequestToAnswer")
       this.renderFriendRequestToAnswer();
-    if(this.type === "friendRequestPending")
-      this.renderFriendRequestPending();
- 
+    if (this.type === "friendRequestPending") this.renderFriendRequestPending();
+    if (this.friendRequestStatus !== null) this.hideFriendsButton();
   }
 
-
-  renderFriendRequestPending()
-  {
+  renderFriendRequestPending() {
     this.hideFriendsRequestsBarToAnswer();
     this.hideBlockedBar();
     this.hideLastMessageDisplayBar();
@@ -133,13 +136,13 @@ image.addEventListener("click", () => {
     const withdrawBtn = document.querySelector(
       `#${this.id}_withdrawBtn`
     ) as HTMLButtonElement;
-    withdrawBtn.addEventListener("click", () => {
+    withdrawBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
       alert("withdraw");
     });
   }
 
-  renderFriendRequestToAnswer()
-  {
+  renderFriendRequestToAnswer() {
     this.hideFriendsRequestsBarPending();
     this.hideBlockedBar();
     this.hideLastMessageDisplayBar();
@@ -148,20 +151,33 @@ image.addEventListener("click", () => {
     const acceptBtn = document.querySelector(
       `#${this.id}_acceptBtn`
     ) as HTMLButtonElement;
-    acceptBtn.addEventListener("click", () => {
-      alert("accept");
+    acceptBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      ChatInterface.sendFriendRequest(
+        {
+          authorId: window.store.userStore.get().id,
+          recipientId: this.recipientId,
+        },
+        "accept"
+      );
     });
 
     const declineBtn = document.querySelector(
       `#${this.id}_declineBtn`
     ) as HTMLButtonElement;
-    declineBtn.addEventListener("click", () => {
-      alert("decline");
+    declineBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      ChatInterface.sendFriendRequest(
+        {
+          authorId: window.store.userStore.get().id,
+          recipientId: this.recipientId,
+        },
+        "reject"
+      );
     });
   }
 
-  renderBlocked()
-  {
+  renderBlocked() {
     this.hideFriendsRequestsBarPending();
     this.hideFriendsRequestsBarToAnswer();
     this.hideLastMessageDisplayBar();
@@ -170,21 +186,22 @@ image.addEventListener("click", () => {
     const unblockBtn = document.querySelector(
       `#${this.id}_unblockBtn`
     ) as HTMLButtonElement;
-    unblockBtn.addEventListener("click", () => {
+    unblockBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
       alert("unblock");
     });
   }
 
-  renderUser()
-  {
+  renderUser() {
     this.hideFriendsRequestsBarToAnswer();
-    this.hideBlockedBar();   
+    this.hideBlockedBar();
     this.hideFriendsRequestsBarPending();
 
     const inviteToPlayBtn = document.querySelector(
       `#${this.id}_inviteToPlayBtn`
     ) as HTMLButtonElement;
-    inviteToPlayBtn.addEventListener("click", () => {
+    inviteToPlayBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
       alert("invited to play");
     });
 
@@ -192,6 +209,7 @@ image.addEventListener("click", () => {
       `#${this.id}_blockBtn`
     ) as HTMLButtonElement;
     blockBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
       alert("blocked");
     });
 
@@ -203,8 +221,9 @@ image.addEventListener("click", () => {
       ChatInterface.sendFriendRequest(
         {
           authorId: window.store.userStore.get().id,
-          recipientId: this.recipientId
-        }
+          recipientId: this.recipientId,
+        },
+        "send"
       );
     });
 
@@ -230,44 +249,47 @@ image.addEventListener("click", () => {
     this.blocked = data.blocked;
     this.image = data.image;
     this.recipientId = data.recipientId;
+    this.friendRequestStatus = data.friendRequestStatus;
     this.type = type;
     this.render();
   }
 
-  hideImageActionsBar()
-  {
+  hideFriendsButton() {
+    const friendsBtn = document.querySelector(
+      `#${this.id}_friendBtn`
+    ) as HTMLButtonElement;
+    friendsBtn.classList.add("invisible");
+  }
+
+  hideImageActionsBar() {
     const imageActionsBar = document.querySelector(
       `#${this.id}_imageActionsBar`
     ) as HTMLButtonElement;
     imageActionsBar.classList.add("invisible");
   }
 
-  hideLastMessageDisplayBar()
-  {
+  hideLastMessageDisplayBar() {
     const lastMessageDisplay = document.querySelector(
       `#${this.id}_lastMessageDisplay`
     ) as HTMLButtonElement;
     lastMessageDisplay.classList.add("hidden");
   }
 
-  hideFriendsRequestsBarToAnswer()
-  {
+  hideFriendsRequestsBarToAnswer() {
     const friendsRequestsBarToAnswer = document.querySelector(
       `#${this.id}_friendsRequestsBarToAnswer`
     ) as HTMLButtonElement;
     friendsRequestsBarToAnswer.classList.add("hidden");
   }
 
-  hideFriendsRequestsBarPending()
-  {
+  hideFriendsRequestsBarPending() {
     const friendsRequestsBarPending = document.querySelector(
       `#${this.id}_friendsRequestsBarPending`
     ) as HTMLButtonElement;
     friendsRequestsBarPending.classList.add("hidden");
   }
 
-  hideBlockedBar()
-  {
+  hideBlockedBar() {
     const blockedBar = document.querySelector(
       `#${this.id}_blockedBar`
     ) as HTMLButtonElement;

@@ -162,9 +162,12 @@ class ChatList extends HTMLElement {
       "#chatFriendRequestListPending"
     ) as HTMLDivElement;
 
-    // for (const user of userGroups.blocked) {
-    //   this.createAndAppend(chatchatFriendRequestList, user);
-    // }
+    for (const user of userGroups.pendingRecipientInvite) {
+      this.createAndAppend(chatFriendRequestListAnswer, user, "friendRequestToAnswer");
+    }
+    for (const user of userGroups.pendingClientInvite) {
+      this.createAndAppend(chatFriendRequestListAnswer, user, "friendRequestPending");
+    }
   }
 
   renderUserList() {

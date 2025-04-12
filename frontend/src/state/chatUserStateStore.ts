@@ -49,9 +49,15 @@ class ChatUserStateStore {
       online: [],
       offline: [],
       blocked: [],
+      pendingClientInvite: [],
+      pendingRecipientInvite: [],
     };
     this.state.forEach((userObj, userId) => {
       const userCopy = deepCopyObj(userObj);
+      if (userObj.friendRequestStatus === "pendingClientInvite")
+        groups.pendingClientInvite.push(userCopy);
+      if (userObj.friendRequestStatus === "pendingRecipientInvite")
+        groups.pendingRecipientInvite.push(userCopy);
       if (userObj.blocked) groups.blocked.push(userCopy);
       else if (userObj.friend) groups.friends.push(userCopy);
       else if (userObj.online) groups.online.push(userCopy);
@@ -85,6 +91,32 @@ class ChatUserStateStore {
     }
   }
 
+  updateChangeUserFriendStatus(
+    userId: string,
+    newFriendStatus: ChatServiceTypes.UpdateFriendRequest["type"] | "newAuthor" | "newRecipient"
+  ) {
+    const user = this.state.get(userId);
+    if (isDefined(user)) {
+      switch (newFriendStatus) {
+        case "newAuthor":
+          user.friendRequestStatus = "pendingClientInvite";
+          break;
+        case "newRecipient":
+          user.friendRequestStatus = "pendingRecipientInvite";
+          break;
+        case "accepted":
+          user.friendRequestStatus = null;
+          user.friend = true;
+          break;
+        case "declined":
+          user.friendRequestStatus = null;
+          user.friend = false;
+          break;
+      }
+      this.updateListenersOnChange();
+    }
+  }
+
   updateChangeUserLastMessage(userId: string, newLastMessage: string) {
     const user = this.state.get(userId);
     if (isDefined(user)) {
@@ -111,11 +143,9 @@ class ChatUserStateStore {
     this.updateListenersOnChange();
   }
 
-  updateUserListFromArray(userList: ChatServiceTypes.ChatUser[])
-  {
+  updateUserListFromArray(userList: ChatServiceTypes.ChatUser[]) {
     this.state = new Map();
-    for (const user of userList)
-    {
+    for (const user of userList) {
       this.state.set(user.recipientId, user);
     }
     this.updateListenersOnChange();

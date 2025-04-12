@@ -6,6 +6,16 @@ declare namespace ChatServiceTypes {
     date: string;
   };
 
+  type FriendRequestStatus =
+    | null
+    | "pendingClientInvite"
+    | "pendingRecipientInvite";
+
+  type UpdateFriendRequest = {
+    type: "new" | "declined" | "accepted";
+    recipientId: string;
+  };
+
   type ChatUser = {
     recipientId: string;
     displayName: string;
@@ -16,7 +26,7 @@ declare namespace ChatServiceTypes {
     email: string;
     lastMessage: string;
     unreadMessages: boolean;
-    friendRequestStatus: null | "pendingClientInvite" | "pendingRecipientInvite";
+    friendRequestStatus: FriendRequestStatus;
   };
 
   // server user came online
@@ -43,7 +53,9 @@ declare namespace ChatServiceTypes {
     | ServerSendChatHistory
     | ServerClientChangedOnlineStatus
     | ServerClientChangedOnlineStatus
-    | SentMessage;
+    | SentMessage
+    | UpdateFriendRequest
+    ;
 
   type DataServerSendUserList = {
     chatUsers: ChatUser[];
@@ -84,9 +96,9 @@ declare namespace ChatServiceTypes {
   };
 
   type SendFriendRequestBody = {
-    authorId: string,
-    recipientId: string,
-  }
+    authorId: string;
+    recipientId: string;
+  };
 
   type ErrorResponseBody = {
     reason: string;
@@ -119,9 +131,7 @@ function isServerSendUserList(
   );
 }
 
-function isSentMessage(
-  message: any
-): message is ChatServiceTypes.SentMessage {
+function isSentMessage(message: any): message is ChatServiceTypes.SentMessage {
   return (
     message?.type === "sentMessage" && message?.data
     // && Array.isArray(message.data)
@@ -153,14 +163,28 @@ function isSendFriendRequestBody(
   message: any
 ): message is ChatServiceTypes.SendFriendRequestBody {
   return (
-    message?.recipientId && message?.authorId && typeof(message.authorId) === "string"
-    && typeof(message.recipientId) === "string"
+    message?.recipientId &&
+    message?.authorId &&
+    typeof message.authorId === "string" &&
+    typeof message.recipientId === "string"
     // && Array.isArray(message.data)
     //  &&isChatUser(message.data[0])
   );
 }
 
+function isUpdateFriendRequest(
+  message: any
+): message is ChatServiceTypes.UpdateFriendRequest {
+  return (
+    message?.type &&
+    ["new", "accepted", "declined"].includes(message.type) &&
+    message?.recipientId &&
+    typeof message?.recipientId === "string"
+  );
+}
+
 const chatServiceTypeGuards = {
+  isUpdateFriendRequest,
   isSendFriendRequestBody,
   isServerSendUserList,
   isChatUser,

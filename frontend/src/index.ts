@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   appRouter.addRoute("/registerPage", "register-page", false);
   appRouter.addRoute("/home", "home-page");
   appRouter.addRoute("/", "home-page");
+  appRouter.addRoute("/chat", "chat-layout");
 
   appRouter.handleRouteChange();
 });
