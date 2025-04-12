@@ -42,11 +42,13 @@ fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
 	}
 });
 
-fastify.post('/send-friend-request', async (req: MatchMakingFastifyRequest, reply) => {
-	const { clientId, recipientId } = req.body;
+fastify.post('/send-friend-request', async (req, reply) => {
+	if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
+		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
+	const { authorId, recipientId } = req.body;
 
 	console.log("Friend request received");
-	if (!clientId || !recipientId)
+	if (!authorId || !recipientId)
 		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
 
 	try {
@@ -55,7 +57,7 @@ fastify.post('/send-friend-request', async (req: MatchMakingFastifyRequest, repl
 			SELECT * FROM friends
 			WHERE (user_id1 = ? AND user_id2 = ? AND status = 'accepted')
 			OR (user_id1 = ? AND user_id2 = ? AND status = 'accepted')
-		`).get(clientId, recipientId, recipientId, clientId);
+		`).get(authorId, recipientId, recipientId, authorId);
 
 		if (existingFriendship)
 			return reply.status(400).send({ error: 'You are already friends.' });
@@ -65,7 +67,7 @@ fastify.post('/send-friend-request', async (req: MatchMakingFastifyRequest, repl
 			SELECT * FROM friends
 			WHERE (user_id1 = ? AND user_id2 = ? AND status = 'pending')
 			OR (user_id1 = ? AND user_id2 = ? AND status = 'pending')
-		`).get(clientId, recipientId, recipientId, clientId);
+		`).get(authorId, recipientId, recipientId, authorId);
 
 		if (existingRequest)
 			return reply.status(400).send({ error: 'Friend request already exists or is pending.' });
@@ -74,7 +76,7 @@ fastify.post('/send-friend-request', async (req: MatchMakingFastifyRequest, repl
 		db.prepare(`
 			INSERT INTO friends (user_id1, user_id2, status)
 			VALUES (?, ?, 'pending')
-		`).run(clientId, recipientId);
+		`).run(authorId, recipientId);
 		return reply.send({ message: 'Friend request sent successfully.' });
 	}
 	catch (err) {
