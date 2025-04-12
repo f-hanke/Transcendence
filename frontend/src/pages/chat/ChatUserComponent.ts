@@ -138,7 +138,11 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLButtonElement;
     withdrawBtn.addEventListener("click", (event) => {
       event.stopPropagation();
-      alert("withdraw");
+      ChatInterface.sendFriendRequest({
+        authorId: window.store.userStore.get().id,
+        recipientId: this.recipientId,
+        type: "withdrawn",
+      });
     });
   }
 
@@ -153,13 +157,11 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLButtonElement;
     acceptBtn.addEventListener("click", (event) => {
       event.stopPropagation();
-      ChatInterface.sendFriendRequest(
-        {
-          authorId: window.store.userStore.get().id,
-          recipientId: this.recipientId,
-        },
-        "accept"
-      );
+      ChatInterface.sendFriendRequest({
+        authorId: window.store.userStore.get().id,
+        recipientId: this.recipientId,
+        type: "accept",
+      });
     });
 
     const declineBtn = document.querySelector(
@@ -167,13 +169,11 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLButtonElement;
     declineBtn.addEventListener("click", (event) => {
       event.stopPropagation();
-      ChatInterface.sendFriendRequest(
-        {
-          authorId: window.store.userStore.get().id,
-          recipientId: this.recipientId,
-        },
-        "reject"
-      );
+      ChatInterface.sendFriendRequest({
+        authorId: window.store.userStore.get().id,
+        recipientId: this.recipientId,
+        type: "declined",
+      });
     });
   }
 
@@ -188,7 +188,13 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLButtonElement;
     unblockBtn.addEventListener("click", (event) => {
       event.stopPropagation();
-      alert("unblock");
+      ChatInterface.sendUpdateBlockStatus(
+        {
+          blockedStatus: false,
+          clientId: window.store.userStore.get().id,
+          recipientId: this.recipientId
+        }
+      );
     });
   }
 
@@ -210,7 +216,13 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLButtonElement;
     blockBtn.addEventListener("click", (event) => {
       event.stopPropagation();
-      alert("blocked");
+      ChatInterface.sendUpdateBlockStatus(
+        {
+          blockedStatus: true,
+          clientId: window.store.userStore.get().id,
+          recipientId: this.recipientId
+        }
+      );
     });
 
     const friendBtn = document.querySelector(
@@ -218,13 +230,11 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLButtonElement;
     friendBtn.addEventListener("click", (event) => {
       event.stopPropagation();
-      ChatInterface.sendFriendRequest(
-        {
-          authorId: window.store.userStore.get().id,
-          recipientId: this.recipientId,
-        },
-        "send"
-      );
+      ChatInterface.sendFriendRequest({
+        authorId: window.store.userStore.get().id,
+        recipientId: this.recipientId,
+        type: this.friend ? "unfriended" : "send",
+      });
     });
 
     const wrapperChatOneUser = document.querySelector(

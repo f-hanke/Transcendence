@@ -15,26 +15,46 @@ class ChatInterface {
 
   static websocket: WebSocket | null = null;
 
-  static async sendFriendRequest(
-    data: ChatServiceTypes.SendFriendRequestBody,
-    which: "accept" | "reject" | "send"
-  ) {
-    let endpoint: string = "";
-    switch (which) {
-      case "send":
-        endpoint = "/send-friend-request";
-        break;
-      case "accept":
-        endpoint = "/accept-friend-request";
-        break;
-      case "reject":
-        endpoint = "/reject-friend-request";
-        break;
-    }
+
+  static async sendUpdateBlockStatus(data: ChatServiceTypes.ClientChangeBlockStatus) {
     const address = buildBackendRoute({
       websocketOrApi: "api",
       service: "chatService",
-      route: endpoint,
+      route: "/update-blocking-status",
+    });
+    colog("data");
+    colog(data);
+    colog(address);
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      colog("!!!!!!");
+      colog(response);
+      if (response.ok) {
+        window.store.chatUserStore.updateChangeUserBlockedStatus(
+          data.recipientId,
+          data.blockedStatus,
+        );
+      }
+      if (!response.ok) {
+        throw new Error(`Couldn't send friend request via API!`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
+
+  static async sendFriendRequest(data: ChatServiceTypes.SendFriendRequestBody) {
+    const address = buildBackendRoute({
+      websocketOrApi: "api",
+      service: "chatService",
+      route: "/update-friend-request",
     });
     try {
       const response = await fetch(address, {
@@ -44,41 +64,18 @@ class ChatInterface {
         },
         body: JSON.stringify(data),
       });
-      // colog(response);
-      // colog(await response.json());
       if (response.ok) {
-        switch (which) {
-          case "send":
-            window.store.chatUserStore.updateChangeUserFriendStatus(
-              data.recipientId,
-              "newAuthor"
-            );
-            break;
-          case "accept":
-            window.store.chatUserStore.updateChangeUserFriendStatus(
-              data.recipientId,
-              "accepted"
-            );
-
-            break;
-          case "reject":
-            window.store.chatUserStore.updateChangeUserFriendStatus(
-              data.recipientId,
-              "declined"
-            );
-
-            break;
-        }
+        window.store.chatUserStore.updateChangeUserFriendStatus(
+          data.recipientId,
+          data.type === "send" ? "newAuthorUpdateFromFrontend" : data.type
+        );
       }
-
       if (!response.ok) {
         throw new Error(`Couldn't send friend request via API!`);
       }
     } catch (error) {
       console.error("Error:", error);
     }
-
-    // update state on friend request success 44654654656532
   }
 
   static async requestChatHistory(recipientId: string) {
@@ -204,7 +201,7 @@ class ChatInterface {
     colog("RECEIVED UPDATE FRIEND REQUEST FROM SERVER!");
     window.store.chatUserStore.updateChangeUserFriendStatus(
       dataJson.recipientId,
-      "newRecipient"
+      dataJson.type
     );
   }
 
@@ -252,10 +249,12 @@ class ChatInterface {
       authorId,
       dataJson.data.message
     );
-    window.store.notificationStore.updateAddNotification({
-      id: generateUniqueId(),
-      message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
-    });
+    if (!window.store.chatUserStore.getIsBlocked(authorId)) {
+      window.store.notificationStore.updateAddNotification({
+        id: generateUniqueId(),
+        message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
+      });
+    }
     window.store.chatMessageStore.addMessage(authorId, dataJson.data);
   }
 
