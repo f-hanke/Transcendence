@@ -298,7 +298,7 @@ function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 		stmt.run(authorId, recipientId, message, date);
 
 		console.log("Message inserted successfully");
-		updateUnreadMessages(recipientId, true);
+		updateUnreadMessages(recipientId, authorId, true);
 		sendToClient(authorId, { type: "sentMessage", data: dataJson.data });
 		sendToClient(recipientId, { type: "sentMessage", data: dataJson.data });
 	} catch (err) {
@@ -350,6 +350,28 @@ function getBlockedStatus(clientId: string, recipientId: string){
 	}
 }
 
+function getLastMessage(clientId: string, recipientId: string)
+{
+	try {
+		const result = db.prepare(`
+			SELECT message, date
+			FROM messages
+			WHERE
+				(authorId = ? AND recipientId = ?) OR
+				(authorId = ? AND recipientId = ?)
+			ORDER BY date DESC
+			LIMIT 1
+		`).get(clientId, recipientId, recipientId, clientId) as { message: string, date: string} | undefined;
+
+		if (!result)
+			return "start a conversation";
+		return result.message;
+	} catch (err) {
+		console.error("Error checking retriving last msg:", err);
+		return "start a conversation";
+	}
+}
+
 function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatServiceTypes.ChatUser[] } } | undefined {
 	const clientId = socketToClientId.get(socket);
 	if (!clientId) {
@@ -359,24 +381,26 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 	const users: ChatServiceTypes.ChatUser[] = [];
 
 	try {
-		const stmt = db.prepare("SELECT username, id, online, unreadMessages FROM users");
-		const rows = stmt.all() as { id: string; username: string; online: boolean; unreadMessages: boolean }[];
+		const stmt = db.prepare("SELECT username, id, online FROM users");
+		const rows = stmt.all() as { id: string; username: string; online: boolean; }[];
 
 		rows.forEach((row) => {
 			if (row.id === clientId)
 				return;
 			const [friendRequestStatus, friendStatus] = getFriendRequestStatus(clientId, row.id);
 			const blocked = getBlockedStatus(clientId, row.id);
+			const lastMessage = getLastMessage(clientId, row.id);
+			// const lastMessage = "start a new conversation"
 			users.push({
 				blocked: blocked,
 				friend: friendStatus,
 				online: row.online,
-				unreadMessages: row.unreadMessages,
+				unreadMessages: getUnreadMessage(row.id, clientId),
 				displayName: row.username,
 				recipientId: row.id,
 				email: `${row.username}@test.com`,
 				image: "test",
-				lastMessage: "",
+				lastMessage: lastMessage,
 				friendRequestStatus: friendRequestStatus,
 			});
 		});
@@ -392,13 +416,39 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 		return undefined;
 	}
 }
-//todo ClientChangeBlockStatus, ClientInviteToPlay
-//todo getLastMessage
-
-function updateUnreadMessages(recipientId: string, unreadMessages: boolean): void {
+//todo ClientInviteToPlay
+function	getUnreadMessage(recipientId: string, authorId: string){
 	try {
-		const stmt = db.prepare("UPDATE users SET unreadMessages = ? WHERE id = ?");
-		stmt.run(unreadMessages ? 1 : 0, recipientId);
+		const result = db.prepare(`
+			SELECT unread
+			FROM chat_status
+			WHERE (user_id = ? AND chat_partner_id = ?)
+		`).get(authorId, recipientId) as { unread: boolean} | undefined;
+
+		if (!result)
+			return false;
+		return result.unread;
+	} catch (err) {
+		console.error("Error checking retriving last msg:", err);
+		return false;
+	}
+}
+
+function updateUnreadMessages(recipientId: string, authorId: string, unreadMessages: boolean): void {
+	try {
+		if (unreadMessages === true){
+			db.prepare(`
+				INSERT INTO chat_status (user_id, chat_partner_id, unread)
+				VALUES (?, ?, 1)
+				ON CONFLICT(user_id, chat_partner_id) DO UPDATE SET unread = 1
+			`).run(recipientId, authorId);
+		}else{
+			db.prepare(`
+				UPDATE chat_status
+				SET unread = 0
+				WHERE user_id = ? AND chat_partner_id = ?
+			  `).run(authorId, recipientId);
+		}
 	} catch (err) {
 		console.error("DB error updating unread messages:", err);
 	}
@@ -419,7 +469,7 @@ function getChatHistory(authorId: string, recipientId: string): ChatServiceTypes
 		const rows = stmt.all(authorId, recipientId, recipientId, authorId) as ChatServiceTypes.Message[];
 
 		console.log(`Chat history successfully fetched authorId: ${authorId} recipientId: ${recipientId}`);
-		updateUnreadMessages(authorId, false);
+		updateUnreadMessages(recipientId, authorId, false);
 		return rows;
 	} catch (err) {
 		console.error("DB error fetching chat history:", err);

@@ -83,11 +83,6 @@ declare namespace ChatServiceTypes {
     blockedStatus: boolean;
   };
 
-  type ClientInviteToPlay = {
-    type: "clientInviteToPlay";
-    data: { recipientId: string };
-  };
-
   type UpdateFriendRequest = {
     type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
     recipientId: string;
@@ -98,7 +93,6 @@ declare namespace ChatServiceTypes {
     authorId: string;
     recipientId: string;
   };
-
 
   type ErrorResponseBody = {
     reason: string;
