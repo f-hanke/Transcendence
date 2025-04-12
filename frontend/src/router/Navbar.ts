@@ -57,7 +57,7 @@ class Navbar extends HTMLElement {
             </ul>
           </li>
           <li>
-            <a href="/messages" class="block p-2 rounded-lg hover:bg-gray-700">✉️ ${
+            <a href="/chat" class="block p-2 rounded-lg hover:bg-gray-700">✉️ ${
               window.store.languageStore.state.navbar.messages
             }</a>
           </li>

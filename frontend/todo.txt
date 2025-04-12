@@ -31,3 +31,5 @@ Chat requirements:
 - component for friend invites
 - component for blocked to unblock
 - integrate login logout refresh
+
+// update state on friend request success 44654654656532

@@ -16,12 +16,25 @@ class ChatInterface {
   static websocket: WebSocket | null = null;
 
   static async sendFriendRequest(
-    data: ChatServiceTypes.SendFriendRequestBody
+    data: ChatServiceTypes.SendFriendRequestBody,
+    which: "accept" | "reject" | "send"
   ) {
+    let endpoint: string = "";
+    switch (which) {
+      case "send":
+        endpoint = "/send-friend-request";
+        break;
+      case "accept":
+        endpoint = "/accept-friend-request";
+        break;
+      case "reject":
+        endpoint = "/reject-friend-request";
+        break;
+    }
     const address = buildBackendRoute({
       websocketOrApi: "api",
       service: "chatService",
-      route: "/send-friend-request",
+      route: endpoint,
     });
     try {
       const response = await fetch(address, {
@@ -31,14 +44,41 @@ class ChatInterface {
         },
         body: JSON.stringify(data),
       });
-      colog(response);
-      colog(await response.json());
+      // colog(response);
+      // colog(await response.json());
+      if (response.ok) {
+        switch (which) {
+          case "send":
+            window.store.chatUserStore.updateChangeUserFriendStatus(
+              data.recipientId,
+              "newAuthor"
+            );
+            break;
+          case "accept":
+            window.store.chatUserStore.updateChangeUserFriendStatus(
+              data.recipientId,
+              "accepted"
+            );
+
+            break;
+          case "reject":
+            window.store.chatUserStore.updateChangeUserFriendStatus(
+              data.recipientId,
+              "declined"
+            );
+
+            break;
+        }
+      }
+
       if (!response.ok) {
         throw new Error(`Couldn't send friend request via API!`);
       }
     } catch (error) {
       console.error("Error:", error);
     }
+
+    // update state on friend request success 44654654656532
   }
 
   static async requestChatHistory(recipientId: string) {
@@ -135,6 +175,8 @@ class ChatInterface {
       chatServiceTypeGuards.isServerClientChangedOnlineStatus(dataJson)
     ) {
       this.handleServerClientChangedOnlineStatus(dataJson);
+    } else if (chatServiceTypeGuards.isUpdateFriendRequest(dataJson)) {
+      this.handleServerUpdateFriendRequest(dataJson);
     }
     // } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
     //   this.handleServerStartGame(dataJson);
@@ -150,6 +192,20 @@ class ChatInterface {
       //   "Client received unknown message from matchmaking server!"
       // );
     }
+  }
+
+  static handleServerUpdateFriendRequest(
+    dataJson: ChatServiceTypes.UpdateFriendRequest
+  ) {
+    window.store.notificationStore.updateAddNotification({
+      id: generateUniqueId(),
+      message: `UPDATE FRIEND STATUS ${dataJson.recipientId} ${dataJson.type} `,
+    });
+    colog("RECEIVED UPDATE FRIEND REQUEST FROM SERVER!");
+    window.store.chatUserStore.updateChangeUserFriendStatus(
+      dataJson.recipientId,
+      "newRecipient"
+    );
   }
 
   static handleServerClientChangedOnlineStatus(
@@ -184,7 +240,10 @@ class ChatInterface {
       dataJson.data.recipientId,
       dataJson.data.message
     );
-    window.store.chatMessageStore.addMessage(dataJson.data.recipientId, dataJson.data);
+    window.store.chatMessageStore.addMessage(
+      dataJson.data.recipientId,
+      dataJson.data
+    );
   }
 
   static handleServerSentOthersMessage(dataJson: ChatServiceTypes.SentMessage) {

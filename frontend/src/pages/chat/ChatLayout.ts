@@ -12,13 +12,13 @@ class ChatLayout extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(
       this.render.bind(this)
     );
-    ChatInterface.connect();
+    // ChatInterface.connect();
     this.render();
   }
 
   disconnectedCallback() {
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
-    ChatInterface.disconnect();
+    // ChatInterface.disconnect();
   }
 
   render() {

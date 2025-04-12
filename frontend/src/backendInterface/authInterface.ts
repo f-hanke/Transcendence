@@ -139,7 +139,7 @@ class AuthInterface {
     window.colog("verify succesful!");
     if (updateUserId)
       window.store.userStore.updateUserSettings({
-        id: body.userId,
+        id: body.userId.toString(),
       });
   }
 

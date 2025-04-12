@@ -12,6 +12,8 @@ type ChatUserGroups = {
   online: ChatServiceTypes.ChatUser[],
   offline: ChatServiceTypes.ChatUser[],
   blocked: ChatServiceTypes.ChatUser[],
+  pendingClientInvite: ChatServiceTypes.ChatUser[],
+  pendingRecipientInvite: ChatServiceTypes.ChatUser[],
 }
 
 export type { ChatUserState, ChatMessageState,ChatUserGroups };
