@@ -83,11 +83,6 @@ declare namespace ChatServiceTypes {
     blockedStatus: boolean;
   };
 
-  type ClientInviteToPlay = {
-    type: "clientInviteToPlay";
-    data: { recipientId: string };
-  };
-
   type UpdateFriendRequest = {
     type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
     recipientId: string;
@@ -98,7 +93,6 @@ declare namespace ChatServiceTypes {
     authorId: string;
     recipientId: string;
   };
-
 
   type ErrorResponseBody = {
     reason: string;
@@ -179,11 +173,11 @@ function isClientChangeBlockStatus(
 ): message is ChatServiceTypes.ClientChangeBlockStatus {
   return (
     message?.recipientId &&
-    message?.authorId &&
-    message?.status &&
-    typeof message.authorId === "string" &&
+    message?.clientId &&
+    (message?.blockedStatus || message?.blockedStatus === false) &&
+    typeof message.clientId === "string" &&
     typeof message.recipientId === "string" &&
-    typeof message.status === 'boolean'
+    typeof message.blockedStatus === 'boolean'
   );
 }
 
