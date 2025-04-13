@@ -49,7 +49,8 @@ class MatchmakingStateStore {
         groups.private.push(matchCopy);
       else if (matchObj.type === "tournament" && curUserIsInvited)
         groups.tournament.push(matchCopy);
-      else throw new Error("User not assigned to any group!");
+      else if (matchObj.type === "private" && !curUserIsInvited) {
+      } else throw new Error("User not assigned to any matchmaking-group!");
     });
     return groups;
   }

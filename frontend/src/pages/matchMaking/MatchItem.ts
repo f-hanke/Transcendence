@@ -1,6 +1,11 @@
 import { colog, isDefined, MatchMakingTypes } from "transcendence";
 import { MatchMakingInterface } from "../../backendInterface/matchmakingInterface";
 
+type OptnsMatchItem = {
+  renderJoin: boolean;
+  matchIsRunning: boolean;
+};
+
 class MatchItem extends HTMLElement {
   hostId: string;
   hostName: string;
@@ -59,6 +64,8 @@ class MatchItem extends HTMLElement {
                 </button>`
               : ""
           }
+          <!-- "Waiting for oponent!" -->
+          <!-- "Could be you!" -->
           ${
             this.matchIsRunning === "1"
               ? `<div class="relative top-0 right-0 h-full bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">
@@ -76,13 +83,8 @@ class MatchItem extends HTMLElement {
 
   setData(
     data: MatchMakingTypes.BasicGame,
-    optns: {
-      renderJoin: boolean;
-      matchIsRunning: boolean;
-    }
+    optns: OptnsMatchItem
   ) {
-    // this.displayName = data.displayName;
-
     this.hostId = data.hostId;
     this.hostName = data.hostId;
     this.oponentId = data.oponentId;
@@ -114,3 +116,11 @@ class MatchItem extends HTMLElement {
 }
 
 customElements.define("match-item", MatchItem);
+
+export {
+  MatchItem
+}
+
+export type {
+  OptnsMatchItem
+}

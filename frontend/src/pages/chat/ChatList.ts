@@ -166,7 +166,7 @@ class ChatList extends HTMLElement {
       this.createAndAppend(chatFriendRequestListAnswer, user, "friendRequestToAnswer");
     }
     for (const user of userGroups.pendingClientInvite) {
-      this.createAndAppend(chatFriendRequestListAnswer, user, "friendRequestPending");
+      this.createAndAppend(chatFriendRequestListPending, user, "friendRequestPending");
     }
   }
 

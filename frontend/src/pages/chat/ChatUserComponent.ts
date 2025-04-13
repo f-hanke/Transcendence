@@ -249,7 +249,6 @@ class ChatUserComponent extends HTMLElement {
   }
 
   setData(data: ChatServiceTypes.ChatUser, type: UserComponentType) {
-    // this.displayName = data.displayName;
     this.displayName = data.recipientId;
     this.lastMessage = data.lastMessage;
     this.unreadMessages = data.unreadMessages;

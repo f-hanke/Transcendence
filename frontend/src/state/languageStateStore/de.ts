@@ -11,7 +11,9 @@ const de: LanguageState = {
     logout: "Ausloggen",
   },
   matchMaking: {
-    availableMatches: "Verfuegbare andere Spiele",
+    publicMatches: "Oeffentliche Spiele",
+    privateMatches: "Private Spiele",
+    tournamentMatches: "Turnierspiele",
     yourOwnMatchHeading: "Dein eigenes Spiel",
     createMatch: "Spiel erstellen",
     closeMatchButton: "Spiel loeschen",
