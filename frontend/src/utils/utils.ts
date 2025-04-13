@@ -82,6 +82,10 @@ function padNumberToString(
   return `${num}`.padStart(padToLength, padWith);
 }
 
+function getCurDateString() {
+  return new Date(Date.now()).toISOString();
+}
+
 export {
   deepCopyObj,
   createHtmlElementFromString,
@@ -91,4 +95,5 @@ export {
   brepo,
   roundIntToString,
   padNumberToString,
+  getCurDateString
 };

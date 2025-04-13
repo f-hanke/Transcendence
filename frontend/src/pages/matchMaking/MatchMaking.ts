@@ -87,23 +87,21 @@ class MatchMaking extends HTMLElement {
       "#containerTournamentMatches"
     ) as HTMLDivElement;
 
-    const optns = { matchIsRunning: false, renderJoin: false };
-
     if (ownMatchOpen) {
-      this.createAndAppend(ownMatchContainer, ownMatch, optns);
+      this.createAndAppend(ownMatchContainer, ownMatch,  { matchIsRunning: false, renderJoin: false });
       this.createAppendDeleteGameBtn(ownMatchContainer);
     } else {
       this.createAppendCreateGameBtn(ownMatchContainer);
     }
 
     for (const match of matchGroups.private) {
-      this.createAndAppend(privateMatchesContainer, match, optns);
+      this.createAndAppend(privateMatchesContainer, match,  { matchIsRunning: false, renderJoin: true });
     }
     for (const match of matchGroups.public) {
-      this.createAndAppend(publicMatchesContainer, match, optns);
+      this.createAndAppend(publicMatchesContainer, match,  { matchIsRunning: false, renderJoin: true });
     }
     for (const match of matchGroups.tournament) {
-      this.createAndAppend(tournamentMatchesContainer, match, optns);
+      this.createAndAppend(tournamentMatchesContainer, match,  { matchIsRunning: false, renderJoin: true });
     }
   }
 

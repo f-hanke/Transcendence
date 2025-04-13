@@ -1,5 +1,6 @@
 import { ChatServiceTypes, generateUniqueId } from "transcendence";
 import { ChatInterface } from "../../backendInterface/chatInterface";
+import { getCurDateString } from "../../utils/utils";
 
 type UserComponentType =
   | "user"
@@ -125,6 +126,7 @@ class ChatUserComponent extends HTMLElement {
       this.renderFriendRequestToAnswer();
     if (this.type === "friendRequestPending") this.renderFriendRequestPending();
     if (this.friendRequestStatus !== null) this.hideFriendsButton();
+    if (!this.online) this.hideInviteToPlayButton();
   }
 
   renderFriendRequestPending() {
@@ -209,6 +211,7 @@ class ChatUserComponent extends HTMLElement {
       ChatInterface.inviteToPlay({
         authorId: window.store.userStore.get().id,
         recipientId: this.recipientId,
+        date: getCurDateString(),
       });
     });
 
@@ -267,6 +270,13 @@ class ChatUserComponent extends HTMLElement {
       `#${this.id}_friendBtn`
     ) as HTMLButtonElement;
     friendsBtn.classList.add("invisible");
+  }
+
+  hideInviteToPlayButton() {
+    const btn = document.querySelector(
+      `#${this.id}_inviteToPlayBtn`
+    ) as HTMLButtonElement;
+    btn.classList.add("invisible");
   }
 
   hideImageActionsBar() {

@@ -1,5 +1,5 @@
 import { ChatServiceTypes } from "transcendence";
-import { createHtmlElementFromString } from "../../utils/utils";
+import { createHtmlElementFromString, getCurDateString } from "../../utils/utils";
 import { ChatInterface } from "../../backendInterface/chatInterface";
 
 let i = 0;
@@ -67,7 +67,7 @@ class ChatCurrent extends HTMLElement {
         data: {
           authorId: window.store.userStore.get().id,
           recipientId: window.store.chatMessageStore.get().recipientId,
-          date: new Date(Date.now()).toISOString(),
+          date: getCurDateString(),
           message: input.value,
         },
       });
