@@ -201,8 +201,9 @@ fastify.post('/send-game-invite', async (req, reply) => {
 			data: {
 				authorId: authorId,
 				recipientId: recipientId,
-				message: "[Start a game] User invited you to play a game \n Go to remote play, to join the game",
+				message: "[Game invite] User invited you to play a game with them\n Click here to join",
 				date: date,
+				type:"sendGameInvite",
 			},
 		});
 		console.log("Game invite was successfull");
@@ -218,7 +219,7 @@ fastify.register(async function (fastify) {
 	fastify.get("/ws", { websocket: true }, async (socket, req) => {
 		registerClient(req, socket);
 
-		const testArray = await getUsers(socket);
+		const testArray = getUsers(socket);
 		console.log(testArray);
 		socket.send(JSON.stringify(testArray));
 
@@ -316,13 +317,16 @@ function updateUserOnlineStatus(userId: string, isOnline: boolean): void {
 
 function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 	console.log(dataJson);
-	const { authorId, recipientId, message, date } = dataJson.data;
+	const { authorId, recipientId, message, date, type } = dataJson.data;
 
 	try {
+		let typeData = null;
+		if (type)
+			typeData = type;
 		const stmt = db.prepare(
-			"INSERT INTO messages (authorId, recipientId, message, date) VALUES (?, ?, ?, ?)"
+			"INSERT INTO messages (authorId, recipientId, message, date, type) VALUES (?, ?, ?, ?, ?)"
 		);
-		stmt.run(authorId, recipientId, message, date);
+		stmt.run(authorId, recipientId, message, date, typeData);
 
 		console.log("Message inserted successfully");
 		updateUnreadMessages(recipientId, authorId, true);
@@ -443,7 +447,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 		return undefined;
 	}
 }
-//todo ClientInviteToPlay
+
 function	getUnreadMessage(recipientId: string, authorId: string){
 	try {
 		const result = db.prepare(`
