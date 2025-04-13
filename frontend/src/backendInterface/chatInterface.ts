@@ -6,7 +6,8 @@ import {
   isDefined,
   MatchMakingTypes,
 } from "transcendence";
-import { buildBackendRoute } from "../utils/utils";
+import { buildBackendRoute, navigateToSite } from "../utils/utils";
+import { MatchMakingInterface } from "./matchmakingInterface";
 
 class ChatInterface {
   constructor() {
@@ -15,8 +16,49 @@ class ChatInterface {
 
   static websocket: WebSocket | null = null;
 
+  static async inviteToPlay(data: ChatServiceTypes.InviteToPlayRequestBody) {
+    const address = buildBackendRoute({
+      websocketOrApi: "api",
+      service: "chatService",
+      route: "/invite-to-play",
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      this.createMatch(data);
+      if (response.ok) {
+        // create own game
+        // change site to matchmaking
+      }
+      if (!response.ok) {
+        throw new Error(`Couldn't send invite to play request via API!`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
 
-  static async sendUpdateBlockStatus(data: ChatServiceTypes.ClientChangeBlockStatus) {
+  static createMatch(data: ChatServiceTypes.InviteToPlayRequestBody) {
+    window.store.matchmakingStore.createGame({
+      hostId: data.authorId,
+      invitedPlayerId: data.recipientId,
+      oponentId: null,
+      matchId: generateUniqueId(),
+      tournamentId: null,
+      type: "private",
+      needsServerInitiation: true,
+    });
+    navigateToSite("matchmaking");
+  }
+
+  static async sendUpdateBlockStatus(
+    data: ChatServiceTypes.ClientChangeBlockStatus
+  ) {
     const address = buildBackendRoute({
       websocketOrApi: "api",
       service: "chatService",
@@ -38,7 +80,7 @@ class ChatInterface {
       if (response.ok) {
         window.store.chatUserStore.updateChangeUserBlockedStatus(
           data.recipientId,
-          data.blockedStatus,
+          data.blockedStatus
         );
         window.store.chatMessageStore.reset();
       }
@@ -49,7 +91,6 @@ class ChatInterface {
       console.error("Error:", error);
     }
   }
-
 
   static async sendFriendRequest(data: ChatServiceTypes.SendFriendRequestBody) {
     const address = buildBackendRoute({

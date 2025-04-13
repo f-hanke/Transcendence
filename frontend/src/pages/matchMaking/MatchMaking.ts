@@ -124,6 +124,9 @@ class MatchMaking extends HTMLElement {
           matchId: generateUniqueId(),
           hostId: window.store.userStore.get().id,
           oponentId: null,
+          invitedPlayerId: null,
+          tournamentId: null,
+          type: "public"
         },
       })
     );

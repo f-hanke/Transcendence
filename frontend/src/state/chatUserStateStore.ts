@@ -165,12 +165,7 @@ class ChatUserStateStore {
 
   updateUserListFromArray(userList: ChatServiceTypes.ChatUser[]) {
     this.state = new Map();
-    colog("56789");
-    colog(userList);
     for (const user of userList) {
-      colog("HERRE");
-      colog(user);
-      colog(user.recipientId);
       this.state.set(user.recipientId, user);
     }
     this.updateListenersOnChange();

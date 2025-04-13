@@ -72,6 +72,7 @@ declare namespace ChatServiceTypes {
       onlineStatus: boolean;
     };
   };
+
   type SentMessage = {
     type: "sentMessage";
     data: Message;
@@ -90,6 +91,11 @@ declare namespace ChatServiceTypes {
 
   type SendFriendRequestBody = {
     type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
+    authorId: string;
+    recipientId: string;
+  };
+
+  type InviteToPlayRequestBody = {
     authorId: string;
     recipientId: string;
   };
@@ -194,6 +200,15 @@ function isUpdateFriendRequest(
   );
 }
 
+function isInviteToPlayRequestBody(obj: any): obj is ChatServiceTypes.InviteToPlayRequestBody {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    typeof obj.authorId === "string" &&
+    typeof obj.recipientId === "string"
+  );
+}
+
 const chatServiceTypeGuards = {
   isUpdateFriendRequest,
   isSendFriendRequestBody,
@@ -203,6 +218,7 @@ const chatServiceTypeGuards = {
   isSentMessage,
   isServerClientChangedOnlineStatus,
   isClientChangeBlockStatus,
+  isInviteToPlayRequestBody
 } as const;
 
 export { chatServiceTypeGuards };
