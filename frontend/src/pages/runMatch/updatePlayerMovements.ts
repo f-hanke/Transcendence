@@ -1,6 +1,5 @@
 import { GameState, Paddle } from "../../state/gameStateTypes";
-import { gameSettings, jlog } from "transcendence";
-import { deepCopyObj } from "../../utils/utils";
+import { gameSettings } from "transcendence";
 import { PongTable } from "./PongTable";
 import { GameServiceInterface } from "../../backendInterface/gameServiceInterface";
 

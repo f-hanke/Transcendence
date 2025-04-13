@@ -1,4 +1,4 @@
-import { colog, isDefined, MatchMakingTypes } from "transcendence";
+import { MatchMakingTypes } from "transcendence";
 import { MatchMakingInterface } from "../../backendInterface/matchmakingInterface";
 
 type OptnsMatchItem = {
@@ -54,8 +54,11 @@ class MatchItem extends HTMLElement {
             <div class="font-medium">Match ID: ${this.matchId}</div>
             <div class="font-medium">${this.hostName}'s Game</div>
             <div class="text-gray-300 text-sm">🟢 ${this.hostName} vs 🔴 ${
-      this.oponentName
-    }</div>
+      this.oponentName ? this.oponentName :  "Waiting for oponent!"
+            }</div>
+            <div class="font-medium">Type of Game: ${this.type}</div>
+            <div class="font-medium">InivitedPlayerId: ${this.invitedPlayerId}</div>
+            <div class="font-medium">TournamentId: ${this.tournamentId}</div>
           </div>
           ${
             this.renderJoin

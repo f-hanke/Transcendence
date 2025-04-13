@@ -1,6 +1,5 @@
 import { Page } from "./types.js";
 import { createHtmlElementFromString, deepCopyObj, navigateToSite } from "../utils/utils.ts";
-import { ChatInterface } from "../backendInterface/chatInterface.ts";
 import { isDefined } from "transcendence";
 
 class AppRouterProtected extends HTMLElement {

@@ -139,14 +139,17 @@ class GameServiceInterface {
   }
 
   static handleServerGameStarted(dataJson: GameServiceTypes.ServerGameStarted) {
+    colog(dataJson);
     window.store.gameStore.updateGameStateState("running");
   }
 
   static handleServerError(dataJson: GameServiceTypes.ServerError) {
+    colog(dataJson);
     colog("SERVER ERROR!");
   }
 
   static handleClientLeftGame(dataJson: GameServiceTypes.ClientLeftGame) {
+    colog(dataJson);
     colog("CLIENT LEFT GAME!");
   }
 

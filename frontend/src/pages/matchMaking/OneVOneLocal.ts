@@ -82,6 +82,7 @@ class OneVOneLocal extends HTMLElement {
     document
       .querySelector("#startGameBtn")
       ?.addEventListener("click", (event) => {
+        event.stopPropagation();
         this.setGameState();
         window.store.gameStore.updateGameStateState("matchmakingSuccessful");
       });
@@ -91,7 +92,7 @@ class OneVOneLocal extends HTMLElement {
     ) as HTMLInputElement;
     let debounceTimeout: number | null = null;
 
-    playerTwoInput.addEventListener("input", (event) => {
+    playerTwoInput.addEventListener("input", () => {
       if (debounceTimeout) clearTimeout(debounceTimeout);
       debounceTimeout = window.setTimeout(() => {
         window.store.oneVOneLocalStore.updatePlayer2Name(

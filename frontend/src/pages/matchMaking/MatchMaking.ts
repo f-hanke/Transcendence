@@ -25,7 +25,7 @@ class MatchMaking extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(() =>
       this.render()
     );
-    MatchMakingInterface.connect();
+    // MatchMakingInterface.connect();
   }
 
   disconnectedCallback() {
@@ -33,9 +33,11 @@ class MatchMaking extends HTMLElement {
     if (this.unsubscribeGameState) this.unsubscribeGameState();
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     MatchMakingInterface.disconnect();
+
   }
 
   render() {
+    MatchMakingInterface.connect();
     const containerStyle = `mb-6 p-4 bg-gray-700 rounded-lg`;
     const ownMatch = window.store.matchmakingStore.get().ownMatch;
     const ownMatchOpen = isDefined(ownMatch);

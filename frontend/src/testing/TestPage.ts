@@ -1,12 +1,9 @@
-import { colog, GameServiceTypes, MatchMakingTypes } from "transcendence";
+import { colog } from "transcendence";
 import {
-  buildBackendRoute,
   createHtmlElementFromString,
-  navigateToSite,
 } from "../utils/utils";
 import { GameServiceInterface } from "../backendInterface/gameServiceInterface";
 import { CentralModalListeners } from "../pages/CentralModalListeners";
-import { ChatInterface } from "../backendInterface/chatInterface";
 
 class TestPage extends HTMLElement {
   constructor() {

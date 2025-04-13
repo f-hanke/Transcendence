@@ -24,7 +24,7 @@ import "../pages/HomePage.ts";
 import "./AppRouterProtected.ts";
 import "./AppRouterUnprotected.ts";
 import { Page } from "./types.js";
-import { createHtmlElementFromString, deepCopyObj } from "../utils/utils.ts";
+import { createHtmlElementFromString } from "../utils/utils.ts";
 import { ChangeLanguageButton } from "../pages/ChangeLanguageButton.ts";
 import { ChatInterface } from "../backendInterface/chatInterface.ts";
 import { AppRouterUnprotected } from "./AppRouterUnprotected.ts";
