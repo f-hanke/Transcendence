@@ -4,10 +4,8 @@ import {
   colog,
   generateUniqueId,
   isDefined,
-  MatchMakingTypes,
 } from "transcendence";
 import { buildBackendRoute, navigateToSite } from "../utils/utils";
-import { MatchMakingInterface } from "./matchmakingInterface";
 
 class ChatInterface {
   constructor() {

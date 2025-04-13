@@ -1,4 +1,4 @@
-import { colog, isDefined } from "transcendence";
+import { isDefined } from "transcendence";
 import styles from "../../index.css?inline";
 import { AllKeyboardKeyCodes } from "../utils/keycodesTypes";
 

@@ -2,7 +2,6 @@ import { ChatServiceTypes, isDefined } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
 import { ChatUserGroups, ChatUserState } from "./chatStateTypes";
 import { StoreCallback } from "./types";
-import { exampleImage } from "../testing/exampleImage";
 
 class ChatUserStateStore {
   listeners: Set<StoreCallback>;
@@ -68,7 +67,7 @@ class ChatUserStateStore {
       pendingClientInvite: [],
       pendingRecipientInvite: [],
     };
-    this.state.forEach((userObj, userId) => {
+    this.state.forEach((userObj) => {
       const userCopy = deepCopyObj(userObj);
       if (userObj.friendRequestStatus === "pendingClientInvite")
         groups.pendingClientInvite.push(userCopy);

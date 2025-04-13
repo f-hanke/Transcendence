@@ -1,8 +1,10 @@
-import { ChatServiceTypes } from "transcendence";
-import { createHtmlElementFromString, getCurDateString } from "../../utils/utils";
+import { ChatServiceTypes, generateUniqueId } from "transcendence";
+import {
+  createHtmlElementFromString,
+  getCurDateString,
+  navigateToSite,
+} from "../../utils/utils";
 import { ChatInterface } from "../../backendInterface/chatInterface";
-
-let i = 0;
 
 class ChatCurrent extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -29,10 +31,13 @@ class ChatCurrent extends HTMLElement {
   }
 
   render() {
-    const recipientIdIsDefined = window.store.chatMessageStore.get().recipientId.length > 0;
+    const recipientIdIsDefined =
+      window.store.chatMessageStore.get().recipientId.length > 0;
     this.innerHTML = `
           <!-- Right Panel: Chat Window -->
-          <div class="h-full flex flex-col bg-gray-100 p-4 ${recipientIdIsDefined ? "" : "hidden"}">
+          <div class="h-full flex flex-col bg-gray-100 p-4 ${
+            recipientIdIsDefined ? "" : "hidden"
+          }">
             <h2 class="text-lg font-bold mb-2">Chat</h2>
 
             <!-- Messages Container -->
@@ -57,6 +62,8 @@ class ChatCurrent extends HTMLElement {
       this.createAndAppend(msgContainer, msg);
     });
 
+    msgContainer.scrollTop = msgContainer.scrollHeight;
+
     const input = this.querySelector("#chatInput") as HTMLInputElement;
     const chatSendButton = this.querySelector(
       "#chatSendButton"
@@ -75,7 +82,12 @@ class ChatCurrent extends HTMLElement {
   }
 
   createAndAppend(container: HTMLDivElement, msg: ChatServiceTypes.Message) {
-    const styleMsgOwner = window.store.userStore.get().id === msg.authorId ? "self-end border-green-300" :"self-start border-blue-300"; 
+    const styleMsgOwner =
+      window.store.userStore.get().id === msg.authorId
+        ? "self-end border-green-300"
+        : "self-start border-blue-300";
+    const id = generateUniqueId();
+    const isGameInvite = msg?.type === "sendGameInvite";
     const elem = createHtmlElementFromString(
       `
       <div class="flex flex-col ${styleMsgOwner} w-3/4 max-w-5xl mb-2">
@@ -83,10 +95,26 @@ class ChatCurrent extends HTMLElement {
         <div class="w-full bg-white border-2 rounded-lg p-2 ${styleMsgOwner} overflow-x-auto">
           ${msg.message}
         </div>
+        <button id="${id}_joinInviteBtn" class="text-white bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg">
+                  ▶ Go to Game Area
+        </button>
       </div>
       `
     ) as HTMLDivElement;
     container.appendChild(elem);
+
+    const joinBtn = document.querySelector(
+      `#${id}_joinInviteBtn`
+    ) as HTMLButtonElement;
+
+    if (isGameInvite) {
+      joinBtn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        navigateToSite("matchmaking");
+      });
+    } else {
+      joinBtn.classList.add("hidden");
+    }
   }
 }
 

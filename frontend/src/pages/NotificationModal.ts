@@ -37,7 +37,7 @@ class NotificationModal extends HTMLElement {
     let notificationNode: HTMLElement;
     this.innerHTML = "";
     const div = createHtmlElementFromString(`<div class="fixed top-0"></div>`);
-    notificationState.forEach(({id, message}, index) => {
+    notificationState.forEach(({id, message}) => {
       notificationNode = this.createNotificationNode(id, message);
       div.appendChild(notificationNode);
       //   this.innerHTML += notificationHtml;

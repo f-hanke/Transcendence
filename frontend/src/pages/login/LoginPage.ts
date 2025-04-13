@@ -1,4 +1,4 @@
-import { AuthServiceTypes, testUserConfig } from "transcendence";
+import { testUserConfig } from "transcendence";
 import { navigateToSite } from "../../utils/utils";
 import { AuthInterface } from "../../backendInterface/authInterface";
 
@@ -48,7 +48,7 @@ class LoginPage extends HTMLElement {
           </button>
 
           ${testUserConfig
-            .map((user, index) => {
+            .map((_, index) => {
               return `
             <button id="loginTestUser${index}" class="w-96 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 my-1">
               Login as test_user_${index}

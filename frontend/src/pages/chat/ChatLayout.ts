@@ -1,4 +1,3 @@
-import { ChatInterface } from "../../backendInterface/chatInterface";
 
 class ChatLayout extends HTMLElement {
   unsubscribeLanguage: null | (() => void);

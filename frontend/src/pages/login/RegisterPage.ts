@@ -1,7 +1,7 @@
 import {  colog, testUserConfig } from "transcendence";
 import { AuthInterface } from "../../backendInterface/authInterface";
 import { RegisterState } from "../../state/registerStateTypes";
-import { buildBackendRoute, navigateToSite } from "../../utils/utils";
+import { navigateToSite } from "../../utils/utils";
 
 class RegisterPage extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -82,7 +82,7 @@ class RegisterPage extends HTMLElement {
 
     let debounceTimeout: number | null = null;
 
-    inputElem.addEventListener("input", (event) => {
+    inputElem.addEventListener("input", () => {
       if (debounceTimeout) clearTimeout(debounceTimeout);
       debounceTimeout = window.setTimeout(() => {
         window.store.registerStore.updateOneField(
@@ -100,15 +100,15 @@ class RegisterPage extends HTMLElement {
 
   async handleSubmit(event: Event) {
     event.preventDefault();
-    const errorMessage = document.querySelector(
-      "#registerErrorMessage"
-    ) as HTMLParagraphElement;
+    // const errorMessage = document.querySelector(
+    //   "#registerErrorMessage"
+    // ) as HTMLParagraphElement;
     const registerPassword = document.querySelector(
       "#registerPassword"
     ) as HTMLInputElement;
-    const registerConfirmPassword = document.querySelector(
-      "#registerConfirmPassword"
-    ) as HTMLInputElement;
+    // const registerConfirmPassword = document.querySelector(
+    //   "#registerConfirmPassword"
+    // ) as HTMLInputElement;
     const details = {
       email: window.store.registerStore.get().email,
       displayName: window.store.registerStore.get().displayName,
