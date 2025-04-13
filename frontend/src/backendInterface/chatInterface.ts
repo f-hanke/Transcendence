@@ -20,7 +20,7 @@ class ChatInterface {
     const address = buildBackendRoute({
       websocketOrApi: "api",
       service: "chatService",
-      route: "/invite-to-play",
+      route: "/send-game-invite",
     });
     try {
       const response = await fetch(address, {
@@ -30,10 +30,8 @@ class ChatInterface {
         },
         body: JSON.stringify(data),
       });
-      this.createMatch(data);
       if (response.ok) {
-        // create own game
-        // change site to matchmaking
+        this.createMatch(data);
       }
       if (!response.ok) {
         throw new Error(`Couldn't send invite to play request via API!`);

@@ -98,6 +98,7 @@ declare namespace ChatServiceTypes {
   type InviteToPlayRequestBody = {
     authorId: string;
     recipientId: string;
+    date: string;
   };
 
   type ErrorResponseBody = {
@@ -205,7 +206,8 @@ function isInviteToPlayRequestBody(obj: any): obj is ChatServiceTypes.InviteToPl
     typeof obj === "object" &&
     obj !== null &&
     typeof obj.authorId === "string" &&
-    typeof obj.recipientId === "string"
+    typeof obj.recipientId === "string" &&
+    typeof obj.date === "string"
   );
 }
 

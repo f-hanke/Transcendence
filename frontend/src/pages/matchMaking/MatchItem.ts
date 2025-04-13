@@ -58,7 +58,7 @@ class MatchItem extends HTMLElement {
     }</div>
           </div>
           ${
-            this.renderJoin === "1"
+            this.renderJoin
               ? `<button class="join-match-btn bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg">
                   ▶ Join
                 </button>`
@@ -67,7 +67,7 @@ class MatchItem extends HTMLElement {
           <!-- "Waiting for oponent!" -->
           <!-- "Could be you!" -->
           ${
-            this.matchIsRunning === "1"
+            this.matchIsRunning
               ? `<div class="relative top-0 right-0 h-full bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">
                 Game Running
               </div>`
