@@ -187,11 +187,39 @@ fastify.post('/update-blocking-status', async (req, reply) => {
 	}
 });
 
+fastify.post('/send-game-invite', async (req, reply) => {
+	console.log("invite to game");
+	console.log(req.body);
+	if (!chatServiceTypeGuards.isInviteToPlayRequestBody(req.body))
+		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
+	const { authorId, recipientId, date } = req.body;
+
+	console.log(req.body);
+	try {
+		handleClientSentMessage({
+			type: "sentMessage",
+			data: {
+				authorId: authorId,
+				recipientId: recipientId,
+				message: "[Game invite] User invited you to play a game with them\n Click here to join",
+				date: date,
+				type:"sendGameInvite",
+			},
+		});
+		console.log("Game invite was successfull");
+		return [200, null] as const;
+	}
+	catch (err) {
+		console.error("Error inviting to game:", err);
+		return [500, { reason: 'Failed to send game invite' }] as const;
+	}
+});
+
 fastify.register(async function (fastify) {
 	fastify.get("/ws", { websocket: true }, async (socket, req) => {
 		registerClient(req, socket);
 
-		const testArray = await getUsers(socket);
+		const testArray = getUsers(socket);
 		console.log(testArray);
 		socket.send(JSON.stringify(testArray));
 
@@ -289,13 +317,16 @@ function updateUserOnlineStatus(userId: string, isOnline: boolean): void {
 
 function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 	console.log(dataJson);
-	const { authorId, recipientId, message, date } = dataJson.data;
+	const { authorId, recipientId, message, date, type } = dataJson.data;
 
 	try {
+		let typeData = null;
+		if (type)
+			typeData = type;
 		const stmt = db.prepare(
-			"INSERT INTO messages (authorId, recipientId, message, date) VALUES (?, ?, ?, ?)"
+			"INSERT INTO messages (authorId, recipientId, message, date, type) VALUES (?, ?, ?, ?, ?)"
 		);
-		stmt.run(authorId, recipientId, message, date);
+		stmt.run(authorId, recipientId, message, date, typeData);
 
 		console.log("Message inserted successfully");
 		updateUnreadMessages(recipientId, authorId, true);
@@ -416,7 +447,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 		return undefined;
 	}
 }
-//todo ClientInviteToPlay
+
 function	getUnreadMessage(recipientId: string, authorId: string){
 	try {
 		const result = db.prepare(`
