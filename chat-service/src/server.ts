@@ -9,6 +9,9 @@ import { parse } from 'path';
 import { get } from 'http';
 import { send } from 'process';
 import { acceptFriendRequest, removeFriendRequest, sendFriendRequest } from './friendService.js';
+import { databaseQuerys } from './databaseQuerys.js';
+import { startConsumer } from './rabbitMQ.js';
+import { start } from 'repl';
 
 const fastify = Fastify();
 fastify.register(fastifyWebsocket);
@@ -18,9 +21,19 @@ export const db = new Database('./test_users_database.db');
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket[]>();
 
+//todo
 //RabbitMQ update database
 //subscribe to updateUserDatabase
+// type updateUserDatabase {
+// 	type: "updateUserDatabase";
+// 	data: {
+// 		id: string;
+// 		username: string;
+// 	}
+// }
 //publish updateFriendDatabase
+
+startConsumer().catch(console.error);
 
 type MatchMakingFastifyRequest = FastifyRequest<{
 	Querystring: SharedTypes.ClientQueryParamMatchMaking;
@@ -87,17 +100,11 @@ fastify.post('/update-blocking-status', async (req, reply) => {
 	console.log(req.body);
 	try {
 		if (blockedStatus === false) {
-			const result = db.prepare(`
-				DELETE FROM blockings
-				WHERE (user_id1 = ? AND user_id2 = ?)
-			`).run(clientId, recipientId);
+			const result = db.prepare(databaseQuerys.deleteBlocking).run(clientId, recipientId);
 			if (result!.changes === 0)
 				return [400, { reason: 'No blockings found' }] as const;
 		} else{
-			db.prepare(`
-				INSERT INTO blockings (user_id1, user_id2)
-				VALUES (?, ?)
-			`).run(clientId, recipientId);
+			db.prepare(databaseQuerys.insertBlocking).run(clientId, recipientId);
 		}
 
 		// Notify users via WebSocket
@@ -221,9 +228,8 @@ function sendToAllClientsExcept(clientIdToExclude: string, message: ChatServiceT
 }
 
 function updateUserOnlineStatus(userId: string, isOnline: boolean): void {
-	const query = `UPDATE users SET online = ? WHERE id = ?`;
 	try {
-		const stmt = db.prepare(query);
+		const stmt = db.prepare(databaseQuerys.updateOnlineStatus);
 		const result = stmt.run(isOnline ? 1 : 0, userId);
 
 		if (result.changes === 0) {
@@ -246,10 +252,7 @@ function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 		let typeData = null;
 		if (type)
 			typeData = type;
-		const stmt = db.prepare(
-			"INSERT INTO messages (authorId, recipientId, message, date, type) VALUES (?, ?, ?, ?, ?)"
-		);
-		stmt.run(authorId, recipientId, message, date, typeData);
+		const stmt = db.prepare(databaseQuerys.insertMessage).run(authorId, recipientId, message, date, typeData);
 
 		console.log("Message inserted successfully");
 		updateUnreadMessages(recipientId, authorId, true);
@@ -262,10 +265,7 @@ function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 
 function getFriendRequestStatus(clientId: string, otherUserId: string){
 	try {
-		const result = db.prepare(`
-			SELECT user_id1, user_id2, status FROM friends
-			WHERE (user_id1 = ? AND user_id2 = ?) OR (user_id1 = ? AND user_id2 = ?)
-		`).get(clientId, otherUserId, otherUserId, clientId) as { user_id1: string; user_id2: string; status: string } | undefined;
+		const result = db.prepare(databaseQuerys.getFriendRow).get(clientId, otherUserId, otherUserId, clientId) as { user_id1: string; user_id2: string; status: string } | undefined;
 
 		if (!result)
 			return [null, false] as const;
@@ -290,10 +290,7 @@ function getFriendRequestStatus(clientId: string, otherUserId: string){
 
 function getBlockedStatus(clientId: string, recipientId: string){
 	try {
-		const result = db.prepare(`
-			SELECT user_id1, user_id2 FROM blockings
-			WHERE (user_id1 = ? AND user_id2 = ?)
-		`).get(clientId, recipientId) as { user_id1: string; user_id2: string} | undefined;
+		const result = db.prepare(databaseQuerys.getBlocking).get(clientId, recipientId) as { user_id1: string; user_id2: string} | undefined;
 
 		if (!result)
 			return false;
@@ -307,15 +304,7 @@ function getBlockedStatus(clientId: string, recipientId: string){
 function getLastMessage(clientId: string, recipientId: string)
 {
 	try {
-		const result = db.prepare(`
-			SELECT message, date
-			FROM messages
-			WHERE
-				(authorId = ? AND recipientId = ?) OR
-				(authorId = ? AND recipientId = ?)
-			ORDER BY date DESC
-			LIMIT 1
-		`).get(clientId, recipientId, recipientId, clientId) as { message: string, date: string} | undefined;
+		const result = db.prepare(databaseQuerys.getLastMessage).get(clientId, recipientId, recipientId, clientId) as { message: string, date: string} | undefined;
 
 		if (!result)
 			return "start a conversation";
@@ -335,7 +324,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 	const users: ChatServiceTypes.ChatUser[] = [];
 
 	try {
-		const stmt = db.prepare("SELECT username, id, online FROM users");
+		const stmt = db.prepare(databaseQuerys.getUser);
 		const rows = stmt.all() as { id: string; username: string; online: boolean; }[];
 
 		rows.forEach((row) => {
@@ -344,7 +333,6 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 			const [friendRequestStatus, friendStatus] = getFriendRequestStatus(clientId, row.id);
 			const blocked = getBlockedStatus(clientId, row.id);
 			const lastMessage = getLastMessage(clientId, row.id);
-			// const lastMessage = "start a new conversation"
 			users.push({
 				blocked: blocked,
 				friend: friendStatus,
@@ -373,12 +361,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 
 function	getUnreadMessage(recipientId: string, authorId: string){
 	try {
-		const result = db.prepare(`
-			SELECT unread
-			FROM chat_status
-			WHERE (user_id = ? AND chat_partner_id = ?)
-		`).get(authorId, recipientId) as { unread: boolean} | undefined;
-
+		const result = db.prepare(databaseQuerys.getUnreadMessage).get(authorId, recipientId) as { unread: boolean} | undefined;
 		if (!result)
 			return false;
 		return result.unread;
@@ -390,40 +373,19 @@ function	getUnreadMessage(recipientId: string, authorId: string){
 
 function updateUnreadMessages(recipientId: string, authorId: string, unreadMessages: boolean): void {
 	try {
-		if (unreadMessages === true){
-			db.prepare(`
-				INSERT INTO chat_status (user_id, chat_partner_id, unread)
-				VALUES (?, ?, 1)
-				ON CONFLICT(user_id, chat_partner_id) DO UPDATE SET unread = 1
-			`).run(recipientId, authorId);
-		}else{
-			db.prepare(`
-				UPDATE chat_status
-				SET unread = 0
-				WHERE user_id = ? AND chat_partner_id = ?
-			  `).run(authorId, recipientId);
-		}
+		db.prepare(databaseQuerys.updateUnreadMessage).run(recipientId, authorId, unreadMessages ? 1 : 0, unreadMessages ? 1 : 0);
 	} catch (err) {
 		console.error("DB error updating unread messages:", err);
 	}
 }
 
 function getChatHistory(authorId: string, recipientId: string): ChatServiceTypes.Message[] {
-	const query = `
-		SELECT authorId, recipientId, message, date, type
-		FROM messages
-		WHERE
-			(authorId = ? AND recipientId = ?) OR
-			(authorId = ? AND recipientId = ?)
-		ORDER BY date ASC
-	`;
-
 	try {
-		const stmt = db.prepare(query);
+		const stmt = db.prepare(databaseQuerys.getChatHistory);
 		const rows = stmt.all(authorId, recipientId, recipientId, authorId) as ChatServiceTypes.Message[];
 
 		console.log(`Chat history successfully fetched authorId: ${authorId} recipientId: ${recipientId}`);
-		updateUnreadMessages(recipientId, authorId, false);
+		updateUnreadMessages(authorId, recipientId, false);
 		return rows;
 	} catch (err) {
 		console.error("DB error fetching chat history:", err);
