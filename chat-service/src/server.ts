@@ -431,7 +431,7 @@ function getChatHistory(authorId: string, recipientId: string): ChatServiceTypes
 	}
 }
 
-fastify.listen({ port: transNetworkSettings.chatService.port, host: "0.0.0.0" }, (err) => {
+fastify.listen({ port: transNetworkSettings.chatService.port, host: transNetworkSettings.chatService.ip }, (err) => {
 	if (err) {
 		console.log("Server Error!");
 		fastify.log.error(err);
