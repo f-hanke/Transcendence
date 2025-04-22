@@ -1,4 +1,3 @@
-import { colog } from "transcendence";
 
 class ToggleAiButton extends HTMLElement {
   private button: HTMLButtonElement;

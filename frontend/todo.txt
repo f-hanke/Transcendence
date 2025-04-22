@@ -18,3 +18,16 @@ Chat requirements:
 - oponent ip etc. doesn't get send correctly when creating remote game
 - generally set up remote game, correctly update player paddle positions etc.
 - use values from game settings for paddle x position
+
+
+- continue blocked user list
+- do friends request list
+- notification on message receival
+- integrate milos work
+- add tab for pending friend requests
+- login, logout, register, refresh
+
+
+- component for friend invites
+- component for blocked to unblock
+- integrate login logout refresh

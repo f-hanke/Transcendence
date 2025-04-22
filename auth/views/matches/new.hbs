@@ -1,0 +1,41 @@
+<h1 class="page-title">Record Match</h1>
+
+<div class="section">
+  {{#if errors.general}}
+    <div class="alert alert-error">
+      {{errors.general}}
+    </div>
+  {{/if}}
+  
+  <form action="/matches/record" method="POST">
+    <div class="form-group">
+      <label for="opponent_id" class="form-label">Opponent</label>
+      <select id="opponent_id" name="opponent_id" class="form-input" required>
+        <option value="">Select Opponent</option>
+        {{#each opponents}}
+          <option value="{{this.id}}" {{#if (eq this.id ../selectedOpponent)}}selected{{/if}}>{{this.display_name}}</option>
+        {{/each}}
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="user_score" class="form-label">Your Score</label>
+      <input type="number" id="user_score" name="user_score" class="form-input" min="0" max="999" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="opponent_score" class="form-label">Opponent Score</label>
+      <input type="number" id="opponent_score" name="opponent_score" class="form-input" min="0" max="999" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="notes" class="form-label">Match Notes (Optional)</label>
+      <textarea id="notes" name="notes" class="form-textarea"></textarea>
+    </div>
+    
+    <div class="form-group">
+      <button type="submit" class="form-button">Record Match</button>
+      <a href="/users/matches" class="form-button" style="background-color: #ccc; color: #333; margin-left: 10px; text-decoration: none;">Cancel</a>
+    </div>
+  </form>
+</div>

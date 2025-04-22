@@ -2,6 +2,7 @@ import { ChatServiceTypes } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
 import { ChatMessageState } from "./chatStateTypes";
 import { StoreCallback } from "./types";
+import { ChatInterface } from "../backendInterface/chatInterface";
 
 class ChatMessageStateStore {
   listeners: Set<StoreCallback>;
@@ -17,25 +18,34 @@ class ChatMessageStateStore {
       recipientId: "",
     };
 
-    for (let i = 0; i < 10; i++) {
-      if (i < 5) {
-        this.state.messages.push({
-          authorId: "USER_ID",
-          date: "25.12.2025",
-          message: "TEST MESSAGE COMING FROM USER",
-          recipientId: String(i),
-        });
-      } else {
-        this.state.messages.push({
-          authorId: String(i),
-          date: "25.12.2025",
-          message: "TEST MESSAGE DIRECTED AT USER",
-          recipientId: "USER_ID",
-        });
-      }
-    }
-
+    // for (let i = 0; i < 20; i++) {
+    //   if (i % 2 == 0) {
+    //     this.state.messages.push({
+    //       authorId: "USER_ID",
+    //       date: Date.now(),
+    //       message: "TEST MESSAGE COMING FROM USER",
+    //       recipientId: String(i),
+    //     });
+    //   } else {
+    //     this.state.messages.push({
+    //       authorId: String(i),
+    //       date: Date.now(),
+    //       message: "TEST MESSAGE DIRECTED AT USER",
+    //       recipientId: "USER_ID",
+    //     });
+    //   }
+    // }
     return this.state;
+  }
+
+  reset() {
+    const firstUnblocked = window.store.chatUserStore.getFirstUnblocked();
+    if (firstUnblocked) {
+      ChatInterface.requestChatHistory(firstUnblocked);
+    } else {
+      this.init();
+    }
+    this.updateListenersOnChange();
   }
 
   subscribe(callback: StoreCallback): () => void {
@@ -54,9 +64,11 @@ class ChatMessageStateStore {
     this.listeners.forEach((callback) => callback());
   }
 
-  addMessage(newMessage: ChatServiceTypes.Message) {
-    this.state.messages.push(newMessage);
-    this.updateListenersOnChange();
+  addMessage(recipientId: string, newMessage: ChatServiceTypes.Message) {
+    if (this.state.recipientId === recipientId) {
+      this.state.messages.push(deepCopyObj(newMessage));
+      this.updateListenersOnChange();
+    }
   }
 
   updateListenersOnChange() {

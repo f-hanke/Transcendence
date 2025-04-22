@@ -1,11 +1,11 @@
 import {
+  chatServiceTypeGuards,
+  ChatServiceTypes,
   colog,
+  generateUniqueId,
   isDefined,
-  jlog,
-  matchmakingTypeGuards,
-  MatchMakingTypes,
 } from "transcendence";
-import { buildBackendRoute } from "../utils/utils";
+import { buildBackendRoute, navigateToSite } from "../utils/utils";
 
 class ChatInterface {
   constructor() {
@@ -14,14 +14,158 @@ class ChatInterface {
 
   static websocket: WebSocket | null = null;
 
+  static async inviteToPlay(data: ChatServiceTypes.InviteToPlayRequestBody) {
+    const address = buildBackendRoute({
+      websocketOrApi: "api",
+      service: "chatService",
+      route: "/send-game-invite",
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (response.ok) {
+        this.createMatch(data);
+      }
+      if (!response.ok) {
+        throw new Error(`Couldn't send invite to play request via API!`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
+  static createMatch(data: ChatServiceTypes.InviteToPlayRequestBody) {
+    window.store.matchmakingStore.createGame({
+      hostId: data.authorId,
+      invitedPlayerId: data.recipientId,
+      oponentId: null,
+      matchId: generateUniqueId(),
+      tournamentId: null,
+      type: "private",
+      needsServerInitiation: true,
+    });
+    navigateToSite("matchmaking");
+  }
+
+  static async sendUpdateBlockStatus(
+    data: ChatServiceTypes.ClientChangeBlockStatus
+  ) {
+    const address = buildBackendRoute({
+      websocketOrApi: "api",
+      service: "chatService",
+      route: "/update-blocking-status",
+    });
+    colog("data");
+    colog(data);
+    colog(address);
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      colog("!!!!!!");
+      colog(response);
+      if (response.ok) {
+        window.store.chatUserStore.updateChangeUserBlockedStatus(
+          data.recipientId,
+          data.blockedStatus
+        );
+        window.store.chatMessageStore.reset();
+      }
+      if (!response.ok) {
+        throw new Error(`Couldn't send friend request via API!`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
+  static async sendFriendRequest(data: ChatServiceTypes.SendFriendRequestBody) {
+    const address = buildBackendRoute({
+      websocketOrApi: "api",
+      service: "chatService",
+      route: "/update-friend-request",
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (response.ok) {
+        window.store.chatUserStore.updateChangeUserFriendStatus(
+          data.recipientId,
+          data.type === "send" ? "newAuthorUpdateFromFrontend" : data.type
+        );
+      }
+      if (!response.ok) {
+        throw new Error(`Couldn't send friend request via API!`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
+  static async requestChatHistory(recipientId: string) {
+    colog("REQUEST CHAT HISTORY!");
+    const address = buildBackendRoute({
+      websocketOrApi: "api",
+      service: "chatService",
+      route: "/chat-history/",
+      queryData: {
+        recipientId: recipientId,
+        clientId: window.store.userStore.get().id,
+      },
+    });
+    colog(address);
+    try {
+      const response = await fetch(address, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      colog(response);
+      const responseJson = await response.json();
+      colog(responseJson);
+      if (chatServiceTypeGuards.isServerSendChatHistory(responseJson)) {
+        window.store.chatMessageStore.update({
+          recipientId: recipientId,
+          messages: responseJson.data,
+        });
+      } else {
+        throw new Error(`Server Send Chat History Wrong Data Type received!`);
+      }
+      window.store;
+      if (!response.ok) {
+        colog("fetchin 2");
+        throw new Error(`Couldn't create match on Server via API!`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
   static connect(): Promise<void> {
     if (!isDefined(this.websocket)) {
+      colog("connecting to chat");
       const address = buildBackendRoute({
         websocketOrApi: "ws",
         service: "chatService",
-        route: "",
+        route: "/ws",
         addClientIdAsQueryParam: true,
       });
+      colog(address);
       return new Promise((resolve, reject) => {
         this.websocket = new WebSocket(address);
         this.websocket.onerror = (error) => {
@@ -48,74 +192,113 @@ class ChatInterface {
 
   static disconnect() {
     if (isDefined(this.websocket)) {
+      colog("disconnecting from chat");
       this.websocket.close();
       this.websocket = null;
     }
   }
 
   static handleMessage(event: MessageEvent) {
+    colog("Hi!");
     const dataJson = JSON.parse(event.data);
-    if (matchmakingTypeGuards.isServerUpdateGames(dataJson)) {
-      this.handleServerUpdatedGames(dataJson);
-    } else if (matchmakingTypeGuards.isClientDeleteGame(dataJson)) {
-      this.handleServerDeleteGame(dataJson);
-    } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
-      this.handleServerStartGame(dataJson);
-    } else if (matchmakingTypeGuards.isServerUpdateOneGame(dataJson)) {
-      this.handleServerUpdateOneGame(dataJson);
-    } else if (matchmakingTypeGuards.isClientCreateGame(dataJson)) {
-      this.handleServerCreateGame(dataJson);
-    } else if (matchmakingTypeGuards.isClientLeaveGame(dataJson)) {
-      this.handleServerLeaveGame(dataJson);
-    } else {
-      jlog(dataJson);
-      throw new Error(
-        "Client received unknown message from matchmaking server!"
-      );
+    colog(dataJson);
+    if (chatServiceTypeGuards.isServerSendUserList(dataJson)) {
+      this.handleServerSendUserList(dataJson);
+    } else if (chatServiceTypeGuards.isSentMessage(dataJson)) {
+      this.handleServerSentMessage(dataJson);
+    } else if (
+      chatServiceTypeGuards.isServerClientChangedOnlineStatus(dataJson)
+    ) {
+      this.handleServerClientChangedOnlineStatus(dataJson);
+    } else if (chatServiceTypeGuards.isUpdateFriendRequest(dataJson)) {
+      this.handleServerUpdateFriendRequest(dataJson);
+    }
+    // } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
+    //   this.handleServerStartGame(dataJson);
+    // } else if (matchmakingTypeGuards.isServerUpdateOneGame(dataJson)) {
+    //   this.handleServerUpdateOneGame(dataJson);
+    // } else if (matchmakingTypeGuards.isClientCreateGame(dataJson)) {
+    //   this.handleServerCreateGame(dataJson);
+    // } else if (matchmakingTypeGuards.isClientLeaveGame(dataJson)) {
+    //   this.handleServerLeaveGame(dataJson);
+    else {
+      colog("UNKNOWN DATA");
+      // throw new Error(
+      //   "Client received unknown message from matchmaking server!"
+      // );
     }
   }
 
-  static handleServerUpdatedGames(
-    dataJson: MatchMakingTypes.ServerUpdateGames
+  static handleServerUpdateFriendRequest(
+    dataJson: ChatServiceTypes.UpdateFriendRequest
   ) {
-    window.store.matchmakingStore.updateFromAllMatches(dataJson.data);
-  }
-
-  static handleServerDeleteGame(dataJson: MatchMakingTypes.ClientDeleteGame) {
-    window.store.matchmakingStore.deleteGame(dataJson.data);
-  }
-
-  static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    const isSelfHosted = dataJson.data.hostId === window.store.userStore.get().id;
-    window.store.gameStore.updateMatchMakingSuccessful({
-      hostId: dataJson.data.hostId,
-      oponentId: dataJson.data.oponentId,
-      selfHosted: isSelfHosted,
-      matchId: dataJson.data.matchId,
-      playerLeftPaddleId: dataJson.data.hostId,
-      playerRightPaddleId: dataJson.data.oponentId,
+    window.store.notificationStore.updateAddNotification({
+      id: generateUniqueId(),
+      message: `UPDATE FRIEND STATUS ${dataJson.recipientId} ${dataJson.type} `,
     });
-    window.store.gameStore.updateGameStateTypeOfGame("remote");
-    window.store.gameStore.updateGameStateState("matchmakingSuccessful");
+    colog("RECEIVED UPDATE FRIEND REQUEST FROM SERVER!");
+    window.store.chatUserStore.updateChangeUserFriendStatus(
+      dataJson.recipientId,
+      dataJson.type
+    );
   }
 
-  static handleServerUpdateOneGame(
-    dataJson: MatchMakingTypes.ServerUpdateOneGame
+  static handleServerClientChangedOnlineStatus(
+    dataJson: ChatServiceTypes.ServerClientChangedOnlineStatus
   ) {
-    window.store.matchmakingStore.updateOneGame(dataJson.data);
+    colog("RECEIVED CHANGE ONLINE STATUS MESSAGE!");
+    window.store.chatUserStore.updateChangeUserOnlineStatus(
+      dataJson.data.recipientId,
+      dataJson.data.onlineStatus
+    );
   }
 
-  static handleServerCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
-    window.store.matchmakingStore.createGame(dataJson.data);
-  }
-
-  static handleServerLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
-    window.store.matchmakingStore.deleteGame(dataJson.data);
-  }
-
-  static sendMessageToServer(
-    message: MatchMakingTypes.AllMatchMakingMessageTypes
+  static handleServerSendUserList(
+    dataJson: ChatServiceTypes.ServerSendUserList
   ) {
+    colog("IPDATING USER LIST");
+    colog("12345");
+    colog(dataJson.data.chatUsers);
+    window.store.chatUserStore.updateUserListFromArray(dataJson.data.chatUsers);
+    // this.requestChatHistory(dataJson.data.chatUsers[0].recipientId);
+  }
+
+  static handleServerSentMessage(dataJson: ChatServiceTypes.SentMessage) {
+    const isOwnMessage =
+      window.store.userStore.get().id === dataJson.data.authorId;
+    if (isOwnMessage) this.handleServerSentOwnMessage(dataJson);
+    else this.handleServerSentOthersMessage(dataJson);
+  }
+
+  static handleServerSentOwnMessage(dataJson: ChatServiceTypes.SentMessage) {
+    colog("SENT OWN MESSAGE");
+    colog(dataJson);
+    window.store.chatUserStore.updateChangeUserLastMessage(
+      dataJson.data.recipientId,
+      dataJson.data.message
+    );
+    window.store.chatMessageStore.addMessage(
+      dataJson.data.recipientId,
+      dataJson.data
+    );
+  }
+
+  static handleServerSentOthersMessage(dataJson: ChatServiceTypes.SentMessage) {
+    const authorId = dataJson.data.authorId;
+    window.store.chatUserStore.updateChangeUserLastMessageAndUnreadMessageStatus(
+      authorId,
+      dataJson.data.message
+    );
+    if (!window.store.chatUserStore.getIsBlocked(authorId)) {
+      window.store.notificationStore.updateAddNotification({
+        id: generateUniqueId(),
+        message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
+      });
+    }
+    window.store.chatMessageStore.addMessage(authorId, dataJson.data);
+  }
+
+  static sendMessageToServer(message: ChatServiceTypes.AllChatMessageTypes) {
     console.log(this.websocket);
     if (
       isDefined(this.websocket) &&

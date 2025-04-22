@@ -35,7 +35,7 @@ class ChangeLanguageButton extends HTMLElement {
       return button;
     }
   
-    private toggleDropdown(event: Event) {
+    private toggleDropdown() {
       if (this.dropdown) {
         this.dropdown.classList.toggle('hidden');
       } else {

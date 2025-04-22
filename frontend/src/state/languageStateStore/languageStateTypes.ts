@@ -12,7 +12,9 @@ type LanguageState = {
     match: string;
     matchMaking: string;
     createMatch: string;
-    availableMatches: string;
+    publicMatches: string;
+    privateMatches: string;
+    tournamentMatches: string;
     yourOwnMatchHeading: string;
     closeMatchButton: string;
     join: string;

@@ -1,5 +1,6 @@
 import {
   colog,
+  generateUniqueId,
   isDefined,
   jlog,
   matchmakingTypeGuards,
@@ -30,6 +31,20 @@ class MatchMakingInterface {
         };
 
         this.websocket.onopen = () => {
+          const ownMatch = window.store.matchmakingStore.get().ownMatch;
+          if (isDefined(ownMatch) && ownMatch.needsServerInitiation) {
+            this.sendMessageToServer({
+              type: "createGame",
+              data: {
+                matchId: generateUniqueId(),
+                hostId: ownMatch.hostId,
+                oponentId: ownMatch.oponentId,
+                invitedPlayerId: ownMatch.invitedPlayerId,
+                tournamentId: ownMatch.tournamentId,
+                type: ownMatch.type,
+              },
+            });
+          }
           console.log("WebSocket connected successfully!");
           resolve();
         };
@@ -96,7 +111,8 @@ class MatchMakingInterface {
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    const isSelfHosted = dataJson.data.hostId === window.store.userStore.get().id;
+    const isSelfHosted =
+      dataJson.data.hostId === window.store.userStore.get().id;
     window.store.gameStore.updateMatchMakingSuccessful({
       hostId: dataJson.data.hostId,
       oponentId: dataJson.data.oponentId,

@@ -6,6 +6,8 @@ type Page =
   | "manage-match"
   | "login-page"
   | "register-page"
+  | "home-page"
+  | "chat-layout"
   ;
 
 export type { Page };

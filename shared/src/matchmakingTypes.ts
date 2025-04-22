@@ -3,6 +3,10 @@ declare namespace MatchMakingTypes {
     matchId: string;
     hostId: string;
     oponentId: string | null;
+    type: "private" | "public" | "tournament";
+    invitedPlayerId: null | string;
+    tournamentId: null | string;
+    needsServerInitiation?: boolean;
   };
 
   type BasicGameFull = Omit<BasicGame, "oponentId"> & { oponentId: string };
@@ -58,14 +62,16 @@ declare namespace MatchMakingTypes {
   };
 }
 
-function isBasicGame(value: unknown): value is MatchMakingTypes.BasicGame {
+function isBasicGame(obj: any): obj is MatchMakingTypes.BasicGame {
   return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as any).matchId === "string" &&
-    typeof (value as any).hostId === "string" &&
-    (typeof (value as any).oponentId === "string" ||
-      (value as any).oponentId === null)
+    typeof obj === "object" &&
+    obj !== null &&
+    typeof obj.matchId === "string" &&
+    typeof obj.hostId === "string" &&
+    (typeof obj.oponentId === "string" || obj.oponentId === null) &&
+    ["private", "public", "tournament"].includes(obj.type) &&
+    (typeof obj.invitedPlayerId === "string" || obj.invitedPlayerId === null) &&
+    (typeof obj.tournamentId === "string" || obj.tournamentId === null)
   );
 }
 

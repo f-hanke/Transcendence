@@ -1,24 +1,36 @@
-import { colog, isDefined } from "transcendence";
+import { MatchMakingTypes } from "transcendence";
 import { MatchMakingInterface } from "../../backendInterface/matchmakingInterface";
 
+type OptnsMatchItem = {
+  renderJoin: boolean;
+  matchIsRunning: boolean;
+};
+
 class MatchItem extends HTMLElement {
-  hostId: string | null;
-  hostName: string | null;
+  hostId: string;
+  hostName: string;
   oponentId: string | null;
   oponentName: string | null;
-  matchId: string | null;
-  renderJoin: "0" | "1" | null;
-  matchIsRunning: "0" | "1" | null;
-
+  matchId: string;
+  renderJoin: boolean;
+  matchIsRunning: boolean;
+  type: MatchMakingTypes.BasicGame["type"];
+  invitedPlayerId: null | string;
+  invitedPlayerName: null | string;
+  tournamentId: string | null;
   constructor() {
     super();
-    this.hostId = null;
-    this.hostName = null;
-    this.oponentId = null;
-    this.oponentName = null;
-    this.matchId = null;
-    this.renderJoin = null;
-    this.matchIsRunning = null;
+    this.hostId = "";
+    this.hostName = "";
+    this.oponentId = "";
+    this.oponentName = "";
+    this.matchId = "";
+    this.renderJoin = false;
+    this.matchIsRunning = false;
+    this.type = "public";
+    this.invitedPlayerId = "";
+    this.invitedPlayerName = "";
+    this.tournamentId = null;
   }
 
   static get observedAttributes() {
@@ -33,49 +45,7 @@ class MatchItem extends HTMLElement {
     ];
   }
 
-  connectedCallback() {
-    this.updateAttributes();
-    // this.logAllAttributes("ON CONNECTED!");
-    this.render();
-  }
-
-  updateAttributes() {
-    this.hostId = this.getAttribute("hostId");
-    this.hostName = this.getAttribute("hostName");
-    this.oponentId = this.getAttribute("oponentId");
-    this.oponentName = this.getAttribute("oponentName");
-    this.matchId = this.getAttribute("matchId");
-    this.renderJoin = this.getAttribute("renderJoin") as "0" | "1" | null;
-    this.matchIsRunning = this.getAttribute("matchIsRunning") as "0" | "1" | null;
-  }
-
-  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
-    if (name === "hostId") this[name] = newValue;
-    if (name === "hostName") this[name] = newValue;
-    if (name === "oponentId") this[name] = newValue;
-    if (name === "oponentName") this[name] = newValue;
-    if (name === "matchId") this[name] = newValue;
-    if (name === "renderJoin") this[name] = newValue as "1" | "0";
-    if (name === "matchIsRunning") this[name] = newValue as "1" | "0";
-    if (
-      isDefined("hostId") &&
-      isDefined("hostName") &&
-      isDefined("oponentId") &&
-      isDefined("oponentName") &&
-      isDefined("matchId") &&
-      isDefined("matchIsRunning") &&
-      isDefined("renderJoin")
-    )
-      this.render();
-  }
-
-  // logAllAttributes(msg?: string) {
-  //   msg ? colog(msg) : "";
-  //   colog(`host: ${this.host}`);
-  //   colog(`oponent: ${this.oponent}`);
-  //   colog(`matchId: ${this.matchId}`);
-  //   colog(`renderJoin: ${this.renderJoin}`);
-  // }
+  connectedCallback() {}
 
   render() {
     this.innerHTML = `
@@ -84,22 +54,27 @@ class MatchItem extends HTMLElement {
             <div class="font-medium">Match ID: ${this.matchId}</div>
             <div class="font-medium">${this.hostName}'s Game</div>
             <div class="text-gray-300 text-sm">🟢 ${this.hostName} vs 🔴 ${
-      this.oponentName
-    }</div>
+      this.oponentName ? this.oponentName :  "Waiting for oponent!"
+            }</div>
+            <div class="font-medium">Type of Game: ${this.type}</div>
+            <div class="font-medium">InivitedPlayerId: ${this.invitedPlayerId}</div>
+            <div class="font-medium">TournamentId: ${this.tournamentId}</div>
           </div>
           ${
-            this.renderJoin === "1"
+            this.renderJoin
               ? `<button class="join-match-btn bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg">
                   ▶ Join
                 </button>`
               : ""
           }
+          <!-- "Waiting for oponent!" -->
+          <!-- "Could be you!" -->
           ${
-            this.matchIsRunning === "1"
-            ? `<div class="relative top-0 right-0 h-full bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">
+            this.matchIsRunning
+              ? `<div class="relative top-0 right-0 h-full bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">
                 Game Running
               </div>`
-            : ""
+              : ""
           }
         </li>
       `;
@@ -107,6 +82,24 @@ class MatchItem extends HTMLElement {
     if (joinButton) {
       joinButton.addEventListener("click", () => this.onJoinClick());
     }
+  }
+
+  setData(
+    data: MatchMakingTypes.BasicGame,
+    optns: OptnsMatchItem
+  ) {
+    this.hostId = data.hostId;
+    this.hostName = data.hostId;
+    this.oponentId = data.oponentId;
+    this.oponentName = data.oponentId;
+    this.matchId = data.matchId;
+    this.renderJoin = optns.renderJoin;
+    this.matchIsRunning = optns.matchIsRunning;
+    this.type = data.type;
+    this.invitedPlayerId = data.invitedPlayerId;
+    this.invitedPlayerName = data.invitedPlayerId;
+    this.tournamentId = data.tournamentId;
+    this.render();
   }
 
   onJoinClick() {
@@ -117,9 +110,20 @@ class MatchItem extends HTMLElement {
         matchId: this.matchId as string,
         hostId: this.hostId as string,
         oponentId: window.store.userStore.get().id,
+        invitedPlayerId: null,
+        tournamentId: null,
+        type: "public",
       },
     });
   }
 }
 
 customElements.define("match-item", MatchItem);
+
+export {
+  MatchItem
+}
+
+export type {
+  OptnsMatchItem
+}

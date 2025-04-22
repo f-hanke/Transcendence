@@ -94,8 +94,6 @@ class GameServiceInterface {
 
   static handleMessage(event: MessageEvent) {
     const dataJson = JSON.parse(event.data);
-    // colog("CLIENT RECEIVED THE FOLLOWING MESSAGE");
-    // jlog(dataJson);
     if (gameServiceTypeGuards.isServerUpdateGameState(dataJson)) {
       this.correctUpdateHandlingFunction(dataJson);
     } else if (gameServiceTypeGuards.isServerGameIsOver(dataJson)) {
@@ -141,14 +139,17 @@ class GameServiceInterface {
   }
 
   static handleServerGameStarted(dataJson: GameServiceTypes.ServerGameStarted) {
+    colog(dataJson);
     window.store.gameStore.updateGameStateState("running");
   }
 
   static handleServerError(dataJson: GameServiceTypes.ServerError) {
+    colog(dataJson);
     colog("SERVER ERROR!");
   }
 
   static handleClientLeftGame(dataJson: GameServiceTypes.ClientLeftGame) {
+    colog(dataJson);
     colog("CLIENT LEFT GAME!");
   }
 

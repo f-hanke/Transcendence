@@ -53,6 +53,10 @@ function buildBackendRoute(optn: {
       ip = transNetworkSettings.chatService.ip;
       port = transNetworkSettings.chatService.port;
       break;
+    case "authService":
+      ip = transNetworkSettings.authService.ip;
+      port = transNetworkSettings.authService.port;
+      break;
   }
   if (optn.addClientIdAsQueryParam === true) {
     const clientId = window.store.userStore.get().id;
@@ -78,6 +82,10 @@ function padNumberToString(
   return `${num}`.padStart(padToLength, padWith);
 }
 
+function getCurDateString() {
+  return new Date(Date.now()).toISOString();
+}
+
 export {
   deepCopyObj,
   createHtmlElementFromString,
@@ -87,4 +95,5 @@ export {
   brepo,
   roundIntToString,
   padNumberToString,
+  getCurDateString
 };

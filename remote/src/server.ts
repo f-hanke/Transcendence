@@ -22,9 +22,6 @@ let games: MatchMakingTypes.BasicGame[] = [];
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket>();
 
-// localhost:3000/ws?clientId=dklglsjkdg
-
-
 fastify.register(async function (fastify) {
   fastify.get("/", { websocket: true }, (socket, req) => {
     registerClient(req as MatchMakingFastifyRequest, socket);
@@ -186,11 +183,11 @@ function removeGameFromServerGameList(game: MatchMakingTypes.BasicGame)
   games = games.filter((g) => g.matchId !== game.matchId);
 }
 
-fastify.listen({ port: transNetworkSettings.matchmakingService.port, host: "0.0.0.0" }, (err) => {
+fastify.listen({ port: transNetworkSettings.matchmakingService.port, host: transNetworkSettings.matchmakingService.ip }, (err) => {
   if (err) {
     console.log("Server Error!");
     fastify.log.error(err);
     process.exit(1);
   }
-  console.log("Server listening on http://localhost:3000/");
+  console.log(`Server listening on http://${transNetworkSettings.matchmakingService.ip}:${transNetworkSettings.matchmakingService.port}/`);
 });

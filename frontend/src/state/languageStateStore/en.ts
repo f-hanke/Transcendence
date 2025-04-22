@@ -11,7 +11,9 @@ const en: LanguageState = {
     logout: "Logout",
   },
   matchMaking: {
-    availableMatches: "Available Matches of other",
+    publicMatches: "public Matches",
+    privateMatches: "private Matches",
+    tournamentMatches: "tournament Matches",
     yourOwnMatchHeading: "Your own match",
     createMatch: "Create Match",
     closeMatchButton: "Close Match",

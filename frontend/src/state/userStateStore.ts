@@ -12,7 +12,7 @@ class UserStateStore {
   }
 
   init() {
-    const test_user_id = `userid_${sessionStorage.getItem("transTestId")}`;
+    const test_user_id = `${sessionStorage.getItem("transTestId")}`;
     this.state = {
       image: exampleImage,
       displayName: "TEST_USER",
@@ -48,7 +48,7 @@ class UserStateStore {
   }
 
   updateUserSettings(
-    updatedState: Partial<Pick<UserState, "image" | "displayName" | "email">>
+    updatedState: Partial<Pick<UserState, "image" | "displayName" | "email" | "id">>
   ) {
     this.state = deepCopyObj({ ...this.state, ...updatedState });
     this.listeners.forEach((callback) => callback());

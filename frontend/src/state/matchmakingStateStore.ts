@@ -1,6 +1,9 @@
 import { isDefined, jlog, MatchMakingTypes } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
-import { MatchmakingState } from "./matchmakingStateTypes";
+import {
+  MatchMakingMatchGroups,
+  MatchmakingState,
+} from "./matchmakingStateTypes";
 import { StoreCallback } from "./types";
 
 class MatchmakingStateStore {
@@ -30,16 +33,27 @@ class MatchmakingStateStore {
     };
   }
 
-  // addMatch(newMatch: MatchMakingTypes.BasicGame) {
-  //   if (
-  //     this.state.otherMatches.filter(
-  //       (elem) => elem.matchId === newMatch.matchId
-  //     ).length == 0
-  //   ) {
-  //     this.state.otherMatches.push(deepCopyObj(newMatch));
-  //   }
-  //   this.updateListenersOnChange();
-  // }
+  getMatchGroups(): MatchMakingMatchGroups {
+    const groups: MatchMakingMatchGroups = {
+      ownMatch: this.state.ownMatch,
+      public: [],
+      private: [],
+      tournament: [],
+    };
+    this.state.otherMatches.forEach((matchObj) => {
+      const curUserIsInvited =
+        matchObj.invitedPlayerId === window.store.userStore.get().id;
+      const matchCopy = deepCopyObj(matchObj);
+      if (matchObj.type === "public") groups.public.push(matchCopy);
+      else if (matchObj.type === "private" && curUserIsInvited)
+        groups.private.push(matchCopy);
+      else if (matchObj.type === "tournament" && curUserIsInvited)
+        groups.tournament.push(matchCopy);
+      else if (matchObj.type === "private" && !curUserIsInvited) {
+      } else throw new Error("User not assigned to any matchmaking-group!");
+    });
+    return groups;
+  }
 
   createGame(match: MatchMakingTypes.BasicGame) {
     if (match.hostId === window.store.userStore.get().id)

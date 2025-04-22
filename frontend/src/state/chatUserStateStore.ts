@@ -1,8 +1,7 @@
-import { isDefined } from "transcendence";
+import { ChatServiceTypes, isDefined } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
 import { ChatUserGroups, ChatUserState } from "./chatStateTypes";
 import { StoreCallback } from "./types";
-import { exampleImage } from "../testing/exampleImage";
 
 class ChatUserStateStore {
   listeners: Set<StoreCallback>;
@@ -15,19 +14,19 @@ class ChatUserStateStore {
   init() {
     this.state = new Map() as ChatUserState;
 
-    for (let i = 0; i < 20; i++) {
-      this.state.set(`user_${i}`, {
-        blocked: Math.random() < 0.5,
-        friend: Math.random() < 0.5,
-        online: Math.random() < 0.5,
-        unreadMessages: Math.random() < 0.5,
-        displayName: "DisplayName",
-        recipientId: String(i),
-        email: "test@email.com",
-        image: exampleImage,
-        lastMessage: "This was the last message!",
-      });
-    }
+    // for (let i = 0; i < 20; i++) {
+    //   this.state.set(`user_${i}`, {
+    //     blocked: Math.random() < 0.5,
+    //     friend: Math.random() < 0.5,
+    //     online: Math.random() < 0.5,
+    //     unreadMessages: Math.random() < 0.5,
+    //     displayName: "DisplayName",
+    //     recipientId: String(i),
+    //     email: "test@email.com",
+    //     image: exampleImage,
+    //     lastMessage: "This was the last message!",
+    //   });
+    // }
 
     return this.state;
   }
@@ -43,15 +42,39 @@ class ChatUserStateStore {
     return this.state;
   }
 
+  getIsBlocked(recipientId: string): boolean {
+    const blocked = this.state.get(recipientId)?.blocked;
+    return blocked ? blocked : false;
+  }
+
+  getFirstUnblocked(): string | null {
+    const groups = this.getUserGroups();
+    let val = groups.friends[0]?.recipientId;
+    if (val) return val;
+    val = groups.online[0]?.recipientId;
+    if (val) return val;
+    val = groups.offline[0]?.recipientId;
+    if (val) return val;
+    return null;
+  }
+
   getUserGroups(): ChatUserGroups {
     const groups: ChatUserGroups = {
       friends: [],
       online: [],
       offline: [],
+      blocked: [],
+      pendingClientInvite: [],
+      pendingRecipientInvite: [],
     };
-    this.state.forEach((userObj, userId) => {
+    this.state.forEach((userObj) => {
       const userCopy = deepCopyObj(userObj);
-      if (userObj.friend) groups.friends.push(userCopy);
+      if (userObj.friendRequestStatus === "pendingClientInvite")
+        groups.pendingClientInvite.push(userCopy);
+      if (userObj.friendRequestStatus === "pendingRecipientInvite")
+        groups.pendingRecipientInvite.push(userCopy);
+      if (userObj.blocked) groups.blocked.push(userCopy);
+      else if (userObj.friend) groups.friends.push(userCopy);
       else if (userObj.online) groups.online.push(userCopy);
       else if (!userObj.online) groups.offline.push(userCopy);
       else throw new Error("User not assigned to any group!");
@@ -83,6 +106,36 @@ class ChatUserStateStore {
     }
   }
 
+  updateChangeUserFriendStatus(
+    userId: string,
+    newFriendStatus:
+      | ChatServiceTypes.UpdateFriendRequest["type"]
+      | "newAuthorUpdateFromFrontend"
+  ) {
+    const user = this.state.get(userId);
+    if (isDefined(user)) {
+      switch (newFriendStatus) {
+        case "newAuthorUpdateFromFrontend":
+          user.friendRequestStatus = "pendingClientInvite";
+          break;
+        case "send":
+          user.friendRequestStatus = "pendingRecipientInvite";
+          break;
+        case "accept":
+          user.friendRequestStatus = null;
+          user.friend = true;
+          break;
+        case "declined":
+        case "withdrawn":
+        case "unfriended":
+          user.friendRequestStatus = null;
+          user.friend = false;
+          break;
+      }
+      this.updateListenersOnChange();
+    }
+  }
+
   updateChangeUserLastMessage(userId: string, newLastMessage: string) {
     const user = this.state.get(userId);
     if (isDefined(user)) {
@@ -106,7 +159,15 @@ class ChatUserStateStore {
 
   update(newState: ChatUserState) {
     this.state = deepCopyObj(newState);
-    this.listeners.forEach((callback) => callback());
+    this.updateListenersOnChange();
+  }
+
+  updateUserListFromArray(userList: ChatServiceTypes.ChatUser[]) {
+    this.state = new Map();
+    for (const user of userList) {
+      this.state.set(user.recipientId, user);
+    }
+    this.updateListenersOnChange();
   }
 
   updateListenersOnChange() {

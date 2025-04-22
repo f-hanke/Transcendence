@@ -79,7 +79,7 @@ class UserSettings extends HTMLElement {
 
     document
       .querySelector("#saveBtn")
-      ?.addEventListener("click", async (event) => {
+      ?.addEventListener("click", async () => {
         const newImage = (
           document.querySelector("#imageUpload") as HTMLInputElement
         ).files?.[0];

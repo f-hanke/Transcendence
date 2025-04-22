@@ -1,3 +1,4 @@
+
 class ChatLayout extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
 
@@ -10,18 +11,20 @@ class ChatLayout extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(
       this.render.bind(this)
     );
+    // ChatInterface.connect();
     this.render();
   }
 
   disconnectedCallback() {
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
+    // ChatInterface.disconnect();
   }
 
   render() {
     this.innerHTML = `
       <div class="flex h-full w-full">
         <chat-list></chat-list>
-        <chat-current></chat-current>
+        <chat-current class="flex-grow"></chat-current>
       </div>
     `;
   }

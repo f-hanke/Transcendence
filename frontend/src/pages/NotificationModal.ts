@@ -1,3 +1,5 @@
+import { createHtmlElementFromString } from "../utils/utils";
+
 class NotificationModal extends HTMLElement {
   message: string;
   timeoutId: number | null;
@@ -34,13 +36,10 @@ class NotificationModal extends HTMLElement {
     if (notificationState.length == 0) return;
     let notificationNode: HTMLElement;
     this.innerHTML = "";
-    const div = document.createElement("div");
-    div.setAttribute("class", "fixed top-0 left-1/2");
-    notificationState.forEach(({id, message}, index) => {
+    const div = createHtmlElementFromString(`<div class="fixed top-0"></div>`);
+    notificationState.forEach(({id, message}) => {
       notificationNode = this.createNotificationNode(id, message);
-
       div.appendChild(notificationNode);
-
       //   this.innerHTML += notificationHtml;
     });
 
@@ -57,14 +56,13 @@ class NotificationModal extends HTMLElement {
   }
 
   createNotificationNode(id: string, message: string) {
-    const template = document.createElement("template");
-    template.innerHTML = `
+    return createHtmlElementFromString(
+    `
       <div id=${id} class="bg-white mx-auto p-4 rounded-md shadow-lg bg-gray-50">
-        <div class="text-2xl font-bold text-indigo-500 mb-4">${message}</div>
+        <div class="text-sm font-bold mb-4">${message}</div>
       </div>
-    `;
-    // return template.content.cloneNode(true) as HTMLElement;
-    return template.content.firstElementChild as HTMLElement;
+    `
+    );
   }
 }
 
