@@ -59,11 +59,8 @@ export class Game {
             };
             this.update();
             if (this.typeOfGame == 'remote') {
-                console.log("Sending remote update");
                 sendMessage(this.websocketplayer1, gameStateMsgNew);
                 sendMessage(this.websocketplayer2, gameStateMsgNew);
-                // sendMessage(this.remoteWebsockets?.get(this.player1.id) as WebSocket, gameStateMsgNew)
-                // sendMessage(this.remoteWebsockets?.get(this.player2.id) as WebSocket, gameStateMsgNew)
             }
             else {
                 sendMessage(this.websocket, gameStateMsgNew);
