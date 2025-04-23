@@ -97,7 +97,6 @@ fastify.post('/update-blocking-status', async (req, reply) => {
 		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
 	const { clientId, recipientId, blockedStatus } = req.body;
 
-	console.log(req.body);
 	try {
 		if (blockedStatus === false) {
 			const result = db.prepare(databaseQuerys.deleteBlocking).run(clientId, recipientId);
