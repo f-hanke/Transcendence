@@ -1,0 +1,7 @@
+
+> dev
+> tsc && node dist/server.js
+
+error TS6059: File '/app/shared/src/index.ts' is not under 'rootDir' '/app/chat-service/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Matched by include pattern '../shared/src/**/*' in '/app/chat-service/tsconfig.json'

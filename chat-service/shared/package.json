@@ -1,0 +1,16 @@
+{
+  "name": "transcendence",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "rm -fr dist && tsc -p tsconfig.json"
+  },
+  "main": "dist/index.js",
+  "types": "dist/types/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/**/*"
+  ],
+  "dependencies": {
+    "typescript": "^5.8.2"
+  }
+}
