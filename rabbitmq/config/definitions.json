@@ -1,0 +1,125 @@
+{
+  "rabbit_version": "3.9.13",
+  "users": [
+    {
+      "name": "admin",
+      "password_hash": "m68Wr5+iPGZrLWIpBg4WBqa8qYvdFQNcgY6+iDBvXU2+HVL1",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "admin",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "queues": [
+    {
+      "name": "auth-service-queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "user-service-queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "game-service-queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "chat-service-queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "notification-service-queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "microservices-exchange",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "microservices-exchange",
+      "vhost": "/",
+      "destination": "auth-service-queue",
+      "destination_type": "queue",
+      "routing_key": "auth.#",
+      "arguments": {}
+    },
+    {
+      "source": "microservices-exchange",
+      "vhost": "/",
+      "destination": "user-service-queue",
+      "destination_type": "queue",
+      "routing_key": "user.#",
+      "arguments": {}
+    },
+    {
+      "source": "microservices-exchange",
+      "vhost": "/",
+      "destination": "game-service-queue",
+      "destination_type": "queue",
+      "routing_key": "game.#",
+      "arguments": {}
+    },
+    {
+      "source": "microservices-exchange",
+      "vhost": "/",
+      "destination": "chat-service-queue",
+      "destination_type": "queue",
+      "routing_key": "chat.#",
+      "arguments": {}
+    },
+    {
+      "source": "microservices-exchange",
+      "vhost": "/",
+      "destination": "notification-service-queue",
+      "destination_type": "queue",
+      "routing_key": "notification.#",
+      "arguments": {}
+    }
+  ]
+} 
