@@ -1,6 +1,4 @@
-.PHONY: start stop status clean fclean setup
-
-# Default target
+# Default Make command :-) MAKE MAKEFILES GREAT AGAIN LOL
 all: setup start
 
 # Setup directories and network
@@ -119,3 +117,17 @@ fclean: stop
 	@echo "Full Docker cleanup complete!"
 
 re: fclean all
+
+help:
+	@echo "Available Commands:"
+	@echo "  all      - Setup and start all services"
+	@echo "  setup    - Setup directories and network"
+	@echo "  start    - Start RabbitMQ and monitoring stack"
+	@echo "  stop     - Stop all services"
+	@echo "  status   - Check status of all services"
+	@echo "  clean    - Clean up stopped containers and volumes"
+	@echo "  fclean   - Clean up all Docker resources (containers, images, networks, volumes)"
+	@echo "  re       - Run fclean and then start everything fresh"
+
+
+.PHONY: start stop status clean fclean re help setup
