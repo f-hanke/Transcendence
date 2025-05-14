@@ -96,6 +96,13 @@ fastify.register(fastifyHttpProxy, {
   rewritePrefix: '', // removes /MM before forwarding
 });
 
+// Game service proxy
+fastify.register(fastifyHttpProxy, {
+  upstream: 'http://game-service:10003',
+  prefix: '/GAMESERVICE',
+  rewritePrefix: '', // removes /GAMESERVICE before forwarding
+});
+
 // 🔁 Game Microservices Proxies
 // Comment these out since we refactored the TransNetworkSettings
 // fastify.register(fastifyHttpProxy, {
@@ -154,7 +161,7 @@ fastify.server.on('upgrade', (req, socket, head) => {
   console.log("\n");
 
   if (url.startsWith('/CHATSERVICE')) target = `ws://localhost:10001`;
-  else if (url.startsWith('/GAMESERVICE')) target = `ws://localhost:10003`;
+  else if (url.startsWith('/GAMESERVICE')) target = `ws://game-service:10003`;
   else if (url.startsWith('/MATCHMAKING')) target = 'ws://remote-matchmaking:10002';
   else {
     socket.destroy();
@@ -196,7 +203,7 @@ fastify.get('/connectioninfo', async (request, reply) => {
       port: 10001 // Placeholder - update with actual port
     },
     game: {
-      ip: 'game-service', // Container name when available
+      ip: 'game-service', // Container name
       port: 10003 // From transNetworkSettings
     },
     mm: {

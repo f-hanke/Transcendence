@@ -41,6 +41,12 @@ start-remote:
 	docker compose up -d --build remote
 	@echo "Remote service starting. Check status with 'make status'"
 
+# Build and start just the game service (for testing)
+start-game-service:
+	@echo "Building and starting the game service..."
+	docker compose up -d --build game-service
+	@echo "Game service starting. Check status with 'make status'"
+
 # Stop all services
 stop:
 	@echo "Stopping the monitoring stack..."
@@ -94,6 +100,7 @@ help:
 	@echo "  setup      - Setup directories and network"
 	@echo "  start      - Start RabbitMQ and monitoring stack"
 	@echo "  start-remote - Build and start the remote service (for testing)"
+	@echo "  start-game-service - Build and start the game service (for testing)"
 	@echo "  stop       - Stop all services"
 	@echo "  status     - Check status of all services (with colorful output)"
 	@echo "  clean      - Clean up stopped containers and volumes"

@@ -58,7 +58,7 @@ check_service "API Gateway" "https://localhost:8443" "HTTPS"
 
 # Check application services
 check_service "Matchmaking Service" "http://localhost:10002/health"
-check_service "Game Service" "http://localhost:10003"
+check_service "Game Service" "http://localhost:10003/health"
 check_service "Chat Service" "http://localhost:10001"
 check_service "Auth Service" "http://localhost:10004/health"
 check_service "Webserver" "http://localhost:10005/health"
