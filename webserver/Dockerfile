@@ -7,14 +7,15 @@ COPY shared/tsconfig.json ./
 COPY shared/src ./src
 RUN npm run build
 
-FROM node:20-alpine AS api-gateway
+FROM node:20-alpine AS service-builder
 
-WORKDIR /app/apiGateway
-COPY apiGateway/package*.json ./
+WORKDIR /app/webserver
+
+# Copy service-specific files
+COPY webserver/package*.json ./
 RUN npm install
-COPY apiGateway/tsconfig.json ./
-COPY apiGateway/src ./src
-COPY apiGateway/certs ./certs
+COPY webserver/tsconfig.json ./
+COPY webserver/src ./src
 
 # Copy the built shared library
 COPY --from=shared-builder /app/shared/dist /app/shared/dist
@@ -23,15 +24,12 @@ COPY --from=shared-builder /app/shared/package.json /app/shared/package.json
 # Update the shared library path
 RUN npm install --no-save ../shared
 
-# Build the API gateway
+# Build the service
 RUN npm run build
 
-# Copy certificates to the dist directory where they're expected
-RUN mkdir -p ./dist/certs && cp ./certs/* ./dist/certs/
-
 # Install health check tools
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl wget
 
-EXPOSE 8443
+EXPOSE 10005
 
-CMD ["node", "dist/server.js"] 
+CMD ["node", "distWebserver/server.js"]

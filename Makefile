@@ -117,3 +117,5 @@ fclean: stop
 	# Remove RabbitMQ network (this will be removed in both clean and fclean)
 	docker network rm rabbitmq-network 2>/dev/null || true
 	@echo "Full Docker cleanup complete!"
+
+re: fclean all

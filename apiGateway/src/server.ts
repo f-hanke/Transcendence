@@ -71,11 +71,6 @@ fastify.addHook('onRequest', async (request, reply) => {
   console.log("\n");
 });
 
-// Health check endpoint for Docker
-fastify.get('/health', async (request, reply) => {
-  return { status: 'ok', timestamp: new Date().toISOString() };
-});
-
 // 🔁 Microservice Proxies (with prefix stripping)
 fastify.register(fastifyHttpProxy, {
   upstream: `http://localhost:${transNetworkSettings.authService.port}`,

@@ -35,7 +35,7 @@ const transNetworkSettings: TransNetworkSettings = {
     port: 10004
   },
   webserver: {
-    ip: "localhost",
+    ip: "0.0.0.0",
     port: 10005
   },
 };
