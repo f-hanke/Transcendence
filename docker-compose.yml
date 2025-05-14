@@ -143,6 +143,8 @@ services:
         condition: service_healthy
       users-auth:
         condition: service_healthy
+      remote:
+        condition: service_healthy
 
   webserver:
     container_name: webserver
@@ -187,6 +189,29 @@ services:
       start_period: 10s
     external_links:
       - rabbitmq-service
+
+  remote:
+    container_name: remote-matchmaking
+    build:
+      context: .
+      dockerfile: remote/Dockerfile
+    ports:
+      - "10002:10002"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - monitoring-network
+      - rabbitmq-network
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:10002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      users-auth:
+        condition: service_healthy
 
 networks:
   monitoring-network:

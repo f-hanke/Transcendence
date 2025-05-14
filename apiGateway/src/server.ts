@@ -56,13 +56,18 @@ async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
   }
 }
 
-// // 🔐 JWT auth middleware (skip for static + auth)
+// 🔐 JWT auth middleware (skip for static + auth)
 // fastify.addHook('onRequest', async (req, reply) => {
 //   const skipAuth = req.raw.url?.startsWith('/auth') || req.raw.url?.match(/\.(js|css|html|png)$/);
 //   if (!skipAuth) {
 //     await authMiddleware(req, reply);
 //   }
 // });
+
+// Add health check endpoint for Docker
+fastify.get('/health', async () => {
+  return { status: 'ok' };
+});
 
 fastify.addHook('onRequest', async (request, reply) => {
   console.log("\n");
@@ -82,6 +87,13 @@ fastify.register(fastifyHttpProxy, {
   upstream: 'http://webserver:10005',
   prefix: '/',
   rewritePrefix: '/',
+});
+
+// Remote/Matchmaking service proxy
+fastify.register(fastifyHttpProxy, {
+  upstream: 'http://remote-matchmaking:10002',
+  prefix: '/MM',
+  rewritePrefix: '', // removes /MM before forwarding
 });
 
 // 🔁 Game Microservices Proxies
@@ -131,30 +143,29 @@ fastify.register(fastifyHttpProxy, {
 
 
 // 🔁 WebSocket proxying
-// Comment out for now since we refactored the TransNetworkSettings
-// const wsProxy = createProxyServer({ ws: true });
+const wsProxy = createProxyServer({ ws: true });
 
-// fastify.server.on('upgrade', (req, socket, head) => {
-//   const url = req.url || '';
-//   let target = '';
+fastify.server.on('upgrade', (req, socket, head) => {
+  const url = req.url || '';
+  let target = '';
 
-//   console.log("\n");
-//   console.log(chalk.yellow('INSIDE UPGRADE ROUTE!'));
-//   console.log("\n");
+  console.log("\n");
+  console.log(chalk.yellow('INSIDE UPGRADE ROUTE!'));
+  console.log("\n");
 
-//   if (url.startsWith('/CHATSERVICE')) target = `ws://localhost:${transNetworkSettings.chatService.port}`;
-//   else if (url.startsWith('/GAMESERVICE')) target = `ws://localhost:${transNetworkSettings.gameService.port}`;
-//   else if (url.startsWith('/MATCHMAKING')) target = `ws://localhost:${transNetworkSettings.matchmakingService.port}`;
-//   else {
-//     socket.destroy();
-//     return;
-//   }
+  if (url.startsWith('/CHATSERVICE')) target = `ws://localhost:10001`;
+  else if (url.startsWith('/GAMESERVICE')) target = `ws://localhost:10003`;
+  else if (url.startsWith('/MATCHMAKING')) target = 'ws://remote-matchmaking:10002';
+  else {
+    socket.destroy();
+    return;
+  }
 
-//   // Optional: Strip prefix if backend expects it
-//   req.url = url.replace(/^\/(CHATSERVICE|GAMESERVICE|MATCHMAKING)/, '');
+  // Optional: Strip prefix if backend expects it
+  req.url = url.replace(/^\/(CHATSERVICE|GAMESERVICE|MATCHMAKING)/, '');
 
-//   wsProxy.ws(req, socket, head, { target });
-// });
+  wsProxy.ws(req, socket, head, { target });
+});
 
 
 // according to ChatGPT, shortest possible JWT is 27 characters
@@ -178,24 +189,23 @@ fastify.get<{
 
 // Special endpoint for the webserver to get the connection info it
 // needs to provide to clients.
-// Comment out for now since we refactored the TransNetworkSettings
-// get('/connectioninfo', async (request, reply) => {
-//   const result = {
-//     chat: {
-//       ip: transNetworkSettings.chatService.ip,
-//       port: transNetworkSettings.chatService.port
-//     },
-//     game: {
-//       ip: transNetworkSettings.gameService.ip,
-//       port: transNetworkSettings.gameService.port
-//     },
-//     mm: {
-//       ip: transNetworkSettings.matchmakingService.ip,
-//       port: transNetworkSettings.matchmakingService.port
-//     }
-//   };
-//   return result;
-// });
+fastify.get('/connectioninfo', async (request, reply) => {
+  const result = {
+    chat: {
+      ip: 'chat-service', // Container name when available
+      port: 10001 // Placeholder - update with actual port
+    },
+    game: {
+      ip: 'game-service', // Container name when available
+      port: 10003 // From transNetworkSettings
+    },
+    mm: {
+      ip: 'remote-matchmaking', // Container name
+      port: 10002 // From transNetworkSettings
+    }
+  };
+  return result;
+});
 
 fastify.listen({
   port: transNetworkSettings.apiGateway.port,

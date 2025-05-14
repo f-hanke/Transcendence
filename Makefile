@@ -1,4 +1,4 @@
-# Default Make command :-) MAKE MAKEFILES GREAT AGAIN LOLmake 
+# Default Make command :-) MAKE MAKEFILES GREAT AGAIN LOL
 all: setup start
 
 # Setup directories and network
@@ -18,6 +18,28 @@ start: setup
 	docker compose up -d
 	@echo "Services are starting up. Check status with 'make status'"
 	@cat service-info.txt
+
+
+start-api-gateway:
+	@echo "Building and starting the api gateway..."
+	docker compose up -d --build api-gateway
+	@echo "Api gateway starting. Check status with 'make status'"
+
+start-webserver:
+	@echo "Building and starting the webserver..."
+	docker compose up -d --build webserver
+	@echo "Webserver starting. Check status with 'make status'"
+
+start-users-auth:
+	@echo "Building and starting the users auth service..."
+	docker compose up -d --build users-auth
+	@echo "Users auth service starting. Check status with 'make status'"
+
+# Build and start just the remote service (for testing)
+start-remote:
+	@echo "Building and starting the remote service..."
+	docker compose up -d --build remote
+	@echo "Remote service starting. Check status with 'make status'"
 
 # Stop all services
 stop:
@@ -71,6 +93,7 @@ help:
 	@echo "  all        - Setup and start all services"
 	@echo "  setup      - Setup directories and network"
 	@echo "  start      - Start RabbitMQ and monitoring stack"
+	@echo "  start-remote - Build and start the remote service (for testing)"
 	@echo "  stop       - Stop all services"
 	@echo "  status     - Check status of all services (with colorful output)"
 	@echo "  clean      - Clean up stopped containers and volumes"
