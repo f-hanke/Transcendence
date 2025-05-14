@@ -53,6 +53,37 @@ start-chat-service:
 	docker compose up -d --build chat-service
 	@echo "Chat service starting. Check status with 'make status'"
 
+# Build and start just the frontend service (for testing)
+start-frontend:
+	@echo "Starting frontend development server..."
+	cd frontend && npm install && npm run dev
+
+# Build the frontend (for production)
+build-frontend:
+	@echo "Building frontend for production..."
+	cd frontend && npm install && npm run build
+
+# Build the frontend with TypeScript checking skipped
+build-frontend-skip-ts-check:
+	@echo "Building frontend for production (skipping TypeScript checks)..."
+	cd frontend && npm install && npm run build-skip-ts-check
+
+# Rebuild just the webserver with the latest frontend
+rebuild-webserver-with-frontend:
+	@echo "Creating mock frontend build..."
+	cd frontend && npm install && npm run mock-build
+	@echo "Building and starting the webserver with the new frontend..."
+	docker compose stop webserver
+	docker compose rm -f webserver
+	docker compose build --no-cache webserver
+	docker compose up -d webserver
+	@echo "Webserver rebuilt with frontend. Check status with 'make status'"
+
+# Rebuild just the frontend service (for development)
+rebuild-frontend:
+	@echo "This is now just an alias for start-frontend for local development"
+	make start-frontend
+
 # Stop all services
 stop:
 	@echo "Stopping the monitoring stack..."
@@ -108,6 +139,8 @@ help:
 	@echo "  start-remote - Build and start the remote service (for testing)"
 	@echo "  start-game-service - Build and start the game service (for testing)"
 	@echo "  start-chat-service - Build and start the chat service (for testing)"
+	@echo "  start-frontend - Build and start the frontend service (for testing)"
+	@echo "  rebuild-frontend - Rebuild and start the frontend service (for development)"
 	@echo "  stop       - Stop all services"
 	@echo "  status     - Check status of all services (with colorful output)"
 	@echo "  clean      - Clean up stopped containers and volumes"

@@ -1,0 +1,114 @@
+import { isDefined, MatchMakingTypes } from "transcendence";
+import { MatchMakingInterface } from "../../backendInterface/matchmakingInterface";
+import { deepCopyObj } from "../../utils/utils";
+
+type OptnsTournamentItem = {
+  renderJoin: boolean;
+  renderLeave: boolean;
+};
+
+class TournamentItem extends HTMLElement {
+  data: MatchMakingTypes.Tournament;
+  renderJoin?: boolean;
+  renderLeave?: boolean;
+  constructor() {
+    super();
+    this.data = {
+      tournamentId: null,
+      player1Id: null,
+      player2Id: null,
+      player3Id: null,
+      player4Id: null,
+    };
+  }
+
+  connectedCallback() {}
+
+  render() {
+    this.innerHTML = `
+        <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg text-white">
+          <div>
+            <div class="font-medium">Tournament ID: ${
+              this.data.tournamentId
+            }</div>
+            <div class="font-medium">Player 1: ${this.displayEmptySpot(
+              this.data.player1Id
+            )}</div>
+            <div class="font-medium">Player 2: ${this.displayEmptySpot(
+              this.data.player2Id
+            )}</div>
+            <div class="font-medium">Player 3: ${this.displayEmptySpot(
+              this.data.player3Id
+            )}</div>
+            <div class="font-medium">Player 4: ${this.displayEmptySpot(
+              this.data.player4Id
+            )}</div>
+          </div>
+          ${
+            this.renderJoin
+              ? `<button class="join-tournament-btn bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg">
+                  ▶ Join
+                </button>`
+              : ""
+          }
+          ${
+            this.renderLeave
+              ? `<button class="leave-tournament-btn bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-lg">
+                  ❌ Leave
+                </button>`
+              : ""
+          }
+        </li>
+      `;
+    const joinButton = this.querySelector(".join-tournament-btn");
+    if (joinButton) {
+      joinButton.addEventListener("click", () => this.onJoinClick());
+    }
+    const leaveButton = this.querySelector(".leave-tournament-btn");
+    if (leaveButton) {
+      leaveButton.addEventListener("click", () => this.onLeaveClick());
+    }
+  }
+
+  setData(data: MatchMakingTypes.Tournament, optns: OptnsTournamentItem) {
+    this.data = deepCopyObj(data);
+    this.renderJoin = optns.renderJoin;
+    this.renderLeave = optns.renderLeave;
+    this.render();
+  }
+
+  onJoinClick() {
+    console.log(`Joining tournament: ${this.data.tournamentId}`);
+    MatchMakingInterface.sendMessageToServer({
+      type: "joinTournament",
+      data: {
+        playerId: window.store.userStore.get().details.id,
+        tournamentId: this.data.tournamentId as string,
+      },
+    });
+  }
+
+  onLeaveClick() {
+    console.log(`Leaving tournament: ${this.data.tournamentId}`);
+    MatchMakingInterface.sendMessageToServer({
+      type: "leaveTournament",
+      data: {
+        playerId: window.store.userStore.get().details.id,
+        tournamentId: this.data.tournamentId as string,
+      },
+    });
+  }
+
+  displayEmptySpot(playerIdOrName: string | null) {
+    if (!isDefined(playerIdOrName)) {
+      return ">free<";
+    }
+    return playerIdOrName;
+  }
+}
+
+customElements.define("tournament-item", TournamentItem);
+
+export { TournamentItem };
+
+export type { OptnsTournamentItem };

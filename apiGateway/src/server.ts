@@ -131,27 +131,27 @@ fastify.register(fastifyHttpProxy, {
 // });
 
 // >>>>>> for local testing only
-// fastify.setNotFoundHandler((req, reply) => {
-//   // Proxy all unmatched GET requests to Vite
-//   if (req.raw.method === 'GET') {
-//     const proxyReq = http.request(
-//       {
-//         hostname: 'localhost',
-//         port: 9999,
-//         path: req.raw.url,
-//         method: req.raw.method,
-//         headers: req.headers,
-//       },
-//       res => {
-//         reply.status(res.statusCode!);
-//         res.pipe(reply.raw);
-//       }
-//     );
-//     req.raw.pipe(proxyReq);
-//   } else {
-//     reply.status(404).send({ error: 'Not found' });
-//   }
-// });
+fastify.setNotFoundHandler((req, reply) => {
+  // Proxy all unmatched GET requests to Vite
+  if (req.raw.method === 'GET') {
+    const proxyReq = http.request(
+      {
+        hostname: 'frontend', // In docker-compose, use the service name
+        port: 80, // Nginx runs on port 80
+        path: req.raw.url,
+        method: req.raw.method,
+        headers: req.headers,
+      },
+      res => {
+        reply.status(res.statusCode!);
+        res.pipe(reply.raw);
+      }
+    );
+    req.raw.pipe(proxyReq);
+  } else {
+    reply.status(404).send({ error: 'Not found' });
+  }
+});
 // <<<<<< for local testing only
 
 

@@ -1,0 +1,229 @@
+import {
+  authErrorsToMsgMap,
+  authServiceTypeGuards,
+  AuthServiceTypes,
+} from "transcendence";
+import { buildApiRouteRelative, navigateToSite } from "../utils/utils";
+
+type AuthInterfaceAnswer = Promise<{
+  ok: boolean;
+  errorMessage?: string;
+}>;
+
+class AuthInterface {
+  constructor() {
+    throw new Error("This class cannot be instantiated.");
+  }
+
+  static nameJwtInSessionStorage = "transcendenceJwt";
+
+  static async registerClient(
+    data: AuthServiceTypes.RegSubmissionBody
+  ): AuthInterfaceAnswer {
+    // const address = buildBackendRoute({
+    //   websocketOrApi: "api",
+    //   service: "authService",
+    //   route: "/api/auth/register",
+    // });
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: "/api/auth/register",
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (response.ok) {
+        return this.success();
+      } else return this.handleApiResponseError(response);
+    } catch (error) {
+      throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
+  static async login(
+    data: AuthServiceTypes.LoginSubmissionBody
+  ): AuthInterfaceAnswer {
+    // const address = buildBackendRoute({
+    //   websocketOrApi: "api",
+    //   service: "authService",
+    //   route: "/api/auth/login",
+    // });
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: "/api/auth/login",
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (response.ok) {
+        this.loginSucessful(await response.json());
+        return this.success();
+      } else return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
+  static async logout(): AuthInterfaceAnswer {
+    // const address = buildBackendRoute({
+    //   websocketOrApi: "api",
+    //   service: "authService",
+    //   route: "/api/auth/logout",
+    // });
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: `/api/auth/logout/${window.store.userStore.get().details.id}`,
+    });
+    try {
+      const response = await fetch(address, {
+        method: "GET",
+        headers: {
+          authorization: this.getAuthHeader(),
+        },
+      });
+      if (response.ok) {
+        this.logoutSucessful();
+        return this.success();
+      }
+      if (response.status === 401) this.logoutSucessful();
+      return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
+  static async refresh(): AuthInterfaceAnswer {
+    // const address = buildBackendRoute({
+    //   websocketOrApi: "api",
+    //   service: "authService",
+    //   route: "/api/auth/refresh",
+    // });
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: "/api/auth/refresh",
+    });
+    try {
+      const response = await fetch(address, {
+        method: "GET",
+        headers: {
+          authorization: this.getAuthHeader(),
+        },
+      });
+      if (response.ok) {
+        this.refreshSucessful(await response.json());
+        return this.success();
+      } else return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
+  static async verify(updateUserId: boolean = false): AuthInterfaceAnswer {
+    // const address = buildBackendRoute({
+    //   websocketOrApi: "api",
+    //   service: "authService",
+    //   route: "/api/auth/verify-jwt",
+    //   secure: true,
+    // });
+    // const address = buildApiRouteRelative({
+    //   service: "authService",
+    //   route: "/api/auth/verify-jwt"
+    // });
+    const address = "/api/auth/verify-jwt";
+    try {
+      const response = await fetch(address, {
+        method: "GET",
+        headers: {
+          authorization: this.getAuthHeader(),
+        },
+      });
+      if (response.ok) {
+        this.verifySuccesful(await response.json(), updateUserId);
+        return this.success();
+      } else return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
+  static verifySuccesful(
+    body: AuthServiceTypes.VerifySuccessResponseBody,
+    updateUserId: boolean = false
+  ) {
+    window.colog("verify succesful!");
+    if (updateUserId)
+      window.store.userStore.updateUserSettings({
+        id: body.userId.toString(),
+      });
+  }
+
+  static refreshSucessful(body: AuthServiceTypes.AuthSuccessResponseBody) {
+    window.colog("refresh succesful!");
+    window.store.userStore.updateUserSettings({
+      id: body.clientId,
+    });
+    sessionStorage.setItem(this.nameJwtInSessionStorage, body.jwtToken);
+  }
+
+  static loginSucessful(body: AuthServiceTypes.AuthSuccessResponseBody) {
+    window.colog("login succesful!");
+    window.store.userStore.updateUserSettings({
+      id: body.clientId.toString(),
+    });
+    sessionStorage.setItem(this.nameJwtInSessionStorage, body.jwtToken);
+    navigateToSite("/");
+  }
+
+  static logoutSucessful() {
+    window.colog("logout succesful!");
+    sessionStorage.removeItem(this.nameJwtInSessionStorage);
+    navigateToSite("/loginPage");
+  }
+
+  static success() {
+    return { ok: true };
+  }
+
+  static async handleApiResponseError(response: Response): AuthInterfaceAnswer {
+    window.colog("API ERRROR");
+    if (response.status === 400) {
+      const body = await response.json();
+      if (authServiceTypeGuards.isErrorResponseBody(body)) {
+        return {
+          ok: false,
+          errorMessage: authErrorsToMsgMap[body.reason],
+        };
+      } else {
+        return {
+          ok: false,
+          errorMessage: `Wrong bad request body send for registration endpoint!`,
+        };
+      }
+    } else {
+      return {
+        ok: false,
+        errorMessage: `Couldn't register User for unknown reasons!`,
+      };
+    }
+  }
+
+  static getAuthHeader() {
+    return `bearer ${
+      sessionStorage.getItem(this.nameJwtInSessionStorage) as string
+    }`;
+  }
+}
+
+export { AuthInterface };
+
+export type { AuthInterfaceAnswer };

@@ -71,11 +71,15 @@ check_service "RabbitMQ" "http://localhost:15672" "GET" "" true
 
 # Check application services (our custom services)
 check_service "API Gateway" "https://localhost:8443/health" "HTTPS"
+
+echo "wont work because of the port are only exposed on localhost"
 check_service "Matchmaking Service" "http://localhost:10002/health"
 check_service "Game Service" "http://localhost:10003/health"
 check_service "Chat Service" "http://localhost:10001/health"
 check_service "Auth Service" "http://localhost:10004/health"
 check_service "Webserver" "http://localhost:10005/health"
+# Frontend is now served by the webserver
+check_service "Frontend via Webserver" "http://localhost:10005/index.html" "GET" "" true
 
 echo "============================================"
 echo "API GATEWAY ROUTING CHECKS:"
@@ -88,3 +92,9 @@ check_service "Game Service via API Gateway" "https://localhost:8443/GAMESERVICE
 check_service "Chat Service via API Gateway" "https://localhost:8443/CHATSERVICE/health" "HTTPS"
 
 echo "============================================" 
+
+echo "============================================" 
+echo "Check out the frontend at:"
+echo "http://localhost:8080"
+
+

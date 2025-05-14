@@ -7,7 +7,7 @@ services:
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
-      - "9200:9200"
+      - "127.0.0.1:9200:9200"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     networks:
@@ -23,7 +23,7 @@ services:
     container_name: kibana
     image: docker.elastic.co/kibana/kibana:8.12.1
     ports:
-      - "5601:5601"
+      - "127.0.0.1:5601:5601"
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - ELASTICSEARCH_SSL_VERIFICATIONMODE=none
@@ -47,10 +47,10 @@ services:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
     ports:
-      - "5044:5044"
-      - "5000:5000/tcp"
-      - "5000:5000/udp"
-      - "9600:9600"
+      - "127.0.0.1:5044:5044"
+      - "127.0.0.1:5000:5000/tcp"
+      - "127.0.0.1:5000:5000/udp"
+      - "127.0.0.1:9600:9600"
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     depends_on:
@@ -72,7 +72,7 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -92,7 +92,7 @@ services:
     container_name: grafana
     image: grafana/grafana:latest
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
@@ -122,7 +122,7 @@ services:
       context: .
       dockerfile: apiGateway/Dockerfile
     ports:
-      - "8443:8443"
+      - "8443:8443"  # Only expose HTTPS
     environment:
       - NODE_ENV=production
       - JWT_SECRET=supersecret
@@ -156,7 +156,7 @@ services:
       context: .
       dockerfile: webserver/Dockerfile
     ports:
-      - "10005:10005"
+      - "10005"
     environment:
       - NODE_ENV=production
     networks:
@@ -169,6 +169,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    expose:
+      - "10005"
 
   users-auth:
     container_name: users-auth
@@ -176,7 +178,7 @@ services:
       context: .
       dockerfile: usersAndAuth/Dockerfile
     ports:
-      - "10004:10004"
+      - "10004"
     environment:
       - NODE_ENV=production
       - JWT_SECRET=supersecret
@@ -193,6 +195,8 @@ services:
       start_period: 10s
     external_links:
       - rabbitmq-service
+    expose:
+      - "10004"
 
   remote:
     container_name: remote-matchmaking
@@ -200,7 +204,7 @@ services:
       context: .
       dockerfile: remote/Dockerfile
     ports:
-      - "10002:10002"
+      - "10002"
     environment:
       - NODE_ENV=production
     networks:
@@ -216,6 +220,8 @@ services:
     depends_on:
       users-auth:
         condition: service_healthy
+    expose:
+      - "10002"
 
   game-service:
     container_name: game-service
@@ -223,7 +229,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     ports:
-      - "10003:10003"
+      - "10003"
     environment:
       - NODE_ENV=production
     networks:
@@ -239,6 +245,8 @@ services:
     depends_on:
       remote:
         condition: service_healthy
+    expose:
+      - "10003"
 
   chat-service:
     container_name: chat-service
@@ -246,10 +254,9 @@ services:
       context: .
       dockerfile: chat-service/Dockerfile
     ports:
-      - "10001:10001"
+      - "10001"
     environment:
       - NODE_ENV=production
-      - RABBITMQ_HOST=rabbitmq-service
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -260,11 +267,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    volumes:
-      - ./chat-service/db:/app/db
     depends_on:
-      users-auth:
-        condition: service_healthy
+      - users-auth
+    expose:
+      - "10001"
 
 networks:
   monitoring-network:

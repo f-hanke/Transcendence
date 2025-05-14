@@ -11,14 +11,15 @@ MONITORING SERVICES:
 - RabbitMQ:      http://localhost:15672 (guest/guest)
 
 APPLICATION SERVICES:
+-some of these wont work as they have no been made to only work on localhost!
 - API Gateway:          https://localhost:8443
 - Auth Service:         http://localhost:10004
 - Matchmaking Service(remote):  http://localhost:10001
 - Game Service(backend):         http://localhost:10002
 - Chat Service:         http://localhost:10003
 - Webserver:            http://localhost:10005
-- FrontEnd Service: To be figured out.....
-
+- FrontEnd Service: (to play the game)
+https://localhost:8443
 ======================================================
 For more details, check the documentation or run:
 $ make status

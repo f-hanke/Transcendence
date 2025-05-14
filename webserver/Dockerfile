@@ -1,5 +1,9 @@
-FROM node:20-alpine AS shared-builder
+FROM node:20-alpine
 
+# Create working directory
+WORKDIR /app
+
+# Now build the shared package
 WORKDIR /app/shared
 COPY shared/package*.json ./
 RUN npm install
@@ -7,24 +11,18 @@ COPY shared/tsconfig.json ./
 COPY shared/src ./src
 RUN npm run build
 
-FROM node:20-alpine AS service-builder
-
+# Set up and build the webserver
 WORKDIR /app/webserver
-
-# Copy service-specific files
 COPY webserver/package*.json ./
 RUN npm install
+# Install the shared package
+RUN npm install --no-save ../shared
 COPY webserver/tsconfig.json ./
 COPY webserver/src ./src
+# Copy the existing frontend files
+COPY webserver/distFrontend ./distFrontend
 
-# Copy the built shared library
-COPY --from=shared-builder /app/shared/dist /app/shared/dist
-COPY --from=shared-builder /app/shared/package.json /app/shared/package.json
-
-# Update the shared library path
-RUN npm install --no-save ../shared
-
-# Build the service
+# Build the webserver
 RUN npm run build
 
 # Install health check tools

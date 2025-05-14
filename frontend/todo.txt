@@ -1,0 +1,21 @@
+- endpoint to actually request the image from backend when api gives me the url
+- complete multiple languages
+- update user details
+- show other user details
+- tournament system
+
+
+
+
+- create tournament -> update tournament message from milos
+- delete tournament from Milos -> only if no one is in the tournament anymore -> handle via update tournament when there is all player ids null
+- start tournament -> serverstarttournament from Milos
+- join tournament -> only one tournament can be joined at a time
+- if already part of a tournament, dont show any tournaments at all just message, that you can only be part of one tournament
+- Milos message, if tournament has finished -> delete client tournament part state
+
+- create tournament state store
+
+
+- make a store, that matches userids to usernames
+- remove event listeners from running pong game, so they dont stack
