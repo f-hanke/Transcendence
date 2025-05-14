@@ -19,6 +19,10 @@ export interface TransNetworkSettings {
     ip: string;
     port: number;
   };
+  chatService: {
+    ip: string;
+    port: number;
+  };
 }
 
 const transNetworkSettings: TransNetworkSettings = {
@@ -41,6 +45,10 @@ const transNetworkSettings: TransNetworkSettings = {
   authService: {
     ip: "0.0.0.0", // use "localhost" outside of Docker
     port: 10004,
+  },
+  chatService: {
+    ip: "0.0.0.0",
+    port: 10001,
   }
 };
 

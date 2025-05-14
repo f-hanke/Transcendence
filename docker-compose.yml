@@ -147,6 +147,8 @@ services:
         condition: service_healthy
       game-service:
         condition: service_healthy
+      chat-service:
+        condition: service_healthy
 
   webserver:
     container_name: webserver
@@ -236,6 +238,32 @@ services:
       start_period: 10s
     depends_on:
       remote:
+        condition: service_healthy
+
+  chat-service:
+    container_name: chat-service
+    build:
+      context: .
+      dockerfile: chat-service/Dockerfile
+    ports:
+      - "10001:10001"
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq-service
+    networks:
+      - monitoring-network
+      - rabbitmq-network
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:10001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - ./chat-service/db:/app/db
+    depends_on:
+      users-auth:
         condition: service_healthy
 
 networks:

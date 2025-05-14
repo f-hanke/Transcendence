@@ -80,7 +80,7 @@ server.get('/ping', async (request, reply) => {
 
 // Health check endpoint for Docker
 server.get('/health', async (request, reply) => {
-  return { status: 'ok', timestamp: new Date().toISOString() };
+  return { status: 'ok' };
 });
 
 server.get<{
