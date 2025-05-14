@@ -1,0 +1,507 @@
+import fastify from 'fastify'
+import cors from '@fastify/cors'
+import fs from 'fs'
+import amqp from 'amqplib';
+import sharp from 'sharp'
+import fastifyJwt from '@fastify/jwt'
+
+import { validators } from './utils/validators.js'
+import { passwordUtils } from './utils/password.js'
+import { config } from './config/config.js';
+
+
+import { User } from './orm/user.js';
+import { GameResultModel } from './orm/gameResultModel.js';
+
+import { AuthServiceTypes,
+         GameResultTypes,
+         RabbitMQTypes,
+         AuthErrors,
+         authServiceTypeGuards,
+         gameResultTypeGuards,
+         rabbitMQTypeGuards,
+         transNetworkSettings } from 'transcendence'
+
+
+type JwtType = AuthServiceTypes.JwtType;
+type RegSubmissionBody = AuthServiceTypes.RegSubmissionBody;
+type LoginSubmissionBody = AuthServiceTypes.LoginSubmissionBody;
+type UpdatePasswordBody = AuthServiceTypes.UpdatePasswordBody;
+type UpdateEmailBody = AuthServiceTypes.UpdateEmailBody;
+type UpdateDisplayNameBody = AuthServiceTypes.UpdateDisplayNameBody;
+type UpdateImageBody = AuthServiceTypes.UpdateImageBody;
+type UserType = AuthServiceTypes.UserType;
+type UserIdsToNamesMapping = AuthServiceTypes.UserIdsToNamesMapping;
+type ErrorResponseBody = AuthServiceTypes.ErrorResponseBody;
+type AuthSuccessResponseBody = AuthServiceTypes.AuthSuccessResponseBody;
+type VerifySuccessResponseBody = AuthServiceTypes.VerifySuccessResponseBody;
+type LogoutSuccessResponseBody = AuthServiceTypes.LogoutSuccessResponseBody;
+type RegSuccessResponseBody = AuthServiceTypes.RegSuccessResponseBody;
+type MatchResult = GameResultTypes.MatchResult;
+type TournamentResult = GameResultTypes.TournamentResult;
+
+const queue = 'auth-ChatService';
+
+async function publishMessage(message: RabbitMQTypes.UserChange) {
+  if (!rabbitMQTypeGuards.isUserChangeBody(message))
+    console.error("Trying to publish unknown type");
+  const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
+  const channel = await connection.createChannel();
+
+  await channel.assertQueue(queue, { durable: false });
+
+  channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
+  console.log('[Publisher] Sent:', message);
+}
+
+
+const server = fastify({
+  logger: {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        translateTime: 'HH:MM:ss Z',
+        ignore: 'pid,hostname',
+      },
+    },
+  },
+})
+
+server.register(fastifyJwt, {
+  secret: 'supersecret'
+})
+server.register(cors, { origin: "*" });
+
+
+server.get('/ping', async (request, reply) => {
+  // the more "automatic" way of fastify handling the entire response
+  return 'pong\n'
+})
+
+// Health check endpoint for Docker
+server.get('/health', async (request, reply) => {
+  return { status: 'ok', timestamp: new Date().toISOString() };
+});
+
+server.get<{
+  Body: RegSubmissionBody
+}>('/playground', async (request, reply) => {
+    reply.code(201).send({ success: true });
+    // .send() is:
+    // - Serializing the body
+    // - Writing it to the socket
+    // - Ending the HTTP response
+})
+
+
+server.post<{
+  Body: RegSubmissionBody;
+  Reply: {
+    201: RegSuccessResponseBody;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/auth/register', async (request, reply) => {
+  if (!authServiceTypeGuards.isRegSubmissionBody(request.body))
+    return reply.code(400).send({ reason: AuthErrors.BadBodyFormat} satisfies ErrorResponseBody );
+  if (!validators.isValidEmail(request.body.email))
+    return reply.code(400).send({ reason: AuthErrors.InvalidEmailFormat} satisfies ErrorResponseBody );
+  const passwordError = validators.identifyPasswordError(request.body.password);
+  if (passwordError !== null)
+    return reply.code(400).send({ reason: passwordError } satisfies ErrorResponseBody );
+  try {
+    const newUser = await User.create(request.body) as UserType;
+    const imgBuffer: Buffer = fs.readFileSync(config.DEFAULT_AVATAR);
+    const smallImgBuffer: Buffer = await sharp(imgBuffer).resize(264, 264, {fit: 'inside', withoutEnlargement: true}).toBuffer();
+    await User.setImage(newUser.id, imgBuffer, smallImgBuffer);
+
+    // // TODO: publish for Flo
+    const publication: RabbitMQTypes.UserChange = {
+      id: newUser.id,
+      displayName: newUser.display_name,
+      smallImage: smallImgBuffer,
+    }
+    publishMessage(publication).catch(console.error);
+
+    // HACK: hardcoded publication
+    //   const publication: RabbitMQTypes.UserChange = {
+    //     id: "13",
+    //     displayName: "Florian",
+    //     smallImage: smallImgBuffer,
+    // }
+    // publishMessage(publication).catch(console.error);
+
+
+    // return reply.code(201).send({ displayName: newUser.display_name, userId: newUser.id } as RegSuccessResponseBody);
+
+  } catch (e) {
+    if (e instanceof Error)
+    {
+      console.error(e.message);
+      if (e.message.includes('UNIQUE constraint failed: users.display_name'))
+        return reply.code(400).send({ reason: AuthErrors.DuplicateDisplayName });
+      else if (e.message.includes('UNIQUE constraint failed: users.email'))
+        return reply.code(400).send({ reason: AuthErrors.DuplicateEmail });
+      return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody );
+    }
+    else
+      console.error(e);
+  }
+})
+
+server.post<{
+  Body: LoginSubmissionBody;
+  Reply: {
+    201: AuthSuccessResponseBody;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/auth/login', async (request, reply) => {
+  if (!authServiceTypeGuards.isLoginSubmissionBody(request.body))
+    return reply.code(400).send({ reason: AuthErrors.BadBodyFormat} satisfies ErrorResponseBody );
+  try {
+    const user = await User.findByEmail(request.body.email) as UserType;
+    if (!user)
+      return reply.code(400).send({ reason: AuthErrors.UnknownEmail } satisfies ErrorResponseBody);
+
+    console.log(user);
+    const isPasswordValid = await passwordUtils.comparePassword(request.body.password, user.pw_hash);
+    if (!isPasswordValid)
+      return reply.code(400).send({ reason: AuthErrors.InvalidPassword } satisfies ErrorResponseBody);
+
+    const token = server.jwt.sign({ userId: user.id } satisfies AuthServiceTypes.JwtType, { expiresIn: '60m' });
+
+    await User.updateOnlineStatus(user.id, 1);
+    await User.incrementLoginCount(user.id);
+    return reply.code(201).send({ clientId: user.id, jwtToken: token } satisfies AuthSuccessResponseBody);
+  } catch (db_error) {
+    console.error(db_error);
+    return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+  }
+});
+
+// Authorization: Bearer <token_without_quotes>
+server.get<{
+  Headers: {'authorization': string};
+}>('/api/auth/verify-jwt', async (request, reply) => {
+  try {
+    if (!request.headers.authorization)
+      return reply.code(401).send({ reason: AuthErrors.LackingAuthorizationHeader } satisfies ErrorResponseBody);
+    const token = request.headers.authorization.split(' ')[1];
+    const decoded = await server.jwt.verify(token) as JwtType;
+
+    reply.code(200)
+      .header('content-security-policy', 'default-src \'self\'; script-src \'self\'; object-src \'none\'; base-uri \'self\';')
+      .send({ userId: decoded.userId } satisfies VerifySuccessResponseBody);
+  } catch (error) {
+    console.error(error);
+    reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies ErrorResponseBody);
+  }
+});
+
+server.get<{
+  Headers: {'authorization': string};
+  Reply: {
+    200: AuthSuccessResponseBody;
+    401: ErrorResponseBody;
+  }
+}>('/api/auth/refresh', async (request, reply) => {
+  if (!request.headers.authorization)
+    return reply.code(401).send({ reason: AuthErrors.LackingAuthorizationHeader } satisfies ErrorResponseBody);
+  try {
+    const oldToken = request.headers.authorization.split(' ')[1];
+    const decoded = await server.jwt.verify(oldToken) as JwtType;
+
+    const newToken = server.jwt.sign({ userId: decoded.userId } satisfies JwtType, { expiresIn: '30s' });
+    return reply.code(200).send({ clientId: decoded.userId, jwtToken: newToken } satisfies AuthSuccessResponseBody);
+  } catch (error) {
+    console.error(error);
+    reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies ErrorResponseBody);
+  }
+})
+
+server.get<{
+  Headers: {'authorization': string};
+}>('/api/auth/logout/:inputUserId', async (request, reply) => {
+  const { inputUserId } = request.params as { inputUserId: string };
+  if (!inputUserId)
+    return reply.code(400).send({ reason: AuthErrors.LackingIdParamInUri } satisfies ErrorResponseBody);
+
+  try {
+    const user = await User.findById(inputUserId) as UserType
+    if (user === null)
+      return reply.code(400).send({ reason: AuthErrors.UnknownUserId } satisfies ErrorResponseBody);
+    if (user.online_status == 0)
+      throw new Error('User is already offline, meaning you\'re unauthorized to log out');
+
+    await User.updateOnlineStatus(user.id, 0);
+    return reply.code(200).send({} satisfies LogoutSuccessResponseBody);
+  } catch (error) {
+    console.error(error);
+    return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+  }
+})
+
+
+server.get<{
+  Reply: {
+    200: UserType;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/users/:inputUserId', async (request, reply) => {
+  // location found when no inputUserId, but findById() correctly returns null for empty string input
+  const { inputUserId } = request.params as { inputUserId: string };
+  if (!inputUserId)
+    return reply.code(400).send({ reason: AuthErrors.LackingIdParamInUri } satisfies ErrorResponseBody);
+
+  try {
+    const user = await User.findById(inputUserId) as UserType | null;
+    if (user === null)
+      return reply.code(400).send({ reason: AuthErrors.UnknownUserId } satisfies ErrorResponseBody);
+    return reply.code(200).send(user);
+  } catch (error) {
+    console.error(error);
+    reply.code(500).send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+  }
+})
+
+server.post<{
+  Body: string[];
+  Reply: {
+    200: UserIdsToNamesMapping;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/users/getusernames', async (request, reply) => {
+  if (!Array.isArray(request.body) || request.body.length === 0 || request.body.length > 200)
+    return reply.code(400).send({ reason: AuthErrors.BadBodyFormat } satisfies ErrorResponseBody);
+  try {
+    const usersMap: UserIdsToNamesMapping = {};
+    const usersList = await User.findByIds(request.body) as UserType[];
+    for (const user of usersList) {
+      usersMap[user.id] = user.display_name;
+    }
+    for (const userId of request.body) {
+      if (!usersMap[userId])
+        usersMap[userId] = null;
+    }
+    return reply.code(200).send(usersMap);
+  }
+  catch (error) {
+    console.error(error);
+    reply.code(500).send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+  }
+});
+
+server.post<{
+  Body: UpdatePasswordBody;
+  Reply: {
+    201: null;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/users/updatepassword/:inputUserId', async (request, reply) => {
+  const { inputUserId } = request.params as { inputUserId: string };
+  if (!inputUserId)
+    return reply.code(400).send({ reason: AuthErrors.LackingIdParamInUri } satisfies ErrorResponseBody);
+
+  try {
+    const passwordError = validators.identifyPasswordError(request.body.password);
+    if (passwordError !== null)
+      return reply.code(400).send({ reason: passwordError } satisfies ErrorResponseBody );
+
+    if (await User.setPassword(inputUserId, request.body.password))
+      return reply.code(201).send();
+    return reply.code(400).send({ reason: AuthErrors.UnknownUserId } satisfies ErrorResponseBody);
+  } catch (e) {
+    console.error(e);
+    return reply.code(500).send({ reason: AuthErrors.BackendError });
+  }
+})
+
+server.post<{
+  Body: UpdateEmailBody;
+  Reply: {
+    201: null;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/users/updateemail/:inputUserId', async (request, reply) => {
+  const { inputUserId } = request.params as { inputUserId: string };
+  if (!inputUserId)
+    return reply.code(400).send({ reason: AuthErrors.LackingIdParamInUri } satisfies ErrorResponseBody);
+  if (!authServiceTypeGuards.isUpdateEmailBody(request.body))
+    return reply.code(400).send({ reason: AuthErrors.BadBodyFormat } satisfies ErrorResponseBody );
+
+  try {
+    if (!validators.isValidEmail(request.body.email))
+      return reply.code(400).send({ reason: AuthErrors.InvalidEmailFormat } satisfies ErrorResponseBody );
+
+    if (await User.setEmail(inputUserId, request.body.email))
+      return reply.code(201).send();
+    return reply.code(400).send({ reason: AuthErrors.UnknownUserId } satisfies ErrorResponseBody);
+  } catch (e) {
+    if (e instanceof Error)
+    {
+      console.error(e.message);
+      if (e.message.includes('UNIQUE constraint failed: users.email'))
+        return reply.code(400).send({ reason: AuthErrors.DuplicateEmail });
+      return reply.code(500).send({ reason: AuthErrors.BackendError });
+    }
+    else
+      console.error(e);
+  }
+})
+
+server.post<{
+  Body: UpdateDisplayNameBody;
+  Reply: {
+    201: UserType;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/users/updatedisplayname/:inputUserId', async (request, reply) => {
+  const { inputUserId } = request.params as { inputUserId: string };
+  if (!inputUserId)
+    return reply.code(400).send({ reason: AuthErrors.LackingIdParamInUri } satisfies ErrorResponseBody);
+  if (!authServiceTypeGuards.isUpdateDisplayNameBody(request.body))
+    return reply.code(400).send({ reason: AuthErrors.BadBodyFormat } satisfies ErrorResponseBody );
+
+  try {
+    const updatedUser = await User.setDisplayName(inputUserId, request.body.displayName) as UserType;
+    if (updatedUser === null)
+      return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+    return reply.code(201).send(updatedUser);
+  } catch (e) {
+    if (e instanceof Error)
+    {
+      console.error(e.message);
+      if (e.message.includes('UNIQUE constraint failed: users.display_name'))
+        return reply.code(400).send({ reason: AuthErrors.DuplicateDisplayName });
+      return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+    }
+    else
+      console.error(e);
+  }
+})
+
+server.post<{
+  Body: UpdateImageBody;
+  Reply: {
+    201: UserType;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/users/updateimage/:inputUserId', async (request, reply) => {
+  const { inputUserId } = request.params as { inputUserId: string };
+  if (!inputUserId)
+    return reply.code(400).send({ reason: AuthErrors.LackingIdParamInUri } satisfies ErrorResponseBody);
+  if (!authServiceTypeGuards.isUpdateImageBody(request.body))
+    return reply.code(400).send({ reason: AuthErrors.BadBodyFormat } satisfies ErrorResponseBody );
+
+  try {
+    const smallImgBuffer: Buffer = await sharp(request.body.image).resize(264, 264, {fit: 'inside', withoutEnlargement: true}).toBuffer();
+    const updatedUser = await User.setImage(inputUserId, request.body.image, smallImgBuffer) as UserType;
+    if (updatedUser === null)
+      return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+    // TODO: publish for Flo
+
+    return reply.code(201).send(updatedUser);
+  } catch (e) {
+    if (e instanceof Error)
+    {
+      console.error(e.message);
+      if (e.message.includes('UNIQUE constraint failed: users.display_name'))
+        return reply.code(400).send({ reason: AuthErrors.DuplicateDisplayName });
+      return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+    }
+    else
+      console.error(e);
+  }
+})
+
+
+server.get<{
+  Reply: {
+    204: null;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/users/delete/:inputUserId', async (request, reply) => {
+  const { inputUserId } = request.params as { inputUserId: string };
+  if (!inputUserId)
+    return reply.code(400).send({ reason: AuthErrors.LackingIdParamInUri } satisfies ErrorResponseBody);
+
+  try {
+    if (await User.delete(inputUserId))
+      return reply.code(204).send();
+    return reply.code(400).send({ reason: AuthErrors.UnknownUserId } satisfies ErrorResponseBody);
+  } catch (e) {
+    if (e instanceof Error)
+    {
+      console.error(e.message);
+      return reply.code(500).send({ reason: AuthErrors.BackendError });
+    }
+    else
+      console.error(e);
+  }
+})
+
+
+// The two below can be modified to return objects as Steffen wants or needs them
+server.get<{
+  Reply: {
+    200: MatchResult[];
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/users/:inputUserId/matches', async (request, reply) => {
+  const { inputUserId } = request.params as { inputUserId: string };
+  if (!inputUserId)
+    return reply.code(400).send({ reason: AuthErrors.LackingIdParamInUri } satisfies ErrorResponseBody);
+
+  try {
+    const matches = await GameResultModel.fetchUserMatches(inputUserId) as MatchResult[];
+    return reply.code(200).send(matches);
+  } catch (e) {
+      console.error(e);
+      return reply.code(500).send({ reason: AuthErrors.BackendError });
+  }
+})
+
+server.get<{
+  Reply: {
+    200: TournamentResult[];
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  }
+}>('/api/users/:inputUserId/tournaments', async (request, reply) => {
+  const { inputUserId } = request.params as { inputUserId: string };
+  if (!inputUserId)
+    return reply.code(400).send({ reason: AuthErrors.LackingIdParamInUri } satisfies ErrorResponseBody);
+
+  try {
+    const tournaments = await GameResultModel.fetchUserTournaments(inputUserId) as TournamentResult[];
+    return reply.code(200).send(tournaments);
+  } catch (e) {
+      console.error(e);
+      return reply.code(500).send({ reason: AuthErrors.BackendError });
+  }
+})
+
+
+server.setNotFoundHandler((req, res) => {
+  res.code(404).send({ route: req.url, method: req.method });
+});
+
+server.listen({
+  port: transNetworkSettings.authService.port,
+  host: '0.0.0.0'
+  }, (err, address) => {
+    if (err) {
+      console.error(err)
+      process.exit(1)
+    }
+      console.log(`Server listening at ${address}`)
+})

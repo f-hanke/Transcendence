@@ -73,39 +73,36 @@ fastify.addHook('onRequest', async (request, reply) => {
 
 // 🔁 Microservice Proxies (with prefix stripping)
 fastify.register(fastifyHttpProxy, {
-  upstream: `http://localhost:${transNetworkSettings.authService.port}`,
+  upstream: 'http://users-auth:10004',
   prefix: '/AUTHENTICATION',
   rewritePrefix: '', // removes /auth before forwarding
 });
 
 fastify.register(fastifyHttpProxy, {
-  upstream: `http://localhost:${transNetworkSettings.matchmakingService.port}`,
-  prefix: '/MATCHMAKING',
-  rewritePrefix: '',
-});
-
-fastify.register(fastifyHttpProxy, {
-  upstream: `http://localhost:${transNetworkSettings.chatService.port}`,
-  prefix: '/CHATSERVICE',
-  rewritePrefix: '',
-});
-
-fastify.register(fastifyHttpProxy, {
-  upstream: `http://localhost:${transNetworkSettings.gameService.port}`,
-  prefix: '/GAMESERVICE',
-  rewritePrefix: '',
-});
-
-fastify.register(fastifyHttpProxy, {
-  upstream: `http://localhost:${transNetworkSettings.webserver.port}`,
-  // >>>>>> for local testing only
-  // upstream: `http://localhost:9999`,
-  // <<<<<< for local testing only
+  upstream: 'http://webserver:10005',
   prefix: '/',
   rewritePrefix: '/',
-  // httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
 });
 
+// 🔁 Game Microservices Proxies
+// Comment these out since we refactored the TransNetworkSettings
+// fastify.register(fastifyHttpProxy, {
+//   upstream: `http://localhost:${transNetworkSettings.matchmakingService.port}`,
+//   prefix: '/MM',
+//   rewritePrefix: '', // removes /matchmaking before forwarding
+// });
+
+// fastify.register(fastifyHttpProxy, {
+//   upstream: `http://localhost:${transNetworkSettings.chatService.port}`,
+//   prefix: '/CHAT',
+//   rewritePrefix: '', // removes /chat before forwarding
+// });
+
+// fastify.register(fastifyHttpProxy, {
+//   upstream: `http://localhost:${transNetworkSettings.gameService.port}`,
+//   prefix: '/GAME',
+//   rewritePrefix: '', // removes /game before forwarding
+// });
 
 // >>>>>> for local testing only
 // fastify.setNotFoundHandler((req, reply) => {
@@ -134,35 +131,30 @@ fastify.register(fastifyHttpProxy, {
 
 
 // 🔁 WebSocket proxying
-const wsProxy = createProxyServer({ ws: true });
+// Comment out for now since we refactored the TransNetworkSettings
+// const wsProxy = createProxyServer({ ws: true });
 
-fastify.server.on('upgrade', (req, socket, head) => {
-  const url = req.url || '';
-  let target = '';
+// fastify.server.on('upgrade', (req, socket, head) => {
+//   const url = req.url || '';
+//   let target = '';
 
-  console.log("\n");
-  console.log(chalk.yellow('INSIDE UPGRADE ROUTE!'));
-  // console.log(chalk.red(`[${new Date().toISOString()}] ${request.method} ${request.url} from ${request.ip}`));
-  console.log("\n");
+//   console.log("\n");
+//   console.log(chalk.yellow('INSIDE UPGRADE ROUTE!'));
+//   console.log("\n");
 
-  if (url.startsWith('/CHATSERVICE')) target = `ws://localhost:${transNetworkSettings.chatService.port}`;
-  else if (url.startsWith('/GAMESERVICE')) target = `ws://localhost:${transNetworkSettings.gameService.port}`;
-  else if (url.startsWith('/MATCHMAKING')) target = `ws://localhost:${transNetworkSettings.matchmakingService.port}`;
-  // >>>>>> for local testing only
-  // else if (url.startsWith('/') || url === '/') {
-  //   target = 'ws://localhost:9999';
-  // }
-  // <<<<<< for local testing only
-  else {
-    socket.destroy();
-    return;
-  }
+//   if (url.startsWith('/CHATSERVICE')) target = `ws://localhost:${transNetworkSettings.chatService.port}`;
+//   else if (url.startsWith('/GAMESERVICE')) target = `ws://localhost:${transNetworkSettings.gameService.port}`;
+//   else if (url.startsWith('/MATCHMAKING')) target = `ws://localhost:${transNetworkSettings.matchmakingService.port}`;
+//   else {
+//     socket.destroy();
+//     return;
+//   }
 
-  // Optional: Strip prefix if backend expects it
-  req.url = url.replace(/^\/(CHATSERVICE|GAMESERVICE|MATCHMAKING)/, '');
+//   // Optional: Strip prefix if backend expects it
+//   req.url = url.replace(/^\/(CHATSERVICE|GAMESERVICE|MATCHMAKING)/, '');
 
-  wsProxy.ws(req, socket, head, { target });
-});
+//   wsProxy.ws(req, socket, head, { target });
+// });
 
 
 // according to ChatGPT, shortest possible JWT is 27 characters
@@ -183,6 +175,27 @@ fastify.get<{
     reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies AuthServiceTypes.ErrorResponseBody);
   }
 });
+
+// Special endpoint for the webserver to get the connection info it
+// needs to provide to clients.
+// Comment out for now since we refactored the TransNetworkSettings
+// get('/connectioninfo', async (request, reply) => {
+//   const result = {
+//     chat: {
+//       ip: transNetworkSettings.chatService.ip,
+//       port: transNetworkSettings.chatService.port
+//     },
+//     game: {
+//       ip: transNetworkSettings.gameService.ip,
+//       port: transNetworkSettings.gameService.port
+//     },
+//     mm: {
+//       ip: transNetworkSettings.matchmakingService.ip,
+//       port: transNetworkSettings.matchmakingService.port
+//     }
+//   };
+//   return result;
+// });
 
 fastify.listen({
   port: transNetworkSettings.apiGateway.port,

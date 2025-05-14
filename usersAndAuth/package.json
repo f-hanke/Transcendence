@@ -1,0 +1,39 @@
+{
+  "name": "usersandauth",
+  "version": "1.0.0",
+  "description": "Users service and Authentication service",
+  "main": "service.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node service.js",
+    "dev": "docker rm -f rabbitmq && docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management && npm run build && npm run start",
+    "db": "node db/init/init.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@fastify/cors": "^11.0.1",
+    "amqplib": "^0.10.7",
+    "@fastify/jwt": "^9.1.0",
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^11.9.1",
+    "fastify": "^5.2.2",
+    "pino-pretty": "^13.0.0",
+    "sqlite": "^5.1.1",
+    "sharp": "^0.32.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.1",
+    "@types/bcrypt": "^5.0.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/eslint__js": "^8.42.3",
+    "@types/node": "^22.14.0",
+    "@types/amqplib": "^0.10.7",
+    "eslint": "^9.25.1",
+    "transcendence": "file:../shared",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.31.0"
+  }
+}

@@ -1,45 +1,47 @@
-type TransNetworkAddress = {
-  port: number;
-  ip: string;
-};
-
-type TransNetworkSettings = {
-  matchmakingService: TransNetworkAddress;
-  gameService: TransNetworkAddress;
-  chatService: TransNetworkAddress;
-  authService: TransNetworkAddress;
-  webserver: TransNetworkAddress;
-  apiGateway: TransNetworkAddress;
-};
+export interface TransNetworkSettings {
+  apiGateway: {
+    ip: string;
+    port: number;
+  };
+  webserver: {
+    ip: string;
+    port: number;
+  };
+  gameMatchmaking: {
+    ip: string;
+    port: number;
+  };
+  gamePlay: {
+    ip: string;
+    port: number;
+  };
+  authService: {
+    ip: string;
+    port: number;
+  };
+}
 
 const transNetworkSettings: TransNetworkSettings = {
   apiGateway: {
     ip: "0.0.0.0",
     port: 8443,
   },
-  matchmakingService: {
-    // ip: "10.15.106.2",
-    ip: "localhost",
-    port: 10001,
+  webserver: {
+    ip: "0.0.0.0", // use "localhost" outside of Docker
+    port: 10005, // 10005 inside Docker
   },
-  gameService: {
-    ip: "localhost",
+  gameMatchmaking: {
+    ip: "0.0.0.0",
     port: 10002,
   },
-  chatService: {
-    ip: "localhost",
-    port: 10003
+  gamePlay: {
+    ip: "0.0.0.0",
+    port: 10003,
   },
   authService: {
-    ip: "localhost",
-    port: 10004
-  },
-  webserver: {
-    ip: "0.0.0.0",
-    port: 10005
-  },
+    ip: "0.0.0.0", // use "localhost" outside of Docker
+    port: 10004,
+  }
 };
 
 export { transNetworkSettings };
-
-export type { TransNetworkSettings };
