@@ -1,4 +1,4 @@
-# Default Make command :-) MAKE MAKEFILES GREAT AGAIN LOL
+# Default Make command :-) MAKE MAKEFILES GREAT AGAIN LOLmake 
 all: setup start
 
 # Setup directories and network
@@ -27,70 +27,9 @@ stop:
 	cd rabbitmq && docker compose down -v
 	@echo "All services have been stopped and removed."
 
-# Check status of all services
+# Check status of all services (improved version with colors)
 status:
-	@echo "Checking status of all services..."
-	@echo "============================================"
-	@echo "CONTAINER STATUS:"
-	docker ps --format "NAMES: {{.Names}}\tSTATUS: {{.Status}}\tPORTS: {{.Ports}}"
-	@echo "============================================"
-	@echo "SERVICE HEALTH CHECKS:"
-	@if curl -s http://localhost:9200 > /dev/null; then \
-		echo "Elasticsearch: ✅ (http://localhost:9200)"; \
-	else \
-		echo "Elasticsearch: ❌ (not responding)"; \
-	fi
-	@if curl -s http://localhost:5601 > /dev/null; then \
-		echo "Kibana: ✅ (http://localhost:5601)"; \
-	else \
-		echo "Kibana: ❌ (not responding)"; \
-	fi
-	@if curl -s http://localhost:9090 > /dev/null; then \
-		echo "Prometheus: ✅ (http://localhost:9090)"; \
-	else \
-		echo "Prometheus: ❌ (not responding)"; \
-	fi
-	@if curl -s http://localhost:3000 > /dev/null; then \
-		echo "Grafana: ✅ (http://localhost:3000)"; \
-	else \
-		echo "Grafana: ❌ (not responding)"; \
-	fi
-	@if curl -s http://localhost:15672 > /dev/null; then \
-		echo "RabbitMQ: ✅ (http://localhost:15672)"; \
-	else \
-		echo "RabbitMQ: ❌ (not responding)"; \
-	fi
-	@if curl -sk https://localhost:8443 > /dev/null; then \
-		echo "API Gateway: ✅ (https://localhost:8443)"; \
-	else \
-		echo "API Gateway: ❌ (not responding)"; \
-	fi
-	@if curl -s http://localhost:10001 > /dev/null; then \
-		echo "Matchmaking Service: ✅ (http://localhost:10001)"; \
-	else \
-		echo "Matchmaking Service: ❌ (not responding)"; \
-	fi
-	@if curl -s http://localhost:10002 > /dev/null; then \
-		echo "Game Service: ✅ (http://localhost:10002)"; \
-	else \
-		echo "Game Service: ❌ (not responding)"; \
-	fi
-	@if curl -s http://localhost:10003 > /dev/null; then \
-		echo "Chat Service: ✅ (http://localhost:10003)"; \
-	else \
-		echo "Chat Service: ❌ (not responding)"; \
-	fi
-	@if curl -s http://localhost:10004 > /dev/null; then \
-		echo "Auth Service: ✅ (http://localhost:10004)"; \
-	else \
-		echo "Auth Service: ❌ (not responding)"; \
-	fi
-	@if curl -s http://localhost:10005 > /dev/null; then \
-		echo "Webserver: ✅ (http://localhost:10005)"; \
-	else \
-		echo "Webserver: ❌ (not responding)"; \
-	fi
-	@echo "============================================"
+	@./scripts/health_check.sh
 
 # Clean up less aggressively (containers, volumes, and networks)
 clean: stop
@@ -102,8 +41,17 @@ clean: stop
 	docker network rm rabbitmq-network 2>/dev/null || true
 	@echo "Less aggressive Docker cleanup complete!"
 
+# Clean npm build files
+clean-npm:
+	@echo "Cleaning npm build files..."
+	find . -name "node_modules" -type d -prune -exec rm -rf '{}' +
+	find . -name "dist" -type d -prune -exec rm -rf '{}' +
+	find . -name ".cache" -type d -prune -exec rm -rf '{}' +
+	find . -name "*.tsbuildinfo" -type f -delete
+	@echo "NPM build files cleaned!"
+
 # Clean everything (more aggressive cleanup)
-fclean: stop
+fclean: stop clean-npm
 	@echo "Forcing full cleanup of Docker resources..."
 	# Remove stopped containers, unused images, networks, and volumes
 	docker container prune -f
@@ -120,14 +68,15 @@ re: fclean all
 
 help:
 	@echo "Available Commands:"
-	@echo "  all      - Setup and start all services"
-	@echo "  setup    - Setup directories and network"
-	@echo "  start    - Start RabbitMQ and monitoring stack"
-	@echo "  stop     - Stop all services"
-	@echo "  status   - Check status of all services"
-	@echo "  clean    - Clean up stopped containers and volumes"
-	@echo "  fclean   - Clean up all Docker resources (containers, images, networks, volumes)"
-	@echo "  re       - Run fclean and then start everything fresh"
+	@echo "  all        - Setup and start all services"
+	@echo "  setup      - Setup directories and network"
+	@echo "  start      - Start RabbitMQ and monitoring stack"
+	@echo "  stop       - Stop all services"
+	@echo "  status     - Check status of all services (with colorful output)"
+	@echo "  clean      - Clean up stopped containers and volumes"
+	@echo "  clean-npm  - Clean up npm build files (node_modules, dist, etc.)"
+	@echo "  fclean     - Clean up all Docker resources and npm build files"
+	@echo "  re         - Run fclean and then start everything fresh"
 
 
-.PHONY: start stop status clean fclean re help setup
+.PHONY: start stop status clean clean-npm fclean re help setup
