@@ -8,28 +8,35 @@ type TransNetworkSettings = {
   gameService: TransNetworkAddress;
   chatService: TransNetworkAddress;
   authService: TransNetworkAddress;
+  webserver: TransNetworkAddress;
+  apiGateway: TransNetworkAddress;
 };
 
 const transNetworkSettings: TransNetworkSettings = {
+  apiGateway: {
+    ip: "0.0.0.0",
+    port: 8443,
+  },
   matchmakingService: {
+    // ip: "10.15.106.2",
     ip: "localhost",
-    // ip: "10.15.204.3",
-    port: 3000,
+    port: 10001,
   },
   gameService: {
-    // ip: "10.15.204.3",
     ip: "localhost",
-    port: 3001
+    port: 10002,
   },
   chatService: {
     ip: "localhost",
-    // ip: "10.15.204.1",
-    port: 3002
+    port: 10003
   },
   authService: {
     ip: "localhost",
-    // ip: "localhost",
-    port: 3003
+    port: 10004
+  },
+  webserver: {
+    ip: "localhost",
+    port: 10005
   },
 };
 

@@ -1,0 +1,5 @@
+- identity checking in api gateway
+- verify and sanitise user input in register, login and settings
+- tournament creation in matchmaking
+- tournament overview page
+- settings page

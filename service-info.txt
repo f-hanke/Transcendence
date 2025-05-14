@@ -1,0 +1,24 @@
+======================================================
+MICROSERVICES STACK - SERVICE INFORMATION
+======================================================
+
+MONITORING SERVICES:
+- Elasticsearch: http://localhost:9200
+- Kibana:        http://localhost:5601
+- Prometheus:    http://localhost:9090
+- Grafana:       http://localhost:3000 (admin/admin)
+- Logstash:      http://localhost:9600
+- RabbitMQ:      http://localhost:15672 (guest/guest)
+
+APPLICATION SERVICES:
+- API Gateway:          https://localhost:8443
+- Auth Service:         http://localhost:10004
+- Matchmaking Service:  http://localhost:10001
+- Game Service:         http://localhost:10002
+- Chat Service:         http://localhost:10003
+- Webserver:            http://localhost:10005
+
+======================================================
+For more details, check the documentation or run:
+$ make status
+====================================================== 

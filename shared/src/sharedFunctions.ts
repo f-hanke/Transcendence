@@ -1,3 +1,5 @@
+import { MatchMakingTypes } from "./matchmakingTypes";
+
 function isTypedObject(value: unknown): value is { type: string } {
   return (
     typeof value === "object" &&
@@ -15,14 +17,51 @@ function generateUniqueId(): string {
   return "id-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
 }
 
-function colog(any: any)
-{
+function colog(any: any) {
   console.log(any);
 }
 
-function jlog(any: any)
-{
-  console.log(JSON.stringify(any, null,2));
+function jlog(any: any) {
+  console.log(JSON.stringify(any, null, 2));
 }
 
-export { isTypedObject, isDefined, generateUniqueId, colog, jlog };
+function tournamentIsEmpty(tournament: MatchMakingTypes.Tournament) {
+  return (
+    !isDefined(tournament.player1Id) &&
+    !isDefined(tournament.player2Id) &&
+    !isDefined(tournament.player3Id) &&
+    !isDefined(tournament.player4Id)
+  );
+}
+
+function tournamentIsFull(tournament: MatchMakingTypes.Tournament) {
+  return (
+    isDefined(tournament.player1Id) &&
+    isDefined(tournament.player2Id) &&
+    isDefined(tournament.player3Id) &&
+    isDefined(tournament.player4Id)
+  );
+}
+
+function isOwnTournament(
+  tournament: MatchMakingTypes.Tournament,
+  ownId: string
+) {
+  return (
+    tournament.player1Id === ownId ||
+    tournament.player2Id === ownId ||
+    tournament.player3Id === ownId ||
+    tournament.player4Id === ownId
+  );
+}
+
+export {
+  isTypedObject,
+  isDefined,
+  generateUniqueId,
+  colog,
+  jlog,
+  tournamentIsEmpty,
+  tournamentIsFull,
+  isOwnTournament,
+};
