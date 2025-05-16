@@ -11,6 +11,13 @@ declare namespace GameServiceTypes {
     clientId: string;
   };
 
+  type APIPaddle =
+  {
+    matchId: string;
+    player: number;
+    newY: number;
+  };
+
   type PossibleGameEnds =
     | "normalMaxScoreReached"
     | "playerLeftGame"
@@ -61,6 +68,8 @@ declare namespace GameServiceTypes {
     ball: Ball;
   };
 
+
+
   type DataServerGameIsOver = {
     matchId: string;
     player1: {
@@ -84,6 +93,7 @@ declare namespace GameServiceTypes {
     | "clientIsReady"
     | "serverGameStarted"
     | "serverUpdateGameState"
+    | "serverUpdateGameStateRestAPI"
     | "serverGameIsOver"
     | "serverError";
 
@@ -110,6 +120,12 @@ declare namespace GameServiceTypes {
     data: DataServerUpdateGameState;
   }
 
+  interface serverUpdateGameStateRestAPI
+    extends GameServiceMessageBlueprint<"serverUpdateGameStateRestAPI"> {
+    data: DataServerUpdateGameState;
+  }
+
+
   interface ServerGameIsOver
     extends GameServiceMessageBlueprint<"serverGameIsOver"> {
     data: DataServerGameIsOver;
@@ -129,6 +145,7 @@ declare namespace GameServiceTypes {
     | ClientLeftGame
     | ClientIsReady
     | ServerUpdateGameState
+    | serverUpdateGameStateRestAPI
     | ServerGameIsOver
     | ServerError
     | ServerGameStarted;
@@ -171,6 +188,28 @@ function isServerUpdateGameState(
 ): message is GameServiceTypes.ServerUpdateGameState {
   return (
     message?.type === "serverUpdateGameState" &&
+    message?.data &&
+    typeof message.data.matchId === "string" &&
+    message.data.player1 &&
+    typeof message.data.player1.id === "string" &&
+    typeof message.data.player1.score === "number" &&
+    typeof message.data.player1.paddleY === "number" &&
+    message.data.ball &&
+    typeof message.data.ball.x === "number" &&
+    typeof message.data.ball.y === "number" &&
+    (message.data.player2 === null ||
+      (message.data.player2 &&
+        typeof message.data.player2.id === "string" &&
+        typeof message.data.player2.score === "number" &&
+        typeof message.data.player2.paddleY === "number"))
+  );
+}
+
+function isServerUpdateGameStateRestAPI(
+  message: any
+): message is GameServiceTypes.serverUpdateGameStateRestAPI {
+  return (
+    message?.type === "serverUpdateGameStateRestAPI" &&
     message?.data &&
     typeof message.data.matchId === "string" &&
     message.data.player1 &&
@@ -243,6 +282,7 @@ const gameServiceTypeGuards = {
   isServerError,
   isClientIsReady,
   isServerGameStarted,
+  isServerUpdateGameStateRestAPI
 } as const;
 
 export { GameServiceTypes, gameServiceTypeGuards };
