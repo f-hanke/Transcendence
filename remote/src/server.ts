@@ -24,8 +24,6 @@ const fastify = Fastify();
 fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
 
-fastify.register(cors, { origin: "*" });
-
 // Add health check endpoint for Docker
 fastify.get('/health', async () => {
   return { status: 'ok' };

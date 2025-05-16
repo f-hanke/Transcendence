@@ -17,6 +17,7 @@ async function publishMessage(message) {
         console.error("Trying to publish unknown type");
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
 =======
 <<<<<<< HEAD
@@ -37,11 +38,15 @@ async function publishMessage(message) {
 =======
     const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
 >>>>>>> 1053fd9 (set up test environment)
+=======
+    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
+>>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
     console.log('[Publisher] Sent:', message);
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 startConsumer().catch(console.error);
 =======
@@ -51,6 +56,9 @@ startConsumer().catch(console.error);
 startConsumer().catch(console.error);
 >>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
 >>>>>>> c8ff778 (chore(remote): shovel it carefully onto new main)
+=======
+startConsumer().catch(console.error);
+>>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
 const server = fastify({
     logger: {
         transport: {
@@ -367,7 +375,7 @@ server.setNotFoundHandler((req, res) => {
 });
 server.listen({
     port: transNetworkSettings.authService.port,
-    host: transNetworkSettings.authService.ip
+    host: '0.0.0.0'
 }, (err, address) => {
     if (err) {
         console.error(err);

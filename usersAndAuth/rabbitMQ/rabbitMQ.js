@@ -4,10 +4,13 @@ import { GameResultModel } from '../orm/gameResultModel.js';
 const queue = 'matchMaking-results';
 async function updateUserTournamentRecords(msg) {
     console.log("Updating user tournament records db...");
+<<<<<<< HEAD
     if (!gameResultTypeGuards.isTournamentResult(msg)) {
         console.error("Invalid tournament result message format");
         return;
     }
+=======
+>>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
     try {
         await GameResultModel.recordNewTournament(msg);
     }
@@ -17,10 +20,13 @@ async function updateUserTournamentRecords(msg) {
 }
 async function updateUserSimpleMatchRecords(msg) {
     console.log("Updating user simple match history db...");
+<<<<<<< HEAD
     if (!gameResultTypeGuards.isMatchResult(msg)) {
         console.error("Invalid match result message format");
         return;
     }
+=======
+>>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
     try {
         await GameResultModel.recordNewSimpleMatch(msg);
     }
@@ -29,7 +35,11 @@ async function updateUserSimpleMatchRecords(msg) {
     }
 }
 export async function startConsumer() {
+<<<<<<< HEAD
     const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
+=======
+    const connection = await amqp.connect('amqp://localhost');
+>>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     console.log('[Consumer] Waiting for messages...');
@@ -42,7 +52,11 @@ export async function startConsumer() {
             else if (gameResultTypeGuards.isMatchResult(message))
                 await updateUserSimpleMatchRecords(message);
             else
+<<<<<<< HEAD
                 console.error("Wrong data read from rabbitMQ in usersAndAuth service.");
+=======
+                console.error("Wrong data read from rabbitMQ.");
+>>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
             channel.ack(msg);
         }
     });
