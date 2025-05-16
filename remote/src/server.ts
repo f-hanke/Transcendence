@@ -13,7 +13,6 @@ import {
   transNetworkSettings,
 } from "transcendence";
 
-import cors from '@fastify/cors';
 import { db } from "./db/db.js"
 import { Tournament } from "./orm/tournament.js";
 import { utils } from "./utils/ranking.js";

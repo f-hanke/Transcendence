@@ -67,7 +67,7 @@ async function publishMessage(message: RabbitMQTypes.UserChange) {
 }
 
 
-// startConsumer().catch(console.error);
+startConsumer().catch(console.error);
 
 
 const server = fastify({
