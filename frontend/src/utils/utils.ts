@@ -112,12 +112,12 @@ function buildBackendRoute(optn: {
   let ip: string = "";
   switch (optn.service) {
     case "gameService":
-      ip = transNetworkSettings.gameService.ip;
-      port = transNetworkSettings.gameService.port;
+      ip = transNetworkSettings.gamePlay.ip;
+      port = transNetworkSettings.gamePlay.port;
       break;
     case "matchmakingService":
-      ip = transNetworkSettings.matchmakingService.ip;
-      port = transNetworkSettings.matchmakingService.port;
+      ip = transNetworkSettings.gameMatchmaking.ip;
+      port = transNetworkSettings.gameMatchmaking.port;
       break;
     case "chatService":
       ip = transNetworkSettings.chatService.ip;

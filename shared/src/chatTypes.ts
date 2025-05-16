@@ -15,7 +15,7 @@ declare namespace ChatServiceTypes {
   type ChatUser = {
     recipientId: string;
     displayName: string;
-    image: string;
+    image: Blob;
     friend: boolean;
     online: boolean;
     blocked: boolean;
@@ -113,7 +113,7 @@ function isChatUser(obj: any): obj is ChatServiceTypes.ChatUser {
     obj !== null &&
     typeof obj.recipientId === "string" &&
     typeof obj.displayName === "string" &&
-    typeof obj.image === "string" &&
+    typeof obj.image === "object" &&
     typeof obj.friend === "boolean" &&
     typeof obj.online === "boolean" &&
     typeof obj.blocked === "boolean" &&
