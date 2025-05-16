@@ -3,6 +3,7 @@ import {
   createHtmlElementFromString,
   getCurDateString,
   navigateToSite,
+  sanitizeAndCleanInput,
 } from "../../utils/utils";
 import { ChatInterface } from "../../backendInterface/chatInterface";
 
@@ -75,7 +76,7 @@ class ChatCurrent extends HTMLElement {
           authorId: window.store.userStore.get().details.id,
           recipientId: window.store.chatMessageStore.get().recipientId,
           date: getCurDateString(),
-          message: input.value,
+          message: sanitizeAndCleanInput(input.value),
         },
       });
     });

@@ -329,7 +329,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 
 	try {
 		const stmt = db.prepare(databaseQuerys.getUser);
-		const rows = stmt.all() as { id: string; username: string; online: boolean; }[];
+		const rows = stmt.all() as { id: string; username: string; small_image: Blob; online: boolean; }[];
 
 		rows.forEach((row) => {
 			if (row.id === clientId)
@@ -345,7 +345,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 				displayName: row.username,
 				recipientId: row.id,
 				email: `${row.username}@test.com`,
-				image: "test",
+				image: row.small_image,
 				lastMessage: lastMessage,
 				friendRequestStatus: friendRequestStatus,
 			});
