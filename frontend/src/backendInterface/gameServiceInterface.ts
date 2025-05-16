@@ -38,8 +38,8 @@ class GameServiceInterface {
         },
         body: JSON.stringify(data),
       });
-    colog("response");
-    colog(response);
+      colog("response");
+      colog(response);
       if (!response.ok) {
         throw new Error(`Couldn't create match on Server via API!`);
       }
@@ -128,19 +128,25 @@ class GameServiceInterface {
   static handleServerUpdateGameStateRemote(
     dataJson: GameServiceTypes.ServerUpdateGameState
   ) {
-    window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+    if (dataJson.type === "serverUpdateGameState")
+      window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+    else window.store.gameStore.updateBallPositionNBothPaddles(dataJson.data);
   }
 
   static handleServerUpdateGameStateLocalPvAi(
     dataJson: GameServiceTypes.ServerUpdateGameState
   ) {
-    window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+    if (dataJson.type === "serverUpdateGameState")
+      window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+    else window.store.gameStore.updateBallPositionNBothPaddles(dataJson.data);
   }
 
   static handleServerUpdateGameStateLocalPvp(
     dataJson: GameServiceTypes.ServerUpdateGameState
   ) {
-    window.store.gameStore.updateBallPosition(dataJson.data);
+    if (dataJson.type === "serverUpdateGameState")
+      window.store.gameStore.updateBallPosition(dataJson.data);
+    else window.store.gameStore.updateBallPositionNBothPaddles(dataJson.data);
   }
 
   static handleServerGameIsOver(dataJson: GameServiceTypes.ServerGameIsOver) {

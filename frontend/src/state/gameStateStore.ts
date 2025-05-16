@@ -138,6 +138,29 @@ class GameStateStore {
     this.updateListenersOnChange();
   }
 
+
+  updateBallPositionNBothPaddles(
+    newState: GameServiceTypes.DataServerUpdateGameState
+  ) {
+    this.state.ball.x = newState.ball.x;
+    this.state.ball.y = newState.ball.y + gameSettings.bumperHeight;
+    const newOponentPaddle =
+      window.store.userStore.get().details.id === newState.player1.id
+        ? newState.player2
+        : newState.player1;
+    const newOwnPaddle =
+      window.store.userStore.get().details.id === newState.player1.id
+        ? newState.player2
+        : newState.player1;
+    this.getPaddleByPlayerId(newOponentPaddle.id).paddleY =
+      newOponentPaddle.paddleY + gameSettings.bumperHeight;
+    this.getPaddleByPlayerId(newOwnPaddle.id).paddleY =
+      newOwnPaddle.paddleY + gameSettings.bumperHeight;
+    this.getPaddleByPlayerId(newState.player1.id).score = newState.player1.score;
+    this.getPaddleByPlayerId(newState.player2.id).score = newState.player2.score;
+    this.updateListenersOnChange();
+  }
+
   updateListenersOnChange() {
     this.listeners.forEach((callback) => callback());
   }
