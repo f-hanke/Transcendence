@@ -180,6 +180,49 @@ export class Game {
 
     }
 
+	updatePaddlePositionRestAPI(data: GameServiceTypes.DataClientUpdatePaddlePosition, player : number) {
+
+
+		if (player === 1) {
+			this.player1.y = data.player1.paddleY;
+		} else if (player === 2 && data.player2 !== null) {
+			this.player2.y = data.player2.paddleY;
+		}
+
+		if (!this.isGameOver) {
+
+			const gameStateMsgNew: GameServiceTypes.serverUpdateGameStateRestAPI = {
+			type: "serverUpdateGameStateRestAPI",
+				data: {
+					ball: {
+					x: this.ball.x,
+					y: this.ball.y,
+					},
+				matchId: this.matchId,
+				player1: {
+					id: this.player1.id,
+					paddleY: this.player1.y,
+					score: this.player1.score,
+					},
+				player2: {
+					id: this.player2.id,
+					paddleY: this.player2.y,
+					score: this.player2.score,
+				}
+			}
+			}
+
+			if (this.typeOfGame == 'remote') {
+				sendMessage(this.websocketplayer1 as WebSocket, gameStateMsgNew);
+				sendMessage(this.websocketplayer2 as WebSocket, gameStateMsgNew);
+            }
+            else {
+                sendMessage(this.websocket as WebSocket, gameStateMsgNew);
+            }
+
+
+    }}
+
     updatePaddlePositionRemote(data: GameServiceTypes.DataClientUpdatePaddlePosition) {
         if (data.player1.playerId == this.player1.id) {
             this.player1.y = data.player1.paddleY;

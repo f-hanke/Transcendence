@@ -90,16 +90,62 @@ fastify.post("/api/game/start", async (request, reply) => {
 
 });
 
+fastify.get("/api/game/state/:matchId", async (request, reply) => {
+  const { matchId } = request.params as { matchId: string };
 
-// fastify.post("/api/game/paddle", async (request, reply) => {
-//   const { matchId, clientId, position } = request.body;
+  const game = games.get(matchId);
 
-//   const game = games.get(matchId);
-//   if (!game) return reply.status(404).send({ error: "Game not found" });
+  if (!game) {
+    return reply.status(404).send({ error: "Game not found" });
+  }
 
-//   game.updatePaddlePosition({ matchId, clientId, position });
-//   reply.send({ message: "Paddle position updated" });
-// });
+  reply.send({
+    matchId,
+    typeOfGame: game.typeOfGame,
+    player1: {
+      id: game.player1.id,
+      score: game.player1.score,
+      paddle: game.player1.y,
+    },
+    player2: {
+      id: game.player2.id,
+      score: game.player2.score,
+      paddle: game.player2.y,
+    },
+    isGameOver: game.isGameOver,
+  });
+});
+
+
+
+
+fastify.get("/api/game/active", async (request, reply) => {
+  const activeGames = [];
+
+  for (const [matchId, game] of games.entries()) {
+    if (!game.isGameOver) {
+      activeGames.push({
+        matchId,
+        type: game.typeOfGame,
+        players: {
+          host: game.player1?.id ?? "unknown",
+          opponent: game.player2?.id ?? "unknown"
+        },
+        status: "active"
+      });
+    }
+  }
+
+  const response = {
+    status: "success",
+    count: activeGames.length,
+    activeGames
+  };
+
+  reply
+    .header('Content-Type', 'application/json; charset=utf-8')
+    .send(JSON.stringify(response, null, 2));  // <== Indentation 2 espaces
+});
 
 
 fastify.post("/api/game/leave", async (request, reply) => {
@@ -113,6 +159,38 @@ fastify.post("/api/game/leave", async (request, reply) => {
   games.delete(matchId);
 
   reply.send({ message: `Player ${clientId} left game ${matchId}` });
+});
+
+/*Not TESTED
+Add borders tests
+restrict to local and remote */
+fastify.post("/api/game/paddle", async (request, reply) => {
+  const { matchId, player, newY } = request.body as GameServiceTypes.APIPaddle;
+
+  const game = games.get(matchId);
+  if (!game) return reply.status(404).send({ error: "Game not found" });
+
+  let data: GameServiceTypes.DataClientUpdatePaddlePosition;
+
+  if (player === 1) {
+    data = {
+      matchId,
+      player1: { playerId: "", paddleY: newY, paddleSpeed: 0 },
+      player2: null,
+    };
+  } else if (player === 2) {
+    data = {
+      matchId,
+      player1: { playerId: "", paddleY: 0, paddleSpeed: 0 },  // Valeurs par défaut ou actuelles si tu les as
+      player2: { playerId: "", paddleY: newY, paddleSpeed: 0 },
+    };
+  } else {
+    return reply.status(400).send({ error: "Invalid player number" });
+  }
+
+  game.updatePaddlePositionRestAPI(data, player);
+
+  reply.send({ message: "Paddle position updated" });
 });
 
 
