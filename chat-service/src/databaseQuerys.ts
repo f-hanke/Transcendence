@@ -64,7 +64,7 @@ export namespace databaseQuerys {
 		`;
 
 	export const	getUser = `
-			SELECT username, id, online FROM users
+			SELECT username, id, small_image, online FROM users
 		`;
 
 	export const	getUnreadMessage = `
