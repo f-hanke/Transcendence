@@ -68,6 +68,11 @@ export function sendMessage(
   socket.send(JSON.stringify(msg));
 }
 
+fastify.get("/api/routes", async (request, reply) => {
+  const routes = fastify
+    .printRoutes();
+  reply.type("text/plain").send(routes);
+});
 
 fastify.post("/api/game/start", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
@@ -83,6 +88,31 @@ fastify.post("/api/game/start", async (request, reply) => {
   clientsGames.set(oponentId, matchId);
   reply.send({ message: "Game started!", matchId });
 
+});
+
+
+// fastify.post("/api/game/paddle", async (request, reply) => {
+//   const { matchId, clientId, position } = request.body;
+
+//   const game = games.get(matchId);
+//   if (!game) return reply.status(404).send({ error: "Game not found" });
+
+//   game.updatePaddlePosition({ matchId, clientId, position });
+//   reply.send({ message: "Paddle position updated" });
+// });
+
+
+fastify.post("/api/game/leave", async (request, reply) => {
+  const message = JSON.stringify(request.body, null, 2);
+  const { matchId, clientId } = request.body as GameServiceTypes.APIClientLeave;
+  const game = games.get(matchId);
+
+  if (!game) return reply.status(404).send({ error: "Game not found" });
+
+  game.stopGame("playerLeftGame");
+  games.delete(matchId);
+
+  reply.send({ message: `Player ${clientId} left game ${matchId}` });
 });
 
 
@@ -289,8 +319,8 @@ fastify.get("/favicon.ico", async (request, reply) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: transNetworkSettings.gameService.port, host: "0.0.0.0" });
-    console.log(chalk.cyan.bold(`Server running on http://localhost:${transNetworkSettings.gameService.port}`));
+    await fastify.listen({ port: transNetworkSettings.gamePlay.port, host: "0.0.0.0" });
+    console.log(chalk.cyan.bold(`Server running on http://localhost:${transNetworkSettings.gamePlay.port}`));
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

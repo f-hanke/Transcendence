@@ -6,6 +6,11 @@ declare namespace GameServiceTypes {
     oponentId: string;
   };
 
+  type APIClientLeave = {
+    matchId: string;
+    clientId: string;
+  };
+
   type PossibleGameEnds =
     | "normalMaxScoreReached"
     | "playerLeftGame"

@@ -129,6 +129,7 @@ fclean: stop clean-npm
 	docker network rm rabbitmq-network 2>/dev/null || true
 	@echo "Full Docker cleanup complete!"
 
+reDev: clean-npm all
 re: fclean all
 
 help:
