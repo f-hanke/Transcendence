@@ -31,7 +31,7 @@ const gameSettings: GameSettings = {
   bumperHeight: 10,
   ballRadius: 5,
   maxScore: 5,
-  ballSpeed: 3,
+  ballSpeed: 4,
   paddleSpeed: 3,
   canvasHeight: -1,
   paddleMaxY: -1,
