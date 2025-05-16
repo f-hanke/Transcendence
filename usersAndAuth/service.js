@@ -15,13 +15,38 @@ const queue = 'auth-ChatService'; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
         console.error("Trying to publish unknown type");
+<<<<<<< HEAD
     const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
+=======
+<<<<<<< HEAD
+    // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
+    // const connection = await amqp.connect(`amqp://localhost`);
+    let connection;
+    try {
+        connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
+    }
+    catch (err) {
+        console.warn('Failed to connect to rabbitmq-service, trying localhost...');
+        connection = await amqp.connect('amqp://localhost');
+    }
+=======
+    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
+>>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
+>>>>>>> c8ff778 (chore(remote): shovel it carefully onto new main)
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
     console.log('[Publisher] Sent:', message);
 }
+<<<<<<< HEAD
 startConsumer().catch(console.error);
+=======
+<<<<<<< HEAD
+// startConsumer().catch(console.error);
+=======
+startConsumer().catch(console.error);
+>>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
+>>>>>>> c8ff778 (chore(remote): shovel it carefully onto new main)
 const server = fastify({
     logger: {
         transport: {
@@ -338,7 +363,7 @@ server.setNotFoundHandler((req, res) => {
 });
 server.listen({
     port: transNetworkSettings.authService.port,
-    host: transNetworkSettings.authService.ip
+    host: '0.0.0.0'
 }, (err, address) => {
     if (err) {
         console.error(err);
