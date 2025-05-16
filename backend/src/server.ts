@@ -286,10 +286,11 @@ fastify.get("/favicon.ico", async (request, reply) => {
   reply.send({ message: "Game started!" });
 });
 
+
 const start = async () => {
   try {
-    await fastify.listen({ port: transNetworkSettings.gamePlay.port, host: "0.0.0.0" });
-    console.log(chalk.cyan.bold(`Server running on http://localhost:${transNetworkSettings.gamePlay.port}`));
+    await fastify.listen({ port: transNetworkSettings.gameService.port, host: "0.0.0.0" });
+    console.log(chalk.cyan.bold(`Server running on http://localhost:${transNetworkSettings.gameService.port}`));
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
