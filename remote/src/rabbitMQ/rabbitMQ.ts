@@ -4,15 +4,15 @@ import { db } from '../db/db.js';
 
 const queue = 'match-results';
 
-function updateOngoingTournamentDatabase(msg: GameResultTypes.MatchResult){
-  console.log("update Tournament db");
-  try {
-    db.prepare(`UPDATE matches SET player1Score=?, player2Score=?, playedAt=? WHERE id=?`)
-    .run(msg.player1Score, msg.player2Score, msg.createdAt, msg.matchId);
-  } catch (err) {
-    console.error("DB error updating/inserting Tournament db: ", err);
-  }
-}
+// function updateOngoingTournamentDatabase(msg: GameResultTypes.MatchResult){
+//   console.log("update ongoing Tournaments db");
+//   try {
+//     db.prepare(`UPDATE matches SET player1Score=?, player2Score=?, playedAt=? WHERE id=?`)
+//     .run(msg.player1Score, msg.player2Score, msg.createdAt, msg.matchId);
+//   } catch (err) {
+//     console.error("DB error updating/inserting Tournament db: ", err);
+//   }
+// }
 
 export async function startConsumer(onMessage: (matchResult: GameResultTypes.MatchResult) => void) {
 	const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
@@ -28,7 +28,7 @@ export async function startConsumer(onMessage: (matchResult: GameResultTypes.Mat
 			console.log('[Consumer] Received:', matchResult);
 			if (gameResultTypeGuards.isMatchResult(matchResult)) {
 				channel.ack(msg);
-				updateOngoingTournamentDatabase(matchResult);
+				// updateOngoingTournamentDatabase(matchResult);
         		onMessage(matchResult);  // callback function
 		  	}
       		else

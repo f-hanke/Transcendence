@@ -58,11 +58,11 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
 {
   tournaments = await dbConverters.getAllTournamentsRuntimeTyped();  // update runtime tournaments so they include the scores recently stored in DB
   let tournamentToHandle: MatchMakingTypes.Tournament | null = null;
-  for (let tournament of tournaments) {
+  for (let tournament of tournaments)
+  {
     if (tournament.matchSemifinale1?.matchId === matchResult.matchId || tournament.matchSemifinale2?.matchId === matchResult.matchId)
     {
       tournamentToHandle = tournament;
-
       if (tournament.matchSemifinale1?.matchId === matchResult.matchId)
         tournament.matchResultSemifinale1 = matchResult;
       else if (tournament.matchSemifinale2?.matchId === matchResult.matchId)
@@ -120,36 +120,45 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       break;
     }
   }
-
-  if (!tournamentToHandle) {
+  if (tournamentToHandle) {
+    try {
+      await Tournament.updateOngoingTournamentDatabase(matchResult.player1Score, matchResult.player2Score, matchResult.createdAt, matchResult.matchId);
+      console.log("Ongoing Tournament updated in DB");
+    }
+    catch (err) {
+      console.error("DB error updating/inserting ongoing Tournament db: ", err);
+    }
+    
+    const tournamentWithRanking: MatchMakingTypes.TournamentWithRanking = utils.deriveTournamentWithRanking(tournamentToHandle);
+    if (tournamentWithRanking.rank1PlayerId && tournamentWithRanking.rank2PlayerId && tournamentWithRanking.rank3PlayerId && tournamentWithRanking.rank4PlayerId) {
+      const tournamentToStore: GameResultTypes.TournamentResult = {
+        tournamentId: tournamentWithRanking.tournamentId as string,
+        rank1PlayerId: tournamentWithRanking.rank1PlayerId,
+        rank2PlayerId: tournamentWithRanking.rank2PlayerId,
+        rank3PlayerId: tournamentWithRanking.rank3PlayerId,
+        rank4PlayerId: tournamentWithRanking.rank4PlayerId,
+        matchSemifinale1: tournamentWithRanking.matchResultSemifinale1 as GameResultTypes.MatchResult,
+        matchSemifinale2: tournamentWithRanking.matchResultSemifinale2 as GameResultTypes.MatchResult,
+        matchBronze: tournamentWithRanking.matchResultBronze as GameResultTypes.MatchResult,
+        matchFinale: tournamentWithRanking.matchResultFinale as GameResultTypes.MatchResult,
+        createdAt: new Date().toISOString()
+      }
+      publishMessage(tournamentToStore); // read by usersAndAuth
+      // TODO: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it?
+    }
+  }
+  else {
     console.log("Tournament not found for matchId", matchResult.matchId, ", processing as a simple match");
     const game = games.find((g) => g.matchId === matchResult.matchId) || null;
     if (!game) {
       console.error("Game service published a result for matchId <", matchResult.matchId, "> unknown to matchmaking");
+      console.error("For reference, here are the games known to matchmaking: ", games);
       return;
     }
     publishMessage(matchResult);  // read by usersAndAuth
     removeGameFromServerGameList(game);
     sendMessageToAllClients({ type: "deleteGame", data: game });
     console.log("Simple Match result processed for matchId: ", game.matchId);
-    return;
-  }
-  const tournamentWithRanking: MatchMakingTypes.TournamentWithRanking = utils.deriveTournamentWithRanking(tournamentToHandle);
-  if (tournamentWithRanking.rank1PlayerId && tournamentWithRanking.rank2PlayerId && tournamentWithRanking.rank3PlayerId && tournamentWithRanking.rank4PlayerId) {
-    const tournamentToStore: GameResultTypes.TournamentResult = {
-      tournamentId: tournamentWithRanking.tournamentId as string,
-      rank1PlayerId: tournamentWithRanking.rank1PlayerId,
-      rank2PlayerId: tournamentWithRanking.rank2PlayerId,
-      rank3PlayerId: tournamentWithRanking.rank3PlayerId,
-      rank4PlayerId: tournamentWithRanking.rank4PlayerId,
-      matchSemifinale1: tournamentWithRanking.matchResultSemifinale1 as GameResultTypes.MatchResult,
-      matchSemifinale2: tournamentWithRanking.matchResultSemifinale2 as GameResultTypes.MatchResult,
-      matchBronze: tournamentWithRanking.matchResultBronze as GameResultTypes.MatchResult,
-      matchFinale: tournamentWithRanking.matchResultFinale as GameResultTypes.MatchResult,
-      createdAt: new Date().toISOString()
-    }
-    publishMessage(tournamentToStore); // read by usersAndAuth
-    // TODO: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it?
   }
 }
 
@@ -206,7 +215,7 @@ fastify.register(async function (fastify) {
       } else if (matchmakingTypeGuards.isClientJoinGame(dataJson)) {
         handleClientJoinGame(dataJson);
       } else if (matchmakingTypeGuards.isClientDeleteGame(dataJson)) {
-        handleClientDeleteGame(dataJson);
+        // handleClientDeleteGame(dataJson); // @Steffen: update to not do this after regular game end?
       } else if (matchmakingTypeGuards.isClientCreateTournament(dataJson)) {
         handleClientCreateTournament(dataJson);
       } else if (matchmakingTypeGuards.isClientJoinTournament(dataJson)) {
@@ -224,7 +233,7 @@ fastify.register(async function (fastify) {
         "WebSocket closed. Client ID: ",
         socketToClientId.get(socket)
       );
-      closeGamesOpenedByClient(socket);
+      closeGamesOpenedByClient(socket);  // @Steffen: too soon, I need Leo's results first
       unregisterClient(socket);
     });
 
@@ -249,14 +258,14 @@ function unregisterClient(socket: WebSocket) {
 }
 
 function closeGamesOpenedByClient(socket: WebSocket) {
-  const clientId = socketToClientId.get(socket) as string;
-  const gameOfClient = games.find((match) => match.hostId === clientId);
-  if (isDefined(gameOfClient)) {
-    handleClientDeleteGame({
-      type: "deleteGame",
-      data: gameOfClient,
-    });
-  }
+  // const clientId = socketToClientId.get(socket) as string;
+  // const gameOfClient = games.find((match) => match.hostId === clientId);
+  // if (isDefined(gameOfClient)) {
+  //   handleClientDeleteGame({
+  //     type: "deleteGame",
+  //     data: gameOfClient,
+  //   });
+  // }
 }
 
 
@@ -278,6 +287,7 @@ function handleClientLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
 function handleClientCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
   console.log(" ~ createGame", dataJson.data.matchId);
   games.push(dataJson.data);
+  console.log("Games: ", games);
   sendMessageToAllClients({ type: "createGame", data: dataJson.data });
 }
 
@@ -398,7 +408,7 @@ async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinT
     sendMessageToManyClients(participants, {
       type: "startTournament",
       data: correspondingTournament as MatchMakingTypes.TournamentFull,
-      // TODO: let them know about game schedule
+      // TODO: let them know about game schedule i.e. SCHEDULE publish the info for Flo
     });
   }
 }

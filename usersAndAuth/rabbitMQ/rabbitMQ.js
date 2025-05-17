@@ -4,6 +4,10 @@ import { GameResultModel } from '../orm/gameResultModel.js';
 const queue = 'matchMaking-results';
 async function updateUserTournamentRecords(msg) {
     console.log("Updating user tournament records db...");
+    if (!gameResultTypeGuards.isTournamentResult(msg)) {
+        console.error("Invalid tournament result message format");
+        return;
+    }
     try {
         await GameResultModel.recordNewTournament(msg);
     }
@@ -13,6 +17,10 @@ async function updateUserTournamentRecords(msg) {
 }
 async function updateUserSimpleMatchRecords(msg) {
     console.log("Updating user simple match history db...");
+    if (!gameResultTypeGuards.isMatchResult(msg)) {
+        console.error("Invalid match result message format");
+        return;
+    }
     try {
         await GameResultModel.recordNewSimpleMatch(msg);
     }
@@ -34,7 +42,7 @@ export async function startConsumer() {
             else if (gameResultTypeGuards.isMatchResult(message))
                 await updateUserSimpleMatchRecords(message);
             else
-                console.error("Wrong data read from rabbitMQ.");
+                console.error("Wrong data read from rabbitMQ in usersAndAuth service.");
             channel.ack(msg);
         }
     });

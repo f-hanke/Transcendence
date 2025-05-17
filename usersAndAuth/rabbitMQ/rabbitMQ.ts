@@ -6,6 +6,10 @@ const queue = 'matchMaking-results';
 
 async function updateUserTournamentRecords(msg: GameResultTypes.TournamentResult){
 	console.log("Updating user tournament records db...");
+	if (!gameResultTypeGuards.isTournamentResult(msg)) {
+		console.error("Invalid tournament result message format");
+		return;
+	}
 	try {
 		await GameResultModel.recordNewTournament(msg);
 	} catch (err) {
@@ -15,6 +19,10 @@ async function updateUserTournamentRecords(msg: GameResultTypes.TournamentResult
 
 async function updateUserSimpleMatchRecords(msg: GameResultTypes.MatchResult) {
 	console.log("Updating user simple match history db...");
+	if (!gameResultTypeGuards.isMatchResult(msg)) {
+		console.error("Invalid match result message format");
+		return;
+	}
 	try {
 		await GameResultModel.recordNewSimpleMatch(msg);
 	} catch (err) {

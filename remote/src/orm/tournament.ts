@@ -227,6 +227,16 @@ const Tournament = {
     } catch (db_error) {
       throw db_error;
     }
+  },
+
+  async updateOngoingTournamentDatabase(player1Score: number, player2Score: number, createdAt: string, matchId: string) {
+    console.log("update ongoing Tournaments db");
+    try {
+      db.prepare(`UPDATE matches SET player1Score=?, player2Score=?, playedAt=? WHERE id=?`)
+      .run(player1Score, player2Score, createdAt, matchId);
+    } catch (db_error) {
+      throw db_error;
+    }
   }
 
 };
