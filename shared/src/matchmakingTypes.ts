@@ -116,14 +116,6 @@ declare namespace MatchMakingTypes {
     player4Id: string | null;
   }
 
-  type TournamentInitiation = {
-    tournamentId: string | null; // Steffen's id === DB id in this case
-    player1Id: string | null;
-    player2Id: string | null;
-    player3Id: string | null;
-    player4Id: string | null;
-  }
-
   type TournamentWithRanking = Tournament & {
     rank1PlayerId: string | null;
     rank2PlayerId: string | null;
@@ -134,7 +126,6 @@ declare namespace MatchMakingTypes {
   type UserTournamentQuery = {
     tournament: TournamentWithRanking | null;
   };
-
 
 
   type ServerCancelGame = {
