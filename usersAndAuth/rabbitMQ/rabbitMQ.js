@@ -21,7 +21,7 @@ async function updateUserSimpleMatchRecords(msg) {
     }
 }
 export async function startConsumer() {
-    const connection = await amqp.connect('amqp://localhost');
+    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     console.log('[Consumer] Waiting for messages...');

@@ -15,7 +15,7 @@ function updateOngoingTournamentDatabase(msg: GameResultTypes.MatchResult){
 }
 
 export async function startConsumer(onMessage: (matchResult: GameResultTypes.MatchResult) => void) {
-	const connection = await amqp.connect('amqp://localhost');
+	const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
 	const channel = await connection.createChannel();
 
 	await channel.assertQueue(queue, { durable: false });
@@ -32,7 +32,7 @@ export async function startConsumer(onMessage: (matchResult: GameResultTypes.Mat
         		onMessage(matchResult);  // callback function
 		  	}
       		else
-				console.error("Wrong data read from rabbitMQ.");
+				console.error("Wrong data read from rabbitMQ in matchMaking (remote) service.");
 		}
 	});
 }

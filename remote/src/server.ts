@@ -45,7 +45,7 @@ const queue = 'matchMaking-results';
 async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult) {
   if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message))
     console.error("Trying to publish unknown type");
-  const connection = await amqp.connect('amqp://localhost');
+  const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
   const channel = await connection.createChannel();
 
   await channel.assertQueue(queue, { durable: false });

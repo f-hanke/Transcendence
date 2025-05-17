@@ -23,7 +23,7 @@ async function updateUserSimpleMatchRecords(msg: GameResultTypes.MatchResult) {
 }
 
 export async function startConsumer() {
-	const connection = await amqp.connect('amqp://localhost');
+	const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
 	const channel = await connection.createChannel();
 
 	await channel.assertQueue(queue, { durable: false });
@@ -39,7 +39,7 @@ export async function startConsumer() {
 			else if (gameResultTypeGuards.isMatchResult(message))
 				await updateUserSimpleMatchRecords(message);
 			else	
-				console.error("Wrong data read from rabbitMQ.");
+				console.error("Wrong data read from rabbitMQ in usersAndAuth service.");
 			channel.ack(msg);
 		}
 	});
