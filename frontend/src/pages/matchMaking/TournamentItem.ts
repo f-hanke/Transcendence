@@ -8,7 +8,7 @@ type OptnsTournamentItem = {
 };
 
 class TournamentItem extends HTMLElement {
-  data: MatchMakingTypes.Tournament;
+  data: MatchMakingTypes.TournamentInitiation;
   renderJoin?: boolean;
   renderLeave?: boolean;
   constructor() {
