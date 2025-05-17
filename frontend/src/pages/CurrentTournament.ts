@@ -6,12 +6,15 @@ import {
 } from "transcendence";
 import { createHtmlElementFromString, getCurDateString } from "../utils/utils";
 import { ChatInterface } from "../backendInterface/chatInterface";
+import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
+import { createHtmlElementFromString, getCurDateString } from "../utils/utils";
+import { ChatInterface } from "../backendInterface/chatInterface";
 
 const tournamentState1: MatchMakingTypes.TournamentWithRanking = {
-  rank1PlayerId: "d",
+  rank1PlayerId: null,
   rank2PlayerId: null,
-  rank3PlayerId: "a",
-  rank4PlayerId: "b",
+  rank3PlayerId: null,
+  rank4PlayerId: null,
   player1Id: "a",
   player2Id: "b",
   player3Id: "c",
