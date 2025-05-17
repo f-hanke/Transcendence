@@ -4,7 +4,6 @@ import {
   matchmakingTypeGuards,
   MatchMakingTypes,
 } from "transcendence";
-import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
 import { createHtmlElementFromString, getCurDateString } from "../utils/utils";
 import { ChatInterface } from "../backendInterface/chatInterface";
 
