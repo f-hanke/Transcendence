@@ -28,10 +28,10 @@ const { createProxyServer } = httpProxy;
 
 const fastify = Fastify({
   logger: true,
-  // https: {
-  //   key: fs.readFileSync(path.join(certPath, 'key.pem')),
-  //   cert: fs.readFileSync(path.join(certPath, 'cert.pem')),
-  // },
+  https: {
+    key: fs.readFileSync(path.join(certPath, 'key.pem')),
+    cert: fs.readFileSync(path.join(certPath, 'cert.pem')),
+  },
 });
 
 fastify.register(fastifyJwt, {
@@ -41,7 +41,6 @@ fastify.register(fastifyJwt, {
 // fastify.register(cors, { origin: "*" });
 
 // await fastify.register(websocketPlugin);
-
 
 async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
   try {
@@ -57,13 +56,18 @@ async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
   }
 }
 
-// // 🔐 JWT auth middleware (skip for static + auth)
+// 🔐 JWT auth middleware (skip for static + auth)
 // fastify.addHook('onRequest', async (req, reply) => {
 //   const skipAuth = req.raw.url?.startsWith('/auth') || req.raw.url?.match(/\.(js|css|html|png)$/);
 //   if (!skipAuth) {
 //     await authMiddleware(req, reply);
 //   }
 // });
+
+// Add health check endpoint for Docker
+fastify.get('/health', async () => {
+  return { status: 'ok' };
+});
 
 fastify.addHook('onRequest', async (request, reply) => {
   console.log("\n");
@@ -74,46 +78,66 @@ fastify.addHook('onRequest', async (request, reply) => {
 
 // 🔁 Microservice Proxies (with prefix stripping)
 fastify.register(fastifyHttpProxy, {
-  upstream: `http://localhost:${transNetworkSettings.authService.port}`,
+  upstream: 'http://users-auth:10004',
   prefix: '/AUTHENTICATION',
   rewritePrefix: '', // removes /auth before forwarding
 });
 
 fastify.register(fastifyHttpProxy, {
-  upstream: `http://localhost:${transNetworkSettings.gameMatchmaking.port}`,
-  prefix: '/MATCHMAKING',
-  rewritePrefix: '',
-});
-
-fastify.register(fastifyHttpProxy, {
-  upstream: `http://localhost:${transNetworkSettings.chatService.port}`,
-  prefix: '/CHATSERVICE',
-  rewritePrefix: '',
-});
-
-fastify.register(fastifyHttpProxy, {
-  upstream: `http://localhost:${transNetworkSettings.gamePlay.port}`,
-  prefix: '/GAMESERVICE',
-  rewritePrefix: '',
-});
-
-fastify.register(fastifyHttpProxy, {
-  // upstream: `http://localhost:${transNetworkSettings.webserver.port}`,
-  upstream: `http://localhost:9999`,
+  upstream: 'http://webserver:10005',
   prefix: '/',
   rewritePrefix: '/',
-  // httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
 });
 
+// Remote/Matchmaking service proxy
+fastify.register(fastifyHttpProxy, {
+  upstream: 'http://remote-matchmaking:10002',
+  prefix: '/MM',
+  rewritePrefix: '', // removes /MM before forwarding
+});
 
+// Game service proxy
+fastify.register(fastifyHttpProxy, {
+  upstream: 'http://game-service:10003',
+  prefix: '/GAMESERVICE',
+  rewritePrefix: '', // removes /GAMESERVICE before forwarding
+});
 
+// Chat service proxy
+fastify.register(fastifyHttpProxy, {
+  upstream: 'http://chat-service:10001',
+  prefix: '/CHATSERVICE',
+  rewritePrefix: '', // removes /CHATSERVICE before forwarding
+});
+
+// 🔁 Game Microservices Proxies
+// Comment these out since we refactored the TransNetworkSettings
+// fastify.register(fastifyHttpProxy, {
+//   upstream: `http://localhost:${transNetworkSettings.matchmakingService.port}`,
+//   prefix: '/MM',
+//   rewritePrefix: '', // removes /matchmaking before forwarding
+// });
+
+// fastify.register(fastifyHttpProxy, {
+//   upstream: `http://localhost:${transNetworkSettings.chatService.port}`,
+//   prefix: '/CHAT',
+//   rewritePrefix: '', // removes /chat before forwarding
+// });
+
+// fastify.register(fastifyHttpProxy, {
+//   upstream: `http://localhost:${transNetworkSettings.gameService.port}`,
+//   prefix: '/GAME',
+//   rewritePrefix: '', // removes /game before forwarding
+// });
+
+// >>>>>> for local testing only
 fastify.setNotFoundHandler((req, reply) => {
   // Proxy all unmatched GET requests to Vite
   if (req.raw.method === 'GET') {
     const proxyReq = http.request(
       {
-        hostname: 'localhost',
-        port: 9999,
+        hostname: 'frontend', // In docker-compose, use the service name
+        port: 80, // Nginx runs on port 80
         path: req.raw.url,
         method: req.raw.method,
         headers: req.headers,
@@ -128,6 +152,8 @@ fastify.setNotFoundHandler((req, reply) => {
     reply.status(404).send({ error: 'Not found' });
   }
 });
+// <<<<<< for local testing only
+
 
 
 // 🔁 WebSocket proxying
@@ -139,15 +165,11 @@ fastify.server.on('upgrade', (req, socket, head) => {
 
   console.log("\n");
   console.log(chalk.yellow('INSIDE UPGRADE ROUTE!'));
-  // console.log(chalk.red(`[${new Date().toISOString()}] ${request.method} ${request.url} from ${request.ip}`));
   console.log("\n");
 
-  if (url.startsWith('/CHATSERVICE')) target = `ws://localhost:${transNetworkSettings.chatService.port}`;
-  else if (url.startsWith('/GAMESERVICE')) target = `ws://localhost:${transNetworkSettings.gamePlay.port}`;
-  else if (url.startsWith('/MATCHMAKING')) target = `ws://localhost:${transNetworkSettings.gameMatchmaking.port}`;
-  else if (url.startsWith('/') || url === '/') {
-    target = 'ws://localhost:9999';
-  }
+  if (url.startsWith('/CHATSERVICE')) target = `ws://chat-service:10001`;
+  else if (url.startsWith('/GAMESERVICE')) target = `ws://game-service:10003`;
+  else if (url.startsWith('/MATCHMAKING')) target = 'ws://remote-matchmaking:10002';
   else {
     socket.destroy();
     return;
@@ -177,6 +199,26 @@ fastify.get<{
     console.error(error);
     reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies AuthServiceTypes.ErrorResponseBody);
   }
+});
+
+// Special endpoint for the webserver to get the connection info it
+// needs to provide to clients.
+fastify.get('/connectioninfo', async (request, reply) => {
+  const result = {
+    chat: {
+      ip: 'chat-service', // Container name
+      port: 10001 // From transNetworkSettings
+    },
+    game: {
+      ip: 'game-service', // Container name
+      port: 10003 // From transNetworkSettings
+    },
+    mm: {
+      ip: 'remote-matchmaking', // Container name
+      port: 10002 // From transNetworkSettings
+    }
+  };
+  return result;
 });
 
 fastify.listen({
