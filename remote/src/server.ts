@@ -153,7 +153,7 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
   }
 }
 
-// await startConsumer(handleMatchResultProcessed);
+await startConsumer(handleMatchResultProcessed).catch(console.error);
 
 
 fastify.register(async function (fastify) {

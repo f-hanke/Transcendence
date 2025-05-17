@@ -37,11 +37,11 @@ const transNetworkSettings: TransNetworkSettings = {
     port: 10005, // 10005 inside Docker
   },
   gameMatchmaking: {
-    ip: "0.0.0.0",
+    ip: "localhost",
     port: 10002,
   },
   gamePlay: {
-    ip: "0.0.0.0",
+    ip: "localhost",
     port: 10003,
   },
   authService: {
@@ -49,7 +49,7 @@ const transNetworkSettings: TransNetworkSettings = {
     port: 10004,
   },
   chatService: {
-    ip: "0.0.0.0",
+    ip: "localhost",
     port: 10001,
   }
 };
