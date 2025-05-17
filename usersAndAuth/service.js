@@ -338,7 +338,7 @@ server.setNotFoundHandler((req, res) => {
 });
 server.listen({
     port: transNetworkSettings.authService.port,
-    host: transNetworkSettings.authService.ip
+    host: '0.0.0.0'
 }, (err, address) => {
     if (err) {
         console.error(err);
