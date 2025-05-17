@@ -7,9 +7,6 @@ import {
 import { createHtmlElementFromString, getCurDateString } from "../utils/utils";
 import { ChatInterface } from "../backendInterface/chatInterface";
 import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
-import { createHtmlElementFromString, getCurDateString } from "../utils/utils";
-import { ChatInterface } from "../backendInterface/chatInterface";
-import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
 
 const tournamentState1: MatchMakingTypes.TournamentWithRanking = {
   rank1PlayerId: "d",
