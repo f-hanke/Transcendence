@@ -11,10 +11,10 @@ import { createHtmlElementFromString, getCurDateString } from "../utils/utils";
 import { ChatInterface } from "../backendInterface/chatInterface";
 
 const tournamentState1: MatchMakingTypes.TournamentWithRanking = {
-  rank1PlayerId: null,
+  rank1PlayerId: "d",
   rank2PlayerId: null,
-  rank3PlayerId: null,
-  rank4PlayerId: null,
+  rank3PlayerId: "a",
+  rank4PlayerId: "b",
   player1Id: "a",
   player2Id: "b",
   player3Id: "c",
