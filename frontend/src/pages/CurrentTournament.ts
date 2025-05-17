@@ -4,9 +4,55 @@ import {
   matchmakingTypeGuards,
   MatchMakingTypes,
 } from "transcendence";
-import { createHtmlElementFromString } from "../utils/utils";
-import { ChatInterface } from "../backendInterface/chatInterface";
 import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
+import { createHtmlElementFromString, getCurDateString } from "../utils/utils";
+import { ChatInterface } from "../backendInterface/chatInterface";
+
+const tournamentState1: MatchMakingTypes.TournamentWithRanking = {
+  rank1PlayerId: null,
+  rank2PlayerId: null,
+  rank3PlayerId: null,
+  rank4PlayerId: null,
+  player1Id: "a",
+  player2Id: "b",
+  player3Id: "c",
+  player4Id: "d",
+  tournamentId: "1234",
+  started: true,
+  playedAt: null,
+  matchSemifinale1: {
+    hostId: "a",
+    invitedPlayerId: "b",
+    matchId: "ab",
+    oponentId: null,
+    tournamentId: "1234",
+    type: "tournament",
+    needsServerInitiation: true,
+  },
+  matchSemifinale2: {
+    hostId: "6",
+    invitedPlayerId: "d",
+    matchId: "bc",
+    oponentId: null,
+    tournamentId: "1234",
+    type: "tournament",
+    needsServerInitiation: true,
+  },
+  matchBronze: null,
+  matchFinale: null,
+  matchResultSemifinale1: {
+    createdAt: "",
+    matchId: "231",
+    player1Id: "a",
+    player2Id: "b",
+    winnerId: "a",
+    player1Score: "5",
+    player2Score: "3",
+  },
+  matchResultSemifinale2: null,
+  matchResultBronze: null,
+  matchResultFinale: null,
+};
 
 const tournamentState1: MatchMakingTypes.TournamentWithRanking = {
   rank1PlayerId: "d",
