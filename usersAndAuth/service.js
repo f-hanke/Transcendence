@@ -10,16 +10,26 @@ import { config } from './config/config.js';
 import { User } from './orm/user.js';
 import { GameResultModel } from './orm/gameResultModel.js';
 import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSettings } from 'transcendence';
-const queue = 'auth-ChatService';
+const queue = 'auth-ChatService'; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
         console.error("Trying to publish unknown type");
-    const connection = await amqp.connect('amqp://localhost');
+    // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
+    // const connection = await amqp.connect(`amqp://localhost`);
+    let connection;
+    try {
+        connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
+    }
+    catch (err) {
+        console.warn('Failed to connect to rabbitmq-service, trying localhost...');
+        connection = await amqp.connect('amqp://localhost');
+    }
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
     console.log('[Publisher] Sent:', message);
 }
+// startConsumer().catch(console.error);
 const server = fastify({
     logger: {
         transport: {
@@ -38,6 +48,10 @@ server.register(cors, { origin: "*" });
 server.get('/ping', async (request, reply) => {
     // the more "automatic" way of fastify handling the entire response
     return 'pong\n';
+});
+// Health check endpoint for Docker
+server.get('/health', async (request, reply) => {
+    return { status: 'ok' };
 });
 server.get('/playground', async (request, reply) => {
     reply.code(201).send({ success: true });

@@ -7,7 +7,7 @@ import {
   matchmakingTypeGuards,
   MatchMakingTypes,
 } from "transcendence";
-import { buildBackendRoute, buildWsRoute, navigateToSite } from "../utils/utils";
+import {  buildBackendRoute, buildWsRoute, navigateToSite } from "../utils/utils";
 import { AuthInterfaceAnswer } from "./authInterface";
 
 class MatchMakingInterface {

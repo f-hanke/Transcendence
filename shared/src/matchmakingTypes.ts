@@ -17,12 +17,38 @@ declare namespace MatchMakingTypes {
     player2Id: string | null;
     player3Id: string | null;
     player4Id: string | null;
+    matchSemifinale1: BasicGame | null;
+    matchSemifinale2: BasicGame | null;
+    matchFinale: BasicGame | null;
+    matchBronze: BasicGame | null;
+    matchResultSemifinale1: GameResultTypes.MatchResult | null;
+    matchResultSemifinale2: GameResultTypes.MatchResult | null;
+    matchResultFinale: GameResultTypes.MatchResult | null;
+    matchResultBronze: GameResultTypes.MatchResult | null;
+    started: boolean;
+    playedAt: string | null;
   };
 
-  type TournamentWithMatches = Tournament & {
-    matches: BasicGame[];
-    matchResults: GameResultTypes.MatchResult[];
+  type RawDBMatch = {
+    id: string;
+    player1Id: string;
+    player2Id: string;
+    player1Score: number | null;
+    player2Score: number | null;
+    playedAt: string | null;
   };
+
+  type RawDBTournament = {
+    id: string;
+    player1Id: string | null;
+    player2Id: string | null;
+    player3Id: string | null;
+    player4Id: string | null;
+    matchSemifinale1Id: string | null;
+    matchSemifinale2Id: string | null;
+    matchFinaleId: string | null;
+    matchBronzeId: string | null;
+  }
 
   type PlayerToCreateTournamentLobby = {
     playerId: string;
@@ -38,13 +64,10 @@ declare namespace MatchMakingTypes {
   };
 
   type PlayerKey = "player1Id" | "player2Id" | "player3Id" | "player4Id";
+  type MatchKey = "matchSemifinale1" | "matchSemifinale2" | "matchFinale" | "matchBronze";
 
   type BasicGameFull = Omit<BasicGame, "oponentId"> & { oponentId: string };
-
-  type TournamentFull = Omit<
-    TournamentWithMatches,
-    "player1Id" | "player2Id" | "player3Id" | "player4Id"
-  > & {
+  type TournamentFull = Omit<Tournament, "player1Id" | "player2Id" | "player3Id" | "player4Id"> & {
     player1Id: string;
     player2Id: string;
     player3Id: string;
@@ -85,21 +108,26 @@ declare namespace MatchMakingTypes {
     };
   };
 
-  // GET  /matchmaking/usertournament/:userId  - get running tournament user is part of or null if not part of one
+  type TournamentInitiation = {
+    tournamentId: string | null; // Steffen's id === DB id in this case
+    player1Id: string | null;
+    player2Id: string | null;
+    player3Id: string | null;
+    player4Id: string | null;
+  }
 
-  // type UserTournamentQuery = {
-  //   tournament: TournamentWithRanking | null;
-  // };
-
-  type PlayerStats = { id: string; rank: number; wins: number; losses: number };
-
-  type TournamentWithRanking = TournamentFull & {
-    Ranking: PlayerStats[];
+  type TournamentWithRanking = Tournament & {
+    rank1PlayerId: string | null;
+    rank2PlayerId: string | null;
+    rank3PlayerId: string | null;
+    rank4PlayerId: string | null;
   };
 
   type UserTournamentQuery = {
     tournament: TournamentWithRanking | null;
   };
+
+
 
   type ServerCancelGame = {
     type: "cancelGame";
@@ -277,11 +305,7 @@ function isTournament(obj: any): obj is MatchMakingTypes.Tournament {
     (typeof obj.player1Id === "string" || obj.player1Id === null) &&
     (typeof obj.player2Id === "string" || obj.player2Id === null) &&
     (typeof obj.player3Id === "string" || obj.player3Id === null) &&
-    (typeof obj.player4Id === "string" || obj.player4Id === null) &&
-    typeof obj.matches === "object" &&
-    Array.isArray(obj.matches) &&
-    typeof obj.matchResults === "object" &&
-    Array.isArray(obj.matchResults)
+    (typeof obj.player4Id === "string" || obj.player4Id === null)
   );
 }
 

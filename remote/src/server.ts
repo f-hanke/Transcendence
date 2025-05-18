@@ -1,7 +1,11 @@
 import Fastify, { FastifyRequest } from "fastify";
+import cors from '@fastify/cors';
 import fastifyWebsocket from "@fastify/websocket";
+import amqp from 'amqplib';
 import { WebSocket } from "ws";
 import {
+  gameResultTypeGuards,
+  GameResultTypes,
   isDefined,
   matchmakingTypeGuards,
   MatchMakingTypes,
@@ -9,12 +13,17 @@ import {
   transNetworkSettings,
 } from "transcendence";
 
+import cors from '@fastify/cors';
+import { db } from "./db/db.js"
 import { Tournament } from "./orm/tournament.js";
 import { utils } from "./utils/ranking.js";
+import { dbConverters } from "./utils/rawDBTypeConverters.js";
+import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
+import { match } from "assert";
 
 const fastify = Fastify();
-
 fastify.register(fastifyWebsocket);
+fastify.register(cors, { origin: "*" });
 
 // Add health check endpoint for Docker
 fastify.get('/health', async () => {
@@ -26,13 +35,130 @@ type MatchMakingFastifyRequest = FastifyRequest<{
 }>;
 
 let games: MatchMakingTypes.BasicGame[] = [];
-let tournaments: MatchMakingTypes.Tournament[] = await Tournament.findAll() as MatchMakingTypes.Tournament[];  // load up any unfinished
+let tournaments: MatchMakingTypes.Tournament[] = await dbConverters.getAllTournamentsRuntimeTyped();  // load up any unfinished tournaments
+console.log("Loaded up following tournaments: ", tournaments);
 
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket>();
 
+const queue = 'matchMaking-results';
+
+async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult) {
+  if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message))
+    console.error("Trying to publish unknown type");
+  const connection = await amqp.connect('amqp://localhost');
+  const channel = await connection.createChannel();
+
+  await channel.assertQueue(queue, { durable: false });
+
+  channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
+  console.log('[Publisher] Sent:', message);
+}
+
+async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResult)
+{
+  tournaments = await dbConverters.getAllTournamentsRuntimeTyped();  // update runtime tournaments so they include the scores recently stored in DB
+  let tournamentToHandle: MatchMakingTypes.Tournament | null = null;
+  for (let tournament of tournaments) {
+    if (tournament.matchSemifinale1?.matchId === matchResult.matchId || tournament.matchSemifinale2?.matchId === matchResult.matchId)
+    {
+      tournamentToHandle = tournament;
+
+      if (tournament.matchSemifinale1?.matchId === matchResult.matchId)
+        tournament.matchResultSemifinale1 = matchResult;
+      else if (tournament.matchSemifinale2?.matchId === matchResult.matchId)
+        tournament.matchResultSemifinale2 = matchResult;
+
+      // SCHEDULE FINAL MATCHES
+      if (!tournament.matchFinale && !tournament.matchBronze) {
+        let newMatchId = await Tournament.scheduleMatch(
+          tournament.tournamentId as string,
+          "matchFinale",
+          matchResult.winnerId,
+          ""
+        );
+        let newMatch: MatchMakingTypes.BasicGame = {
+          matchId: newMatchId,
+          hostId: matchResult.winnerId,
+          oponentId: null,
+          tournamentId: tournament.tournamentId as string,
+          type: "tournament",
+          invitedPlayerId: null
+        };
+        tournament.matchFinale = newMatch;
+
+        newMatchId = await Tournament.scheduleMatch(
+          tournament.tournamentId as string,
+          "matchBronze",
+          matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
+          ""
+        );
+        newMatch = {
+          matchId: newMatchId,
+          hostId: matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
+          oponentId: null,
+          tournamentId: tournament.tournamentId as string,
+          type: "tournament",
+          invitedPlayerId: null
+        }
+      }
+      else if (tournament.matchFinale && tournament.matchBronze) {
+        await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchFinale", matchResult.winnerId);
+        tournament.matchFinale.invitedPlayerId = matchResult.winnerId;
+        await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchBronze", matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id);
+        tournament.matchBronze.invitedPlayerId = matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id;
+      }
+      break;
+    }
+    else if (tournament.matchFinale?.matchId === matchResult.matchId) {
+      tournamentToHandle = tournament;
+      tournament.matchResultFinale = matchResult;
+      break;
+    }
+    else if (tournament.matchBronze?.matchId === matchResult.matchId) {
+      tournamentToHandle = tournament;
+      tournament.matchResultBronze = matchResult;
+      break;
+    }
+  }
+
+  if (!tournamentToHandle) {
+    console.log("Tournament not found for matchId", matchResult.matchId, ", processing as a simple match");
+    const game = games.find((g) => g.matchId === matchResult.matchId) || null;
+    if (!game) {
+      console.error("Game service published a result for matchId <", matchResult.matchId, "> unknown to matchmaking");
+      return;
+    }
+    publishMessage(matchResult);  // read by usersAndAuth
+    removeGameFromServerGameList(game);
+    sendMessageToAllClients({ type: "deleteGame", data: game });
+    console.log("Simple Match result processed for matchId: ", game.matchId);
+    return;
+  }
+  const tournamentWithRanking: MatchMakingTypes.TournamentWithRanking = utils.deriveTournamentWithRanking(tournamentToHandle);
+  if (tournamentWithRanking.rank1PlayerId && tournamentWithRanking.rank2PlayerId && tournamentWithRanking.rank3PlayerId && tournamentWithRanking.rank4PlayerId) {
+    const tournamentToStore: GameResultTypes.TournamentResult = {
+      tournamentId: tournamentWithRanking.tournamentId as string,
+      rank1PlayerId: tournamentWithRanking.rank1PlayerId,
+      rank2PlayerId: tournamentWithRanking.rank2PlayerId,
+      rank3PlayerId: tournamentWithRanking.rank3PlayerId,
+      rank4PlayerId: tournamentWithRanking.rank4PlayerId,
+      matchSemifinale1: tournamentWithRanking.matchResultSemifinale1 as GameResultTypes.MatchResult,
+      matchSemifinale2: tournamentWithRanking.matchResultSemifinale2 as GameResultTypes.MatchResult,
+      matchBronze: tournamentWithRanking.matchResultBronze as GameResultTypes.MatchResult,
+      matchFinale: tournamentWithRanking.matchResultFinale as GameResultTypes.MatchResult,
+      createdAt: new Date().toISOString()
+    }
+    publishMessage(tournamentToStore); // read by usersAndAuth
+    // TODO: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it?
+  }
+}
+
+// await startConsumer(handleMatchResultProcessed);
+
+
 fastify.register(async function (fastify) {
-  
+
   // API endpoint
   fastify.get<{
     Params: { playerId: string };
@@ -43,19 +169,22 @@ fastify.register(async function (fastify) {
   }>("/matchmaking/playertournament/:playerId", async (req, reply) => {
     const playerId = req.params.playerId as string;
     try {
-      const tournamentId: MatchMakingTypes.TournamentId | null = await Tournament.getPlayerTournamentId(playerId) as MatchMakingTypes.TournamentId | null;
-      if (!tournamentId) {
+      const tournamentIdDBObj: MatchMakingTypes.TournamentId | null = await Tournament.getPlayerTournamentId(playerId) as MatchMakingTypes.TournamentId || null;
+      if (!tournamentIdDBObj || !tournamentIdDBObj.tournamentId) {
+        console.log("Player is not part of any tournament, returning null");
         return reply.status(200).send(null);
       }
-      const tournament = await Tournament.findById(tournamentId.tournamentId.toString()) as MatchMakingTypes.TournamentWithMatches;
-      return reply.status(200).send(utils.deriveTournamentWithRanking(tournament));
-      
+      const playerTournamendId: string = tournamentIdDBObj.tournamentId.toString();
+      const tournament = tournaments.find((tournament) => tournament.tournamentId === playerTournamendId) as MatchMakingTypes.Tournament || null;
+      console.log("Player is part of tournament <", tournament.tournamentId, ">, returning TournamentWithRanking");
+      const tournamentWithRanking = utils.deriveTournamentWithRanking(tournament);
+      return reply.status(200).send(tournamentWithRanking);
+
     } catch (err) {
-      console.error("Error fetching tournament:", err);
+      console.error("Error fetching tournament: ", err);
       return reply.status(500).send({ error: "Internal server error" });
     }
   });
-
 
   // websocket
   fastify.get("/", { websocket: true }, (socket, req) => {
@@ -88,9 +217,7 @@ fastify.register(async function (fastify) {
       } else if (matchmakingTypeGuards.isClientDeleteTournament(dataJson)) {
         handleClientDeleteTournament(dataJson);
       } else {
-        throw new Error(
-          "Matchmaking server received unknown message from client!"
-        );
+        console.error("Matchmaking server received unknown message from client!");
       }
     });
     socket.on("close", () => {
@@ -110,8 +237,8 @@ fastify.register(async function (fastify) {
 
 function registerClient(req: MatchMakingFastifyRequest, socket: WebSocket) {
   const clientId = getClientIdFromQueryParam(req as MatchMakingFastifyRequest);
-  socketToClientId.set(socket, clientId);
-  clientIdToSocket.set(clientId, socket);
+  socketToClientId.set(socket, clientId as string);
+  clientIdToSocket.set(clientId as string, socket);
   console.log(" ~ Client connected: ", clientId);
 }
 
@@ -139,7 +266,6 @@ function getClientIdFromQueryParam(req: MatchMakingFastifyRequest) {
   const msg =
     "Client didn't provide their id in query string when connecting to websocket!";
   console.log(msg);
-  throw new Error(msg);
 }
 
 function handleClientLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
@@ -158,15 +284,13 @@ function handleClientCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
 
 function handleClientJoinGame(dataJson: MatchMakingTypes.ClientJoinGame) {
   console.log(" ~ joinGame", dataJson.data.matchId);
-  const correspondingGame = games.find(
-    (game) => game.matchId === dataJson.data.matchId
-  );
+  const correspondingGame = games.find((game) => game.matchId === dataJson.data.matchId) as MatchMakingTypes.BasicGame;
   if (!correspondingGame) {
-    throw new Error("Client tried to join game, that didn't exist!");
+    console.log("Client tried to join game, that didn't exist!");
   } else if (!isDefined(correspondingGame.oponentId)) {
     correspondingGame.oponentId = dataJson.data.oponentId;
   } else {
-    throw new Error("Client tried to join game, thats already full!");
+    console.log("Client tried to join game, thats already full!");
   }
 
   const participants = [
@@ -194,32 +318,31 @@ async function handleClientCreateTournament(dataJson: MatchMakingTypes.ClientCre
   try {
     const newTournamentId = await Tournament.create(dataJson.data.playerId) as string;
     console.log(" ~ createTournament", newTournamentId);
-    const newTournament: MatchMakingTypes.TournamentWithMatches = {
+    const newTournament: MatchMakingTypes.Tournament = {
       tournamentId: newTournamentId,
       player1Id: dataJson.data.playerId, player2Id: null, player3Id: null, player4Id: null,
-      matches: [], matchResults: []
+      matchSemifinale1: null, matchSemifinale2: null, matchFinale: null, matchBronze: null,
+      matchResultSemifinale1: null, matchResultSemifinale2: null, matchResultFinale: null, matchResultBronze: null,
+      started: false, playedAt: null,
     };
     tournaments.push(newTournament);
     sendMessageToAllClients({ type: "updateOneTournament", data: newTournament });
   } catch (err) {
     console.error("Error creating tournament:", err);
-    throw new Error("Failed to create tournament");
   }
 }
 
 async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinTournament) {
-  
-  const correspondingTournament = tournaments.find((tournament) => tournament.tournamentId === dataJson.data.tournamentId) as MatchMakingTypes.TournamentWithMatches || null;
-  if (!correspondingTournament)
-    throw new Error("Client tried to join a tournament that didn't exist!");
+  const correspondingTournament = tournaments.find((tournament) => tournament.tournamentId === dataJson.data.tournamentId) as MatchMakingTypes.Tournament || null;
   try {
+    if (!correspondingTournament)
+      throw new Error("Client tried to join a tournament that didn't exist!");
     const playerPosition: MatchMakingTypes.PlayerKey = await Tournament.addPlayer(dataJson.data.tournamentId, dataJson.data.playerId) as MatchMakingTypes.PlayerKey;
     correspondingTournament[playerPosition] = dataJson.data.playerId as string;
     console.log(" ~ joinTournament", dataJson.data.tournamentId);
     sendMessageToAllClients({ type: "updateOneTournament", data: correspondingTournament });
   } catch (err) {
     console.error("Error adding player to tournament:", err);
-    throw new Error("Failed to add player to tournament");
   }
 
   // startTournament logic INDEED when lobby full
@@ -231,35 +354,46 @@ async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinT
       correspondingTournament.player4Id as string,
     ];
 
-    let offset = 0;
-    for (let i = 0; i < 6; i++) {
-      if (i === 4) {
-        offset = 1;
-      }
-      try {
-        const newMatchId = await Tournament.scheduleMatch(
-          correspondingTournament.tournamentId as string,
-          (i + 1).toString(),                     // matchNr (1-6)
-          (i % 4 + 1).toString(),                 // match playerNr1
-          ((i + 1 + offset) % 4 + 1).toString()   // match playerNr2
-        );
-        const newMatch: MatchMakingTypes.BasicGame = {
-          matchId: newMatchId,
-          hostId: correspondingTournament[`player${(i % 4 + 1)}Id` as MatchMakingTypes.PlayerKey] as string,
-          oponentId: correspondingTournament[`player${(i + 1 + offset) % 4 + 1}Id` as MatchMakingTypes.PlayerKey] as string,
-          tournamentId: correspondingTournament.tournamentId as string,
-          type: "tournament",
-          invitedPlayerId: null,  // ??? needed?
-        };
-        // type MatchKey = keyof Pick<MatchMakingTypes.Tournament, 'match1' | 'match2' | 'match3' | 'match4' | 'match5' | 'match6'>;
-        // const key = `match${i + 1}` as MatchKey;
-        // correspondingTournament[key] = newMatch;  // match1-6
-        correspondingTournament.matches.push(newMatch);
-        games.push(newMatch);  // add to server game list => needed???
-      } catch (err) {
-        console.error("Error scheduling match:", err);
-        throw new Error("Failed to schedule match");
-      }
+    try {
+      let newMatchId = await Tournament.scheduleMatch(
+        correspondingTournament.tournamentId as string,
+        "matchSemifinale1",                 // matchName
+        correspondingTournament.player1Id,  // match playerNr1
+        correspondingTournament.player2Id   // match playerNr2
+      );
+      let newMatch: MatchMakingTypes.BasicGame = {
+        matchId: newMatchId,
+        hostId: correspondingTournament.player1Id,
+        oponentId: null,
+        tournamentId: correspondingTournament.tournamentId as string,
+        type: "tournament",
+        invitedPlayerId: correspondingTournament.player2Id
+      };
+      correspondingTournament.matchSemifinale1 = newMatch;
+      // games.push(newMatch);
+
+      newMatchId = await Tournament.scheduleMatch(
+        correspondingTournament.tournamentId as string,
+        "matchSemifinale2",                 // matchName
+        correspondingTournament.player3Id,  // match playerNr1
+        correspondingTournament.player4Id   // match playerNr2
+      );
+      newMatch = {
+        matchId: newMatchId,
+        hostId: correspondingTournament.player3Id,
+        oponentId: null,
+        tournamentId: correspondingTournament.tournamentId as string,
+        type: "tournament",
+        invitedPlayerId: correspondingTournament.player4Id
+      };
+      correspondingTournament.matchSemifinale2 = newMatch;
+      // games.push(newMatch);
+
+      correspondingTournament.matchFinale = null;
+      correspondingTournament.matchBronze = null;
+
+    } catch (err) {
+      console.error("Error scheduling match:", err);
     }
 
     sendMessageToManyClients(participants, {
@@ -272,37 +406,44 @@ async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinT
 
 async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeaveTournament) {
   try {
-    Tournament.removePlayer(dataJson.data.tournamentId as string, dataJson.data.playerId as string);
     const tournament = tournaments.find((tournament) => tournament.tournamentId === dataJson.data.tournamentId) as MatchMakingTypes.Tournament || null;
-    if (tournament.player1Id === dataJson.data.playerId)
-      tournament.player1Id = null;
-    else if (tournament.player2Id === dataJson.data.playerId)
-      tournament.player2Id = null;
-    else if (tournament.player3Id === dataJson.data.playerId)
-      tournament.player3Id = null;
-    else if (tournament.player4Id === dataJson.data.playerId)
-      tournament.player4Id = null;
-    
-    // delete Tournament (1) from DB and (2) from mem if no players left
-    if (tournament.player1Id === null && tournament.player2Id === null && tournament.player3Id === null && tournament.player4Id === null)
+    if (!tournament)
+      throw new Error("Client tried to leave a tournament that didn't exist!");
+    if (tournament.started === false)
     {
-      tournaments = tournaments.filter((t) => t.tournamentId !== tournament.tournamentId)
-      Tournament.delete(tournament.tournamentId as string);
+      Tournament.removePlayer(dataJson.data.tournamentId as string, dataJson.data.playerId as string);
+      if (tournament.player1Id === dataJson.data.playerId)
+        tournament.player1Id = null;
+      else if (tournament.player2Id === dataJson.data.playerId)
+        tournament.player2Id = null;
+      else if (tournament.player3Id === dataJson.data.playerId)
+        tournament.player3Id = null;
+      else if (tournament.player4Id === dataJson.data.playerId)
+        tournament.player4Id = null;
+      // delete Tournament (1.) from DB and also (2.) from memory if no players left
+      if (tournament.player1Id === null && tournament.player2Id === null && tournament.player3Id === null && tournament.player4Id === null)
+      {
+        tournaments = tournaments.filter((t) => t.tournamentId !== tournament.tournamentId)
+        Tournament.delete(tournament.tournamentId as string);
+      }
+      // Steffen checks players manually to determine if null
+      sendMessageToAllClients({type: "updateOneTournament", data: tournament});
     }
-    // Steffen checks players manually to determine if null
-    sendMessageToAllClients({type: "updateOneTournament", data: tournament});
+    else if (tournament.started === true)
+    {
+      // TODO: store any unfinished matches with opponent as winner
+    }
   } catch (err) {
     console.error("Error removing player from tournament:", err);
-    throw new Error("Failed to remove player from tournament");
   }
 }
 
+// defunct?
 async function handleClientDeleteTournament(dataJson: MatchMakingTypes.ClientDeleteTournament) {
   try {
     removeTournament(dataJson.data);
   } catch (err) {
     console.error("Error deleting tournament:", err);
-    throw new Error("Failed to delete tournament");
   }
 }
 
@@ -350,24 +491,21 @@ function removeGameFromServerGameList(game: MatchMakingTypes.BasicGame)
   games = games.filter((g) => g.matchId !== game.matchId);
 }
 
-async function removeTournament(tournament: MatchMakingTypes.TournamentWithMatches)
+async function removeTournament(tournament: MatchMakingTypes.Tournament)
 {
   try {
-    // first delete any matches from DB and from server game list
-    for (let i = 0; i < 6; i++) {
-      const match: MatchMakingTypes.BasicGame = tournament.matches[i] as MatchMakingTypes.BasicGame;
-      if (match) {
-        await Tournament.deleteMatch(match.matchId);
-        removeGameFromServerGameList(match);
-      }
-    }
+    // first delete all tournament matches from DB (and not from server game list bc never added)
+    await Tournament.deleteMatch(tournament.matchSemifinale1?.matchId as string);
+    await Tournament.deleteMatch(tournament.matchSemifinale2?.matchId as string);
+    await Tournament.deleteMatch(tournament.matchFinale?.matchId as string);
+    await Tournament.deleteMatch(tournament.matchBronze?.matchId as string);
+
     // then delete tournament from DB and from server tournament list
     await Tournament.delete(tournament.tournamentId as string);
     removeTournamentFromServerTournamentList(tournament);
     console.log(" ~ deleteTournament", tournament.tournamentId);
   } catch (err) {
     console.error("Error deleting tournament:", err);
-    throw new Error("Failed to delete tournament");
   }
 }
 
@@ -387,4 +525,9 @@ fastify.listen({ port: transNetworkSettings.gameMatchmaking.port, host: transNet
     process.exit(1);
   }
   console.log(`Server listening on http://${transNetworkSettings.gameMatchmaking.ip}:${transNetworkSettings.gameMatchmaking.port}/`);
+});
+
+process.on('SIGINT', () => {
+  db.close();
+  process.exit();
 });

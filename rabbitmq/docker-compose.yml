@@ -8,10 +8,11 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_CONFIG_FILE=/sgoinfre/goinfre/Perso/fhanke/trancendence/rabbitmq/config/rabbitmq.conf
     volumes:
       - ./config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./config/definitions.json:/etc/rabbitmq/definitions.json:ro
-      - ./config/rabbitmq-env.conf:/etc/rabbitmq/rabbitmq-env.conf:ro
+      # - ./config/rabbitmq-env.conf:/etc/rabbitmq/rabbitmq-env.conf:ro
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - rabbitmq-network
@@ -26,4 +27,4 @@ networks:
     external: true
 
 volumes:
-  rabbitmq-data: 
+  rabbitmq-data:

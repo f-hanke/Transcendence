@@ -12,26 +12,7 @@ function run_in_terminal {
   gnome-terminal --title=$2 -- bash -c "$1 && TRANSCENDENCE_DEV=$1 exec bash"
 }
 
-# only start rabbitmq docker when not already running 
-if docker ps --filter "name=rabbitmq" --filter "status=running" | grep -q rabbitmq; then
-  echo "Container is already running."
-elif docker ps -a --filter "name=rabbitmq" | grep -q rabbitmq; then
-  echo "Starting existing container..."
-  docker start rabbitmq
-else
-  echo "Running new container..."
-  docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
-fi
-
-if [ -z "$1" ]; then
-  echo "Using Frontend build for testing"
-  # for testing with webseerver microservice and build of frontend
-  run_in_terminal "cd apiGateway && npm run startBuild" "apiGateway" &
-else
-  echo "Using Frontend vite dev server for testing"
-  # for testing with vite dev server
-  run_in_terminal "cd apiGateway && npm run startDev" "apiGateway" &
-fi
+run_in_terminal "cd apiGateway && npm run start" "apiGateway" &
 run_in_terminal "cd webserver && npm run start" "webserver" &
 run_in_terminal "cd usersAndAuth && npm run start" "usersAndAuth" &
 run_in_terminal "cd remote && npm run start" "remote" &
@@ -40,7 +21,7 @@ run_in_terminal "cd chat-service && npm run start" "chat-service" &
 
 read -p "Press any key to kill transcendence..."
 
-bash ./scripts/kill_all.sh
+bash ./testing_scripts/kill_all.sh
 
 # trap "echo 'Caught SIGINT, killing all...'; kill 0; exit" SIGINT SIGTERM
 

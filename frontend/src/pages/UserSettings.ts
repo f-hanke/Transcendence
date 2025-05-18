@@ -2,6 +2,7 @@ import { isDefined } from "transcendence";
 import { EditableFields, UserState } from "../state/userStateTypes";
 import {
   createHtmlElementFromString,
+  getImgSrcFromBuffer,
   sanitizeAndCleanInput,
 } from "../utils/utils";
 
@@ -43,11 +44,12 @@ class UserSettings extends HTMLElement {
         <!-- Profile Picture (Clickable) -->
         <div class="flex flex-col items-center mb-4">
             <img id="profileImage" src="${
-              window.store.userStore.get().details.image
-            }" 
-              class="cursor-pointer w-full max-w-xl border border-gray-600 hover:opacity-80 transition duration-300" 
+              getImgSrcFromBuffer(window.store.userStore.get().details.image)
+            }"
+              class="cursor-pointer w-full max-w-xl border border-gray-600 hover:opacity-80 transition duration-300"
               title="Click to change profile picture"/>
-          <input type="file" id="imageUpload" class="hidden" accept="image/*">
+          <input type="file" id="imageUpload" class="hidden"
+          accept="image/png, image/jpeg">
         </div>
         <div id="inputEditContainer"></div>
         <div class="bg-gray-800" id="userFriends"></div>
@@ -88,6 +90,15 @@ class UserSettings extends HTMLElement {
     });
   }
 
+  //  this.querySelector("#imageUpload")?.addEventListener('change', function(event) {
+  //   const input = event.target as HTMLInputElement;
+  //   if (!input || !input.files || input.files.length === 0) return;
+  //   const file = input.files[0];
+  //   colog("FILE");
+  //   colog(file);
+  //   if (!file) return;
+  // })
+
   renderOneInput(which: keyof EditableFields, label: string) {
     const htmlElem = createHtmlElementFromString(`
     <div>
@@ -97,7 +108,7 @@ class UserSettings extends HTMLElement {
           💾
         </button>
         <button id="resetBtnEdit${which}" title="Reset">
-          🔄 
+          🔄
         </button>
       </div>
         <input type="text" id="input${which}" value="${

@@ -1,5 +1,5 @@
 import { testUserConfig } from "transcendence";
-import { navigateToSite } from "../../utils/utils";
+import { navigateToSite, sanitizeAndCleanInput } from "../../utils/utils";
 import { AuthInterface } from "../../backendInterface/authInterface";
 
 class LoginPage extends HTMLElement {
@@ -36,6 +36,8 @@ class LoginPage extends HTMLElement {
                 <label for="password" class="block font-medium">Password</label>
                 <input id="password" type="password" class="w-full p-2 rounded bg-gray-700 focus:outline-none" required>
             </div>
+            <p id="errorMessage" class="text-red-500 text-sm mb-4"></p>
+
 
             <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 p-2 rounded">
                 Login
@@ -65,12 +67,27 @@ class LoginPage extends HTMLElement {
       navigateToSite("/registerPage");
     });
 
+    const usernameElem = document.querySelector(
+      "#username"
+    ) as HTMLInputElement;
+    const passwordElem = document.querySelector(
+      "#password"
+    ) as HTMLInputElement;
+    const erroMsg = document.querySelector(
+      "#errorMessage"
+    ) as HTMLParagraphElement;
+
     document
       .querySelector("#loginForm")
-      ?.addEventListener("submit", function (event) {
+      ?.addEventListener("submit", async function (event) {
         event.preventDefault();
-        console.log("Form Submitted");
-        alert("Form Submitted");
+        const res = await AuthInterface.login({
+          email: sanitizeAndCleanInput(usernameElem.value),
+          password: sanitizeAndCleanInput(passwordElem.value),
+        });
+        if (!res.ok) {
+          erroMsg.innerText = res.errorMessage as string;
+        }
       });
 
     this.addTestUserLogin();

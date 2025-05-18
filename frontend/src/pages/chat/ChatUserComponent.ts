@@ -1,6 +1,6 @@
 import { ChatServiceTypes, generateUniqueId } from "transcendence";
 import { ChatInterface } from "../../backendInterface/chatInterface";
-import { getCurDateString } from "../../utils/utils";
+import { getCurDateString, getImgSrcFromBuffer } from "../../utils/utils";
 
 type UserComponentType =
   | "user"
@@ -86,7 +86,7 @@ class ChatUserComponent extends HTMLElement {
                 🏓
                 </button>
               <button id="${this.id}_blockBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center">
-              ⛔	
+              ⛔
               </button>
               <button id="${this.id}_friendBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center flex items-center justify-center">
               ${friend}
@@ -258,10 +258,13 @@ class ChatUserComponent extends HTMLElement {
     this.online = data.online;
     this.friend = data.friend;
     this.blocked = data.blocked;
-    this.image = data.image;
     this.recipientId = data.recipientId;
     this.friendRequestStatus = data.friendRequestStatus;
     this.type = type;
+    if(data.image)
+    {
+      this.image = getImgSrcFromBuffer(data.image);
+    }
     this.render();
   }
 

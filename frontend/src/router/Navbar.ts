@@ -1,4 +1,5 @@
 import { AuthInterface } from "../backendInterface/authInterface";
+import { getImgSrcFromBuffer } from "../utils/utils";
 
 class Navbar extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -27,7 +28,7 @@ class Navbar extends HTMLElement {
     <div class="bg-gray-800 text-white shadow-lg flex flex-col">
       <div class="p-4 flex flex-col items-center space-x-3 border-b border-gray-700">
         <img src="${
-          window.store.userStore.get().details.image
+          getImgSrcFromBuffer(window.store.userStore.get().details.image)
         }" alt="Profile" class="h-32 rounded-lg" />
         <div>
           <a href="/profile" class="text-lg font-semibold hover:underline">id = ${
@@ -81,7 +82,7 @@ class Navbar extends HTMLElement {
           </li> -->
         </ul>
       </nav>
-      
+
       <!-- <button id="querynotifyBtn" class="w-full p-2 bg-red-600 rounded-lg hover:bg-red-700">
             🚪 notify
         </button> -->

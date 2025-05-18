@@ -29,7 +29,15 @@ function	updateUserDatabase(msg: RabbitMQTypes.UserChange){
 }
 
 export async function startConsumer() {
-	const connection = await amqp.connect('amqp://localhost');
+	// const connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
+	let connection;
+	try {
+		connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
+	} catch (err) {
+		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
+		connection = await amqp.connect('amqp://localhost');
+	}
+//   const connection = await amqp.connect(`amqp://localhost`);
 	const channel = await connection.createChannel();
 
 	await channel.assertQueue(queue, { durable: false });
@@ -39,14 +47,14 @@ export async function startConsumer() {
 	channel.consume(queue, (msg) => {
 		if (msg !== null) {
 			const message = JSON.parse(msg.content.toString());
-			console.log('[Consumer] Received:', message);
+			message.id = message.id.toString();
 			if (message.smallImage && message.smallImage.type === 'Buffer')
 				message.smallImage = Buffer.from(message.smallImage.data);
 			if (rabbitMQTypeGuards.isUserChangeBody(message)) {
 				channel.ack(msg);
 				updateUserDatabase(message);
 			}else
-				console.error("Wrong data read from rabbitMQ.");
+				console.error("Wrong data read from rabbitMQ : ChatService.");
 		}
 	});
 }

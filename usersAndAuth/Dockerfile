@@ -19,6 +19,7 @@ COPY usersAndAuth/service.ts ./
 COPY usersAndAuth/utils ./utils
 COPY usersAndAuth/orm ./orm
 COPY usersAndAuth/config ./config
+COPY usersAndAuth/rabbitMQ ./rabbitMQ
 COPY usersAndAuth/db ./db
 COPY usersAndAuth/public ./public
 

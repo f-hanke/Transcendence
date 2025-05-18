@@ -23,8 +23,9 @@ const Tournament = {
       `);
       console.log(stmt.all);
       const result = stmt.run(playerId);
-      
-      return result.lastInsertRowid.toString();
+      const tournamentId = result.lastInsertRowid.toString();
+      db.prepare(`INSERT INTO playerTournaments (playerId, tournamentId) VALUES (?, ?)`).run(playerId, tournamentId);
+      return tournamentId;
     } catch (db_error) {
       throw db_error;  // just passing along without trying to interpret
     }
@@ -51,6 +52,20 @@ const Tournament = {
   async findById(id: string) {
     try {
       const stmt = db.prepare('SELECT * FROM tournaments WHERE id = ?');
+      return stmt.get(Number(id)) || null;
+    } catch (db_error) {
+      throw db_error;
+    }
+  },
+
+  /**
+   * Find match by ID
+   * @param {string} id Match ID
+   * @returns {Object|null} Match or null if not found
+   */
+  async findMatchById(id: string) {
+    try {
+      const stmt = db.prepare('SELECT * FROM matches WHERE id = ?');
       return stmt.get(Number(id)) || null;
     } catch (db_error) {
       throw db_error;
@@ -117,20 +132,40 @@ const Tournament = {
   /**
    * Add an empty match to be played
    * @param {string} id Tournament ID
-   * @param {string} matchNr Which of Match 1-6 | 1-3
+   * @param {string} matchName matchSemifinale1 | matchSemifinale2 | matchFinale | matchBronze
    * @param {string} player1Id Player1 ID
    * @param {string} player2Id Player2 ID
    * @returns {string} The newly created Match ID
    */
-  async scheduleMatch(id: string, matchNr: string, player1Id: string, player2Id: string) {
+  async scheduleMatch(id: string, matchName: string, player1Id: string, player2Id: string) {
     try {
-      const stmtMtch = db.prepare(
-        `INSERT INTO matches (player1Id, player2Id)
-         VALUES (?, ?)`
-        );
-      const resultMtch = stmtMtch.run(player1Id, player2Id);
-      db.prepare(`UPDATE tournaments SET match${matchNr}Id = ? WHERE id = ?`).run(resultMtch.lastInsertRowid.toString(), id);
+      let stmtMtch;
+      let resultMtch;
+      if (!player2Id) {
+        stmtMtch = db.prepare(
+          `INSERT INTO matches (player1Id)
+          VALUES (?)`
+          );
+        resultMtch = stmtMtch.run(player1Id);
+      }
+      else {
+        stmtMtch = db.prepare(
+          `INSERT INTO matches (player1Id, player2Id)
+          VALUES (?, ?)`
+          );
+        resultMtch = stmtMtch.run(player1Id, player2Id);
+      }
+      db.prepare(`UPDATE tournaments SET ${matchName} = ? WHERE id = ?`).run(resultMtch.lastInsertRowid.toString(), id);
       return resultMtch.lastInsertRowid.toString();
+    } catch (db_error) {
+      throw db_error;
+    }
+  },
+
+  async addOpponentToMatch(id: string, matchId: string, matchName: string, player2Id: string) {
+    try {
+      db.prepare(`UPDATE matches SET player2Id = ? WHERE id = ?`).run(player2Id, matchId);
+      db.prepare(`UPDATE tournaments SET ${matchName} = ? WHERE id = ?`).run(matchId, id);
     } catch (db_error) {
       throw db_error;
     }

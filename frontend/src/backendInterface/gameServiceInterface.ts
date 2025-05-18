@@ -13,8 +13,9 @@ class GameServiceInterface {
   }
 
   static correctUpdateHandlingFunction: (
-    dataJson: GameServiceTypes.ServerUpdateGameState
+    dataJson: GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
   ) => void = GameServiceInterface.handleServerUpdateGameStateRemote;
+
   static websocket: WebSocket | null = null;
 
   static async createMatchOnServer(
@@ -38,8 +39,8 @@ class GameServiceInterface {
         },
         body: JSON.stringify(data),
       });
-    colog("response");
-    colog(response);
+      colog("response");
+      colog(response);
       if (!response.ok) {
         throw new Error(`Couldn't create match on Server via API!`);
       }
@@ -107,7 +108,7 @@ class GameServiceInterface {
   static handleMessage(event: MessageEvent) {
     const dataJson = JSON.parse(event.data);
     colog(dataJson);
-    if (gameServiceTypeGuards.isServerUpdateGameState(dataJson)) {
+    if (gameServiceTypeGuards.isServerUpdateGameState(dataJson) || gameServiceTypeGuards.isServerUpdateGameStateRestAPI(dataJson)) {
       this.correctUpdateHandlingFunction(dataJson);
     } else if (gameServiceTypeGuards.isServerGameIsOver(dataJson)) {
       this.handleServerGameIsOver(dataJson);
@@ -126,21 +127,27 @@ class GameServiceInterface {
   }
 
   static handleServerUpdateGameStateRemote(
-    dataJson: GameServiceTypes.ServerUpdateGameState
+    dataJson:GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
-    window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+    if (dataJson.type === "serverUpdateGameState")
+      window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+    else window.store.gameStore.updateBallPositionNBothPaddles(dataJson.data);
   }
 
   static handleServerUpdateGameStateLocalPvAi(
-    dataJson: GameServiceTypes.ServerUpdateGameState
+    dataJson: GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
-    window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+    if (dataJson.type === "serverUpdateGameState")
+      window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+    else window.store.gameStore.updateBallPositionNBothPaddles(dataJson.data);
   }
 
   static handleServerUpdateGameStateLocalPvp(
-    dataJson: GameServiceTypes.ServerUpdateGameState
+    dataJson: GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
-    window.store.gameStore.updateBallPosition(dataJson.data);
+    if (dataJson.type === "serverUpdateGameState")
+      window.store.gameStore.updateBallPosition(dataJson.data);
+    else window.store.gameStore.updateBallPositionNBothPaddles(dataJson.data);
   }
 
   static handleServerGameIsOver(dataJson: GameServiceTypes.ServerGameIsOver) {

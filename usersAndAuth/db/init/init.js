@@ -25,15 +25,16 @@ import { db } from '../db.js';
       )
     `);
 
-    // Create match records table
+    // Create match records table which stores both simple and tournament matches, but we differentiate sneakily
     db.exec(`
       CREATE TABLE IF NOT EXISTS matches (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        p1_id INTEGER NOT NULL,
-        p2_id INTEGER NOT NULL,
-        p1_score INTEGER NOT NULL,
-        p2_score INTEGER NOT NULL,
-        date TEXT DEFAULT CURRENT_TIMESTAMP
+        player1Id INTEGER NOT NULL,
+        player2Id INTEGER NOT NULL,
+        player1Score INTEGER NOT NULL,
+        player2Score INTEGER NOT NULL,
+        winnerId INTEGER NOT NULL,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
@@ -41,19 +42,19 @@ import { db } from '../db.js';
     db.exec(`
       CREATE TABLE IF NOT EXISTS tournaments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ranking1_id INTEGER NOT NULL,
-        ranking2_id INTEGER,
-        ranking3_id INTEGER,
-        ranking4_id INTEGER,
-        rank1_score INTEGER,
-        rank2_score INTEGER,
-        rank3_score INTEGER,
-        rank4_score INTEGER,
-        date TEXT DEFAULT CURRENT_TIMESTAMP
+        playerRank1Id INTEGER NOT NULL,
+        playerRank2Id INTEGER NOT NULL,
+        playerRank3Id INTEGER NOT NULL,
+        playerRank4Id INTEGER NOT NULL,
+        matchSemifinale1Id INTEGER NOT NULL,
+        matchSemifinale2Id INTEGER NOT NULL,
+        matchFinaleId INTEGER NOT NULL,
+        matchBronzeId INTEGER NOT NULL,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    // Create user matches relationship table (stored per user, yes in duplicates)
+    // Create user matches relationship table FOR SIMPLE MATCHES (stored per user, yes in duplicates)
     db.exec(`
       CREATE TABLE IF NOT EXISTS user_matches (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

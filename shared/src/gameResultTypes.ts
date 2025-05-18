@@ -1,4 +1,5 @@
-
+import { MatchMakingTypes } from "./matchmakingTypes";
+type BasicGame = MatchMakingTypes.BasicGame;
 
 declare namespace GameResultTypes {
 
@@ -6,22 +7,45 @@ declare namespace GameResultTypes {
         matchId: string;
         player1Id: string;
         player2Id: string;
-        player1Score: string;
-        player2Score: string;
+        player1Score: number;
+        player2Score: number;
         winnerId: string;
         createdAt: string;
     };
 
     type TournamentResult = {
         tournamentId: string;
-        playerRank1Id: string;
-        playerRank2Id: string;
-        playerRank3Id: string;
-        playerRank4Id: string;
-        playerRank1Score: string;
-        playerRank2Score: string;
-        playerRank3Score: string;
-        playerRank4Score: string;
+        rank1PlayerId: string;
+        rank2PlayerId: string;
+        rank3PlayerId: string;
+        rank4PlayerId: string;
+        matchSemifinale1: MatchResult;
+        matchSemifinale2: MatchResult;
+        matchFinale: MatchResult;
+        matchBronze: MatchResult;
+        createdAt: string;
+    };
+
+    type RawDBRecordMatchResult = {
+        id: number;
+        player1Id: number;
+        player2Id: number;
+        player1Score: number;
+        player2Score: number;
+        winnerId: number;
+        createdAt: string;
+    };
+
+    type RawDBRecordTournamentResult = {
+        id: number;
+        rank1PlayerId: number;
+        rank2PlayerId: number;
+        rank3PlayerId: number;
+        rank4PlayerId: number;
+        matchSemifinale1Id: number;
+        matchSemifinale2Id: number;
+        matchFinaleId: number;
+        matchBronzeId: number;
         createdAt: string;
     };
 }

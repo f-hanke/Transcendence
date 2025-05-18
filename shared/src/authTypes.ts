@@ -1,5 +1,7 @@
 // auth
 
+import { ChatServiceTypes } from "./chatTypes";
+
 // GET  /api/auth/verify-jwt - verify JWT token
 // GET  /api/auth/refresh    - For extending (only if logged in)
 
@@ -116,7 +118,7 @@ declare namespace AuthServiceTypes {
     email: string;
     pw_hash: string;
     display_name: string;
-    image: string;
+    image: ChatServiceTypes.BufferLike;
     online_status: number;
     login_count: number;
     created_at: string;

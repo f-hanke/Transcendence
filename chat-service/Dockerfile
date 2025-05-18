@@ -50,4 +50,4 @@ EXPOSE 10001
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://0.0.0.0:10001/health || exit 1
 
-CMD ["npm", "start"] 
+CMD ["npm", "start"]

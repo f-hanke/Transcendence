@@ -34,7 +34,7 @@ fastify.setNotFoundHandler((req, reply) => {
 
 fastify.listen({ 
   port: transNetworkSettings.webserver.port, 
-  host: '0.0.0.0' // Allow connections from any IP address, needed for Docker
+  host: transNetworkSettings.webserver.ip // Allow connections from any IP address, needed for Docker
 }, (err, address) => {
   if (err) throw err;
   console.log(`🌐 Frontend server listening at ${address}`);

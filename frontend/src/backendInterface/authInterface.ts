@@ -96,7 +96,11 @@ class AuthInterface {
         return this.success();
       }
       if (response.status === 401) this.logoutSucessful();
-      return this.handleApiResponseError(response);
+      else;
+      {
+        setTimeout(() => this.logoutSucessful(), 2000);
+        return this.handleApiResponseError(response);
+      }
     } catch {
       throw new Error(`Error: Fetch request to auth service`);
     }
@@ -161,10 +165,11 @@ class AuthInterface {
     updateUserId: boolean = false
   ) {
     window.colog("verify succesful!");
-    if (updateUserId)
+    if (updateUserId) {
       window.store.userStore.updateUserSettings({
         id: body.userId.toString(),
       });
+    }
   }
 
   static refreshSucessful(body: AuthServiceTypes.AuthSuccessResponseBody) {
