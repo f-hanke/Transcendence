@@ -83,21 +83,22 @@ class ManageMatch extends HTMLElement {
       </central-modal-listeners>`) as CentralModalListeners;
       this.innerHTML = "";
       this.appendChild(modal);
-      await sleep(2000);
-      modal.open();
-      modal.setKeyListener({
-        KeyY: () => {
-          window.store.gameStore.updateGameStateState("waitingForServerStart");
-          GameServiceInterface.sendMessageToServer({
-            type: "clientIsReady",
-            data: {
-              clientId: window.store.userStore.get().details.id,
-              matchId: window.store.gameStore.get().matchId,
-            },
-          });
-        },
-        KeyN: this.leaveGame.bind(this),
-      });
+      modal.ready.then(() => {
+        modal.open();
+        modal.setKeyListener({
+          KeyY: () => {
+            window.store.gameStore.updateGameStateState("waitingForServerStart");
+            GameServiceInterface.sendMessageToServer({
+              type: "clientIsReady",
+              data: {
+                clientId: window.store.userStore.get().details.id,
+                matchId: window.store.gameStore.get().matchId,
+              },
+            });
+          },
+          KeyN: this.leaveGame.bind(this),
+        });
+      })
   }
 
   renderRunningGame() {

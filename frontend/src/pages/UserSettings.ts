@@ -124,19 +124,15 @@ class UserSettings extends HTMLElement {
     saveBtn.addEventListener("click", async () => {
       const newImage = window.store.userStore.get().editState.image;
       if (isDefined(newImage)) {
-        colog(newImage);
         const res = await UserInterface.updateUserImage({
-           image: newImage.data
+           image: newImage
         });
-        colog(res);
         if (res.ok) {
           window.store.notificationStore.updateAddNotification({
             id: generateUniqueId(),
             message: "Profile picture updated successfully!",
           });
-          colog("SUCCESS!");
         } else {
-          colog("ERROR!");
           window.store.notificationStore.updateAddNotification({
             id: generateUniqueId(),
             message: `Couldn't update profile picture! Reason: ${res.errorMessage}`,
