@@ -99,7 +99,7 @@ fastify.register(fastifyHttpProxy, {
 
 fastify.register(fastifyHttpProxy, {
   // upstream: `http://localhost:${transNetworkSettings.webserver.port}`,
-  upstream: `http://10.15.106.1:9999`,
+  upstream: `http://localhost:9999`,
   prefix: '/',
   rewritePrefix: '/',
   // httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -112,7 +112,7 @@ fastify.setNotFoundHandler((req, reply) => {
   if (req.raw.method === 'GET') {
     const proxyReq = http.request(
       {
-        hostname: '10.15.106.1',
+        hostname: 'localhost',
         port: 9999,
         path: req.raw.url,
         method: req.raw.method,
@@ -146,7 +146,7 @@ fastify.server.on('upgrade', (req, socket, head) => {
   else if (url.startsWith('/GAMESERVICE')) target = `ws://localhost:${transNetworkSettings.gamePlay.port}`;
   else if (url.startsWith('/MATCHMAKING')) target = `ws://localhost:${transNetworkSettings.gameMatchmaking.port}`;
   else if (url.startsWith('/') || url === '/') {
-    target = 'ws://10.15.106.1:9999';
+    target = 'ws://localhost:9999';
   }
   else {
     socket.destroy();

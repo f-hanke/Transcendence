@@ -155,7 +155,7 @@ const Tournament = {
           );
         resultMtch = stmtMtch.run(player1Id, player2Id);
       }
-      db.prepare(`UPDATE tournaments SET ${matchName} = ? WHERE id = ?`).run(resultMtch.lastInsertRowid.toString(), id);
+      db.prepare(`UPDATE tournaments SET ${matchName}Id = ? WHERE id = ?`).run(resultMtch.lastInsertRowid.toString(), id);
       return resultMtch.lastInsertRowid.toString();
     } catch (db_error) {
       throw db_error;
