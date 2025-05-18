@@ -247,27 +247,37 @@ export class Game {
         if (this.typeOfGame === 'localPvAi' && this.player2 instanceof AIPlayer) {
             this.player2.updateAI(this.player1.score, this.player2.score);
         }
+
         //left player
         if (
+      //  this.ball.prevX - this.ball.radius > this.player1.x + this.player1.paddleWidth &&
         this.ball.x - this.ball.radius <= this.player1.x + this.player1.paddleWidth && // côté droit de la paddle gauche
         this.ball.x + this.ball.radius >= this.player1.x && // côté gauche de la paddle gauche
         this.ball.y >= this.player1.y - this.player1.paddleHeight / 2 &&
         this.ball.y <= this.player1.y + this.player1.paddleHeight / 2
         ) {
         this.ball.speedX *= -1;
+
+        const minSpeedY = 2;
+        if (Math.abs(this.ball.speedY) < minSpeedY)
+            this.ball.speedY = (Math.random() < 0.5 ? -1 : 1) * minSpeedY;
+
         this.ball.x = this.player1.x + this.player1.paddleWidth + this.ball.radius; // repositionner la balle après la collision
+
         }
-
-
-
         //right player
         if (
+      //  this.ball.prevX + this.ball.radius < this.player2.x - this.player2.paddleWidth &&
         this.ball.x + this.ball.radius >= this.player2.x - this.player2.paddleWidth && // côté gauche de la paddle droite
         this.ball.x - this.ball.radius <= this.player2.x && // côté droit de la paddle droite
         this.ball.y >= this.player2.y - this.player2.paddleHeight / 2 &&
         this.ball.y <= this.player2.y + this.player2.paddleHeight / 2
         ) {
         this.ball.speedX *= -1;
+        const minSpeedY = 2;
+        if (Math.abs(this.ball.speedY) < minSpeedY) {
+            this.ball.speedY = (Math.random() < 0.5 ? -1 : 1) * minSpeedY;
+        }
         this.ball.x = this.player2.x - this.player2.paddleWidth - this.ball.radius; // repositionner la balle après la collision
         }
 
