@@ -18,8 +18,6 @@ class CentralModalListeners extends HTMLElement {
     style.textContent = styles;
     const modalWrapper = document.createElement("div");
 
-
-
     modalWrapper.innerHTML = `
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
       <div id="modalContent" class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
