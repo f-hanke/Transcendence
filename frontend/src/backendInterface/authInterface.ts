@@ -4,6 +4,7 @@ import {
   AuthServiceTypes,
 } from "transcendence";
 import { buildApiRouteRelative, navigateToSite } from "../utils/utils";
+import { UserInterface } from "./userInterface";
 
 type AuthInterfaceAnswer = Promise<{
   ok: boolean;

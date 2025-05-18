@@ -268,13 +268,6 @@ class ChatUserComponent extends HTMLElement {
     this.render();
   }
 
-  displayBufferImage(imageBufferObj: ChatServiceTypes.BufferLike) {
-    const uint8Array = new Uint8Array(imageBufferObj.data);
-    const blob = new Blob([uint8Array], { type: guessImageTypeFromBuffer(imageBufferObj) });
-    const url = URL.createObjectURL(blob);
-    return url;
-  }
-
   hideFriendsButton() {
     const friendsBtn = document.querySelector(
       `#${this.id}_friendBtn`
