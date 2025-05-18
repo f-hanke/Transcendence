@@ -20,8 +20,11 @@ async function publishMessage(message) {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
 =======
 <<<<<<< HEAD
+>>>>>>> origin/main
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -32,7 +35,10 @@ async function publishMessage(message) {
 >>>>>>> 16b64d1 (cleanup after rebase)
 >>>>>>> origin/main
 >>>>>>> origin/main
+<<<<<<< HEAD
+=======
 >>>>>>> 52a4f32ea79ef32a3638ebd7634672b27a9cb1c1
+>>>>>>> origin/main
     // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
     // const connection = await amqp.connect(`amqp://localhost`);
     let connection;
@@ -70,7 +76,10 @@ async function publishMessage(message) {
 >>>>>>> 16b64d1 (cleanup after rebase)
 >>>>>>> origin/main
 >>>>>>> origin/main
+<<<<<<< HEAD
+=======
 >>>>>>> 52a4f32ea79ef32a3638ebd7634672b27a9cb1c1
+>>>>>>> origin/main
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));

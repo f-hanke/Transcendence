@@ -90,7 +90,7 @@ class MatchmakingStateStore {
     const newState: MatchmakingState = {
       otherMatches: [],
       tournaments: deepCopyObj(allMatches.tournaments),
-      ownMatch: deepCopyObj(this.state.ownMatch),
+      ownMatch: this.state.ownMatch ? deepCopyObj(this.state.ownMatch) : null,
     };
     const clientId = window.store.userStore.get().details.id;
     allMatches.basicGames.forEach((match) => {

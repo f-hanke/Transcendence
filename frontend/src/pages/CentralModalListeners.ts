@@ -9,6 +9,9 @@ class CentralModalListeners extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
   keyDownCallBack: KeyCallbackMap;
   shadow: ShadowRoot;
+  ready: Promise<void>;
+  _resolveReady!: ()=>void;
+
   constructor() {
     super();
     this.keyDownCallBack = {};
@@ -17,6 +20,11 @@ class CentralModalListeners extends HTMLElement {
     const style = document.createElement("style");
     style.textContent = styles;
     const modalWrapper = document.createElement("div");
+
+    this.ready = new Promise<void>((resolve) => 
+    {
+      this._resolveReady = resolve;
+    })
 
     modalWrapper.innerHTML = `
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
@@ -32,6 +40,7 @@ class CentralModalListeners extends HTMLElement {
 
   connectedCallback() {
     document.addEventListener("keydown", this.handleKeyDown);
+    this._resolveReady();
   }
 
   disconnectedCallback() {
