@@ -107,7 +107,7 @@ declare namespace MatchMakingTypes {
       tournaments: Tournament[];
     };
   };
-  
+
   type TournamentInitiation = {
     tournamentId: string | null; // Steffen's id === DB id in this case
     player1Id: string | null;

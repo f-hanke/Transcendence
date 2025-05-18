@@ -57,7 +57,7 @@ async function publishMessage(message: RabbitMQTypes.UserChange) {
 		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
 		connection = await amqp.connect('amqp://localhost');
 	}
-  
+
   const channel = await connection.createChannel();
 
   await channel.assertQueue(queue, { durable: false });

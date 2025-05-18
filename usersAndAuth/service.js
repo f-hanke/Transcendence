@@ -16,6 +16,8 @@ async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
         console.error("Trying to publish unknown type");
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -24,6 +26,7 @@ async function publishMessage(message) {
 <<<<<<< HEAD
 =======
 >>>>>>> 16b64d1 (cleanup after rebase)
+>>>>>>> origin/main
     // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
     // const connection = await amqp.connect(`amqp://localhost`);
     let connection;
@@ -34,6 +37,8 @@ async function publishMessage(message) {
         console.warn('Failed to connect to rabbitmq-service, trying localhost...');
         connection = await amqp.connect('amqp://localhost');
     }
+<<<<<<< HEAD
+=======
 <<<<<<< HEAD
 =======
     const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
@@ -47,11 +52,15 @@ async function publishMessage(message) {
 >>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
 =======
 >>>>>>> 16b64d1 (cleanup after rebase)
+>>>>>>> origin/main
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
     console.log('[Publisher] Sent:', message);
 }
+<<<<<<< HEAD
+// startConsumer().catch(console.error);
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -69,6 +78,7 @@ startConsumer().catch(console.error);
 =======
 startConsumer().catch(console.error);
 >>>>>>> 16b64d1 (cleanup after rebase)
+>>>>>>> origin/main
 const server = fastify({
     logger: {
         transport: {
