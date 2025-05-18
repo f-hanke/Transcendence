@@ -45,7 +45,13 @@ const queue = 'matchMaking-results';
 async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult) {
   if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message))
     console.error("Trying to publish unknown type");
-  const connection = await amqp.connect('amqp://localhost');
+  let connection;
+  try {
+		connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
+	} catch (err) {
+		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
+		connection = await amqp.connect('amqp://localhost');
+	}
   const channel = await connection.createChannel();
 
   await channel.assertQueue(queue, { durable: false });
@@ -149,16 +155,8 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
   }
   else {
     console.log("Tournament not found for matchId", matchResult.matchId, ", processing as a simple match");
-    const game = games.find((g) => g.matchId === matchResult.matchId) || null;
-    if (!game) {
-      console.error("Game service published a result for matchId <", matchResult.matchId, "> unknown to matchmaking");
-      console.error("For reference, here are the games known to matchmaking: ", games);
-      return;
-    }
     publishMessage(matchResult);  // read by usersAndAuth
-    removeGameFromServerGameList(game);
-    sendMessageToAllClients({ type: "deleteGame", data: game });
-    console.log("Simple Match result processed for matchId: ", game.matchId);
+    console.log("Simple Match result processed for matchId: ", matchResult.matchId);
   }
 }
 
@@ -215,7 +213,7 @@ fastify.register(async function (fastify) {
       } else if (matchmakingTypeGuards.isClientJoinGame(dataJson)) {
         handleClientJoinGame(dataJson);
       } else if (matchmakingTypeGuards.isClientDeleteGame(dataJson)) {
-        // handleClientDeleteGame(dataJson); // @Steffen: update to not do this after regular game end?
+        handleClientDeleteGame(dataJson);
       } else if (matchmakingTypeGuards.isClientCreateTournament(dataJson)) {
         handleClientCreateTournament(dataJson);
       } else if (matchmakingTypeGuards.isClientJoinTournament(dataJson)) {
@@ -258,14 +256,14 @@ function unregisterClient(socket: WebSocket) {
 }
 
 function closeGamesOpenedByClient(socket: WebSocket) {
-  // const clientId = socketToClientId.get(socket) as string;
-  // const gameOfClient = games.find((match) => match.hostId === clientId);
-  // if (isDefined(gameOfClient)) {
-  //   handleClientDeleteGame({
-  //     type: "deleteGame",
-  //     data: gameOfClient,
-  //   });
-  // }
+  const clientId = socketToClientId.get(socket) as string;
+  const gameOfClient = games.find((match) => match.hostId === clientId);
+  if (isDefined(gameOfClient)) {
+    handleClientDeleteGame({
+      type: "deleteGame",
+      data: gameOfClient,
+    });
+  }
 }
 
 
