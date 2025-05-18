@@ -5,26 +5,28 @@ export class Ball {
     y: number;
     prevX: number;
     prevY: number;
-
     speedX: number;
     speedY: number;
     radius : number;
 
 
     constructor() {
+        this.prevX = 0;
+        this.prevY = 0;
         this.x = 400;
         this.y = 200;
         this.speedX = 5;
         this.speedY = 3;
         this.radius = gameSettings.ballRadius;
-        this.prevX = this.x;
-        this.prevY = this.y;
+
     }
 
 
     move(screenWidth: number, screenHeight: number) {
-        this.prevX = this.x;
+
+         this.prevX = this.x;
         this.prevY = this.y;
+
         this.x += this.speedX;
         this.y += this.speedY;
 
@@ -45,7 +47,7 @@ export class Ball {
 
         const speed = gameSettings.ballSpeed;
 
-        let angleDeg = Math.random() * 90 - 45;  // angle entre -45° et +45°
+        let angleDeg = Math.random() * 90 - 45;
 
         if (Math.abs(angleDeg) < 15) {
             angleDeg = angleDeg < 0 ? -15 : 15;
