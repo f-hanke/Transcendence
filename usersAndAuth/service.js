@@ -18,9 +18,12 @@ async function publishMessage(message) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> 16b64d1 (cleanup after rebase)
     // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
     // const connection = await amqp.connect(`amqp://localhost`);
     let connection;
@@ -31,6 +34,7 @@ async function publishMessage(message) {
         console.warn('Failed to connect to rabbitmq-service, trying localhost...');
         connection = await amqp.connect('amqp://localhost');
     }
+<<<<<<< HEAD
 =======
     const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
 >>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
@@ -41,11 +45,14 @@ async function publishMessage(message) {
 =======
     const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
 >>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
+=======
+>>>>>>> 16b64d1 (cleanup after rebase)
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
     console.log('[Publisher] Sent:', message);
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 startConsumer().catch(console.error);
@@ -59,6 +66,9 @@ startConsumer().catch(console.error);
 =======
 startConsumer().catch(console.error);
 >>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
+=======
+startConsumer().catch(console.error);
+>>>>>>> 16b64d1 (cleanup after rebase)
 const server = fastify({
     logger: {
         transport: {
