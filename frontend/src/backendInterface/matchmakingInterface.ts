@@ -7,7 +7,7 @@ import {
   matchmakingTypeGuards,
   MatchMakingTypes,
 } from "transcendence";
-import {  buildBackendRoute, buildWsRoute, navigateToSite } from "../utils/utils";
+import {  buildApiRouteRelative, buildWsRoute, navigateToSite } from "../utils/utils";
 import { AuthInterfaceAnswer } from "./authInterface";
 
 class MatchMakingInterface {
@@ -18,17 +18,17 @@ class MatchMakingInterface {
   static websocket: WebSocket | null = null;
 
   static async getCurrentTournament(): AuthInterfaceAnswer {
-    const address = buildBackendRoute({
-      websocketOrApi: "api",
-      service: "matchmakingService",
-      route: `/matchmaking/playertournament/${
-        window.store.userStore.get().details.id
-      }`,
-    });
-    // const address = buildApiRouteRelative({
+    // const address = buildBackendRoute({
+    //   websocketOrApi: "api",
     //   service: "matchmakingService",
-    // route: `/matchmaking/playertournament/${window.store.userStore.get().details.id}`,
+    //   route: `/matchmaking/playertournament/${
+    //     window.store.userStore.get().details.id
+    //   }`,
     // });
+    const address = buildApiRouteRelative({
+      service: "matchmakingService",
+    route: `/matchmaking/playertournament/${window.store.userStore.get().details.id}`,
+    });
     try {
       const response = await fetch(address, {
         method: "GET",

@@ -2,9 +2,12 @@ import { isDefined } from "transcendence";
 import { EditableFields, UserState } from "../state/userStateTypes";
 import {
   createHtmlElementFromString,
+  fileToBufferLike,
   getImgSrcFromBuffer,
   sanitizeAndCleanInput,
 } from "../utils/utils";
+import { generateUniqueId } from "transcendence";
+import { UserInterface } from "../backendInterface/userInterface";
 
 class UserSettings extends HTMLElement {
   unsubscribe: null | (() => void);
@@ -37,20 +40,7 @@ class UserSettings extends HTMLElement {
   render() {
     this.innerHTML = `
       <div class="p-4 w-full h-full mx-auto bg-gray-800 text-white rounded-lg shadow-md">
-        <h2 class="text-lg font-semibold mb-4">${
-          window.store.languageStore.state.userSettings.userSettings
-        }</h2>
-
-        <!-- Profile Picture (Clickable) -->
-        <div class="flex flex-col items-center mb-4">
-            <img id="profileImage" src="${
-              window.store.userStore.get().details.image
-            }"
-              class="cursor-pointer w-full max-w-xl border border-gray-600 hover:opacity-80 transition duration-300"
-              title="Click to change profile picture"/>
-          <input type="file" id="imageUpload" class="hidden"
-          accept="image/png, image/jpeg">
-        </div>
+        <h2 class="text-lg font-semibold mb-4">${window.store.languageStore.state.userSettings.userSettings}</h2>
         <div id="inputEditContainer"></div>
         <div class="bg-gray-800" id="userFriends"></div>
         <div class="bg-gray-800" id="userMatchHistory"></div>
@@ -65,6 +55,9 @@ class UserSettings extends HTMLElement {
     const inputEditContainer = this.querySelector(
       "#inputEditContainer"
     ) as HTMLDivElement;
+
+    inputEditContainer.appendChild(this.renderProfileImage());
+
     inputEditContainer.appendChild(
       this.renderOneInput(
         "displayName",
@@ -83,21 +76,110 @@ class UserSettings extends HTMLElement {
         window.store.languageStore.state.userSettings.password
       )
     );
+  }
 
-    this.querySelector("#profileImage")?.addEventListener("click", (event) => {
+  renderProfileImage() {
+    const imageToRender =
+      window.store.userStore.get().editState.image ??
+      window.store.userStore.get().details.image;
+    const htmlElem = createHtmlElementFromString(`
+    <div>
+      <div class="flex gap-2">
+      <label class="block text-sm">Profile Picture</label>
+        <button id="saveBtnEditImage" title="Save">
+          💾
+        </button>
+        <button id="resetBtnEditImage" title="Reset">
+          🔄
+        </button>
+      </div>
+        <div class="flex flex-col mb-4">
+            <img id="profileImage" src="${getImgSrcFromBuffer(imageToRender)}" 
+              class="cursor-pointer w-full max-w-xl border border-gray-600 hover:opacity-80 transition duration-300" 
+              title="Click to change profile picture"/>
+          <input type="file" id="imageUpload" class="hidden" 
+          accept="image/png, image/jpeg">
+      </div>
+    </div>
+      `);
+
+    const saveBtn = htmlElem.querySelector(
+      `#saveBtnEditImage`
+    ) as HTMLButtonElement;
+    const resetBtn = htmlElem.querySelector(
+      `#resetBtnEditImage`
+    ) as HTMLButtonElement;
+
+    if (!isDefined(window.store.userStore.get().editState.image)) {
+      saveBtn.classList.add("hidden");
+      resetBtn.classList.add("hidden");
+    }
+
+    resetBtn.addEventListener("click", () => {
+      const newState = {} as Partial<UserState["editState"]>;
+      newState.image = null;
+      window.store.userStore.updateSetEditState(newState);
+    });
+
+    saveBtn.addEventListener("click", async () => {
+      const newImage = window.store.userStore.get().editState.image;
+      if (isDefined(newImage)) {
+        colog(newImage);
+        const res = await UserInterface.updateUserImage({
+           image: newImage.data
+        });
+        colog(res);
+        if (res.ok) {
+          window.store.notificationStore.updateAddNotification({
+            id: generateUniqueId(),
+            message: "Profile picture updated successfully!",
+          });
+          colog("SUCCESS!");
+        } else {
+          colog("ERROR!");
+          window.store.notificationStore.updateAddNotification({
+            id: generateUniqueId(),
+            message: `Couldn't update profile picture! Reason: ${res.errorMessage}`,
+          });
+        }
+      }
+      const newState = {} as Partial<UserState["editState"]>;
+      newState["image"] = null;
+      window.store.userStore.updateSetEditState(newState);
+    });
+
+    const profileImage = htmlElem.querySelector(
+      "#profileImage"
+    ) as HTMLImageElement;
+
+    profileImage.addEventListener("click", (event) => {
       event.preventDefault();
       (this.querySelector("#imageUpload") as HTMLLabelElement).click();
     });
-  }
 
-  //  this.querySelector("#imageUpload")?.addEventListener('change', function(event) {
-  //   const input = event.target as HTMLInputElement;
-  //   if (!input || !input.files || input.files.length === 0) return;
-  //   const file = input.files[0];
-  //   colog("FILE");
-  //   colog(file);
-  //   if (!file) return;
-  // })
+    htmlElem
+      .querySelector("#imageUpload")
+      ?.addEventListener("change", async function (event) {
+        const maxFileSize = 1024 * 1024 * 4;
+        const input = event.target as HTMLInputElement;
+        if (!input || !input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        if (file.size > maxFileSize) {
+          window.store.notificationStore.updateAddNotification({
+            id: generateUniqueId(),
+            message:
+              "The file you chose is too big! Please select a file smaller than 4 MB!",
+          });
+          return;
+        }
+        const fileAsBufferLike = await fileToBufferLike(file);
+        window.store.userStore.updateSetEditState({
+          image: fileAsBufferLike,
+        });
+      });
+
+    return htmlElem;
+  }
 
   renderOneInput(which: keyof EditableFields, label: string) {
     const htmlElem = createHtmlElementFromString(`

@@ -110,7 +110,7 @@ declare namespace AuthServiceTypes {
   };
 
   type UpdateImageBody = {
-    image: Buffer;
+    image: ChatServiceTypes.BufferLike;
   }
 
   type UserType = {

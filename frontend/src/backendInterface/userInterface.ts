@@ -89,6 +89,60 @@ class UserInterface {
     }
   }
 
+  static async updateUserEmail(
+    body: AuthServiceTypes.UpdateEmailBody
+  ): AuthInterfaceAnswer {
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: `/api/users/updateemail/${
+        window.store.userStore.get().details.id
+      }`,
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        return {
+          ok: true,
+        };
+      } else return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
+static async updateUserImage(
+    body: AuthServiceTypes.UpdateImageBody
+  ): AuthInterfaceAnswer {
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: `/api/users/updateimage/${
+        window.store.userStore.get().details.id
+      }`,
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        return {
+          ok: true,
+        };
+      } else return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
   static async handleApiResponseError(response: Response): AuthInterfaceAnswer {
     const body = await response.json();
     if (authServiceTypeGuards.isErrorResponseBody(body)) {

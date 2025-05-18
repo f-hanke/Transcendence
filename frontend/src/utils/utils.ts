@@ -244,6 +244,30 @@ function getImgSrcFromBuffer(
   return url;
 }
 
+function fileToBufferLike(file: File): Promise<ChatServiceTypes.BufferLike> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const arrayBuffer = reader.result as ArrayBuffer;
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const bufferLike: ChatServiceTypes.BufferLike = {
+        type: "Buffer",
+        data: Array.from(uint8Array),
+      };
+      resolve(bufferLike);
+    };
+
+    reader.onerror = () => reject(reader.error);
+
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export {
   deepCopyObj,
   createHtmlElementFromString,
@@ -260,4 +284,6 @@ export {
   deepEqual,
   guessImageTypeFromBuffer,
   getImgSrcFromBuffer,
+  fileToBufferLike,
+  sleep
 };
