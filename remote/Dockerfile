@@ -16,6 +16,7 @@ RUN npm install
 COPY remote/tsconfig.json ./
 COPY remote/src ./src
 COPY remote/client ./client
+COPY remote/db_file ./db_file
 
 # Copy the shared package build
 COPY --from=shared-builder /app/shared/dist/ ../shared/dist/
@@ -29,6 +30,7 @@ FROM node:20-alpine
 
 WORKDIR /app
 COPY --from=service-builder /app/remote/dist ./dist
+COPY --from=service-builder /app/remote/db_file ./db_file
 COPY --from=service-builder /app/remote/node_modules ./node_modules
 COPY --from=service-builder /app/remote/package.json ./
 COPY --from=service-builder /app/remote/client ./client

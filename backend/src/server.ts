@@ -397,7 +397,7 @@ fastify.get("/favicon.ico", async (request, reply) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: transNetworkSettings.gamePlay.port, host: "0.0.0.0" });
+    await fastify.listen({ port: transNetworkSettings.gamePlay.port, host: transNetworkSettings.gamePlay.ip });
     console.log(chalk.cyan.bold(`Server running on http://localhost:${transNetworkSettings.gamePlay.port}`));
   } catch (err) {
     fastify.log.error(err);

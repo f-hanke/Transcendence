@@ -32,6 +32,7 @@ import { ChatInterface } from "../backendInterface/chatInterface.ts";
 import { AppRouterUnprotected } from "./AppRouterUnprotected.ts";
 import { AppRouterProtected } from "./AppRouterProtected.ts";
 import { AuthInterface } from "../backendInterface/authInterface.ts";
+import { UserInterface } from "../backendInterface/userInterface.ts";
 
 class AppRouter extends HTMLElement {
   // routes: Record<string, Page>;
@@ -77,6 +78,11 @@ class AppRouter extends HTMLElement {
 
   async handleRouteChange() {
     const isAuthenticated = await AuthInterface.verify(true);
+    if (window.store.userStore.get().details.fetchNeeded) {
+      await UserInterface.getAllUserDetails(
+        window.store.userStore.get().details.id
+      );
+    }
     if (this.appRouterProtected.curRouteIsProtected()) {
       ChatInterface.connect();
       this.appRouterProtected.handleRouteChange(isAuthenticated.ok);
@@ -88,18 +94,15 @@ class AppRouter extends HTMLElement {
     }
   }
 
-  showProtectedAppRouter()
-  {
+  showProtectedAppRouter() {
     this.appRouterProtected.classList.remove("hidden");
     this.appRouterUnprotected.classList.add("hidden");
   }
 
-  showUnProtectedAppRouter()
-  {
+  showUnProtectedAppRouter() {
     this.appRouterUnprotected.classList.remove("hidden");
     this.appRouterProtected.classList.add("hidden");
   }
-
 }
 
 customElements.define("app-router", AppRouter);

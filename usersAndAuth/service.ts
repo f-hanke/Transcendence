@@ -13,6 +13,8 @@ import { config } from './config/config.js';
 import { User } from './orm/user.js';
 import { GameResultModel } from './orm/gameResultModel.js';
 
+import { startConsumer } from './rabbitMQ/rabbitMQ.js';
+
 import { AuthServiceTypes,
          GameResultTypes,
          RabbitMQTypes,
@@ -40,12 +42,22 @@ type RegSuccessResponseBody = AuthServiceTypes.RegSuccessResponseBody;
 type MatchResult = GameResultTypes.MatchResult;
 type TournamentResult = GameResultTypes.TournamentResult;
 
-const queue = 'auth-ChatService';
+const queue = 'auth-ChatService';  // for publishing
 
 async function publishMessage(message: RabbitMQTypes.UserChange) {
   if (!rabbitMQTypeGuards.isUserChangeBody(message))
     console.error("Trying to publish unknown type");
-  const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
+  // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
+  // const connection = await amqp.connect(`amqp://localhost`);
+
+  let connection;
+	try {
+		connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
+	} catch (err) {
+		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
+		connection = await amqp.connect('amqp://localhost');
+	}
+  
   const channel = await connection.createChannel();
 
   await channel.assertQueue(queue, { durable: false });
@@ -53,6 +65,9 @@ async function publishMessage(message: RabbitMQTypes.UserChange) {
   channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
   console.log('[Publisher] Sent:', message);
 }
+
+
+// startConsumer().catch(console.error);
 
 
 const server = fastify({
@@ -497,7 +512,7 @@ server.setNotFoundHandler((req, res) => {
 
 server.listen({
   port: transNetworkSettings.authService.port,
-  host: '0.0.0.0'
+  host: transNetworkSettings.authService.ip
   }, (err, address) => {
     if (err) {
       console.error(err)

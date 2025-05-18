@@ -1,3 +1,5 @@
+import { ChatServiceTypes } from "transcendence";
+
 type UserId = string;
 
 type MatchFinished = {
@@ -14,12 +16,13 @@ type MatchFinished = {
 type UserDetails = {
   id: UserId;
   displayName: string;
-  image: string;
+  image: ChatServiceTypes.BufferLike | null;
   matchHistory: MatchFinished[];
   friends: UserId[];
   online: boolean;
   email: string;
   password: string;
+  fetchNeeded: boolean;
 };
 
 type EditableFields = Pick<UserDetails, "displayName" | "email" | "password">

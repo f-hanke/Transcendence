@@ -18,16 +18,10 @@ import { db } from '../db.js';
         player2Id TEXT DEFAULT NULL,
         player3Id TEXT DEFAULT NULL,
         player4Id TEXT DEFAULT NULL,
-        match1Id TEXT DEFAULT NULL,
-        match2Id TEXT DEFAULT NULL,
-        match3Id TEXT DEFAULT NULL,
-        match4Id TEXT DEFAULT NULL,
-        match5Id TEXT DEFAULT NULL,
-        match6Id TEXT DEFAULT NULL,
-        match7Id TEXT DEFAULT NULL,
-        match8Id TEXT DEFAULT NULL,
-        match9Id TEXT DEFAULT NULL,
-        match10Id TEXT DEFAULT NULL
+        matchSemifinale1Id TEXT DEFAULT NULL,
+        matchSemifinale2Id TEXT DEFAULT NULL,
+        matchFinaleId TEXT DEFAULT NULL,
+        matchBronzeId TEXT DEFAULT NULL
       )
     `);
 
@@ -35,10 +29,11 @@ import { db } from '../db.js';
     db.exec(`
         CREATE TABLE IF NOT EXISTS matches (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          p1_id TEXT NOT NULL,
-          p2_id TEXT NOT NULL,
-          p1_score INTEGER DEFAULT NULL,
-          p2_score INTEGER DEFAULT NULL
+          player1Id TEXT DEFAULT NULL,
+          player2Id TEXT DEFAULT NULL,
+          player1Score INTEGER DEFAULT NULL,
+          player2Score INTEGER DEFAULT NULL,
+          playedAt TEXT DEFAULT NULL
         )
       `);
 

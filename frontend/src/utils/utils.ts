@@ -1,4 +1,5 @@
 import {
+  ChatServiceTypes,
   isDefined,
   transNetworkSettings,
 } from "transcendence";
@@ -200,6 +201,48 @@ function deepEqual(a: any, b: any) {
   return true;
 }
 
+function guessImageTypeFromBuffer(buffer: ChatServiceTypes.BufferLike) {
+  let bytes: Uint8Array;
+
+  if (buffer instanceof ArrayBuffer) {
+    bytes = new Uint8Array(buffer);
+  } else if (buffer.type === "Buffer" && Array.isArray(buffer.data)) {
+    bytes = new Uint8Array(buffer.data);
+  } else {
+    return "unknown";
+  }
+
+  const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  const jpegSignature = [0xff, 0xd8, 0xff];
+
+  function matchesSignature(sig: number[]): boolean {
+    if (bytes.length < sig.length) return false;
+    for (let i = 0; i < sig.length; i++) {
+      if (bytes[i] !== sig[i]) return false;
+    }
+    return true;
+  }
+
+  if (matchesSignature(pngSignature)) {
+    return "image/png";
+  }
+  if (matchesSignature(jpegSignature)) {
+    return "image/jpeg";
+  }
+  return "unknown";
+}
+
+function getImgSrcFromBuffer(
+  imageBufferObj: ChatServiceTypes.BufferLike | null
+) {
+  if (!isDefined(imageBufferObj)) return "";
+  const uint8Array = new Uint8Array(imageBufferObj.data);
+  const blob = new Blob([uint8Array], {
+    type: guessImageTypeFromBuffer(imageBufferObj),
+  });
+  const url = URL.createObjectURL(blob);
+  return url;
+}
 
 export {
   deepCopyObj,
@@ -215,4 +258,6 @@ export {
   buildWsRoute,
   sanitizeAndCleanInput,
   deepEqual,
+  guessImageTypeFromBuffer,
+  getImgSrcFromBuffer,
 };

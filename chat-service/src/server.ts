@@ -180,6 +180,7 @@ fastify.register(async function (fastify) {
 
 function registerClient(req: FastifyRequest, socket: WebSocket) {
 	const clientId = (req.query as { clientId?: string }).clientId;
+	//todo: check if client exists in db
 	if (!clientId) {
 		console.log("No clientId provided in query");
 		socket.close(1008, "Missing clientId");
@@ -329,7 +330,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 
 	try {
 		const stmt = db.prepare(databaseQuerys.getUser);
-		const rows = stmt.all() as { id: string; username: string; small_image: Blob; online: boolean; }[];
+		const rows = stmt.all() as { id: string; username: string; small_image: ChatServiceTypes.BufferLike; online: boolean; }[];
 
 		rows.forEach((row) => {
 			if (row.id === clientId)
@@ -403,5 +404,5 @@ fastify.listen({ port: transNetworkSettings.chatService.port, host: transNetwork
 		fastify.log.error(err);
 		process.exit(1);
 	}
-	console.log(`Server listening on http://localhost:${transNetworkSettings.chatService.port}/`);
+	console.log(`ChatService - Server listening on http://localhost:${transNetworkSettings.chatService.port}/`);
 });

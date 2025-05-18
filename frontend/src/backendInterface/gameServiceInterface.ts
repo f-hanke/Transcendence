@@ -13,8 +13,9 @@ class GameServiceInterface {
   }
 
   static correctUpdateHandlingFunction: (
-    dataJson: GameServiceTypes.ServerUpdateGameState
+    dataJson: GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
   ) => void = GameServiceInterface.handleServerUpdateGameStateRemote;
+
   static websocket: WebSocket | null = null;
 
   static async createMatchOnServer(
@@ -107,7 +108,7 @@ class GameServiceInterface {
   static handleMessage(event: MessageEvent) {
     const dataJson = JSON.parse(event.data);
     colog(dataJson);
-    if (gameServiceTypeGuards.isServerUpdateGameState(dataJson)) {
+    if (gameServiceTypeGuards.isServerUpdateGameState(dataJson) || gameServiceTypeGuards.isServerUpdateGameStateRestAPI(dataJson)) {
       this.correctUpdateHandlingFunction(dataJson);
     } else if (gameServiceTypeGuards.isServerGameIsOver(dataJson)) {
       this.handleServerGameIsOver(dataJson);
@@ -126,7 +127,7 @@ class GameServiceInterface {
   }
 
   static handleServerUpdateGameStateRemote(
-    dataJson: GameServiceTypes.ServerUpdateGameState
+    dataJson:GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
     if (dataJson.type === "serverUpdateGameState")
       window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
@@ -134,7 +135,7 @@ class GameServiceInterface {
   }
 
   static handleServerUpdateGameStateLocalPvAi(
-    dataJson: GameServiceTypes.ServerUpdateGameState
+    dataJson: GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
     if (dataJson.type === "serverUpdateGameState")
       window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
@@ -142,7 +143,7 @@ class GameServiceInterface {
   }
 
   static handleServerUpdateGameStateLocalPvp(
-    dataJson: GameServiceTypes.ServerUpdateGameState
+    dataJson: GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
     if (dataJson.type === "serverUpdateGameState")
       window.store.gameStore.updateBallPosition(dataJson.data);

@@ -26,12 +26,14 @@ export interface TransNetworkSettings {
 }
 
 const transNetworkSettings: TransNetworkSettings = {
+  // put "0.0.0.0" ervywhere for docker setup
   apiGateway: {
+    // ip: "localhost",
     ip: "0.0.0.0",
     port: 8443,
   },
   webserver: {
-    ip: "0.0.0.0", // use "localhost" outside of Docker
+    ip: "0.0.0.0", // use "0.0.0.0" outside of Docker
     port: 10005, // 10005 inside Docker
   },
   gameMatchmaking: {
@@ -43,7 +45,7 @@ const transNetworkSettings: TransNetworkSettings = {
     port: 10003,
   },
   authService: {
-    ip: "0.0.0.0", // use "localhost" outside of Docker
+    ip: "0.0.0.0", // use "0.0.0.0" outside of Docker
     port: 10004,
   },
   chatService: {

@@ -120,7 +120,7 @@ fclean: stop clean-npm
 	@echo "Forcing full cleanup of Docker resources..."
 	# Remove stopped containers, unused images, networks, and volumes
 	docker container prune -f
-	docker image prune -a -f
+	# docker image prune -a -f
 	docker network prune -f
 	docker volume prune -f
 	# Optionally, remove the .docker directory if you want to completely reset Docker's data

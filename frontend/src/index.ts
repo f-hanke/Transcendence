@@ -42,6 +42,5 @@ document.addEventListener("DOMContentLoaded", () => {
   appRouter.addRoute("/home", "home-page");
   appRouter.addRoute("/", "home-page");
   appRouter.addRoute("/chat", "chat-layout");
-
   appRouter.handleRouteChange();
 });

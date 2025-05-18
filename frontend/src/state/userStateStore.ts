@@ -1,4 +1,4 @@
-import { exampleImage } from "../testing/exampleImage";
+import { ChatServiceTypes } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
 import { StoreCallback } from "./types";
 import { UserState } from "./userStateTypes";
@@ -15,7 +15,7 @@ class UserStateStore {
     const test_user_id = `${sessionStorage.getItem("transTestId")}`;
     this.state = {
       details: {
-        image: exampleImage,
+        image: null,
         displayName: "TEST_USER",
         friends: ["friend_1_id", "friend_2_id"],
         id: test_user_id,
@@ -34,6 +34,7 @@ class UserStateStore {
         ],
         online: true,
         password: "",
+        fetchNeeded: true,
       },
       editState: {},
     };
@@ -53,15 +54,23 @@ class UserStateStore {
 
   updateUserSettings(
     updatedState: Partial<
-      Pick<UserState["details"], "image" | "displayName" | "email" | "id">
+      Pick<UserState["details"], "displayName" | "email" | "id">
     >
   ) {
     const newState = deepCopyObj(this.state);
     for (const detail of Object.keys(updatedState)) {
-      const typedDetail = detail as keyof  Pick<UserState["details"], "image" | "displayName" | "email" | "id">;
+      const typedDetail = detail as keyof Pick<
+        UserState["details"],
+        "displayName" | "email" | "id"
+      >;
       newState["details"][typedDetail] = updatedState[typedDetail] as string;
     }
     this.state = newState;
+    this.listeners.forEach((callback) => callback());
+  }
+
+  updateUserImage(newImage: ChatServiceTypes.BufferLike) {
+    this.state.details.image = newImage;
     this.listeners.forEach((callback) => callback());
   }
 
@@ -70,6 +79,11 @@ class UserStateStore {
       ...this.state.editState,
       ...updatedState,
     });
+    this.listeners.forEach((callback) => callback());
+  }
+
+  updateSetFetchNeeded(needed: boolean) {
+    this.state.details.fetchNeeded = needed;
     this.listeners.forEach((callback) => callback());
   }
 

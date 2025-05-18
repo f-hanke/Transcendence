@@ -3,58 +3,41 @@ import {
 } from "transcendence";
 
 const utils = {
-  deriveTournamentWithRanking(tournament: MatchMakingTypes.TournamentWithMatches) {
-    const wins: MatchMakingTypes.PlayerStats[] = [
-      { wins: 0, id: tournament.player1Id as string, rank: 0, losses: 0 },
-      { wins: 0, id: tournament.player3Id as string, rank: 0, losses: 0 },
-      { wins: 0, id: tournament.player2Id as string, rank: 0, losses: 0 },
-      { wins: 0, id: tournament.player4Id as string, rank: 0, losses: 0 }
-    ]
 
-    // tournament.matchResults.reduce((prev, cur) => {
-    //   switch(cur.winnerId){
-    //     case tournament.player1Id:
-    //       prev[0]++;
-    //       break;
-    //     case tournament.player2Id:
-    //       prev[1]++;
-    //       break;
-    //     case tournament.player3Id:
-    //       prev[2]++;
-    //       break;
-    //     case tournament.player4Id:
-    //       prev[3]++;
-    //       break;
-    //   }
-    //   return prev;
-    // }, [0,0,0,0])
-
-    for (let matchResult of tournament.matchResults) {
-      const winner = wins.find((elem) => elem.id === matchResult.winnerId) as MatchMakingTypes.PlayerStats;
-      winner.wins++;
-    }
-    const sortedWins = wins.sort((a, b) => a.wins - b.wins);
-    let i = 1;
-
-    sortedWins.forEach((elem, index) => {
-      if (index === 0)
-        elem.rank = i;
-      else {
-        elem.rank = i;
-        if (elem.wins <= sortedWins[index - 1].wins)
-          i++;
-      }
-    })
-
+  deriveTournamentWithRanking(tournament: MatchMakingTypes.Tournament) {
     const tournamentWithRanking: MatchMakingTypes.TournamentWithRanking = {
       tournamentId: tournament.tournamentId as string,
       player1Id: tournament.player1Id as string,
       player2Id: tournament.player2Id as string,
       player3Id: tournament.player3Id as string,
       player4Id: tournament.player4Id as string,
-      Ranking: wins,
-      matches: [],
-      matchResults: []
+      matchSemifinale1: tournament.matchSemifinale1,
+      matchSemifinale2: tournament.matchSemifinale2,
+      matchFinale: tournament.matchFinale,
+      matchBronze: tournament.matchBronze,
+      matchResultSemifinale1: tournament.matchResultSemifinale1,
+      matchResultSemifinale2: tournament.matchResultSemifinale2,
+      matchResultFinale: tournament.matchResultFinale,
+      matchResultBronze: tournament.matchResultBronze,
+      rank1PlayerId: null,
+      rank2PlayerId: null,
+      rank3PlayerId: null,
+      rank4PlayerId: null,
+      started: tournament.matchResultSemifinale1? true : false,
+      playedAt: null
+    }
+
+    if (tournament.matchResultFinale) {
+      const winnerId = tournament.matchResultFinale.winnerId;
+      const loserId = winnerId === tournament.matchResultFinale.player1Id ? tournament.matchResultFinale.player2Id : tournament.matchResultFinale.player1Id;
+      tournamentWithRanking.rank1PlayerId = winnerId;
+      tournamentWithRanking.rank2PlayerId = loserId;
+    }
+    if (tournament.matchResultBronze) {
+      const winnerId = tournament.matchResultBronze.winnerId;
+      const loserId = winnerId === tournament.matchResultBronze.player1Id ? tournament.matchResultBronze.player2Id : tournament.matchResultBronze.player1Id;
+      tournamentWithRanking.rank3PlayerId = winnerId;
+      tournamentWithRanking.rank4PlayerId = loserId;
     }
     return tournamentWithRanking;
   }

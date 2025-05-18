@@ -12,10 +12,15 @@ declare namespace ChatServiceTypes {
     | "pendingClientInvite"
     | "pendingRecipientInvite";
 
+  type BufferLike = {
+    type: "Buffer";
+    data: number[];
+  };
+
   type ChatUser = {
     recipientId: string;
     displayName: string;
-    image: Blob;
+    image: BufferLike;
     friend: boolean;
     online: boolean;
     blocked: boolean;
@@ -88,7 +93,7 @@ declare namespace ChatServiceTypes {
   type UpdateFriendRequest = {
     type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
     recipientId: string;
-  }
+  };
 
   type SendFriendRequestBody = {
     type: "send" | "accept" | "declined" | "withdrawn" | "unfriended";
@@ -185,7 +190,7 @@ function isClientChangeBlockStatus(
     (message?.blockedStatus || message?.blockedStatus === false) &&
     typeof message.clientId === "string" &&
     typeof message.recipientId === "string" &&
-    typeof message.blockedStatus === 'boolean'
+    typeof message.blockedStatus === "boolean"
   );
 }
 
@@ -202,7 +207,9 @@ function isUpdateFriendRequest(
   );
 }
 
-function isInviteToPlayRequestBody(obj: any): obj is ChatServiceTypes.InviteToPlayRequestBody {
+function isInviteToPlayRequestBody(
+  obj: any
+): obj is ChatServiceTypes.InviteToPlayRequestBody {
   return (
     typeof obj === "object" &&
     obj !== null &&
@@ -221,7 +228,7 @@ const chatServiceTypeGuards = {
   isSentMessage,
   isServerClientChangedOnlineStatus,
   isClientChangeBlockStatus,
-  isInviteToPlayRequestBody
+  isInviteToPlayRequestBody,
 } as const;
 
 export { chatServiceTypeGuards };

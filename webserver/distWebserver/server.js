@@ -8,6 +8,10 @@ const __dirname = path.dirname(__filename);
 const fastify = Fastify({ logger: true });
 const distFrontendPath = path.join(__dirname, '../distFrontend');
 console.log(distFrontendPath);
+// Health check endpoint for Docker
+fastify.get('/health', async (request, reply) => {
+    return { status: 'ok', timestamp: new Date().toISOString() };
+});
 fastify.register(fastifyStatic, {
     root: distFrontendPath,
     prefix: '/', // Serve static files at root
@@ -20,7 +24,10 @@ fastify.setNotFoundHandler((req, reply) => {
     }
     reply.code(404).send({ error: 'Not Found' });
 });
-fastify.listen({ port: transNetworkSettings.webserver.port }, (err, address) => {
+fastify.listen({
+    port: transNetworkSettings.webserver.port,
+    host: transNetworkSettings.webserver.ip // Allow connections from any IP address, needed for Docker
+}, (err, address) => {
     if (err)
         throw err;
     console.log(`🌐 Frontend server listening at ${address}`);

@@ -21,7 +21,7 @@ run_in_terminal "cd chat-service && npm run start" "chat-service" &
 
 read -p "Press any key to kill transcendence..."
 
-bash kill_all.sh
+bash ./testing_scripts/kill_all.sh
 
 # trap "echo 'Caught SIGINT, killing all...'; kill 0; exit" SIGINT SIGTERM
 

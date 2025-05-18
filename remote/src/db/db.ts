@@ -8,13 +8,14 @@ import fs from 'fs';
 import path from 'path';
 
 // Ensure the database directory exists
-const dbDirectory = path.dirname('./dist/db/matchmaking_service.db');
-if (!fs.existsSync(dbDirectory)) {
-  fs.mkdirSync(dbDirectory, { recursive: true });
+const dbParentDir = path.dirname('./db_file');
+if (!fs.existsSync(dbParentDir)) {
+  console.error("Didn't find parent dir for matchmaking_service.db, creating one recursively");
+  fs.mkdirSync(dbParentDir, { recursive: true });
 }
 
 // Create database connection
-const db = sqlite3('./dist/db/matchmaking_service.db');
+const db = sqlite3('./db_file/matchmaking_service.db');
 
 // Enable foreign keys
 db.pragma('foreign_keys = ON');

@@ -8,7 +8,7 @@ declare namespace RabbitMQTypes {
 }
 
 function isUserChangeBody(arg: any): arg is RabbitMQTypes.UserChange {
-  return (
+	return (
 	typeof arg === "object" &&
 	arg !== null &&
 	typeof arg.id === "string" &&

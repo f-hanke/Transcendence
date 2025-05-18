@@ -4,8 +4,14 @@ import {
   colog,
   generateUniqueId,
   isDefined,
+  MatchMakingTypes,
 } from "transcendence";
-import { buildApiRouteRelative, buildWsRoute, navigateToSite } from "../utils/utils";
+import {
+  buildApiRouteRelative,
+  buildWsRoute,
+  getCurDateString,
+  navigateToSite,
+} from "../utils/utils";
 
 class ChatInterface {
   constructor() {
@@ -41,6 +47,40 @@ class ChatInterface {
     } catch (error) {
       console.error("Error:", error);
     }
+  }
+
+  static async inviteToPlayTournamentMatch(data: MatchMakingTypes.BasicGame) {
+    const address = buildApiRouteRelative({
+      service: "chatService",
+      route: "/send-game-invite",
+    });
+    const inviteData: ChatServiceTypes.InviteToPlayRequestBody = {
+      authorId: data.hostId,
+      recipientId: data.invitedPlayerId as string,
+      date: getCurDateString(),
+    };
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(inviteData),
+      });
+      if (response.ok) {
+        this.createMatchTournament(data);
+      }
+      if (!response.ok) {
+        throw new Error(`Couldn't send invite to play request via API!`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
+    static createMatchTournament(data:  MatchMakingTypes.BasicGame) {
+    window.store.matchmakingStore.createGame(data);
+    navigateToSite("matchmaking");
   }
 
   static createMatch(data: ChatServiceTypes.InviteToPlayRequestBody) {

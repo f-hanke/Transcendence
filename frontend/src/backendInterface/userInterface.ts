@@ -11,6 +11,33 @@ class UserInterface {
     throw new Error("This class cannot be instantiated.");
   }
 
+
+  static async getAllUserDetails(id:string): AuthInterfaceAnswer {
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: `/api/users/${id}`,
+    });
+    try {
+      const response = await fetch(address, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const res = await response.json() as AuthServiceTypes.UserType;
+        window.store.userStore.updateUserSettings(res);
+        window.store.userStore.updateUserImage(res.image);
+        window.store.userStore.updateSetFetchNeeded(false);
+        return {
+          ok: true,
+        };
+      } else return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
   static async getNames(body: string[]): AuthInterfaceAnswer {
     const address = buildApiRouteRelative({
       service: "authService",

@@ -19,6 +19,16 @@ class TournamentItem extends HTMLElement {
       player2Id: null,
       player3Id: null,
       player4Id: null,
+      matchSemifinale1: null,
+      matchSemifinale2: null,
+      matchFinale: null,
+      matchBronze: null,
+      matchResultSemifinale1: null,
+      matchResultSemifinale2: null,
+      matchResultFinale: null,
+      matchResultBronze: null,
+      started: false,
+      playedAt: null
     };
   }
 
