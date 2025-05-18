@@ -84,11 +84,31 @@ const GameResultModel = {
             const matchFinale = await GameResultModel.fetchMatchAsMatchResultObject(rawTournamentData.matchFinaleId);
             const matchBronze = await GameResultModel.fetchMatchAsMatchResultObject(rawTournamentData.matchBronzeId);
             const tournamentResult = {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> c3430e427988189e70204314553592dcc0580d98
                 tournamentId: rawTournamentData.id,
                 rank1PlayerId: rawTournamentData.rank1PlayerId,
                 rank2PlayerId: rawTournamentData.rank2PlayerId,
                 rank3PlayerId: rawTournamentData.rank3PlayerId,
                 rank4PlayerId: rawTournamentData.rank4PlayerId,
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> origin/main
+                tournamentId: rawTournamentData.id.toString(),
+                rank1PlayerId: rawTournamentData.rank1PlayerId.toString(),
+                rank2PlayerId: rawTournamentData.rank2PlayerId.toString(),
+                rank3PlayerId: rawTournamentData.rank3PlayerId.toString(),
+                rank4PlayerId: rawTournamentData.rank4PlayerId.toString(),
+<<<<<<< HEAD
+=======
+>>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
+>>>>>>> origin/main
+>>>>>>> c3430e427988189e70204314553592dcc0580d98
                 matchSemifinale1: matchSemifinale1,
                 matchSemifinale2: matchSemifinale2,
                 matchFinale: matchFinale,

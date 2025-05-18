@@ -46,7 +46,7 @@ export async function startConsumer() {
 				await updateUserTournamentRecords(message);
 			else if (gameResultTypeGuards.isMatchResult(message))
 				await updateUserSimpleMatchRecords(message);
-			else	
+			else
 				console.error("Wrong data read from rabbitMQ in usersAndAuth service.");
 			channel.ack(msg);
 		}

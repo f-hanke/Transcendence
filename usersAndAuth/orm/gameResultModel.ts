@@ -9,7 +9,7 @@ import { GameResultTypes } from 'transcendence'
 import { db } from '../db/db.js';
 
 const GameResultModel = {
-    
+
     /**
      * not for tournament matches
     */

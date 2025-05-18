@@ -64,11 +64,11 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
 {
   tournaments = await dbConverters.getAllTournamentsRuntimeTyped();  // update runtime tournaments so they include the scores recently stored in DB
   let tournamentToHandle: MatchMakingTypes.Tournament | null = null;
-  for (let tournament of tournaments)
-  {
+  for (let tournament of tournaments) {
     if (tournament.matchSemifinale1?.matchId === matchResult.matchId || tournament.matchSemifinale2?.matchId === matchResult.matchId)
     {
       tournamentToHandle = tournament;
+
       if (tournament.matchSemifinale1?.matchId === matchResult.matchId)
         tournament.matchResultSemifinale1 = matchResult;
       else if (tournament.matchSemifinale2?.matchId === matchResult.matchId)
@@ -134,7 +134,7 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
     catch (err) {
       console.error("DB error updating/inserting ongoing Tournament db: ", err);
     }
-    
+
     const tournamentWithRanking: MatchMakingTypes.TournamentWithRanking = utils.deriveTournamentWithRanking(tournamentToHandle);
     if (tournamentWithRanking.rank1PlayerId && tournamentWithRanking.rank2PlayerId && tournamentWithRanking.rank3PlayerId && tournamentWithRanking.rank4PlayerId) {
       const tournamentToStore: GameResultTypes.TournamentResult = {

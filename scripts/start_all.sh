@@ -12,7 +12,8 @@ function run_in_terminal {
   gnome-terminal --title=$2 -- bash -c "$1 && TRANSCENDENCE_DEV=$1 exec bash"
 }
 
-# only start rabbitmq docker when not already running 
+# only start rabbitmq docker when not already running
+
 if docker ps --filter "name=rabbitmq" --filter "status=running" | grep -q rabbitmq; then
   echo "Container is already running."
 elif docker ps -a --filter "name=rabbitmq" | grep -q rabbitmq; then
@@ -22,6 +23,15 @@ else
   echo "Running new container..."
   docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 fi
+
+# Wait until the HTTP API is ready
+until curl -s -u guest:guest http://localhost:15672/api/overview > /dev/null; do
+  echo "Waiting for RabbitMQ management API..."
+  sleep 1
+done
+
+echo "RabbitMQ management API is ready!"
+
 
 if [ -z "$1" ]; then
   echo "Using Frontend build for testing"
@@ -44,23 +54,23 @@ bash ./scripts/kill_all.sh
 
 # trap "echo 'Caught SIGINT, killing all...'; kill 0; exit" SIGINT SIGTERM
 
-# (cd usersAndAuth && npm run dev) & 
+# (cd usersAndAuth && npm run dev) &
 # PID_usersAndAuth=$!
 
-# (cd remote && npm run dev) & 
+# (cd remote && npm run dev) &
 # PID_remote=$!
 
-# (cd apiGateway && npm run dev) & 
+# (cd apiGateway && npm run dev) &
 # PID_apiGateway=$!
 
 
-# (cd webserver && npm run dev) & 
+# (cd webserver && npm run dev) &
 # PID_webserver=$!
 
-# (cd backend && npm run dev) & 
+# (cd backend && npm run dev) &
 # PID_backend=$!
 
-# (cd chat-service && npm run dev) & 
+# (cd chat-service && npm run dev) &
 # PID_chat=$!
 
 # echo PID_usersAndAuth=$PID_usersAndAuth
