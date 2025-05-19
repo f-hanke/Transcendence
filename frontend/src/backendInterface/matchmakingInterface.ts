@@ -79,7 +79,7 @@ class MatchMakingInterface {
             this.sendMessageToServer({
               type: "createGame",
               data: {
-                matchId: generateUniqueId(),
+                matchId: ownMatch.matchId,
                 hostId: ownMatch.hostId,
                 oponentId: ownMatch.oponentId,
                 invitedPlayerId: ownMatch.invitedPlayerId,

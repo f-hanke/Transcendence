@@ -1,5 +1,5 @@
 import { GameServiceInterface } from "../../backendInterface/gameServiceInterface";
-import { createHtmlElementFromString, navigateToSite, sleep } from "../../utils/utils";
+import { createHtmlElementFromString, navigateToSite } from "../../utils/utils";
 import { CentralModalListeners } from "../CentralModalListeners";
 import { MatchScore } from "./MatchScore";
 
