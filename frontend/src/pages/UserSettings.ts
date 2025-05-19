@@ -132,6 +132,7 @@ class UserSettings extends HTMLElement {
             id: generateUniqueId(),
             message: "Profile picture updated successfully!",
           });
+          window.store.userStore.updateUserImage(newImage);
         } else {
           window.store.notificationStore.updateAddNotification({
             id: generateUniqueId(),

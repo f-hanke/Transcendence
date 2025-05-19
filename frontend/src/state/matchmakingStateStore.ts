@@ -63,6 +63,7 @@ class MatchmakingStateStore {
   }
 
   createGame(match: MatchMakingTypes.BasicGame) {
+
     if (match.hostId == window.store.userStore.get().details.id)
     {
       this.state.ownMatch = deepCopyObj(match);
@@ -86,7 +87,6 @@ class MatchmakingStateStore {
 
   updateFromAllMatches(allMatches: MatchMakingTypes.ServerUpdateGames["data"]) {
     console.log("UPDATE FROM ALL MATCHES");
-    jlog(allMatches);
     const newState: MatchmakingState = {
       otherMatches: [],
       tournaments: deepCopyObj(allMatches.tournaments),

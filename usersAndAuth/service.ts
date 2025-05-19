@@ -20,7 +20,6 @@ import {
   RabbitMQTypes,
   AuthErrors,
   authServiceTypeGuards,
-  gameResultTypeGuards,
   rabbitMQTypeGuards,
   transNetworkSettings,
 } from "transcendence";
@@ -507,7 +506,7 @@ server.post<{
 
 server.post<{
   Body: UpdateImageBody;
-  Reply: {
+  Reply: { 
     201: UserType;
     400: ErrorResponseBody;
     500: ErrorResponseBody;
@@ -524,7 +523,6 @@ server.post<{
     return reply
       .code(400)
       .send({ reason: AuthErrors.BadBodyFormat } satisfies ErrorResponseBody);
-
   try {
     const { image } = request.body;
     const nodeJsImageBuffer = Buffer.from(image.data);

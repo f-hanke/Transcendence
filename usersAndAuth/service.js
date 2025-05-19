@@ -44,18 +44,23 @@ async function publishMessage(message) {
 =======
 >>>>>>> 52a4f32ea79ef32a3638ebd7634672b27a9cb1c1
 >>>>>>> origin/main
+<<<<<<< HEAD
 >>>>>>> 062df067cbf310f301aa5f5cb83a84b2dfdf4782
+=======
+>>>>>>> origin/main
+>>>>>>> cd0c18a6e70801bda76659793b05e1446d2f8689
     // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
     // const connection = await amqp.connect(`amqp://localhost`);
     let connection;
     try {
-<<<<<<< HEAD
         connection = await amqp.connect("amqp://admin:admin@rabbitmq-service:5672");
     }
     catch (err) {
         console.warn("Failed to connect to rabbitmq-service, trying localhost...");
         connection = await amqp.connect("amqp://localhost");
     }
+<<<<<<< HEAD
+=======
 =======
         connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
     }
@@ -89,7 +94,11 @@ async function publishMessage(message) {
 =======
 >>>>>>> 52a4f32ea79ef32a3638ebd7634672b27a9cb1c1
 >>>>>>> origin/main
+<<<<<<< HEAD
 >>>>>>> 062df067cbf310f301aa5f5cb83a84b2dfdf4782
+=======
+>>>>>>> origin/main
+>>>>>>> cd0c18a6e70801bda76659793b05e1446d2f8689
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
@@ -446,6 +455,9 @@ server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
             .send({
             reason: AuthErrors.LackingIdParamInUri,
         });
+    console.log("HELLO WORLD!");
+    console.log(request.body);
+    console.log(authServiceTypeGuards.isUpdateImageBody(request.body));
     if (!authServiceTypeGuards.isUpdateImageBody(request.body))
         return reply
             .code(400)
