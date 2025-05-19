@@ -165,7 +165,7 @@ const Tournament = {
   async addOpponentToMatch(id: string, matchId: string, matchName: string, player2Id: string) {
     try {
       db.prepare(`UPDATE matches SET player2Id = ? WHERE id = ?`).run(player2Id, matchId);
-      db.prepare(`UPDATE tournaments SET ${matchName} = ? WHERE id = ?`).run(matchId, id);
+      db.prepare(`UPDATE tournaments SET ${matchName}Id = ? WHERE id = ?`).run(matchId, id);
     } catch (db_error) {
       throw db_error;
     }
@@ -180,7 +180,7 @@ const Tournament = {
    */
   async updateMatchScore(id: string, player1Score: string, player2Score: string) {
     try {
-      const stmt = db.prepare(`UPDATE matches SET player1_score = ?, player2_score = ? WHERE id = ?`)
+      const stmt = db.prepare(`UPDATE matches SET player1Score = ?, player2Score = ? WHERE id = ?`)
       const result = stmt.run(player1Score, player2Score, id);
       return result.changes > 0;
     } catch (db_error) {

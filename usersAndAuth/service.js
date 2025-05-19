@@ -15,40 +15,6 @@ const queue = "auth-ChatService"; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
         console.error("Trying to publish unknown type");
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
-<<<<<<< HEAD
->>>>>>> origin/main
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
-=======
-<<<<<<< HEAD
-=======
->>>>>>> 16b64d1 (cleanup after rebase)
->>>>>>> origin/main
->>>>>>> origin/main
-<<<<<<< HEAD
->>>>>>> 52a4f32ea79ef32a3638ebd7634672b27a9cb1c1
-=======
-<<<<<<< HEAD
-=======
->>>>>>> 52a4f32ea79ef32a3638ebd7634672b27a9cb1c1
->>>>>>> origin/main
-<<<<<<< HEAD
->>>>>>> 062df067cbf310f301aa5f5cb83a84b2dfdf4782
-=======
->>>>>>> origin/main
->>>>>>> cd0c18a6e70801bda76659793b05e1446d2f8689
     // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
     // const connection = await amqp.connect(`amqp://localhost`);
     let connection;
@@ -59,46 +25,6 @@ async function publishMessage(message) {
         console.warn("Failed to connect to rabbitmq-service, trying localhost...");
         connection = await amqp.connect("amqp://localhost");
     }
-<<<<<<< HEAD
-=======
-=======
-        connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
-    }
-    catch (err) {
-        console.warn('Failed to connect to rabbitmq-service, trying localhost...');
-        connection = await amqp.connect('amqp://localhost');
-    }
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
->>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
->>>>>>> c8ff778 (chore(remote): shovel it carefully onto new main)
-=======
-    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
->>>>>>> 1053fd9 (set up test environment)
-=======
-    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
->>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
-=======
->>>>>>> 16b64d1 (cleanup after rebase)
->>>>>>> origin/main
->>>>>>> origin/main
-<<<<<<< HEAD
->>>>>>> 52a4f32ea79ef32a3638ebd7634672b27a9cb1c1
-=======
-<<<<<<< HEAD
-=======
->>>>>>> 52a4f32ea79ef32a3638ebd7634672b27a9cb1c1
->>>>>>> origin/main
-<<<<<<< HEAD
->>>>>>> 062df067cbf310f301aa5f5cb83a84b2dfdf4782
-=======
->>>>>>> origin/main
->>>>>>> cd0c18a6e70801bda76659793b05e1446d2f8689
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
@@ -430,6 +356,13 @@ server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) 
             return reply
                 .code(500)
                 .send({ reason: AuthErrors.BackendError });
+        // // TODO
+        // const publication: RabbitMQTypes.UserChange = {
+        //   id: updatedUser.id,
+        //   displayName: updatedUser.display_name,
+        //   smallImage: updatedUser.,
+        // };
+        // publishMessage(publication).catch(console.error);
         return reply.code(201).send(updatedUser);
     }
     catch (e) {
@@ -455,9 +388,6 @@ server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
             .send({
             reason: AuthErrors.LackingIdParamInUri,
         });
-    console.log("HELLO WORLD!");
-    console.log(request.body);
-    console.log(authServiceTypeGuards.isUpdateImageBody(request.body));
     if (!authServiceTypeGuards.isUpdateImageBody(request.body))
         return reply
             .code(400)
@@ -474,6 +404,12 @@ server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
                 .code(500)
                 .send({ reason: AuthErrors.BackendError });
         // TODO: publish for Flo
+        const publication = {
+            id: updatedUser.id,
+            displayName: updatedUser.display_name,
+            smallImage: smallImgBuffer,
+        };
+        publishMessage(publication).catch(console.error);
         return reply.code(201).send(updatedUser);
     }
     catch (e) {

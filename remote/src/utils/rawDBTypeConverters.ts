@@ -79,7 +79,7 @@ const dbConverters = {
     const isMatchPlayed: boolean = (rawDBMatch.player1Score === null || rawDBMatch.player2Score === null)? false : true;
 
     const basicGame = {
-      matchId: rawDBMatch.id,
+      matchId: rawDBMatch.id.toString(),
       hostId: rawDBMatch.player1Id,
       oponentId: isMatchPlayed? rawDBMatch.player2Id : null,
       type: "tournament" as "tournament",
@@ -98,7 +98,7 @@ const dbConverters = {
     const winnerId = rawDBMatch.player1Score > rawDBMatch.player2Score ? rawDBMatch.player1Id : rawDBMatch.player2Id;
 
     const matchResult: GameResultTypes.MatchResult = {
-      matchId: rawDBMatch.id,
+      matchId: rawDBMatch.id.toString(),
       player1Id: rawDBMatch.player1Id,
       player2Id: rawDBMatch.player2Id,
       player1Score: rawDBMatch.player1Score,
