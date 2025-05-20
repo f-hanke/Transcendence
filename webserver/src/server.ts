@@ -32,8 +32,8 @@ fastify.setNotFoundHandler((req, reply) => {
   reply.code(404).send({ error: 'Not Found' });
 });
 
-fastify.listen({ 
-  port: transNetworkSettings.webserver.port, 
+fastify.listen({
+  port: transNetworkSettings.webserver.port,
   host: transNetworkSettings.webserver.ip // Allow connections from any IP address, needed for Docker
 }, (err, address) => {
   if (err) throw err;

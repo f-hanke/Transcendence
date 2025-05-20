@@ -41,7 +41,7 @@ export class AIPlayer extends Player {
             return;
         }
 
-        if (Math.random() < 0.40) {
+        if (Math.random() < 0.20) {
             return;
         }
 
