@@ -1,0 +1,96 @@
+import { LanguageState } from "./languageStateTypes";
+const fr: LanguageState = {
+  navbar: {
+    play: "Jouer",
+    oneV1local: "1v1 Local",
+    oneV1remote: "Matchmaking",
+    tournament: "Tournoi",
+    messages: "Messages",
+    settings: "Paramètres",
+    logout: "Déconnexion",
+  },
+  matchMaking: {
+    publicMatches: "Matchs publics",
+    privateMatches: "Matchs privés",
+    tournamentMatches: "Matchs de tournoi",
+    yourOwnMatchHeading: "Votre propre match",
+    createMatch: "Créer un match",
+    closeMatchButton: "Fermer le match",
+    join: "Rejoindre",
+    match: "Match",
+    matchMaking: "Matchmaking",
+    noMatchesAvailable: "Aucun match disponible !",
+    yourMatch: "Votre match",
+    tournaments: "Tournois",
+    createTournament: "Créer un tournoi",
+  },
+  oneVOneLocal: {
+    player1: "Joueur 1",
+    player2: "Joueur 2",
+    startGame: "Démarrer la partie",
+    localGameOnSame: "Partie locale sur le même clavier",
+    aIOrHumanBtnHuman: "Adversaire humain",
+    aIOrHumanBtnAi: "Adversaire IA",
+  },
+  userSettings: {
+    userSettings: "Paramètres utilisateur",
+    displayName: "Nom affiché",
+    email: "E-mail",
+    save: "Enregistrer",
+    password: "Mot de passe",
+  },
+    tournamentItem: {
+    tournamentId: "ID du tournoi",
+    player1: "Joueur 1",
+    player2: "Joueur 2",
+    player3: "Joueur 3",
+    player4: "Joueur 4",
+    join: "Rejoindre",
+    leave: "Quitter",
+    freeSpot: ">libre<",
+  },
+    matchItem: {
+    matchId: "ID du match",
+    gameOf: "Partie de",
+    waitingForOpponent: "En attente d'un adversaire !",
+    typeOfGame: "Type de partie",
+    join: "Rejoindre",
+    gameRunning: "Partie en cours",
+  },
+  chat: {
+    tabs: {
+      users: "Utilisateurs",
+      blocked: "Bloqués",
+      friendRequests: "Demandes d'amis",
+    },
+    sections: {
+      friends: "Amis",
+      online: "En ligne",
+      offline: "Hors ligne",
+      blockedUsers: "Utilisateurs bloqués",
+      answerRequired: "Réponse requise",
+      ownPending: "En attente",
+    },
+    buttons: {
+      sendMessage: "Envoyer un message",
+      blockUser: "Bloquer l'utilisateur",
+      unblockUser: "Débloquer l'utilisateur",
+      acceptRequest: "Accepter",
+      declineRequest: "Refuser",
+	  withdrawRequest: "Retirer la demande",
+	  pending: "En attente",
+    },
+    placeholders: {
+      searchUsers: "Rechercher des utilisateurs...",
+      typeMessage: "Tapez votre message ici...",
+    },
+    notifications: {
+      userBlocked: "Utilisateur bloqué avec succès.",
+      userUnblocked: "Utilisateur débloqué avec succès.",
+      friendRequestAccepted: "Demande d'ami acceptée.",
+      friendRequestDeclined: "Demande d'ami refusée.",
+    }
+  },
+} as const;
+
+export { fr };

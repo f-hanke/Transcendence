@@ -36,70 +36,66 @@ class ChatList extends HTMLElement {
     if (this.unsubscribeChatMessageState) this.unsubscribeChatMessageState();
   }
 
-  render() {
-    const classBtn =
-      "flex-1 rounded border-2 outline-none p-1 hover:bg-gray-600";
-    const classBtnSelected = `${classBtn} border-white`;
-    const classBtnNotSelected = `${classBtn} border-gray-700 text-gray-700`;
+render() {
+  const lang = window.store.languageStore.state.chat;
 
-    this.innerHTML = `
-      <div class="w-72 h-full bg-gray-800 text-white py-2 overflow-y-auto">
-        <!-- Tabs -->
-        <div class="flex justify-start mx-2">
-          <button id="chatUserTabBtn" class="${
-            this.selectedTab === "userList"
-              ? classBtnSelected
-              : classBtnNotSelected
-          }   font-semibold">Users</button>
-          <button id="chatBlockedTabBtn" class="${
-            this.selectedTab === "blocked"
-              ? classBtnSelected
-              : classBtnNotSelected
-          }">Blocked</button>
-          <button id="chatFriendRequestTabBtn" class="${
-            this.selectedTab === "friendRequests"
-              ? classBtnSelected
-              : classBtnNotSelected
-          }">Friend Requests</button>
+  const classBtn = "flex-1 rounded border-2 outline-none p-1 hover:bg-gray-600";
+  const classBtnSelected = `${classBtn} border-white`;
+  const classBtnNotSelected = `${classBtn} border-gray-700 text-gray-700`;
+
+  this.innerHTML = `
+    <div class="w-72 h-full bg-gray-800 text-white py-2 overflow-y-auto">
+      <!-- Tabs -->
+      <div class="flex justify-start mx-2">
+        <button id="chatUserTabBtn" class="${
+          this.selectedTab === "userList" ? classBtnSelected : classBtnNotSelected
+        } font-semibold">${lang.tabs.users}</button>
+        <button id="chatBlockedTabBtn" class="${
+          this.selectedTab === "blocked" ? classBtnSelected : classBtnNotSelected
+        }">${lang.tabs.blocked}</button>
+        <button id="chatFriendRequestTabBtn" class="${
+          this.selectedTab === "friendRequests" ? classBtnSelected : classBtnNotSelected
+        }">${lang.tabs.friendRequests}</button>
+      </div>
+
+      <!-- Friends Tab Content -->
+      <div id="friendsTab" class="tab-content ${
+        this.selectedTab === "userList" ? "" : "hidden"
+      }">
+        <div id="chatFriendsList">
+          <h2 class="text-lg font-bold py-4">${lang.friends}</h2>
+          <!-- Populate friend users here -->
         </div>
-
-        <!-- Friends Tab Content -->
-        <div id="friendsTab" class="tab-content ${
-          this.selectedTab === "userList" ? "" : "hidden"
-        }">
-          <div id="chatFriendsList">
-            <h2 class="text-lg font-bold py-4">Friends</h2>
-            <!-- Populate friend users here -->
-          </div>
-          <div id="chatOnlineUsersList">
-            <h2 class="text-lg font-bold py-4">Online</h2>
-          </div>
-          <div id="chatOfflineUsersList">
-            <h2 class="text-lg font-bold py-4">Offline</h2>
-          </div>
+        <div id="chatOnlineUsersList">
+          <h2 class="text-lg font-bold py-4">${lang.online}</h2>
         </div>
-
-        <!-- Blocked Tab Content -->
-        <div id="blockedTab" class="tab-content ${
-          this.selectedTab === "blocked" ? "" : "hidden"
-        }">
-          <div id="chatBlockedUsersList">
-            <h2 class="text-lg font-bold py-4">Blocked Users</h2>
-          </div>
-        </div>
-
-        <div id="friendRequestTab" class="tab-content ${
-          this.selectedTab === "friendRequests" ? "" : "hidden"
-        }">
-          <div id="chatFriendRequestListAnswer">
-            <h2 class="text-lg font-bold py-4">Answer required </h2>
-          </div>
-          <div id="chatFriendRequestListPending">
-            <h2 class="text-lg font-bold py-4">Own Pending</h2>
-          </div>
+        <div id="chatOfflineUsersList">
+          <h2 class="text-lg font-bold py-4">${lang.offline}</h2>
         </div>
       </div>
-    `;
+
+      <!-- Blocked Tab Content -->
+      <div id="blockedTab" class="tab-content ${
+        this.selectedTab === "blocked" ? "" : "hidden"
+      }">
+        <div id="chatBlockedUsersList">
+          <h2 class="text-lg font-bold py-4">${lang.blockedUsers}</h2>
+        </div>
+      </div>
+
+      <!-- Friend Requests Tab Content -->
+      <div id="friendRequestTab" class="tab-content ${
+        this.selectedTab === "friendRequests" ? "" : "hidden"
+      }">
+        <div id="chatFriendRequestListAnswer">
+          <h2 class="text-lg font-bold py-4">${lang.answerRequired}</h2>
+        </div>
+        <div id="chatFriendRequestListPending">
+          <h2 class="text-lg font-bold py-4">${lang.ownPending}</h2>
+        </div>
+      </div>
+    </div>
+  `;
 
     const chatUserTabBtn = this.querySelector(
       "#chatUserTabBtn"
