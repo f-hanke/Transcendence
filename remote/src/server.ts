@@ -19,6 +19,7 @@ import { utils } from "./utils/ranking.js";
 import { dbConverters } from "./utils/rawDBTypeConverters.js";
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
 import { match } from "assert";
+import { stringify } from "querystring";
 
 const fastify = Fastify();
 fastify.register(fastifyWebsocket);
@@ -64,7 +65,9 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
 {
   tournaments = await dbConverters.getAllTournamentsRuntimeTyped();  // update runtime tournaments so they include the scores recently stored in DB
   let tournamentToHandle: MatchMakingTypes.Tournament | null = null;
+  console.log("handleMatchResultProcessed, fetched tournaments:", tournaments);
   for (let tournament of tournaments) {
+    console.log("Checking tournament: ", tournament.tournamentId);
     if (tournament.matchSemifinale1?.matchId === matchResult.matchId || tournament.matchSemifinale2?.matchId === matchResult.matchId)
     {
       tournamentToHandle = tournament;
@@ -74,45 +77,63 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       else if (tournament.matchSemifinale2?.matchId === matchResult.matchId)
         tournament.matchResultSemifinale2 = matchResult;
 
-      // SCHEDULE FINAL MATCHES
-      if (!tournament.matchFinale && !tournament.matchBronze) {
-        let newMatchId = await Tournament.scheduleMatch(
-          tournament.tournamentId as string,
-          "matchFinale",
-          matchResult.winnerId,
-          ""
-        );
-        let newMatch: MatchMakingTypes.BasicGame = {
-          matchId: newMatchId,
-          hostId: matchResult.winnerId,
-          oponentId: null,
-          tournamentId: tournament.tournamentId as string,
-          type: "tournament",
-          invitedPlayerId: null
-        };
-        tournament.matchFinale = newMatch;
+      // SCHEDULE FINAL MATCHES (if semifinals are done and final matches unscheduled)
+      if (tournament.matchResultSemifinale1 && tournament.matchResultSemifinale2 && !tournament.matchFinale && !tournament.matchBronze) {
+        try {
+          let newMatchId: string = await Tournament.scheduleMatch(
+            tournament.tournamentId as string,
+            "matchFinale",
+            matchResult.winnerId,
+            ""
+          );
+          let newMatch: MatchMakingTypes.BasicGame = {
+            matchId: newMatchId,
+            hostId: matchResult.winnerId,
+            oponentId: null,
+            tournamentId: tournament.tournamentId as string,
+            type: "tournament",
+            invitedPlayerId: null
+          };
+          tournament.matchFinale = newMatch;
 
-        newMatchId = await Tournament.scheduleMatch(
-          tournament.tournamentId as string,
-          "matchBronze",
-          matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
-          ""
-        );
-        newMatch = {
-          matchId: newMatchId,
-          hostId: matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
-          oponentId: null,
-          tournamentId: tournament.tournamentId as string,
-          type: "tournament",
-          invitedPlayerId: null
+          newMatchId = await Tournament.scheduleMatch(
+            tournament.tournamentId as string,
+            "matchBronze",
+            matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
+            ""
+          );
+          newMatch = {
+            matchId: newMatchId,
+            hostId: matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
+            oponentId: null,
+            tournamentId: tournament.tournamentId as string,
+            type: "tournament",
+            invitedPlayerId: null
+          };
+          tournament.matchBronze = newMatch;
+
+          let finaleOpponentId: string | null = null;
+          let bronzeOpponentId: string | null = null;
+          finaleOpponentId = (tournament.matchResultSemifinale1.player1Id === matchResult.winnerId) ? tournament.matchResultSemifinale2.winnerId : tournament.matchResultSemifinale1.winnerId;
+          if (tournament.matchSemifinale1?.matchId === matchResult.matchId)
+            bronzeOpponentId = tournament.matchResultSemifinale2.player1Id === matchResult.winnerId ? tournament.matchResultSemifinale2.player2Id : tournament.matchResultSemifinale2.player1Id;
+          else
+            bronzeOpponentId = tournament.matchResultSemifinale1.player1Id === matchResult.winnerId ? tournament.matchResultSemifinale1.player2Id : tournament.matchResultSemifinale1.player1Id;
+
+          await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchFinale", finaleOpponentId as string);
+          tournament.matchFinale.invitedPlayerId = matchResult.winnerId;
+          await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchBronze", bronzeOpponentId as string);
+          tournament.matchBronze.invitedPlayerId = matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id;
+        } catch (err) {
+          console.error("Error scheduling final matches:", err);
         }
       }
-      else if (tournament.matchFinale && tournament.matchBronze) {
-        await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchFinale", matchResult.winnerId);
-        tournament.matchFinale.invitedPlayerId = matchResult.winnerId;
-        await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchBronze", matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id);
-        tournament.matchBronze.invitedPlayerId = matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id;
-      }
+      // if (tournament.matchFinale && tournament.matchBronze && !tournament.matchFinale.hostId) {
+      //   await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchFinale", matchResult.winnerId);
+      //   tournament.matchFinale.invitedPlayerId = matchResult.winnerId;
+      //   await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchBronze", matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id);
+      //   tournament.matchBronze.invitedPlayerId = matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id;
+      // }
       break;
     }
     else if (tournament.matchFinale?.matchId === matchResult.matchId) {
@@ -362,7 +383,7 @@ async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinT
     ];
 
     try {
-      let newMatchId = await Tournament.scheduleMatch(
+      let newMatchId: string = await Tournament.scheduleMatch(
         correspondingTournament.tournamentId as string,
         "matchSemifinale1",                 // matchName
         correspondingTournament.player1Id,  // match playerNr1
