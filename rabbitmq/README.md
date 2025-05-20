@@ -15,13 +15,13 @@ RabbitMQ is used as the central message broker for asynchronous communication be
 - **Exchange**: `microservices-exchange` (topic)
 - **Queues**:
   - `auth-service-queue`
-  - `user-service-queue`
+  - `matchmaking-service-queue`
   - `game-service-queue`
   - `chat-service-queue`
   - `notification-service-queue`
 - **Bindings**:
   - `auth.#` → `auth-service-queue`
-  - `user.#` → `user-service-queue`
+  - `user.#` → `matchmaking-service-queue`
   - `game.#` → `game-service-queue`
   - `chat.#` → `chat-service-queue`
   - `notification.#` → `notification-service-queue`
@@ -100,7 +100,7 @@ async function consumeMessages() {
     const channel = await connection.createChannel();
 
     // Consume from a specific queue
-    const queue = 'user-service-queue';
+    const queue = 'matchmaking-service-queue';
     
     // Ensure the queue exists
     await channel.assertQueue(queue, { durable: true });

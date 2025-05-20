@@ -1,8 +1,9 @@
 import amqp from 'amqplib';
 import { GameResultTypes, gameResultTypeGuards } from 'transcendence';
 import { GameResultModel } from '../orm/gameResultModel.js';
+import { matchmakingTypeGuards } from 'transcendence';
 
-const queue = 'matchMaking-results';
+const queue = 'matchmaking-service-queue';
 
 async function updateUserTournamentRecords(msg: GameResultTypes.TournamentResult){
 	console.log("Updating user tournament records db...");
@@ -46,6 +47,8 @@ export async function startConsumer() {
 				await updateUserTournamentRecords(message);
 			else if (gameResultTypeGuards.isMatchResult(message))
 				await updateUserSimpleMatchRecords(message);
+			else if (matchmakingTypeGuards.isTournamentNotification(message))
+				console.log("Received tournament notification:", message, ", not for usersAndAuth service.");
 			else
 				console.error("Wrong data read from rabbitMQ in usersAndAuth service.");
 			channel.ack(msg);

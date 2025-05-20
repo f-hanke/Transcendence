@@ -260,7 +260,7 @@ async function handleUserUpdated(data: UserMessage): Promise<void> {
 
 // Example usage
 setupConsumer<UserMessage>(
-  'user-service-queue',
+  'matchmaking-service-queue',
   'user.#',
   async (message, properties) => {
     switch (message.event) {
@@ -371,7 +371,7 @@ async function setupUserInfoResponder(): Promise<void> {
   const channel = await connection.createChannel();
   
   // Setup queue
-  const queueName = 'user-service-queue';
+  const queueName = 'matchmaking-service-queue';
   await channel.assertQueue(queueName, { durable: true });
   await channel.bindQueue(queueName, 'microservices-exchange', 'user.get');
   
@@ -746,7 +746,7 @@ async function startService(): Promise<void> {
   
   // Subscribe to user events
   await rabbitmq.subscribe<UserMessage>(
-    'user-service-queue',
+    'matchmaking-service-queue',
     'user.#',
     async (message, properties) => {
       switch (message.event) {

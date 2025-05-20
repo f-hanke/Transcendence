@@ -15,45 +15,6 @@ const queue = "auth-ChatService"; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
         console.error("Trying to publish unknown type");
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
-<<<<<<< HEAD
->>>>>>> origin/main
->>>>>>> origin/main
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
-=======
-<<<<<<< HEAD
-=======
->>>>>>> 16b64d1 (cleanup after rebase)
->>>>>>> origin/main
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
-<<<<<<< HEAD
-=======
->>>>>>> 52a4f32ea79ef32a3638ebd7634672b27a9cb1c1
->>>>>>> origin/main
->>>>>>> origin/main
->>>>>>> origin/main
->>>>>>> origin/main
->>>>>>> 1a52d7d722672556d27e0fe59a93f00c3975762e
     // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
     // const connection = await amqp.connect(`amqp://localhost`);
     let connection;
@@ -64,81 +25,12 @@ async function publishMessage(message) {
         console.warn("Failed to connect to rabbitmq-service, trying localhost...");
         connection = await amqp.connect("amqp://localhost");
     }
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-=======
-        connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
-    }
-    catch (err) {
-        console.warn('Failed to connect to rabbitmq-service, trying localhost...');
-        connection = await amqp.connect('amqp://localhost');
-    }
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
-    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
->>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
->>>>>>> c8ff778 (chore(remote): shovel it carefully onto new main)
-=======
-    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
->>>>>>> 1053fd9 (set up test environment)
-=======
-    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
->>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
-=======
->>>>>>> 16b64d1 (cleanup after rebase)
->>>>>>> origin/main
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
-<<<<<<< HEAD
-=======
->>>>>>> 52a4f32ea79ef32a3638ebd7634672b27a9cb1c1
->>>>>>> origin/main
->>>>>>> origin/main
->>>>>>> origin/main
->>>>>>> origin/main
->>>>>>> 1a52d7d722672556d27e0fe59a93f00c3975762e
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
     console.log("[Publisher] Sent:", message);
 }
-<<<<<<< HEAD
-<<<<<<< HEAD
-// startConsumer().catch(console.error);
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 startConsumer().catch(console.error);
-=======
-<<<<<<< HEAD
-// startConsumer().catch(console.error);
-=======
-startConsumer().catch(console.error);
->>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
->>>>>>> c8ff778 (chore(remote): shovel it carefully onto new main)
-=======
-startConsumer().catch(console.error);
->>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
-=======
-startConsumer().catch(console.error);
->>>>>>> 16b64d1 (cleanup after rebase)
->>>>>>> origin/main
-=======
-startConsumer().catch(console.error);
->>>>>>> origin/main
 const server = fastify({
     logger: {
         transport: {

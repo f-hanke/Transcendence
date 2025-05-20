@@ -41,10 +41,11 @@ console.log("Loaded up following tournaments: ", tournaments);
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket>();
 
-const queue = 'matchMaking-results';
+// const queue = 'matchMaking-results';
+const queue = 'matchmaking-service-queue';
 
-async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult) {
-  if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message))
+async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult | MatchMakingTypes.TournamentNotification) {
+  if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message) && !matchmakingTypeGuards.isTournamentNotification(message))
     console.error("Trying to publish unknown type");
   let connection;
   try {
@@ -120,22 +121,12 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
           };
           tournament.matchBronze = newMatch;
 
-          console.log("Scheduled final matches: ", tournament);
+          // console.log("Scheduled final matches: ", tournament);
 
-          // await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchFinale", finaleOpponentId as string);
-          // tournament.matchFinale.invitedPlayerId = matchResult.winnerId;
-          // await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchBronze", bronzeOpponentId as string);
-          // tournament.matchBronze.invitedPlayerId = matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id;
         } catch (err) {
           console.error("Error scheduling final matches:", err);
         }
       }
-      // if (tournament.matchFinale && tournament.matchBronze && !tournament.matchFinale.hostId) {
-      //   await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchFinale", matchResult.winnerId);
-      //   tournament.matchFinale.invitedPlayerId = matchResult.winnerId;
-      //   await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchBronze", matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id);
-      //   tournament.matchBronze.invitedPlayerId = matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id;
-      // }
       break;
     }
     else if (tournament.matchFinale?.matchId === matchResult.matchId) {
@@ -175,6 +166,22 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       publishMessage(tournamentToStore); // read by usersAndAuth
       // TODO: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it?
     }
+    // for every update to a tournament, whether finished or not, send the updated tournament to chat-service
+    let matchType = "";
+      if (matchResult.matchId === tournamentToHandle.matchSemifinale1?.matchId)
+        matchType = "semifinale1";
+      else if (matchResult.matchId === tournamentToHandle.matchSemifinale2?.matchId)
+        matchType = "semifinale2";
+      else if (matchResult.matchId === tournamentToHandle.matchFinale?.matchId)
+        matchType = "finale";
+      else if (matchResult.matchId === tournamentToHandle.matchBronze?.matchId)
+        matchType = "bronze";
+      let tournamentNotification: MatchMakingTypes.TournamentNotification = {
+        updateForMatch: matchType,
+        tournamentData: tournamentToHandle
+      } as MatchMakingTypes.TournamentNotification;
+      publishMessage(tournamentNotification); // read by chat-service
+      console.log("Tournament state published to chat-service: ", tournamentToHandle);
   }
   else {
     console.log("Tournament not found for matchId", matchResult.matchId, ", processing as a simple match");
