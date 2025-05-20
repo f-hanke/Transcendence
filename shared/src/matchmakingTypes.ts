@@ -405,6 +405,7 @@ const matchmakingTypeGuards = {
   isClientDeleteTournament,
   isServerStartTournament,
   isServerUpdateOneTournament,
+  isTournament,
 } as const;
 
 export { MatchMakingTypes, matchmakingTypeGuards };
