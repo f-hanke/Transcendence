@@ -19,7 +19,7 @@ type GameSettings = {
 };
 
 const gameSettings: GameSettings = {
-  paddleWidth: 10,
+  paddleWidth: 5,
   paddleHeight: 50,
   playerYStart: -1,
   player1XStart: -1,

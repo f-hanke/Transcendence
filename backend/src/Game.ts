@@ -90,7 +90,7 @@ export class Game {
                 sendMessage(this.websocket as WebSocket, gameStateMsgNew);
             }
 
-            this.gameLoopId = setTimeout(this.gameLoop, 1000 / 60); // 60 FPS
+            this.gameLoopId = setInterval(this.gameLoop, 1000 / 60); // 60 FPS
         }
     };
 
@@ -253,7 +253,7 @@ export class Game {
 
     update() {
 
-        //console.log(this.player2);
+
         this.ball.move(this.screenWidth, this.screenHeight)
         if (this.ball.y <= 0 || this.ball.y >= this.screenHeight) {
             this.ball.speedY *= -1;
@@ -262,37 +262,58 @@ export class Game {
         if (this.typeOfGame === 'localPvAi' && this.player2 instanceof AIPlayer) {
             this.player2.updateAI(this.player1.score, this.player2.score);
         }
+
         //left player
         if (
-        this.ball.x - this.ball.radius <= this.player1.x + this.player1.paddleWidth && // côté droit de la paddle gauche
-        this.ball.x + this.ball.radius >= this.player1.x && // côté gauche de la paddle gauche
-        this.ball.y >= this.player1.y - this.player1.paddleHeight / 2 &&
-        this.ball.y <= this.player1.y + this.player1.paddleHeight / 2
+            this.ball.prevX - this.ball.radius >= this.player1.x + this.player1.paddleWidth &&
+            this.ball.x - this.ball.radius <= this.player1.x + this.player1.paddleWidth &&
+
+            this.ball.y >= this.player1.y - this.player1.paddleHeight / 2 &&
+            this.ball.y <= this.player1.y + this.player1.paddleHeight / 2
         ) {
-        this.ball.speedX *= -1;
-        this.ball.x = this.player1.x + this.player1.paddleWidth + this.ball.radius; // repositionner la balle après la collision
+            this.ball.speedX *= -1;
+
+            const minSpeedY = 2;
+            if (Math.abs(this.ball.speedY) < minSpeedY)
+                this.ball.speedY = (Math.random() < 0.5 ? -1 : 1) * minSpeedY;
+
+            // repositionne juste à droite de la paddle
+            this.ball.x = this.player1.x + this.player1.paddleWidth + this.ball.radius;
         }
 
 
 
         //right player
         if (
-        this.ball.x + this.ball.radius >= this.player2.x - this.player2.paddleWidth && // côté gauche de la paddle droite
-        this.ball.x - this.ball.radius <= this.player2.x && // côté droit de la paddle droite
-        this.ball.y >= this.player2.y - this.player2.paddleHeight / 2 &&
-        this.ball.y <= this.player2.y + this.player2.paddleHeight / 2
+            this.ball.prevX + this.ball.radius <= this.player2.x &&
+            this.ball.x + this.ball.radius >= this.player2.x &&
+
+            this.ball.y >= this.player2.y - this.player2.paddleHeight / 2 &&
+            this.ball.y <= this.player2.y + this.player2.paddleHeight / 2
         ) {
-        this.ball.speedX *= -1;
-        this.ball.x = this.player2.x - this.player2.paddleWidth - this.ball.radius; // repositionner la balle après la collision
+            this.ball.speedX *= -1;
+
+            const minSpeedY = 2;
+            if (Math.abs(this.ball.speedY) < minSpeedY)
+                this.ball.speedY = (Math.random() < 0.5 ? -1 : 1) * minSpeedY;
+
+            // repositionne juste à gauche de la paddle
+            this.ball.x = this.player2.x - this.ball.radius;
         }
 
 
-
-        if (this.ball.x <= 0 + this.player2.paddleWidth ) {
+        if (this.ball.x <= 0  ) {
             this.player2.score += 1;
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
             this.ball.reset();
         }
+
+        // if (this.ball.x <= 0 + this.player2.paddleWidth ) {
+        //     this.player2.score += 1;
+        //     console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
+        //     this.ball.reset();
+        // }
+
         if (this.ball.x >= this.screenWidth - this.player2.paddleWidth) {
             this.player1.score += 1;
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);

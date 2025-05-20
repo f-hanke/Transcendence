@@ -48,17 +48,6 @@ fastify.options('/api/auth/verify-jwt', (request, reply) => {
 });
 
 fastify.register(fastifyWebsocket);
-//fastify.register(cors, { origin: "*" });
-
-////debuging after auth
-//import cors from '@fastify/cors';
-
-await fastify.register(cors, {
-  origin: ['http://localhost:9999'], // frontend URL
-  credentials: true,
-});
-
-
 
 export function sendMessage(
 
@@ -144,7 +133,7 @@ fastify.get("/api/game/active", async (request, reply) => {
 
   reply
     .header('Content-Type', 'application/json; charset=utf-8')
-    .send(JSON.stringify(response, null, 2));  // <== Indentation 2 espaces
+    .send(JSON.stringify(response, null, 2));
 });
 
 
@@ -181,7 +170,7 @@ fastify.post("/api/game/paddle", async (request, reply) => {
   } else if (player === 2) {
     data = {
       matchId,
-      player1: { playerId: "", paddleY: 0, paddleSpeed: 0 },  // Valeurs par défaut ou actuelles si tu les as
+      player1: { playerId: "", paddleY: 0, paddleSpeed: 0 }, 
       player2: { playerId: "", paddleY: newY, paddleSpeed: 0 },
     };
   } else {
