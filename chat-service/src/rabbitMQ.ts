@@ -2,6 +2,7 @@ import amqp from 'amqplib';
 import { rabbitMQTypeGuards, RabbitMQTypes } from 'transcendence';
 import { db } from './server.js';
 import { databaseQuerys } from './databaseQuerys.js';
+import { matchmakingTypeGuards } from 'transcendence';
 
 const queue = 'auth-ChatService';
 
@@ -47,14 +48,20 @@ export async function startConsumer() {
 	channel.consume(queue, (msg) => {
 		if (msg !== null) {
 			const message = JSON.parse(msg.content.toString());
-			message.id = message.id.toString();
-			if (message.smallImage && message.smallImage.type === 'Buffer')
-				message.smallImage = Buffer.from(message.smallImage.data);
-			if (rabbitMQTypeGuards.isUserChangeBody(message)) {
-				channel.ack(msg);
-				updateUserDatabase(message);
-			}else
-				console.error("Wrong data read from rabbitMQ : ChatService.");
+			if (matchmakingTypeGuards.isTournament(message)){
+				console.log("Tournament Notification received!");
+			}
+			else {
+				if (message.smallImage && message.smallImage.type === 'Buffer')
+					message.smallImage = Buffer.from(message.smallImage.data);
+				if (message.id)
+					message.id = message.id.toString();
+				if (rabbitMQTypeGuards.isUserChangeBody(message)) {
+					channel.ack(msg);
+					updateUserDatabase(message);
+				}else
+					console.error("Wrong data read from rabbitMQ : ChatService.");
+			}
 		}
 	});
 }

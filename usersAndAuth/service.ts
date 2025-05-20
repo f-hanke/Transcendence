@@ -513,7 +513,7 @@ server.post<{
 
 server.post<{
   Body: UpdateImageBody;
-  Reply: { 
+  Reply: {
     201: UserType;
     400: ErrorResponseBody;
     500: ErrorResponseBody;

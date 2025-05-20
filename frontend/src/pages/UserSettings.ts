@@ -94,10 +94,10 @@ class UserSettings extends HTMLElement {
         </button>
       </div>
         <div class="flex flex-col mb-4">
-            <img id="profileImage" src="${getImgSrcFromBuffer(imageToRender)}" 
-              class="cursor-pointer w-full max-w-xl border border-gray-600 hover:opacity-80 transition duration-300" 
+            <img id="profileImage" src="${getImgSrcFromBuffer(imageToRender)}"
+              class="cursor-pointer w-full max-w-xl border border-gray-600 hover:opacity-80 transition duration-300"
               title="Click to change profile picture"/>
-          <input type="file" id="imageUpload" class="hidden" 
+          <input type="file" id="imageUpload" class="hidden"
           accept="image/png, image/jpeg">
       </div>
     </div>
