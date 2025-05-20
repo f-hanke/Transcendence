@@ -77,8 +77,8 @@ class ChatInterface {
       console.error("Error:", error);
     }
   }
-
     static createMatchTournament(data:  MatchMakingTypes.BasicGame) {
+    data.needsServerInitiation = true;
     window.store.matchmakingStore.createGame(data);
     navigateToSite("matchmaking");
   }

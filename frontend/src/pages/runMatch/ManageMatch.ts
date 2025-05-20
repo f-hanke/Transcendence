@@ -7,6 +7,7 @@ class ManageMatch extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
   unsubscribeGameState: null | (() => void);
   matchScoreComponent: MatchScore | null;
+  modal?: CentralModalListeners;
   constructor() {
     super();
     this.unsubscribeLanguage = null;
@@ -74,28 +75,30 @@ class ManageMatch extends HTMLElement {
     });
   }
 
-  renderWaitingClientStartModal() {
+  async renderWaitingClientStartModal() {
     const modal = createHtmlElementFromString(`
       <central-modal-listeners>
         <p>Press 'y' when you are ready</p>
         <p>Press 'n' to cancel game</p>
       </central-modal-listeners>`) as CentralModalListeners;
-    this.innerHTML = "";
-    this.appendChild(modal);
-    modal.open();
-    modal.setKeyListener({
-      KeyY: () => {
-        window.store.gameStore.updateGameStateState("waitingForServerStart");
-        GameServiceInterface.sendMessageToServer({
-          type: "clientIsReady",
-          data: {
-            clientId: window.store.userStore.get().details.id,
-            matchId: window.store.gameStore.get().matchId,
+      this.innerHTML = "";
+      this.appendChild(modal);
+      modal.ready.then(() => {
+        modal.open();
+        modal.setKeyListener({
+          KeyY: () => {
+            window.store.gameStore.updateGameStateState("waitingForServerStart");
+            GameServiceInterface.sendMessageToServer({
+              type: "clientIsReady",
+              data: {
+                clientId: window.store.userStore.get().details.id,
+                matchId: window.store.gameStore.get().matchId,
+              },
+            });
           },
+          KeyN: this.leaveGame.bind(this),
         });
-      },
-      KeyN: this.leaveGame.bind(this),
-    });
+      })
   }
 
   renderRunningGame() {

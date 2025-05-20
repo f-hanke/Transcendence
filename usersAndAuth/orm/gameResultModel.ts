@@ -9,7 +9,7 @@ import { GameResultTypes } from 'transcendence'
 import { db } from '../db/db.js';
 
 const GameResultModel = {
-    
+
     /**
      * not for tournament matches
     */
@@ -129,11 +129,11 @@ const GameResultModel = {
             const matchFinale: GameResultTypes.MatchResult = await GameResultModel.fetchMatchAsMatchResultObject(rawTournamentData.matchFinaleId);
             const matchBronze: GameResultTypes.MatchResult = await GameResultModel.fetchMatchAsMatchResultObject(rawTournamentData.matchBronzeId);
             const tournamentResult: GameResultTypes.TournamentResult = {
-                tournamentId: rawTournamentData.id.toString(),
-                rank1PlayerId: rawTournamentData.rank1PlayerId.toString(),
-                rank2PlayerId: rawTournamentData.rank2PlayerId.toString(),
-                rank3PlayerId: rawTournamentData.rank3PlayerId.toString(),
-                rank4PlayerId: rawTournamentData.rank4PlayerId.toString(),
+                tournamentId: rawTournamentData.id,
+                rank1PlayerId: rawTournamentData.rank1PlayerId,
+                rank2PlayerId: rawTournamentData.rank2PlayerId,
+                rank3PlayerId: rawTournamentData.rank3PlayerId,
+                rank4PlayerId: rawTournamentData.rank4PlayerId,
                 matchSemifinale1: matchSemifinale1,
                 matchSemifinale2: matchSemifinale2,
                 matchFinale: matchFinale,
@@ -147,7 +147,7 @@ const GameResultModel = {
         }
     },
 
-    fetchMatchAsMatchResultObject: async (matchId: number) => {
+    fetchMatchAsMatchResultObject: async (matchId: string) => {
         try {
             const stmt = db.prepare(`
                 SELECT *

@@ -65,6 +65,7 @@ class UserStateStore {
       >;
       newState["details"][typedDetail] = updatedState[typedDetail] as string;
     }
+    newState.details.id = String(newState.details.id);
     this.state = newState;
     this.listeners.forEach((callback) => callback());
   }

@@ -17,7 +17,7 @@ class PongTable extends HTMLElement {
     super();
     this.unsubscribeLanguage = null;
     this.unsubscribeGameState = null;
-    this.canvas = document.createElement("canvas");
+    this.canvas = createHtmlElementFromString(`<canvas tabindex="0"></canvas>`) as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
     this.animationFrameId = -1;
     this.running = true;
@@ -36,18 +36,19 @@ class PongTable extends HTMLElement {
     this.designCanvas();
     this.startAnimationFrame();
     this.render();
-    window.addEventListener("keydown", (event) => this.onKeyDown(event));
-    window.addEventListener("keyup", (event) => this.onKeyUp(event));
+    this.canvas.addEventListener("keydown", (event) => this.onKeyDown(event));
+    this.canvas.addEventListener("keyup", (event) => this.onKeyUp(event));
   }
 
   disconnectedCallback() {
     if (this.unsubscribeGameState) this.unsubscribeGameState();
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
-    window.removeEventListener("keydown", (event) => this.onKeyDown(event));
-    window.removeEventListener("keyup", (event) => this.onKeyUp(event));
+    this.canvas.removeEventListener("keydown", (event) => this.onKeyDown(event));
+    this.canvas.removeEventListener("keyup", (event) => this.onKeyUp(event));
   }
 
   render() {
+    this.canvas.focus();
     this.pongTableDrawer.draw();
   }
 

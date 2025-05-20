@@ -42,7 +42,7 @@ class DrawPongTable {
     this.ctx.setLineDash([]);
   }
 
-  drawBumpers() {
+  drawBumpersLeveGap() {
     this.ctx.fillStyle = "white";
     this.ctx.fillRect(
       gameSettings.paddleWidth,
@@ -54,6 +54,22 @@ class DrawPongTable {
       gameSettings.paddleWidth,
       gameSettings.canvasHeight - gameSettings.bumperHeight,
       gameSettings.pongTableWidth - gameSettings.paddleWidth * 2,
+      gameSettings.bumperHeight
+    );
+  }
+
+  drawBumpers() {
+    this.ctx.fillStyle = "white";
+    this.ctx.fillRect(
+      0,
+      0,
+      gameSettings.pongTableWidth,
+      gameSettings.bumperHeight
+    );
+    this.ctx.fillRect(
+      0,
+      gameSettings.canvasHeight - gameSettings.bumperHeight,
+      gameSettings.pongTableWidth,
       gameSettings.bumperHeight
     );
   }

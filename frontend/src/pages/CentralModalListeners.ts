@@ -9,6 +9,9 @@ class CentralModalListeners extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
   keyDownCallBack: KeyCallbackMap;
   shadow: ShadowRoot;
+  ready: Promise<void>;
+  _resolveReady!: () => void;
+  modalWrapper: HTMLDivElement;
   constructor() {
     super();
     this.keyDownCallBack = {};
@@ -16,36 +19,43 @@ class CentralModalListeners extends HTMLElement {
     this.shadow = this.attachShadow({ mode: "open" });
     const style = document.createElement("style");
     style.textContent = styles;
-    const modalWrapper = document.createElement("div");
+    this.modalWrapper = document.createElement("div");
 
-
-
-    modalWrapper.innerHTML = `
-    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div id="modalContent" class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
-        <slot>DEFAULT SLOT MESSAGE</slot>
-      </div>
-    </div>
-  `;
+    this.ready = new Promise<void>((resolve) => {
+      this._resolveReady = resolve;
+    });
     this.shadow.appendChild(style);
-    this.shadow.appendChild(modalWrapper);
+    this.shadow.appendChild(this.modalWrapper);
     this.handleKeyDown = this.handleKeyDown.bind(this);
   }
 
   connectedCallback() {
+    this.render();
     document.addEventListener("keydown", this.handleKeyDown);
+    this._resolveReady();
   }
 
   disconnectedCallback() {
     document.removeEventListener("keydown", this.handleKeyDown);
   }
 
+  render() {
+    this.modalWrapper.innerHTML = `
+      <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div id="modalContent" class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+          <slot>DEFAULT SLOT MESSAGE</slot>
+        </div>
+      </div>
+    `;
+  }
+
   open() {
-    this.style.display = "flex";
+    this.modalWrapper.classList.remove("hidden");
   }
 
   close() {
-    this.style.display = "none";
+    this.modalWrapper.classList.add("hidden");
+    // this.style.display = "none";
   }
 
   setKeyListener(KeyCallbackMap: KeyCallbackMap) {
@@ -54,8 +64,7 @@ class CentralModalListeners extends HTMLElement {
 
   handleKeyDown(event: KeyboardEvent) {
     const validKeyCode = event.code as AllKeyboardKeyCodes;
-    if (isDefined(this.keyDownCallBack[validKeyCode]))
-    {
+    if (isDefined(this.keyDownCallBack[validKeyCode])) {
       this.keyDownCallBack[validKeyCode]();
       this.close();
     }

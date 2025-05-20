@@ -13,7 +13,6 @@ import {
   transNetworkSettings,
 } from "transcendence";
 
-
 import { db } from "./db/db.js"
 import { Tournament } from "./orm/tournament.js";
 import { utils } from "./utils/ranking.js";
@@ -46,7 +45,13 @@ const queue = 'matchMaking-results';
 async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult) {
   if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message))
     console.error("Trying to publish unknown type");
-  const connection = await amqp.connect('amqp://localhost');
+  let connection;
+  try {
+		connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
+	} catch (err) {
+		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
+		connection = await amqp.connect('amqp://localhost');
+	}
   const channel = await connection.createChannel();
 
   await channel.assertQueue(queue, { durable: false });
@@ -121,40 +126,41 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       break;
     }
   }
+  if (tournamentToHandle) {
+    try {
+      await Tournament.updateOngoingTournamentDatabase(matchResult.player1Score, matchResult.player2Score, matchResult.createdAt, matchResult.matchId);
+      console.log("Ongoing Tournament updated in DB");
+    }
+    catch (err) {
+      console.error("DB error updating/inserting ongoing Tournament db: ", err);
+    }
 
-  if (!tournamentToHandle) {
-    console.log("Tournament not found for matchId", matchResult.matchId, ", processing as a simple match");
-    const game = games.find((g) => g.matchId === matchResult.matchId) || null;
-    if (!game) {
-      console.error("Game service published a result for matchId <", matchResult.matchId, "> unknown to matchmaking");
-      return;
+    const tournamentWithRanking: MatchMakingTypes.TournamentWithRanking = utils.deriveTournamentWithRanking(tournamentToHandle);
+    if (tournamentWithRanking.rank1PlayerId && tournamentWithRanking.rank2PlayerId && tournamentWithRanking.rank3PlayerId && tournamentWithRanking.rank4PlayerId) {
+      const tournamentToStore: GameResultTypes.TournamentResult = {
+        tournamentId: tournamentWithRanking.tournamentId as string,
+        rank1PlayerId: tournamentWithRanking.rank1PlayerId,
+        rank2PlayerId: tournamentWithRanking.rank2PlayerId,
+        rank3PlayerId: tournamentWithRanking.rank3PlayerId,
+        rank4PlayerId: tournamentWithRanking.rank4PlayerId,
+        matchSemifinale1: tournamentWithRanking.matchResultSemifinale1 as GameResultTypes.MatchResult,
+        matchSemifinale2: tournamentWithRanking.matchResultSemifinale2 as GameResultTypes.MatchResult,
+        matchBronze: tournamentWithRanking.matchResultBronze as GameResultTypes.MatchResult,
+        matchFinale: tournamentWithRanking.matchResultFinale as GameResultTypes.MatchResult,
+        createdAt: new Date().toISOString()
+      }
+      publishMessage(tournamentToStore); // read by usersAndAuth
+      // TODO: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it?
     }
-    publishMessage(matchResult);  // read by usersAndAuth
-    removeGameFromServerGameList(game);
-    sendMessageToAllClients({ type: "deleteGame", data: game });
-    console.log("Simple Match result processed for matchId: ", game.matchId);
-    return;
   }
-  const tournamentWithRanking: MatchMakingTypes.TournamentWithRanking = utils.deriveTournamentWithRanking(tournamentToHandle);
-  if (tournamentWithRanking.rank1PlayerId && tournamentWithRanking.rank2PlayerId && tournamentWithRanking.rank3PlayerId && tournamentWithRanking.rank4PlayerId) {
-    const tournamentToStore: GameResultTypes.TournamentResult = {
-      tournamentId: tournamentWithRanking.tournamentId as string,
-      rank1PlayerId: tournamentWithRanking.rank1PlayerId,
-      rank2PlayerId: tournamentWithRanking.rank2PlayerId,
-      rank3PlayerId: tournamentWithRanking.rank3PlayerId,
-      rank4PlayerId: tournamentWithRanking.rank4PlayerId,
-      matchSemifinale1: tournamentWithRanking.matchResultSemifinale1 as GameResultTypes.MatchResult,
-      matchSemifinale2: tournamentWithRanking.matchResultSemifinale2 as GameResultTypes.MatchResult,
-      matchBronze: tournamentWithRanking.matchResultBronze as GameResultTypes.MatchResult,
-      matchFinale: tournamentWithRanking.matchResultFinale as GameResultTypes.MatchResult,
-      createdAt: new Date().toISOString()
-    }
-    publishMessage(tournamentToStore); // read by usersAndAuth
-    // TODO: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it?
+  else {
+    console.log("Tournament not found for matchId", matchResult.matchId, ", processing as a simple match");
+    publishMessage(matchResult);  // read by usersAndAuth
+    console.log("Simple Match result processed for matchId: ", matchResult.matchId);
   }
 }
 
-// await startConsumer(handleMatchResultProcessed);
+await startConsumer(handleMatchResultProcessed).catch(console.error);
 
 
 fastify.register(async function (fastify) {
@@ -225,7 +231,7 @@ fastify.register(async function (fastify) {
         "WebSocket closed. Client ID: ",
         socketToClientId.get(socket)
       );
-      closeGamesOpenedByClient(socket);
+      closeGamesOpenedByClient(socket);  // @Steffen: too soon, I need Leo's results first
       unregisterClient(socket);
     });
 
@@ -279,6 +285,7 @@ function handleClientLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
 function handleClientCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
   console.log(" ~ createGame", dataJson.data.matchId);
   games.push(dataJson.data);
+  console.log("Games: ", games);
   sendMessageToAllClients({ type: "createGame", data: dataJson.data });
 }
 
@@ -399,7 +406,7 @@ async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinT
     sendMessageToManyClients(participants, {
       type: "startTournament",
       data: correspondingTournament as MatchMakingTypes.TournamentFull,
-      // TODO: let them know about game schedule
+      // TODO: let them know about game schedule i.e. SCHEDULE publish the info for Flo
     });
   }
 }

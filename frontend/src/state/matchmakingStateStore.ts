@@ -52,9 +52,9 @@ class MatchmakingStateStore {
         matchObj.invitedPlayerId === window.store.userStore.get().details.id;
       const matchCopy = deepCopyObj(matchObj);
       if (matchObj.type === "public") groups.public.push(matchCopy);
-      else if (matchObj.type === "private" && curUserIsInvited)
+      else if ((matchObj.type === "private" || matchObj.type === "tournament") && curUserIsInvited)
         groups.private.push(matchCopy);
-      else if (matchObj.type === "tournament" && curUserIsInvited)
+      else if (matchObj.type === "tournament")
         groups.tournament.push(matchCopy);
       else if (matchObj.type === "private" && !curUserIsInvited) {
       } else throw new Error("User not assigned to any matchmaking-group!");
@@ -63,8 +63,11 @@ class MatchmakingStateStore {
   }
 
   createGame(match: MatchMakingTypes.BasicGame) {
-    if (match.hostId === window.store.userStore.get().details.id)
+
+    if (match.hostId == window.store.userStore.get().details.id)
+    {
       this.state.ownMatch = deepCopyObj(match);
+    }
     else this.state.otherMatches.push(deepCopyObj(match));
     this.updateListenersOnChange();
   }
@@ -72,7 +75,7 @@ class MatchmakingStateStore {
   deleteGame(match: MatchMakingTypes.BasicGame) {
     if (
       isDefined(this.state.ownMatch) &&
-      this.state.ownMatch.matchId === match.matchId
+      this.state.ownMatch.matchId == match.matchId
     )
       this.state.ownMatch = null;
     else
@@ -84,11 +87,10 @@ class MatchmakingStateStore {
 
   updateFromAllMatches(allMatches: MatchMakingTypes.ServerUpdateGames["data"]) {
     console.log("UPDATE FROM ALL MATCHES");
-    jlog(allMatches);
     const newState: MatchmakingState = {
       otherMatches: [],
       tournaments: deepCopyObj(allMatches.tournaments),
-      ownMatch: null,
+      ownMatch: this.state.ownMatch ? deepCopyObj(this.state.ownMatch) : null,
     };
     const clientId = window.store.userStore.get().details.id;
     allMatches.basicGames.forEach((match) => {

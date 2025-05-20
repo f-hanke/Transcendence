@@ -1,10 +1,25 @@
 /* Game logic */
 import { Player } from './player.js';
 import { Ball } from './ball.js';
-import { GameServiceTypes, gameSettings } from 'transcendence';
+import { gameResultTypeGuards, GameResultTypes, GameServiceTypes, gameSettings } from 'transcendence';
 import { WebSocket } from 'ws';
+import amqp from 'amqplib';
 import { sendMessage } from './server.js';
 import { AIPlayer } from './aiPlayer.js';
+
+const queue = "match-results";
+
+async function publishMatchResult(message: GameResultTypes.MatchResult) {
+  if (!gameResultTypeGuards.isMatchResult(message))
+    console.error("Trying to publish unknown type");
+  const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
+  const channel = await connection.createChannel();
+
+  await channel.assertQueue(queue, { durable: false });
+
+  channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
+  console.log('[Publisher] Sent:', message);
+}
 
 export class Game {
     typeOfGame: GameServiceTypes.StaticGameProperties["typeOfGame"];
@@ -148,24 +163,24 @@ export class Game {
         sendMessage(this.websocket as WebSocket, gameOverMsg);
     }
 
-    /* RabbitMQ publishing
-        todo: right type of the date
-        let date = new Date();
-        let sqllite_date = date.toISOString();
+    // RabbitMQ publishing
+        // todo: right type of the date
+    let date = new Date();
+    let sqllite_date = date.toISOString();
 
-        let id_win =  (this.player1.score > this.player1.score ? this.player1.id : this.player1.id  );
+    let id_win =  (this.player1.score > this.player1.score ? this.player1.id : this.player1.id  );
 
-        publishMatchResult({
-            matchId: this.matchId,
-            player1Id: this.player1.id,
-            player2Id: this.player2.id,
-            player1Score: this.player1.score,
-            player2Score:this.player2.score,
-            winnerId: id_win,
-            createdAt: formattedDate,
-          }).catch((err) => {
-            console.error('Failed to publish match result:', err);
-          });*/
+    publishMatchResult({
+        matchId: this.matchId,
+        player1Id: this.player1.id,
+        player2Id: this.player2.id,
+        player1Score: this.player1.score,
+        player2Score:this.player2.score,
+        winnerId: id_win,
+        createdAt: sqllite_date,
+        }).catch((err) => {
+        console.error('Failed to publish match result:', err);
+        });
 
     }
 

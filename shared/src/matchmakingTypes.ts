@@ -128,7 +128,6 @@ declare namespace MatchMakingTypes {
   };
 
 
-
   type ServerCancelGame = {
     type: "cancelGame";
     data: BasicGame;

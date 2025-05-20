@@ -28,8 +28,7 @@ type UserDetails = {
 type EditableFields = Pick<UserDetails, "displayName" | "email" | "password">
 
 type UserEditState = Partial<EditableFields> & {
-  imageFile?: File;
-  imagePreviewUrl?: string;
+  image?: ChatServiceTypes.BufferLike | null;
 };
 
 type UserState = {

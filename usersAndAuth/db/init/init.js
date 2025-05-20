@@ -28,12 +28,12 @@ import { db } from '../db.js';
     // Create match records table which stores both simple and tournament matches, but we differentiate sneakily
     db.exec(`
       CREATE TABLE IF NOT EXISTS matches (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        player1Id INTEGER NOT NULL,
-        player2Id INTEGER NOT NULL,
+        id TEXT NOT NULL PRIMARY KEY,
+        player1Id TEXT NOT NULL,
+        player2Id TEXT NOT NULL,
         player1Score INTEGER NOT NULL,
         player2Score INTEGER NOT NULL,
-        winnerId INTEGER NOT NULL,
+        winnerId TEXT NOT NULL,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -41,15 +41,15 @@ import { db } from '../db.js';
     // Create tournament records table
     db.exec(`
       CREATE TABLE IF NOT EXISTS tournaments (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        playerRank1Id INTEGER NOT NULL,
-        playerRank2Id INTEGER NOT NULL,
-        playerRank3Id INTEGER NOT NULL,
-        playerRank4Id INTEGER NOT NULL,
-        matchSemifinale1Id INTEGER NOT NULL,
-        matchSemifinale2Id INTEGER NOT NULL,
-        matchFinaleId INTEGER NOT NULL,
-        matchBronzeId INTEGER NOT NULL,
+        id TEXT NOT NULL PRIMARY KEY,
+        playerRank1Id TEXT NOT NULL,
+        playerRank2Id TEXT NOT NULL,
+        playerRank3Id TEXT NOT NULL,
+        playerRank4Id TEXT NOT NULL,
+        matchSemifinale1Id TEXT NOT NULL,
+        matchSemifinale2Id TEXT NOT NULL,
+        matchFinaleId TEXT NOT NULL,
+        matchBronzeId TEXT NOT NULL,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP
       )
     `);

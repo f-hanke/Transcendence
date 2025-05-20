@@ -38,7 +38,7 @@ const clientIdToSocket = new Map<string, WebSocket[]>();
 // }
 //publish updateFriendDatabase
 
-startConsumer().catch(console.error);
+await startConsumer().catch(console.error);
 
 type MatchMakingFastifyRequest = FastifyRequest<{
 	Querystring: SharedTypes.ClientQueryParamMatchMaking;

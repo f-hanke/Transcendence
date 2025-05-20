@@ -6,6 +6,10 @@ const queue = 'matchMaking-results';
 
 async function updateUserTournamentRecords(msg: GameResultTypes.TournamentResult){
 	console.log("Updating user tournament records db...");
+	if (!gameResultTypeGuards.isTournamentResult(msg)) {
+		console.error("Invalid tournament result message format");
+		return;
+	}
 	try {
 		await GameResultModel.recordNewTournament(msg);
 	} catch (err) {
@@ -15,6 +19,10 @@ async function updateUserTournamentRecords(msg: GameResultTypes.TournamentResult
 
 async function updateUserSimpleMatchRecords(msg: GameResultTypes.MatchResult) {
 	console.log("Updating user simple match history db...");
+	if (!gameResultTypeGuards.isMatchResult(msg)) {
+		console.error("Invalid match result message format");
+		return;
+	}
 	try {
 		await GameResultModel.recordNewSimpleMatch(msg);
 	} catch (err) {
@@ -23,7 +31,7 @@ async function updateUserSimpleMatchRecords(msg: GameResultTypes.MatchResult) {
 }
 
 export async function startConsumer() {
-	const connection = await amqp.connect('amqp://localhost');
+	const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
 	const channel = await connection.createChannel();
 
 	await channel.assertQueue(queue, { durable: false });
@@ -38,8 +46,8 @@ export async function startConsumer() {
 				await updateUserTournamentRecords(message);
 			else if (gameResultTypeGuards.isMatchResult(message))
 				await updateUserSimpleMatchRecords(message);
-			else	
-				console.error("Wrong data read from rabbitMQ.");
+			else
+				console.error("Wrong data read from rabbitMQ in usersAndAuth service.");
 			channel.ack(msg);
 		}
 	});

@@ -155,7 +155,7 @@ const Tournament = {
           );
         resultMtch = stmtMtch.run(player1Id, player2Id);
       }
-      db.prepare(`UPDATE tournaments SET ${matchName} = ? WHERE id = ?`).run(resultMtch.lastInsertRowid.toString(), id);
+      db.prepare(`UPDATE tournaments SET ${matchName}Id = ? WHERE id = ?`).run(resultMtch.lastInsertRowid.toString(), id);
       return resultMtch.lastInsertRowid.toString();
     } catch (db_error) {
       throw db_error;
@@ -224,6 +224,16 @@ const Tournament = {
     try {
       const stmt = db.prepare('SELECT * FROM tournaments');
       return stmt.all();
+    } catch (db_error) {
+      throw db_error;
+    }
+  },
+
+  async updateOngoingTournamentDatabase(player1Score: number, player2Score: number, createdAt: string, matchId: string) {
+    console.log("update ongoing Tournaments db");
+    try {
+      db.prepare(`UPDATE matches SET player1Score=?, player2Score=?, playedAt=? WHERE id=?`)
+      .run(player1Score, player2Score, createdAt, matchId);
     } catch (db_error) {
       throw db_error;
     }

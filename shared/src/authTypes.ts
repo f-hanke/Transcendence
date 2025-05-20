@@ -1,7 +1,5 @@
 // auth
 
-import { ChatServiceTypes } from "./chatTypes";
-
 // GET  /api/auth/verify-jwt - verify JWT token
 // GET  /api/auth/refresh    - For extending (only if logged in)
 
@@ -71,6 +69,11 @@ const authErrorsToMsgMap: Record<AuthErrors, string> = {
 
 declare namespace AuthServiceTypes {
 
+  type BufferLike = {
+    type: "Buffer";
+    data: number[];
+  };
+
   type JwtType = {
     userId: string;
   };
@@ -110,7 +113,7 @@ declare namespace AuthServiceTypes {
   };
 
   type UpdateImageBody = {
-    image: Buffer;
+    image: BufferLike;
   }
 
   type UserType = {
@@ -118,7 +121,7 @@ declare namespace AuthServiceTypes {
     email: string;
     pw_hash: string;
     display_name: string;
-    image: ChatServiceTypes.BufferLike;
+    image: BufferLike;
     online_status: number;
     login_count: number;
     created_at: string;
@@ -196,11 +199,21 @@ function isUpdateDisplayNameBody(arg: any): arg is AuthServiceTypes.UpdateDispla
   )
 }
 
+function isBufferLike(obj: any): obj is AuthServiceTypes.BufferLike {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    obj.type === "Buffer" &&
+    Array.isArray(obj.data) &&
+    typeof obj.data[0] === "number"
+  );
+}
+
 function isUpdateImageBody(arg: any): arg is AuthServiceTypes.UpdateImageBody {
   return (
     typeof arg === "object" &&
     arg !== null &&
-    Buffer.isBuffer(arg.image)
+    isBufferLike(arg.image)
   )
 }
 
@@ -222,7 +235,8 @@ const authServiceTypeGuards = {
   isUpdateEmailBody,
   isUpdatePasswordBody,
   isUpdateDisplayNameBody,
-  isUpdateImageBody
+  isUpdateImageBody,
+  isBufferLike
 } as const;
 
 

@@ -28,11 +28,11 @@ export async function startConsumer(onMessage: (matchResult: GameResultTypes.Mat
 			console.log('[Consumer] Received:', matchResult);
 			if (gameResultTypeGuards.isMatchResult(matchResult)) {
 				channel.ack(msg);
-				updateOngoingTournamentDatabase(matchResult);
+				// updateOngoingTournamentDatabase(matchResult);
         		onMessage(matchResult);  // callback function
 		  	}
       		else
-				console.error("Wrong data read from rabbitMQ.");
+				console.error("Wrong data read from rabbitMQ in matchMaking (remote) service.");
 		}
 	});
 }
