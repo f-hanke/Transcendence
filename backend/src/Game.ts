@@ -90,7 +90,7 @@ export class Game {
                 sendMessage(this.websocket as WebSocket, gameStateMsgNew);
             }
 
-            this.gameLoopId = setInterval(this.gameLoop, 1000 / 60); // 60 FPS
+            this.gameLoopId = setTimeout(this.gameLoop, 1000 / 60); // 60 FPS
         }
     };
 

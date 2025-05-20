@@ -1,25 +1,14 @@
 import amqp from 'amqplib';
 import { gameResultTypeGuards } from 'transcendence';
 import { GameResultModel } from '../orm/gameResultModel.js';
-const queue = 'matchMaking-results';
+import { matchmakingTypeGuards } from 'transcendence';
+const queue = 'matchmaking-service-queue';
 async function updateUserTournamentRecords(msg) {
     console.log("Updating user tournament records db...");
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
     if (!gameResultTypeGuards.isTournamentResult(msg)) {
         console.error("Invalid tournament result message format");
         return;
     }
-<<<<<<< HEAD
-=======
->>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
->>>>>>> origin/main
-=======
->>>>>>> origin/main
     try {
         await GameResultModel.recordNewTournament(msg);
     }
@@ -29,22 +18,10 @@ async function updateUserTournamentRecords(msg) {
 }
 async function updateUserSimpleMatchRecords(msg) {
     console.log("Updating user simple match history db...");
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
     if (!gameResultTypeGuards.isMatchResult(msg)) {
         console.error("Invalid match result message format");
         return;
     }
-<<<<<<< HEAD
-=======
->>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
->>>>>>> origin/main
-=======
->>>>>>> origin/main
     try {
         await GameResultModel.recordNewSimpleMatch(msg);
     }
@@ -53,19 +30,7 @@ async function updateUserSimpleMatchRecords(msg) {
     }
 }
 export async function startConsumer() {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const connection = await amqp.connect('amqp://localhost');
-=======
-<<<<<<< HEAD
     const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
-=======
-    const connection = await amqp.connect('amqp://localhost');
->>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
->>>>>>> origin/main
-=======
-    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
->>>>>>> origin/main
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     console.log('[Consumer] Waiting for messages...');
@@ -77,20 +42,10 @@ export async function startConsumer() {
                 await updateUserTournamentRecords(message);
             else if (gameResultTypeGuards.isMatchResult(message))
                 await updateUserSimpleMatchRecords(message);
+            else if (matchmakingTypeGuards.isTournamentNotification(message))
+                console.log("Received tournament notification:", message, ", not for usersAndAuth service.");
             else
-<<<<<<< HEAD
-<<<<<<< HEAD
-                console.error("Wrong data read from rabbitMQ.");
-=======
-<<<<<<< HEAD
                 console.error("Wrong data read from rabbitMQ in usersAndAuth service.");
-=======
-                console.error("Wrong data read from rabbitMQ.");
->>>>>>> f85dc2c (chore(remote): shovel it carefully onto new main)
->>>>>>> origin/main
-=======
-                console.error("Wrong data read from rabbitMQ in usersAndAuth service.");
->>>>>>> origin/main
             channel.ack(msg);
         }
     });

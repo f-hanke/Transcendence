@@ -33,7 +33,7 @@
       }
     },
     {
-      "name": "user-service-queue",
+      "name": "matchmaking-service-queue",
       "vhost": "/",
       "durable": true,
       "auto_delete": false,
@@ -92,7 +92,7 @@
     {
       "source": "microservices-exchange",
       "vhost": "/",
-      "destination": "user-service-queue",
+      "destination": "matchmaking-service-queue",
       "destination_type": "queue",
       "routing_key": "user.#",
       "arguments": {}
