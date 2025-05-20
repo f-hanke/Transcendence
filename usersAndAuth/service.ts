@@ -489,6 +489,13 @@ server.post<{
       return reply
         .code(500)
         .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+    // // TODO
+    // const publication: RabbitMQTypes.UserChange = {
+    //   id: updatedUser.id,
+    //   displayName: updatedUser.display_name,
+    //   smallImage: updatedUser.,
+    // };
+    // publishMessage(publication).catch(console.error);
     return reply.code(201).send(updatedUser);
   } catch (e) {
     if (e instanceof Error) {
@@ -539,6 +546,12 @@ server.post<{
         .code(500)
         .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
     // TODO: publish for Flo
+    const publication: RabbitMQTypes.UserChange = {
+      id: updatedUser.id,
+      displayName: updatedUser.display_name,
+      smallImage: smallImgBuffer,
+    };
+    publishMessage(publication).catch(console.error);
 
     return reply.code(201).send(updatedUser);
   } catch (e) {
