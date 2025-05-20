@@ -19,6 +19,7 @@ import { utils } from "./utils/ranking.js";
 import { dbConverters } from "./utils/rawDBTypeConverters.js";
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
 import { match } from "assert";
+import { stringify } from "querystring";
 
 const fastify = Fastify();
 fastify.register(fastifyWebsocket);
@@ -111,9 +112,17 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
           };
           tournament.matchBronze = newMatch;
 
-          await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchFinale", matchResult.winnerId);
+          let finaleOpponentId: string | null = null;
+          let bronzeOpponentId: string | null = null;
+          finaleOpponentId = (tournament.matchResultSemifinale1.player1Id === matchResult.winnerId) ? tournament.matchResultSemifinale2.winnerId : tournament.matchResultSemifinale1.winnerId;
+          if (tournament.matchSemifinale1?.matchId === matchResult.matchId)
+            bronzeOpponentId = tournament.matchResultSemifinale2.player1Id === matchResult.winnerId ? tournament.matchResultSemifinale2.player2Id : tournament.matchResultSemifinale2.player1Id;
+          else
+            bronzeOpponentId = tournament.matchResultSemifinale1.player1Id === matchResult.winnerId ? tournament.matchResultSemifinale1.player2Id : tournament.matchResultSemifinale1.player1Id;
+
+          await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchFinale", finaleOpponentId as string);
           tournament.matchFinale.invitedPlayerId = matchResult.winnerId;
-          await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchBronze", matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id);
+          await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchBronze", bronzeOpponentId as string);
           tournament.matchBronze.invitedPlayerId = matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id;
         } catch (err) {
           console.error("Error scheduling final matches:", err);
