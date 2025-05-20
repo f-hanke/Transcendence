@@ -159,6 +159,7 @@ class UserSettings extends HTMLElement {
       ?.addEventListener("change", async function (event) {
         const maxFileSize = 1024 * 1024 * 4;
         const input = event.target as HTMLInputElement;
+        // to do, only allow certain file extensions
         if (!input || !input.files || input.files.length === 0) return;
         const file = input.files[0];
         if (file.size > maxFileSize) {
@@ -166,6 +167,16 @@ class UserSettings extends HTMLElement {
             id: generateUniqueId(),
             message:
               "The file you chose is too big! Please select a file smaller than 4 MB!",
+          });
+          return;
+        }
+        const extension = file.name.split('.').pop()?.toLowerCase();
+        if(!extension || !(["jpg", "png",].includes(extension)))
+        {
+          window.store.notificationStore.updateAddNotification({
+            id: generateUniqueId(),
+            message:
+              "Only files with extensions 'jpg' or 'png' are supported!",
           });
           return;
         }
