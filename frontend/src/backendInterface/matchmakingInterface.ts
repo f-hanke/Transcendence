@@ -184,7 +184,7 @@ class MatchMakingInterface {
       playerLeftPaddleId: dataJson.data.hostId,
       playerRightPaddleId: dataJson.data.oponentId,
     });
-    window.store.gameStore.updateGameStateTypeOfGame("remote");
+    window.store.gameStore.updateGameStateTypeOfGame("remote", false);
     window.store.gameStore.updateGameStateState("matchmakingSuccessful");
   }
 
