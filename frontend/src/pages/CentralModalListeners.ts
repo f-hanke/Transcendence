@@ -1,72 +1,53 @@
 import { isDefined } from "transcendence";
 import styles from "../../index.css?inline";
 import { AllKeyboardKeyCodes } from "../utils/keycodesTypes";
-
-type KeyDownCallback = () => void;
-type KeyCallbackMap = Partial<Record<AllKeyboardKeyCodes, KeyDownCallback>>;
+import { createHtmlElementFromString } from "../utils/utils";
+import { KeyDownCallback } from "../state/modalStateTypes";
 
 class CentralModalListeners extends HTMLElement {
+  unsubscribe: null | (() => void);
   unsubscribeLanguage: null | (() => void);
-  keyDownCallBack: KeyCallbackMap;
-  shadow: ShadowRoot;
-  ready: Promise<void>;
-  _resolveReady!: () => void;
-  modalWrapper: HTMLDivElement;
   constructor() {
     super();
-    this.keyDownCallBack = {};
     this.unsubscribeLanguage = null;
-    this.shadow = this.attachShadow({ mode: "open" });
-    const style = document.createElement("style");
-    style.textContent = styles;
-    this.modalWrapper = document.createElement("div");
-
-    this.ready = new Promise<void>((resolve) => {
-      this._resolveReady = resolve;
-    });
-    this.shadow.appendChild(style);
-    this.shadow.appendChild(this.modalWrapper);
+    this.unsubscribe = null;
+    this.innerHTML = `<div class="hidden"></div>`;
     this.handleKeyDown = this.handleKeyDown.bind(this);
   }
 
   connectedCallback() {
+    this.unsubscribe = window.store.modalStore.subscribe(
+      this.render.bind(this)
+    );
     this.render();
     document.addEventListener("keydown", this.handleKeyDown);
-    this._resolveReady();
   }
 
   disconnectedCallback() {
+    if (this.unsubscribe) this.unsubscribe();
     document.removeEventListener("keydown", this.handleKeyDown);
   }
 
   render() {
-    this.modalWrapper.innerHTML = `
-      <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    const state = window.store.modalStore.get();
+    this.innerHTML = `
+      <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center
+      ${state.open ? "" : "hidden"}">
         <div id="modalContent" class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
-          <slot>DEFAULT SLOT MESSAGE</slot>
+          ${window.store.modalStore.get().content.map((line) => {
+            return `<p>${line}</p>`;
+          })}
         </div>
       </div>
     `;
   }
 
-  open() {
-    this.modalWrapper.classList.remove("hidden");
-  }
-
-  close() {
-    this.modalWrapper.classList.add("hidden");
-    // this.style.display = "none";
-  }
-
-  setKeyListener(KeyCallbackMap: KeyCallbackMap) {
-    this.keyDownCallBack = KeyCallbackMap;
-  }
-
   handleKeyDown(event: KeyboardEvent) {
     const validKeyCode = event.code as AllKeyboardKeyCodes;
-    if (isDefined(this.keyDownCallBack[validKeyCode])) {
-      this.keyDownCallBack[validKeyCode]();
-      this.close();
+    if (isDefined(window.store.modalStore.get().keyDownCallback[validKeyCode])) {
+      (window.store.modalStore.get().keyDownCallback[validKeyCode] as KeyDownCallback)() ; 
+      window.store.modalStore.reset();
+      window.store.modalStore.updateSetClosed();
     }
   }
 }

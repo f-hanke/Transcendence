@@ -62,43 +62,45 @@ class ManageMatch extends HTMLElement {
   }
 
   renderWaitingServerStartModal() {
+    window.store.modalStore.updateAddKeyDownCallback(
+      "KeyN",
+      this.leaveGame.bind(this)
+    );
+    window.store.modalStore.updateSetContent([
+      "Waiting for Server to start game",
+      "Press 'n' to cancel game",
+    ]);
+    window.store.modalStore.updateSetOpen();
     const modal = createHtmlElementFromString(`
-      <central-modal-listeners>
-        <p>Waiting for Server to start game</p>
-        <p>Press 'n' to cancel game</p>
-      </central-modal-listeners>`) as CentralModalListeners;
+      <central-modal-listeners></central-modal-listeners>`) as CentralModalListeners;
     this.innerHTML = "";
     this.appendChild(modal);
-    modal.open();
-    modal.setKeyListener({
-      KeyN: this.leaveGame.bind(this),
-    });
   }
 
   async renderWaitingClientStartModal() {
+    window.store.modalStore.updateAddKeyDownCallback("KeyY", () => {
+      window.store.gameStore.updateGameStateState("waitingForServerStart");
+      GameServiceInterface.sendMessageToServer({
+        type: "clientIsReady",
+        data: {
+          clientId: window.store.userStore.get().details.id,
+          matchId: window.store.gameStore.get().matchId,
+        },
+      });
+    });
+    window.store.modalStore.updateAddKeyDownCallback(
+      "KeyN",
+      this.leaveGame.bind(this)
+    );
+    window.store.modalStore.updateSetContent([
+      "Press 'y' when you are ready",
+      "Press 'n' to cancel game",
+    ]);
+    window.store.modalStore.updateSetOpen();
     const modal = createHtmlElementFromString(`
-      <central-modal-listeners>
-        <p>Press 'y' when you are ready</p>
-        <p>Press 'n' to cancel game</p>
-      </central-modal-listeners>`) as CentralModalListeners;
-      this.innerHTML = "";
-      this.appendChild(modal);
-      modal.ready.then(() => {
-        modal.open();
-        modal.setKeyListener({
-          KeyY: () => {
-            window.store.gameStore.updateGameStateState("waitingForServerStart");
-            GameServiceInterface.sendMessageToServer({
-              type: "clientIsReady",
-              data: {
-                clientId: window.store.userStore.get().details.id,
-                matchId: window.store.gameStore.get().matchId,
-              },
-            });
-          },
-          KeyN: this.leaveGame.bind(this),
-        });
-      })
+      <central-modal-listeners></central-modal-listeners>`) as CentralModalListeners;
+    this.innerHTML = "";
+    this.appendChild(modal);
   }
 
   renderRunningGame() {
