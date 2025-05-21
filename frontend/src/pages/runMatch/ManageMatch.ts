@@ -26,13 +26,22 @@ class ManageMatch extends HTMLElement {
   }
 
   disconnectedCallback() {
+    colog("DISCONNECTED cALLBACK cALLEd");
+
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     if (this.unsubscribeGameState) this.unsubscribeGameState();
     if (window.store.gameStore.get().state === "running") this.leaveGame();
-    window.store.gameStore.reset();
+    if (!(["matchmakingSuccessful", "waitingForClientReady"].includes(window.store.gameStore.get().state)))
+    {
+      colog("reset");
+      colog(window.store.gameStore.get().state);
+      window.store.gameStore.reset();
+    } 
   }
 
   async render() {
+    colog("in manage match");
+    colog(window.store.gameStore.get().state);
     if (window.store.gameStore.get().state === "none") navigateToSite("/");
     if (window.store.gameStore.get().state === "matchmakingSuccessful") {
       window.store.gameStore.updateGameStateState(
@@ -73,7 +82,7 @@ class ManageMatch extends HTMLElement {
     window.store.modalStore.updateSetOpen();
     const modal = createHtmlElementFromString(`
       <central-modal-listeners></central-modal-listeners>`) as CentralModalListeners;
-    this.innerHTML = "";
+    // this.innerHTML = "";
     this.appendChild(modal);
   }
 
@@ -99,7 +108,7 @@ class ManageMatch extends HTMLElement {
     window.store.modalStore.updateSetOpen();
     const modal = createHtmlElementFromString(`
       <central-modal-listeners></central-modal-listeners>`) as CentralModalListeners;
-    this.innerHTML = "";
+    // this.innerHTML = "";
     this.appendChild(modal);
   }
 

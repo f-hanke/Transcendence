@@ -174,6 +174,7 @@ class MatchMakingInterface {
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
+    window.store.gameStore.updateGameStateState("matchmakingSuccessful");
     const isSelfHosted =
       dataJson.data.hostId === window.store.userStore.get().details.id;
     window.store.gameStore.updateMatchMakingSuccessful({
@@ -185,7 +186,6 @@ class MatchMakingInterface {
       playerRightPaddleId: dataJson.data.oponentId,
     });
     window.store.gameStore.updateGameStateTypeOfGame("remote", false);
-    window.store.gameStore.updateGameStateState("matchmakingSuccessful");
   }
 
   static handleServerUpdateOneGame(
