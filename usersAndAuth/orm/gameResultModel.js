@@ -34,7 +34,7 @@ const GameResultModel = {
     recordNewTournament: async (tournamentData) => {
         try {
             db.prepare(`
-                INSERT INTO tournaments (id, player1Id, player2Id, player3Id, player4Id, matchSemifinale1, matchSemifinale2, matchFinale, matchBronze, createdAt)
+                INSERT INTO tournaments (id, rank1PlayerId, rank2PlayerId, rank3PlayerId, rank4PlayerId, matchSemifinale1Id, matchSemifinale2Id, matchFinaleId, matchBronzeId, createdAt)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(tournamentData.tournamentId, tournamentData.rank1PlayerId, tournamentData.rank2PlayerId, tournamentData.rank3PlayerId, tournamentData.rank4PlayerId, tournamentData.matchSemifinale1.matchId, tournamentData.matchSemifinale2.matchId, tournamentData.matchFinale.matchId, tournamentData.matchBronze.matchId, tournamentData.createdAt);
             // Record the 4 tournament matches without adding them to user_matches
