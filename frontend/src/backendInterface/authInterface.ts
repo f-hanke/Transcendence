@@ -166,32 +166,26 @@ class AuthInterface {
   ) {
     window.colog("verify succesful!");
     if (updateUserId) {
-      window.store.userStore.updateUserSettings({
-        id: body.userId.toString(),
-      });
+      window.store.userStore.updateUserId(body.userId.toString());
     }
   }
 
   static refreshSucessful(body: AuthServiceTypes.AuthSuccessResponseBody) {
     window.colog("refresh succesful!");
-    window.store.userStore.updateUserSettings({
-      id: body.clientId,
-    });
+    window.store.userStore.updateUserId(body.clientId.toString());
     sessionStorage.setItem(this.nameJwtInSessionStorage, body.jwtToken);
   }
 
   static loginSucessful(body: AuthServiceTypes.AuthSuccessResponseBody) {
     window.colog("login succesful!");
-    window.store.userStore.updateUserSettings({
-      id: body.clientId.toString(),
-    });
+    window.store.userStore.updateUserId(body.clientId.toString());
     sessionStorage.setItem(this.nameJwtInSessionStorage, body.jwtToken);
     navigateToSite("/");
   }
 
   static logoutSucessful() {
-    window.colog("logout succesful!");
     sessionStorage.removeItem(this.nameJwtInSessionStorage);
+    window.store.reset();
     navigateToSite("/loginPage");
   }
 

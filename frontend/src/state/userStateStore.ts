@@ -1,4 +1,4 @@
-import { ChatServiceTypes } from "transcendence";
+import { ChatServiceTypes, GameResultTypes } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
 import { StoreCallback } from "./types";
 import { UserState } from "./userStateTypes";
@@ -16,25 +16,16 @@ class UserStateStore {
     this.state = {
       details: {
         image: null,
-        displayName: "TEST_USER",
-        friends: ["friend_1_id", "friend_2_id"],
+        displayName: "",
+        friends: [],
         id: test_user_id,
-        email: "test@user.de",
-        matchHistory: [
-          {
-            date: "15.02.2025",
-            player1Id: "TEST_USER",
-            player2Id: "friend_1_id",
-            result: {
-              player1: 1,
-              player2: 7,
-            },
-            tournament: null,
-          },
-        ],
+        email: "",
+        matchHistory: [],
+        tournamentHistory: [],
         online: true,
         password: "",
         fetchNeeded: true,
+        otherUserId: null,
       },
       editState: {},
     };
@@ -52,20 +43,24 @@ class UserStateStore {
     return this.state;
   }
 
+  updateUserId(newId: string, rerender: boolean = true) {
+    this.state.details.id = newId;
+    if (rerender) this.listeners.forEach((callback) => callback());
+  }
+
   updateUserSettings(
-    updatedState: Partial<
-      Pick<UserState["details"], "displayName" | "email" | "id">
-    >
+    updatedState: Partial<Pick<UserState["details"], "displayName" | "email">>
   ) {
     const newState = deepCopyObj(this.state);
     for (const detail of Object.keys(updatedState)) {
-      const typedDetail = detail as keyof Pick<
-        UserState["details"],
-        "displayName" | "email" | "id"
-      >;
-      newState["details"][typedDetail] = updatedState[typedDetail] as string;
+      if (["displayName", "email"].includes(detail)) {
+        const typedDetail = detail as keyof Pick<
+          UserState["details"],
+          "displayName" | "email"
+        >;
+        newState["details"][typedDetail] = updatedState[typedDetail] as string;
+      }
     }
-    newState.details.id = String(newState.details.id);
     this.state = newState;
     this.listeners.forEach((callback) => callback());
   }
@@ -83,9 +78,30 @@ class UserStateStore {
     this.listeners.forEach((callback) => callback());
   }
 
-  updateSetFetchNeeded(needed: boolean) {
+  updateSetFetchNeeded(needed: boolean, rerender: boolean = true) {
     this.state.details.fetchNeeded = needed;
-    this.listeners.forEach((callback) => callback());
+    if (rerender) this.listeners.forEach((callback) => callback());
+  }
+
+  updateSetOtherUserId(newId: string | null, rerender: boolean = true) {
+    this.state.details.otherUserId = newId;
+    if (rerender) this.listeners.forEach((callback) => callback());
+  }
+
+  updateMatchHistory(
+    newMatchHistory: GameResultTypes.MatchResult[],
+    rerender: boolean = true
+  ) {
+    this.state.details.matchHistory = deepCopyObj(newMatchHistory);
+    if (rerender) this.listeners.forEach((callback) => callback());
+  }
+
+  updateTournamentHistory(
+    newTournamentHistory: GameResultTypes.TournamentResult[],
+    rerender: boolean = true
+  ) {
+    this.state.details.tournamentHistory = deepCopyObj(newTournamentHistory);
+    if (rerender) this.listeners.forEach((callback) => callback());
   }
 
   // update(newState: UserState) {

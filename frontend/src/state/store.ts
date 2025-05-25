@@ -39,6 +39,21 @@ class Store {
     this.modalStore = new ModalStateStore();
   }
 
+  reset()
+  {
+    this.userStore.init();
+    this.gameStore.init();
+    this.notificationStore.init();
+    this.matchmakingStore.init();
+    this.oneVOneLocalStore.init();
+    this.registerStore.init();
+    this.chatMessageStore.init();
+    this.chatUserStore.init();
+    this.currentTournamentStore.init();
+    this.playerNamesStore.init();
+    this.modalStore.reset();
+  }
+
 }
 
 export { Store };

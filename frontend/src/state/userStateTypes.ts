@@ -1,4 +1,4 @@
-import { ChatServiceTypes } from "transcendence";
+import { ChatServiceTypes, GameResultTypes } from "transcendence";
 
 type UserId = string;
 
@@ -17,13 +17,16 @@ type UserDetails = {
   id: UserId;
   displayName: string;
   image: ChatServiceTypes.BufferLike | null;
-  matchHistory: MatchFinished[];
+  matchHistory: GameResultTypes.MatchResult[];
+  tournamentHistory: GameResultTypes.TournamentResult[];
   friends: UserId[];
   online: boolean;
   email: string;
   password: string;
   fetchNeeded: boolean;
+  otherUserId: string | null;
 };
+
 
 type EditableFields = Pick<UserDetails, "displayName" | "email" | "password">
 

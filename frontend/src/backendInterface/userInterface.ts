@@ -2,6 +2,7 @@ import {
   authErrorsToMsgMap,
   authServiceTypeGuards,
   AuthServiceTypes,
+  GameResultTypes,
 } from "transcendence";
 import { buildApiRouteRelative } from "../utils/utils";
 import { AuthInterfaceAnswer } from "./authInterface";
@@ -11,8 +12,10 @@ class UserInterface {
     throw new Error("This class cannot be instantiated.");
   }
 
-
-  static async getAllUserDetails(id:string): AuthInterfaceAnswer {
+  static async getAllUserDetails(
+    id: string,
+    updateId: boolean = true
+  ): AuthInterfaceAnswer {
     const address = buildApiRouteRelative({
       service: "authService",
       route: `/api/users/${id}`,
@@ -25,7 +28,11 @@ class UserInterface {
         },
       });
       if (response.ok) {
-        const res = await response.json() as AuthServiceTypes.UserType;
+        const res = (await response.json()) as AuthServiceTypes.UserType & {
+          displayName: string;
+        };
+        res.displayName = res.display_name;
+        if (updateId) window.store.userStore.updateUserId(res.id);
         window.store.userStore.updateUserSettings(res);
         window.store.userStore.updateUserImage(res.image);
         window.store.userStore.updateSetFetchNeeded(false);
@@ -116,7 +123,34 @@ class UserInterface {
     }
   }
 
-static async updateUserImage(
+  static async updateUserPassword(
+    body: AuthServiceTypes.UpdatePasswordBody
+  ): AuthInterfaceAnswer {
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: `/api/users/updatepassword/${
+        window.store.userStore.get().details.id
+      }`,
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        return {
+          ok: true,
+        };
+      } else return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
+  static async updateUserImage(
     body: AuthServiceTypes.UpdateImageBody
   ): AuthInterfaceAnswer {
     const address = buildApiRouteRelative({
@@ -140,6 +174,69 @@ static async updateUserImage(
       } else return this.handleApiResponseError(response);
     } catch {
       throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
+  static async getMatches(id: string,rerender: boolean = true) {
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: `/api/users/${id}/matches`,
+    });
+    try {
+      const response = await fetch(address, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      console.log(
+        `GETTING MATCHES FOR USER ${id}`
+      );
+      console.log(response);
+      if (response.ok) {
+        const res = await response.json();
+        window.store.userStore.updateMatchHistory(res, rerender);
+        console.log(res);
+        return {
+          ok: true,
+          matches: res as GameResultTypes.MatchResult[],
+        };
+      } else return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Fetching Matches`);
+    }
+  }
+
+  static async getTournaments( id: string, rerender: boolean = true): AuthInterfaceAnswer {
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: `/api/users/${
+        id
+      }/tournaments`,
+    });
+    try {
+      const response = await fetch(address, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      console.log(
+        `GETTING TOURNAMENTS FOR USER ${
+          id
+        }`
+      );
+      console.log(response);
+      if (response.ok) {
+        const res = await response.json();
+        window.store.userStore.updateTournamentHistory(res, rerender);
+        console.log(res);
+        return {
+          ok: true,
+        };
+      } else return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Fetching Tournaments`);
     }
   }
 

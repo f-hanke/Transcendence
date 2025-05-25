@@ -1,6 +1,6 @@
 import { ChatServiceTypes, generateUniqueId } from "transcendence";
 import { ChatInterface } from "../../backendInterface/chatInterface";
-import { getCurDateString, getImgSrcFromBuffer } from "../../utils/utils";
+import { getCurDateString, getImgSrcFromBuffer, navigateToSite } from "../../utils/utils";
 
 type UserComponentType =
   | "user"
@@ -18,6 +18,7 @@ class ChatUserComponent extends HTMLElement {
   friend: boolean;
   image: string;
   id: string;
+  userId: string;
   recipientId: string;
   focussed: boolean;
   type: UserComponentType;
@@ -28,6 +29,7 @@ class ChatUserComponent extends HTMLElement {
     this.unsubscribeLanguage = null;
     this.displayName = "";
     this.lastMessage = "";
+    this.userId = "";
     this.unreadMessages = false;
     this.online = false;
     this.blocked = false;
@@ -117,7 +119,8 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLButtonElement;
     image.addEventListener("click", (event) => {
       event.stopPropagation();
-      alert("user profile");
+      window.store.userStore.updateSetOtherUserId(this.userId ,false);
+      navigateToSite("userSettingsOther");
     });
 
     if (this.type === "user") this.renderUser();
@@ -253,6 +256,7 @@ class ChatUserComponent extends HTMLElement {
 
   setData(data: ChatServiceTypes.ChatUser, type: UserComponentType) {
     this.displayName = data.recipientId;
+    this.userId = data.recipientId;
     this.lastMessage = data.lastMessage;
     this.unreadMessages = data.unreadMessages;
     this.online = data.online;

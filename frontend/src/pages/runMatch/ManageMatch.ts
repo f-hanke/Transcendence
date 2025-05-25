@@ -26,22 +26,22 @@ class ManageMatch extends HTMLElement {
   }
 
   disconnectedCallback() {
-    colog("DISCONNECTED cALLBACK cALLEd");
+    // colog("DISCONNECTED cALLBACK cALLEd");
 
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     if (this.unsubscribeGameState) this.unsubscribeGameState();
     if (window.store.gameStore.get().state === "running") this.leaveGame();
     if (!(["matchmakingSuccessful", "waitingForClientReady"].includes(window.store.gameStore.get().state)))
     {
-      colog("reset");
-      colog(window.store.gameStore.get().state);
+      // colog("reset");
+      // colog(window.store.gameStore.get().state);
       window.store.gameStore.reset();
     } 
   }
 
   async render() {
-    colog("in manage match");
-    colog(window.store.gameStore.get().state);
+    // colog("in manage match");
+    // colog(window.store.gameStore.get().state);
     if (window.store.gameStore.get().state === "none") navigateToSite("/");
     if (window.store.gameStore.get().state === "matchmakingSuccessful") {
       window.store.gameStore.updateGameStateState(

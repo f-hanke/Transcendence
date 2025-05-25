@@ -7,6 +7,8 @@ import "../pages/matchMaking/TournamentItem.ts";
 import "../pages/matchMaking/OneVOneLocal.ts";
 import "../testing/TestPage.ts";
 import "../pages/UserSettings.ts";
+import "../pages/UserSettingsOther.ts";
+import "../pages/UserSettingsOwn.ts";
 import "../pages/CurrentTournament.ts";
 import "../pages/runMatch/RunMatch.ts";
 import "../pages/runMatch/ManageMatch.ts";
@@ -78,13 +80,13 @@ class AppRouter extends HTMLElement {
 
   async handleRouteChange() {
     const isAuthenticated = await AuthInterface.verify(true);
-    if (window.store.userStore.get().details.fetchNeeded) {
-      await UserInterface.getAllUserDetails(
-        window.store.userStore.get().details.id
-      );
-    }
     if (this.appRouterProtected.curRouteIsProtected()) {
       ChatInterface.connect();
+      if (window.store.userStore.get().details.fetchNeeded) {
+        await UserInterface.getAllUserDetails(
+          window.store.userStore.get().details.id
+        );
+      }
       this.appRouterProtected.handleRouteChange(isAuthenticated.ok);
       this.showProtectedAppRouter();
     } else {
