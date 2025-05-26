@@ -164,7 +164,11 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
         createdAt: new Date().toISOString()
       }
       publishMessage(tournamentToStore); // read by usersAndAuth
-      // TODO: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it?
+      // TODO: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it? For now just do it
+      await removeTournament(tournamentToHandle);
+      console.log("Tournament finished and stored in DB, removed from runtime and DB");
+      tournaments = tournaments.filter((t) => t.tournamentId !== tournamentToHandle.tournamentId); // remove from runtime
+      console.log("Removed tournament from runtime tournaments list: ", tournamentToHandle.tournamentId);
     }
     // for every update to a tournament, whether finished or not, send the updated tournament to chat-service
     let matchType = "";
@@ -470,6 +474,14 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
     else if (tournament.started === true)
     {
       // TODO: store any unfinished matches with opponent as winner
+      if (!tournament.matchBronze && !tournament.matchFinale) {
+        // generate a match result with the player leaving as loser
+        // schedule a bronzeMatch with the player leaving assigned? But what about score?
+      }
+      else {
+        // this means the player has already played in the semifinales, so we only need to generate a match result for either finale or bronze match 
+      }
+      // let Florian know?
     }
   } catch (err) {
     console.error("Error removing player from tournament:", err);
