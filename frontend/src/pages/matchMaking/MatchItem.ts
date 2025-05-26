@@ -48,7 +48,7 @@ class MatchItem extends HTMLElement {
   connectedCallback() {}
 
 render() {
-  const lang = window.store.languageStore.current.matchItem;
+  const lang = window.store.languageStore.state.matchItem;
 
   this.innerHTML = `
     <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg text-white">

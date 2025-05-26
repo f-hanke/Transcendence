@@ -30,7 +30,7 @@ class UserSettings extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(
       this.render.bind(this)
     );
-    const userId = window.store.userStore.get().details.otherUserId ?? window.store.userStore.get().details.id; 
+    const userId = window.store.userStore.get().details.otherUserId ?? window.store.userStore.get().details.id;
     UserInterface.getAllUserDetails(userId, true);
     UserInterface.getMatches(userId, false);
     UserInterface.getTournaments(userId);
@@ -48,21 +48,23 @@ class UserSettings extends HTMLElement {
       <div class="p-4 w-full h-full mx-auto bg-gray-800 text-white rounded-lg shadow-md">
         <h2 class="text-lg font-semibold mb-4">${window.store.languageStore.state.userSettings.userSettings}</h2>
         <div id="inputEditContainer"></div>
-      
+
         <div class="bg-gray-800" id="userFriends"></div>
         <div class="bg-gray-800" id="userMatchHistory"></div>
       </div>
     `;
 
-    const pwGuidlines = createHtmlElementFromString(`
-        <ul class="text-sm text-gray-400 list-disc pl-5 mb-4 space-y-1">
-            <li>Must be at least <span class="text-white font-medium">8 characters</span> long</li>
-            <li>Must not exceed <span class="text-white font-medium">256 characters</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">uppercase letter</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">lowercase letter</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">digit</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">special character</span></li>
-          </ul>`);
+  const guidelines = window.store.languageStore.state.register;
+  const pwGuidlines = createHtmlElementFromString(`
+    <ul class="text-sm text-gray-400 list-disc pl-5 mb-4 space-y-1">
+      <li>${guidelines.passwordRuleMinLength}</li>
+      <li>${guidelines.passwordRuleMaxLength}</li>
+      <li>${guidelines.passwordRuleUppercase}</li>
+      <li>${guidelines.passwordRuleLowercase}</li>
+      <li>${guidelines.passwordRuleDigit}</li>
+      <li>${guidelines.passwordRuleSpecialChar}</li>
+    </ul>
+  `);
 
     // (this.querySelector("#userFriends") as HTMLDivElement).innerHTML =
     //   this.renderFriends();
@@ -116,10 +118,10 @@ class UserSettings extends HTMLElement {
     <div>
       <div class="flex gap-2">
       <label class="block text-sm">Profile Picture</label>
-        <button id="saveBtnEditImage" title="Save">
+        <button id="saveBtnEditImage" title=${window.store.languageStore.state.register.save}>
           💾
         </button>
-        <button id="resetBtnEditImage" title="Reset">
+        <button id="resetBtnEditImage" title=${window.store.languageStore.state.register.reset}>
           🔄
         </button>
       </div>
@@ -197,7 +199,7 @@ class UserSettings extends HTMLElement {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
               message:
-                "The file you chose is too big! Please select a file smaller than 4 MB!",
+                "The file you chose is too big! Please select a file smaller than 4 MB!", //LEO
             });
             return;
           }
@@ -206,7 +208,7 @@ class UserSettings extends HTMLElement {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
               message:
-                "Only files with extensions 'jpg' or 'png' are supported!",
+                "Only files with extensions 'jpg' or 'png' are supported!", //LEO
             });
             return;
           }
@@ -231,7 +233,7 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: "Email updated successfully!",
+          message: "Email updated successfully!", //LEO
         });
         window.store.userStore.updateUserSettings({
           email: window.store.userStore.get().editState.email as string,
@@ -242,7 +244,7 @@ class UserSettings extends HTMLElement {
       } else {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `Couldn't update email! Reason: ${res.errorMessage}`,
+          message: `Couldn't update email! Reason: ${res.errorMessage}`, //LEO
         });
       }
     }
@@ -256,7 +258,7 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: "Password updated successfully!",
+          message: "Password updated successfully!", //LEO
         });
         const newState = {} as Partial<UserState["editState"]>;
         newState["displayName"] = undefined;
@@ -264,7 +266,7 @@ class UserSettings extends HTMLElement {
       } else {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `Couldn't update password! Reason: ${res.errorMessage}`,
+          message: `Couldn't update password! Reason: ${res.errorMessage}`, //LEO
         });
       }
     }
@@ -279,7 +281,7 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: "Displayname updated successfully!",
+          message: "Displayname updated successfully!", //LEO
         });
         window.store.userStore.updateUserSettings({
           displayName: window.store.userStore.get().editState
@@ -291,7 +293,7 @@ class UserSettings extends HTMLElement {
       } else {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `Couldn't update displayName! Reason: ${res.errorMessage}`,
+          message: `Couldn't update displayName! Reason: ${res.errorMessage}`, //LEO
         });
       }
     }
@@ -307,10 +309,10 @@ class UserSettings extends HTMLElement {
     <div>
       <div class="flex gap-2">
       <label class="block text-sm">${label}</label>
-        <button id="saveBtnEdit${which}" title="Save">
+        <button id="saveBtnEdit${which}" title=${window.store.languageStore.state.register.save}>
           💾
         </button>
-        <button id="resetBtnEdit${which}" title="Reset">
+        <button id="resetBtnEdit${which}" title=${window.store.languageStore.state.register.save}>
           🔄
         </button>
       </div>
@@ -403,7 +405,7 @@ class UserSettings extends HTMLElement {
         type: "localPvAi",
         tournament: false,
       },
-    ];
+    ]; //LEO CHANGE THE WIN ??
     return `
     <div class="mt-6">
       <h3 class="text-md font-semibold mb-2">Match History</h3>

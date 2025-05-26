@@ -63,14 +63,14 @@ render() {
         this.selectedTab === "userList" ? "" : "hidden"
       }">
         <div id="chatFriendsList">
-          <h2 class="text-lg font-bold py-4">${lang.friends}</h2>
+          <h2 class="text-lg font-bold py-4">${lang.sections.friends}</h2>
           <!-- Populate friend users here -->
         </div>
         <div id="chatOnlineUsersList">
-          <h2 class="text-lg font-bold py-4">${lang.online}</h2>
+          <h2 class="text-lg font-bold py-4">${lang.sections.online}</h2>
         </div>
         <div id="chatOfflineUsersList">
-          <h2 class="text-lg font-bold py-4">${lang.offline}</h2>
+          <h2 class="text-lg font-bold py-4">${lang.sections.offline}</h2>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ render() {
         this.selectedTab === "blocked" ? "" : "hidden"
       }">
         <div id="chatBlockedUsersList">
-          <h2 class="text-lg font-bold py-4">${lang.blockedUsers}</h2>
+          <h2 class="text-lg font-bold py-4">${lang.sections.blockedUsers}</h2>
         </div>
       </div>
 
@@ -88,10 +88,10 @@ render() {
         this.selectedTab === "friendRequests" ? "" : "hidden"
       }">
         <div id="chatFriendRequestListAnswer">
-          <h2 class="text-lg font-bold py-4">${lang.answerRequired}</h2>
+          <h2 class="text-lg font-bold py-4">${lang.sections.answerRequired}</h2>
         </div>
         <div id="chatFriendRequestListPending">
-          <h2 class="text-lg font-bold py-4">${lang.ownPending}</h2>
+          <h2 class="text-lg font-bold py-4">${lang.sections.ownPending}</h2>
         </div>
       </div>
     </div>

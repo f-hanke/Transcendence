@@ -43,6 +43,29 @@ type LanguageState = {
   waitingForHost: string,
   notParticipant: string
   },
+  register: {
+    title: string,
+    email: string,
+    displayName: string,
+    password: string,
+    confirmPassword: string,
+    submit: string,
+    alreadyRegistered: string,
+    testUsers: string,
+    passwordRuleMinLength: string,
+    passwordRuleMaxLength: string,
+    passwordRuleUppercase: string,
+    passwordRuleLowercase: string,
+    passwordRuleDigit: string,
+    passwordRuleSpecialChar: string,
+    errorPasswordMismatch: string,
+    success: string,
+    save: string,
+    reset: string,
+    matchHistory: string,
+    friends: string,
+    profilePicture: string,
+}
   oneVOneLocal: {
     player1: string;
     player2: string;
