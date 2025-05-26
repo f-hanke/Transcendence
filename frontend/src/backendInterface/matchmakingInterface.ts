@@ -1,6 +1,5 @@
 import {
   colog,
-  generateUniqueId,
   isDefined,
   isOwnTournament,
   jlog,

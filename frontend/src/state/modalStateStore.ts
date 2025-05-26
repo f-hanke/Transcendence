@@ -1,7 +1,5 @@
-import { ChatServiceTypes } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
 import { StoreCallback } from "./types";
-import { UserState } from "./userStateTypes";
 import { KeyDownCallback, ModalListenerState } from "./modalStateTypes";
 import { AllKeyboardKeyCodes } from "../utils/keycodesTypes";
 

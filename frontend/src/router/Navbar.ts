@@ -62,7 +62,7 @@ class Navbar extends HTMLElement {
             }</a>
           </li>
           <li>
-            <a href="/userSettings" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ ${
+            <a href="/userSettingsOwn" class="block p-2 rounded-lg hover:bg-gray-700">⚙️ ${
               window.store.languageStore.state.navbar.settings
             }</a>
           </li>

@@ -1,7 +1,5 @@
 import { isDefined } from "transcendence";
-import styles from "../../index.css?inline";
 import { AllKeyboardKeyCodes } from "../utils/keycodesTypes";
-import { createHtmlElementFromString } from "../utils/utils";
 import { KeyDownCallback } from "../state/modalStateTypes";
 
 class CentralModalListeners extends HTMLElement {
