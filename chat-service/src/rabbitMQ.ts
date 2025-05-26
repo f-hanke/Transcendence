@@ -1,32 +1,166 @@
 import amqp from 'amqplib';
 import { rabbitMQTypeGuards, RabbitMQTypes } from 'transcendence';
-import { db } from './server.js';
+import { db, sendToClient, updateUnreadMessages } from './server.js';
 import { databaseQuerys } from './databaseQuerys.js';
 import { matchmakingTypeGuards } from 'transcendence';
+import { MatchMakingTypes } from 'transcendence';
+import { GameResultTypes } from 'transcendence';
+import { match } from 'assert';
 
 const queue = 'auth-ChatService';
 const tournamentQueue = 'matchmaking-service-queue';
 
-// from auth service
-// const message = {
-// 	type: "updateUserDatabase",
-// 	data: {
-// 		id: string,
-// 		username: string,
-// 		smallimage: string,
-//   	}
-//   };
-
-//announce tournament matchup
-
 function	updateUserDatabase(msg: RabbitMQTypes.UserChange){
-	if (!rabbitMQTypeGuards.isUserChangeBody(msg))
-		console.error("Trying to updateUserDatabase with wrong data.");
 	console.log("update user db");
 	try {
 		db.prepare(databaseQuerys.updateUserDatabase).run(msg.id, msg.displayName, msg.smallImage);
 	} catch (err) {
 		console.error("DB error updating/inserting user db", err);
+	}
+}
+
+function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tournament){
+	let msg = "[Tournament Notification] - Match Result\n";
+
+	let matchResult: GameResultTypes.MatchResult | null;
+	switch (type) {
+		case "semifinale1":
+			matchResult = data.matchResultSemifinale1;
+			type = type.substring(0, 10);
+			break;
+		case "semifinale2":
+			matchResult = data.matchResultSemifinale2;
+			type = type.substring(0, 10);
+			break;
+		case "finale":
+			matchResult = data.matchResultFinale;
+			break;
+		case "bronze":
+			matchResult = data.matchResultBronze;
+			break;
+	}
+	msg += "Type: " + type + "\n";
+	msg += "Player1: " + matchResult!.player1Id + "\nPlayer2: " + matchResult!.player2Id + "\n";
+	msg += "Winner: " + matchResult!.winnerId;
+	return msg;
+}
+
+function	tournamentResultNotification(msg: MatchMakingTypes.TournamentNotification) {
+	const type = msg.updateForMatch;
+	const data = msg.tournamentData;
+	const players: string[] = [
+		data.player1Id,
+		data.player2Id,
+		data.player3Id,
+		data.player4Id
+	].filter((id): id is string => typeof id === 'string');
+
+	console.log("TYPE OF NOTIFICATION: ", type);
+	const message = generateTournamentMessage(type, data);
+	const date = new Date().toISOString().replace('T', ' ').substring(0, 19);
+	switch (type){
+		case "semifinale1":
+			console.log("Handling semifinal1 match logic");
+			players.forEach((player) => {
+				const notification = {
+					type: "sentMessage",
+					data: {
+						authorId: "0",
+						recipientId: player,
+						message: message,
+						date: date,
+						type: null,
+					},
+				} as const;
+				try {
+					const stmt = db.prepare(databaseQuerys.insertMessage).run("0", player, message, date, null);
+
+					console.log("Message inserted successfully");
+					updateUnreadMessages(player, "0", true);
+				} catch (err) {
+					console.error("DB error inserting message:", err);
+				}
+				sendToClient(player, notification);
+			});
+
+			break;
+		case "semifinale2":
+			console.log("Handling semifinal2 match logic");
+			players.forEach((player) => {
+				const notification = {
+					type: "sentMessage",
+					data: {
+						authorId: "0",
+						recipientId: player,
+						message: message,
+						date: date,
+						type: null,
+					},
+				} as const;
+				try {
+					const stmt = db.prepare(databaseQuerys.insertMessage).run("0", player, message, date, null);
+
+					console.log("Message inserted successfully");
+					updateUnreadMessages(player, "0", true);
+				} catch (err) {
+					console.error("DB error inserting message:", err);
+				}
+				sendToClient(player, notification);
+			});
+
+			break;
+
+		case "finale":
+			console.log("Handling final match logic");
+			players.forEach((player) => {
+				const notification = {
+					type: "sentMessage",
+					data: {
+						authorId: "0",
+						recipientId: player,
+						message: message,
+						date: date,
+						type: null,
+					},
+				} as const;
+				try {
+					const stmt = db.prepare(databaseQuerys.insertMessage).run("0", player, message, date, null);
+
+					console.log("Message inserted successfully");
+					updateUnreadMessages(player, "0", true);
+				} catch (err) {
+					console.error("DB error inserting message:", err);
+				}
+				sendToClient(player, notification);
+			});
+
+			break;
+
+		case "bronze":
+			console.log("Handling bronze match logic");
+			players.forEach((player) => {
+				const notification = {
+					type: "sentMessage",
+					data: {
+						authorId: "0",
+						recipientId: player,
+						message: message,
+						date: date,
+						type: null,
+					},
+				} as const;
+				try {
+					const stmt = db.prepare(databaseQuerys.insertMessage).run("0", player, message, date, null);
+
+					console.log("Message inserted successfully");
+					updateUnreadMessages(player, "0", true);
+				} catch (err) {
+					console.error("DB error inserting message:", err);
+				}
+				sendToClient(player, notification);
+			});
+
+			break;
 	}
 }
 
@@ -55,8 +189,10 @@ export async function startConsumer() {
 			if (rabbitMQTypeGuards.isUserChangeBody(message)) {
 				channel.ack(msg);
 				updateUserDatabase(message);
-			}else
+			}else {
 				console.error("Wrong data read from rabbitMQ : ChatService.");
+				channel.nack(msg, false, true);
+			}
 		}
 	});
 
@@ -68,29 +204,12 @@ export async function startConsumer() {
 			const message = JSON.parse(msg.content.toString());
 			if (matchmakingTypeGuards.isTournamentNotification(message)) {
 				channel.ack(msg);
-				// if (message.type === 'tournamentMatchup') {
-				// 	const tournamentMatchup = message.data;
-				// 	db.prepare(databaseQuerys.updateTournamentMatchup).run(
-				// 		tournamentMatchup.tournamentId,
-				// 		tournamentMatchup.matchSemifinale1,
-				// 		tournamentMatchup.matchSemifinale2,
-				// 		tournamentMatchup.matchFinale,
-				// 		tournamentMatchup.matchBronze
-				// 	);
-				// } else if (message.type === 'tournamentResult') {
-				// 	const tournamentResult = message.data;
-				// 	db.prepare(databaseQuerys.updateTournamentResult).run(
-				// 		tournamentResult.tournamentId,
-				// 		tournamentResult.rank1PlayerId,
-				// 		tournamentResult.rank2PlayerId,
-				// 		tournamentResult.rank3PlayerId,
-				// 		tournamentResult.rank4PlayerId
-				// 	);
-				// }
 				console.log("Received tournament notification:", message);
+				tournamentResultNotification(message);
 			} else {
 				console.error("Wrong data read from rabbitMQ : ChatService.");
-				channel.nack(msg);
+				console.log("Message: ", message)
+				channel.nack(msg, false, true);
 			}
 		}
 	});
