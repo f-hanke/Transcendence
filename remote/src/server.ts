@@ -479,7 +479,7 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
         // schedule a bronzeMatch with the player leaving assigned? But what about score?
       }
       else {
-        // this means the player has already played in the semifinales, so we only need to generate a match result for either finale or bronze match 
+        // this means the player has already played in the semifinales, so we only need to generate a match result for either finale or bronze match
       }
       // let Florian know?
     }
