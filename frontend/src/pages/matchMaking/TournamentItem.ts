@@ -35,7 +35,7 @@ class TournamentItem extends HTMLElement {
   connectedCallback() {}
 
   render() {
-  const lang = window.store.languageStore.state.tournamentItem; // récupère les traductions
+  const lang = window.store.languageStore.state.tournamentItem;
 
   this.innerHTML = `
     <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg text-white">

@@ -62,10 +62,11 @@ class ManageMatch extends HTMLElement {
   }
 
   renderWaitingServerStartModal() {
+    const lang = window.store.languageStore.state.manageMatch;
     const modal = createHtmlElementFromString(`
-      <central-modal-listeners>
-        <p>Waiting for Server to start game</p>
-        <p>Press 'n' to cancel game</p>
+    <central-modal-listeners>
+      <p>${lang.waitingServerStart || "Waiting for Server to start game"}</p>
+      <p>${lang.cancelKeyInstruction || "Press 'n' to cancel game"}</p>
       </central-modal-listeners>`) as CentralModalListeners;
     this.innerHTML = "";
     this.appendChild(modal);
@@ -76,10 +77,11 @@ class ManageMatch extends HTMLElement {
   }
 
   async renderWaitingClientStartModal() {
+    const lang = window.store.languageStore.state.manageMatch;
     const modal = createHtmlElementFromString(`
       <central-modal-listeners>
-        <p>Press 'y' when you are ready</p>
-        <p>Press 'n' to cancel game</p>
+      <p>${lang.cancelKeyInstruction || "Press 'n' to cancel game"}</p>
+      <p>${lang.readyKeyInstruction || "Press 'y' when you are ready"}</p>
       </central-modal-listeners>`) as CentralModalListeners;
       this.innerHTML = "";
       this.appendChild(modal);

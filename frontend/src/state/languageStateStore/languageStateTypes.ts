@@ -23,6 +23,26 @@ type LanguageState = {
     noMatchesAvailable: string;
     yourMatch: string;
   };
+    manageMatch: {
+    waitingServerStart: string;
+    cancelKeyInstruction: string;
+    readyKeyInstruction: string;
+  };
+   currentTournament: {
+  title: string,
+  rankings: string,
+  rank: string,
+  name: string,
+  getDataBtn: string,
+  toBeDetermined: string,
+  player1: string,
+  player2: string,
+  result: string,
+  winner: string,
+  createGame: string,
+  waitingForHost: string,
+  notParticipant: string
+  },
   oneVOneLocal: {
     player1: string;
     player2: string;
