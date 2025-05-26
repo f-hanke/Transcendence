@@ -42,8 +42,11 @@ export async function startConsumer() {
                 await updateUserTournamentRecords(message);
             else if (gameResultTypeGuards.isMatchResult(message))
                 await updateUserSimpleMatchRecords(message);
-            else if (matchmakingTypeGuards.isTournamentNotification(message))
+            if (matchmakingTypeGuards.isTournamentNotification(message)) {
                 console.log("Received tournament notification:", message, ", not for usersAndAuth service.");
+                channel.nack(msg, false, true);
+                return;
+            }
             else
                 console.error("Wrong data read from rabbitMQ in usersAndAuth service.");
             channel.ack(msg);

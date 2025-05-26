@@ -5,11 +5,9 @@ TODO:
 	noctification for Tournament
 	sql init scipt
 
-- Get Userinfo update from authService
-	userid
-	picture --> new db colume
-----> send Frontend image (Email still nessecery?)
-
+-Steffan frontend
+	-->Tournament noctification at top
+	---> client shouldnt be able to write to them
 
 - Tournament noctification with BOT
 
