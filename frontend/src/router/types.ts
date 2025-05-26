@@ -9,6 +9,8 @@ type Page =
   | "home-page"
   | "chat-layout"
   | "current-tournament"
+  | "user-settings-other"
+  | "user-settings-own"
   ;
 
 export type { Page };

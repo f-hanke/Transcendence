@@ -41,10 +41,11 @@ console.log("Loaded up following tournaments: ", tournaments);
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket>();
 
-const queue = 'matchMaking-results';
+// const queue = 'matchMaking-results';
+const queue = 'matchmaking-service-queue';
 
-async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult) {
-  if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message))
+async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult | MatchMakingTypes.TournamentNotification) {
+  if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message) && !matchmakingTypeGuards.isTournamentNotification(message))
     console.error("Trying to publish unknown type");
   let connection;
   try {
@@ -80,11 +81,19 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       // SCHEDULE FINAL MATCHES (if semifinals are done and final matches unscheduled)
       if (tournament.matchResultSemifinale1 && tournament.matchResultSemifinale2 && !tournament.matchFinale && !tournament.matchBronze) {
         try {
+          let finaleOpponentId: string | null = null;
+          let bronzeOpponentId: string | null = null;
+          finaleOpponentId = (tournament.matchResultSemifinale1.player1Id === matchResult.winnerId) ? tournament.matchResultSemifinale2.winnerId : tournament.matchResultSemifinale1.winnerId;
+          if (tournament.matchSemifinale1?.matchId === matchResult.matchId)
+            bronzeOpponentId = tournament.matchResultSemifinale2.player1Id === tournament.matchResultSemifinale2.winnerId ? tournament.matchResultSemifinale2.player2Id : tournament.matchResultSemifinale2.player1Id;
+          else
+            bronzeOpponentId = tournament.matchResultSemifinale1.player1Id === tournament.matchResultSemifinale1.winnerId ? tournament.matchResultSemifinale1.player2Id : tournament.matchResultSemifinale1.player1Id;
+
           let newMatchId: string = await Tournament.scheduleMatch(
             tournament.tournamentId as string,
             "matchFinale",
             matchResult.winnerId,
-            ""
+            finaleOpponentId as string
           );
           let newMatch: MatchMakingTypes.BasicGame = {
             matchId: newMatchId,
@@ -92,7 +101,7 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
             oponentId: null,
             tournamentId: tournament.tournamentId as string,
             type: "tournament",
-            invitedPlayerId: null
+            invitedPlayerId: finaleOpponentId as string
           };
           tournament.matchFinale = newMatch;
 
@@ -100,7 +109,7 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
             tournament.tournamentId as string,
             "matchBronze",
             matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
-            ""
+            bronzeOpponentId as string
           );
           newMatch = {
             matchId: newMatchId,
@@ -108,32 +117,16 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
             oponentId: null,
             tournamentId: tournament.tournamentId as string,
             type: "tournament",
-            invitedPlayerId: null
+            invitedPlayerId: bronzeOpponentId as string
           };
           tournament.matchBronze = newMatch;
 
-          let finaleOpponentId: string | null = null;
-          let bronzeOpponentId: string | null = null;
-          finaleOpponentId = (tournament.matchResultSemifinale1.player1Id === matchResult.winnerId) ? tournament.matchResultSemifinale2.winnerId : tournament.matchResultSemifinale1.winnerId;
-          if (tournament.matchSemifinale1?.matchId === matchResult.matchId)
-            bronzeOpponentId = tournament.matchResultSemifinale2.player1Id === matchResult.winnerId ? tournament.matchResultSemifinale2.player2Id : tournament.matchResultSemifinale2.player1Id;
-          else
-            bronzeOpponentId = tournament.matchResultSemifinale1.player1Id === matchResult.winnerId ? tournament.matchResultSemifinale1.player2Id : tournament.matchResultSemifinale1.player1Id;
+          // console.log("Scheduled final matches: ", tournament);
 
-          await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchFinale", finaleOpponentId as string);
-          tournament.matchFinale.invitedPlayerId = matchResult.winnerId;
-          await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchBronze", bronzeOpponentId as string);
-          tournament.matchBronze.invitedPlayerId = matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id;
         } catch (err) {
           console.error("Error scheduling final matches:", err);
         }
       }
-      // if (tournament.matchFinale && tournament.matchBronze && !tournament.matchFinale.hostId) {
-      //   await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchFinale", matchResult.winnerId);
-      //   tournament.matchFinale.invitedPlayerId = matchResult.winnerId;
-      //   await Tournament.addOpponentToMatch(tournament.tournamentId as string, matchResult.matchId, "matchBronze", matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id);
-      //   tournament.matchBronze.invitedPlayerId = matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id;
-      // }
       break;
     }
     else if (tournament.matchFinale?.matchId === matchResult.matchId) {
@@ -173,6 +166,22 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       publishMessage(tournamentToStore); // read by usersAndAuth
       // TODO: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it?
     }
+    // for every update to a tournament, whether finished or not, send the updated tournament to chat-service
+    let matchType = "";
+      if (matchResult.matchId === tournamentToHandle.matchSemifinale1?.matchId)
+        matchType = "semifinale1";
+      else if (matchResult.matchId === tournamentToHandle.matchSemifinale2?.matchId)
+        matchType = "semifinale2";
+      else if (matchResult.matchId === tournamentToHandle.matchFinale?.matchId)
+        matchType = "finale";
+      else if (matchResult.matchId === tournamentToHandle.matchBronze?.matchId)
+        matchType = "bronze";
+      let tournamentNotification: MatchMakingTypes.TournamentNotification = {
+        updateForMatch: matchType,
+        tournamentData: tournamentToHandle
+      } as MatchMakingTypes.TournamentNotification;
+      publishMessage(tournamentNotification); // read by chat-service
+      console.log("Tournament state published to chat-service: ", tournamentToHandle);
   }
   else {
     console.log("Tournament not found for matchId", matchResult.matchId, ", processing as a simple match");

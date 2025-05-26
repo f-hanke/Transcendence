@@ -26,13 +26,22 @@ class ManageMatch extends HTMLElement {
   }
 
   disconnectedCallback() {
+    // colog("DISCONNECTED cALLBACK cALLEd");
+
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     if (this.unsubscribeGameState) this.unsubscribeGameState();
     if (window.store.gameStore.get().state === "running") this.leaveGame();
-    window.store.gameStore.reset();
+    if (!(["matchmakingSuccessful", "waitingForClientReady"].includes(window.store.gameStore.get().state)))
+    {
+      // colog("reset");
+      // colog(window.store.gameStore.get().state);
+      window.store.gameStore.reset();
+    }
   }
 
   async render() {
+    // colog("in manage match");
+    // colog(window.store.gameStore.get().state);
     if (window.store.gameStore.get().state === "none") navigateToSite("/");
     if (window.store.gameStore.get().state === "matchmakingSuccessful") {
       window.store.gameStore.updateGameStateState(
@@ -62,45 +71,45 @@ class ManageMatch extends HTMLElement {
   }
 
   renderWaitingServerStartModal() {
-    const lang = window.store.languageStore.state.manageMatch;
+    window.store.modalStore.updateAddKeyDownCallback(
+      "KeyN",
+      this.leaveGame.bind(this)
+    );
+    window.store.modalStore.updateSetContent([
+      "Waiting for Server to start game",
+      "Press 'n' to cancel game",
+    ]);
+    window.store.modalStore.updateSetOpen();
     const modal = createHtmlElementFromString(`
-    <central-modal-listeners>
-      <p>${lang.waitingServerStart || "Waiting for Server to start game"}</p>
-      <p>${lang.cancelKeyInstruction || "Press 'n' to cancel game"}</p>
-      </central-modal-listeners>`) as CentralModalListeners;
-    this.innerHTML = "";
+      <central-modal-listeners></central-modal-listeners>`) as CentralModalListeners;
+    // this.innerHTML = "";
     this.appendChild(modal);
-    modal.open();
-    modal.setKeyListener({
-      KeyN: this.leaveGame.bind(this),
-    });
   }
 
   async renderWaitingClientStartModal() {
-    const lang = window.store.languageStore.state.manageMatch;
+    window.store.modalStore.updateAddKeyDownCallback("KeyY", () => {
+      window.store.gameStore.updateGameStateState("waitingForServerStart");
+      GameServiceInterface.sendMessageToServer({
+        type: "clientIsReady",
+        data: {
+          clientId: window.store.userStore.get().details.id,
+          matchId: window.store.gameStore.get().matchId,
+        },
+      });
+    });
+    window.store.modalStore.updateAddKeyDownCallback(
+      "KeyN",
+      this.leaveGame.bind(this)
+    );
+    window.store.modalStore.updateSetContent([
+      "Press 'y' when you are ready",
+      "Press 'n' to cancel game",
+    ]);
+    window.store.modalStore.updateSetOpen();
     const modal = createHtmlElementFromString(`
-      <central-modal-listeners>
-      <p>${lang.cancelKeyInstruction || "Press 'n' to cancel game"}</p>
-      <p>${lang.readyKeyInstruction || "Press 'y' when you are ready"}</p>
-      </central-modal-listeners>`) as CentralModalListeners;
-      this.innerHTML = "";
-      this.appendChild(modal);
-      modal.ready.then(() => {
-        modal.open();
-        modal.setKeyListener({
-          KeyY: () => {
-            window.store.gameStore.updateGameStateState("waitingForServerStart");
-            GameServiceInterface.sendMessageToServer({
-              type: "clientIsReady",
-              data: {
-                clientId: window.store.userStore.get().details.id,
-                matchId: window.store.gameStore.get().matchId,
-              },
-            });
-          },
-          KeyN: this.leaveGame.bind(this),
-        });
-      })
+      <central-modal-listeners></central-modal-listeners>`) as CentralModalListeners;
+    // this.innerHTML = "";
+    this.appendChild(modal);
   }
 
   renderRunningGame() {

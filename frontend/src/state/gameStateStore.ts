@@ -78,7 +78,7 @@ class GameStateStore {
     if (updateListeners) this.updateListenersOnChange();
   }
 
-  updateMatchMakingSuccessful(data: UpdateOnSuccessfullMatchmaking) {
+  updateMatchMakingSuccessful(data: UpdateOnSuccessfullMatchmaking, update?: boolean) {
     this.state.paddleLeft.playerId = data.playerLeftPaddleId;
     this.state.paddleRight.playerId = data.playerRightPaddleId;
     this.state.hostId = data.hostId;
@@ -100,11 +100,13 @@ class GameStateStore {
     );
     if (isDefined(data.matchId)) this.state.matchId = data.matchId;
     if (isDefined(data.typeOfGame)) this.state.typeOfGame = data.typeOfGame;
+    if (update === false) return;
     this.updateListenersOnChange();
   }
 
-  updateGameStateTypeOfGame(newState: GameTypeOfGame) {
+  updateGameStateTypeOfGame(newState: GameTypeOfGame, update?: boolean) {
     this.state.typeOfGame = newState;
+    if (update === false) return;
     this.updateListenersOnChange();
   }
 
@@ -133,11 +135,12 @@ class GameStateStore {
         : newState.player1;
     this.getPaddleByPlayerId(newOponentPaddle.id).paddleY =
       newOponentPaddle.paddleY + gameSettings.bumperHeight;
-    this.getPaddleByPlayerId(newState.player1.id).score = newState.player1.score;
-    this.getPaddleByPlayerId(newState.player2.id).score = newState.player2.score;
+    this.getPaddleByPlayerId(newState.player1.id).score =
+      newState.player1.score;
+    this.getPaddleByPlayerId(newState.player2.id).score =
+      newState.player2.score;
     this.updateListenersOnChange();
   }
-
 
   updateBallPositionNBothPaddles(
     newState: GameServiceTypes.DataServerUpdateGameState
@@ -156,8 +159,10 @@ class GameStateStore {
       newOponentPaddle.paddleY + gameSettings.bumperHeight;
     this.getPaddleByPlayerId(newOwnPaddle.id).paddleY =
       newOwnPaddle.paddleY + gameSettings.bumperHeight;
-    this.getPaddleByPlayerId(newState.player1.id).score = newState.player1.score;
-    this.getPaddleByPlayerId(newState.player2.id).score = newState.player2.score;
+    this.getPaddleByPlayerId(newState.player1.id).score =
+      newState.player1.score;
+    this.getPaddleByPlayerId(newState.player2.id).score =
+      newState.player2.score;
     this.updateListenersOnChange();
   }
 

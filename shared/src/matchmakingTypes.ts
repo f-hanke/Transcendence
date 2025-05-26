@@ -29,6 +29,11 @@ declare namespace MatchMakingTypes {
     playedAt: string | null;
   };
 
+  type TournamentNotification = {
+    tournamentData: Tournament;
+    updateForMatch: UpdateForMatch;
+  }
+
   type RawDBMatch = {
     id: string;
     player1Id: string;
@@ -65,6 +70,7 @@ declare namespace MatchMakingTypes {
 
   type PlayerKey = "player1Id" | "player2Id" | "player3Id" | "player4Id";
   type MatchKey = "matchSemifinale1" | "matchSemifinale2" | "matchFinale" | "matchBronze";
+  type UpdateForMatch = "semifinale1" | "semifinale2" | "finale" | "bronze";
 
   type BasicGameFull = Omit<BasicGame, "oponentId"> & { oponentId: string };
   type TournamentFull = Omit<Tournament, "player1Id" | "player2Id" | "player3Id" | "player4Id"> & {
@@ -304,7 +310,27 @@ function isTournament(obj: any): obj is MatchMakingTypes.Tournament {
     (typeof obj.player1Id === "string" || obj.player1Id === null) &&
     (typeof obj.player2Id === "string" || obj.player2Id === null) &&
     (typeof obj.player3Id === "string" || obj.player3Id === null) &&
-    (typeof obj.player4Id === "string" || obj.player4Id === null)
+    (typeof obj.player4Id === "string" || obj.player4Id === null) &&
+    (typeof obj.matchSemifinale1 === "object" || obj.matchSemifinale1 === null) &&
+    (typeof obj.matchSemifinale2 === "object" || obj.matchSemifinale2 === null) &&
+    (typeof obj.matchFinale === "object" || obj.matchFinale === null) &&
+    (typeof obj.matchBronze === "object" || obj.matchBronze === null) &&
+    (typeof obj.matchResultSemifinale1 === "object" || obj.matchResultSemifinale1 === null) &&
+    (typeof obj.matchResultSemifinale2 === "object" || obj.matchResultSemifinale2 === null) &&
+    (typeof obj.matchResultFinale === "object" || obj.matchResultFinale === null) &&
+    (typeof obj.matchResultBronze === "object" || obj.matchResultBronze === null) &&
+    (typeof obj.started === "boolean") &&
+    (typeof obj.playedAt === "string" || obj.playedAt === null)
+  );
+}
+
+function isTournamentNotification(obj: any): obj is MatchMakingTypes.TournamentNotification {
+  return (
+    typeof obj === "object" && obj !== null &&
+    (typeof obj.tournamentData === "object" && obj.tournamentData !== null) &&
+    isTournament(obj.tournamentData) &&
+    (typeof obj.updateForMatch === "string" && obj.updateForMatch !== null) &&
+    ["semifinale1", "semifinale2", "finale", "bronze"].includes(obj.updateForMatch)
   );
 }
 
@@ -405,6 +431,8 @@ const matchmakingTypeGuards = {
   isClientDeleteTournament,
   isServerStartTournament,
   isServerUpdateOneTournament,
+  isTournament,
+  isTournamentNotification,
 } as const;
 
 export { MatchMakingTypes, matchmakingTypeGuards };

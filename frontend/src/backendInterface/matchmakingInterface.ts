@@ -1,6 +1,5 @@
 import {
   colog,
-  generateUniqueId,
   isDefined,
   isOwnTournament,
   jlog,
@@ -174,6 +173,7 @@ class MatchMakingInterface {
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
+    window.store.gameStore.updateGameStateState("matchmakingSuccessful");
     const isSelfHosted =
       dataJson.data.hostId === window.store.userStore.get().details.id;
     window.store.gameStore.updateMatchMakingSuccessful({
@@ -184,8 +184,7 @@ class MatchMakingInterface {
       playerLeftPaddleId: dataJson.data.hostId,
       playerRightPaddleId: dataJson.data.oponentId,
     });
-    window.store.gameStore.updateGameStateTypeOfGame("remote");
-    window.store.gameStore.updateGameStateState("matchmakingSuccessful");
+    window.store.gameStore.updateGameStateTypeOfGame("remote", false);
   }
 
   static handleServerUpdateOneGame(

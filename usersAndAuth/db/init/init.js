@@ -42,10 +42,10 @@ import { db } from '../db.js';
     db.exec(`
       CREATE TABLE IF NOT EXISTS tournaments (
         id TEXT NOT NULL PRIMARY KEY,
-        playerRank1Id TEXT NOT NULL,
-        playerRank2Id TEXT NOT NULL,
-        playerRank3Id TEXT NOT NULL,
-        playerRank4Id TEXT NOT NULL,
+        rank1PlayerId TEXT NOT NULL,
+        rank2PlayerId TEXT NOT NULL,
+        rank3PlayerId TEXT NOT NULL,
+        rank4PlayerId TEXT NOT NULL,
         matchSemifinale1Id TEXT NOT NULL,
         matchSemifinale2Id TEXT NOT NULL,
         matchFinaleId TEXT NOT NULL,

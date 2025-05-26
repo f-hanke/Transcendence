@@ -111,6 +111,7 @@ render() {
     MatchMakingInterface.sendMessageToServer({
       type: "joinGame",
       data: {
+        // to do here: set invited playeris, tournament id and type of game
         matchId: this.matchId as string,
         hostId: this.hostId as string,
         oponentId: window.store.userStore.get().details.id,

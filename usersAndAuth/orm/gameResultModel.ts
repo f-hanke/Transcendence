@@ -62,7 +62,7 @@ const GameResultModel = {
     recordNewTournament: async (tournamentData: GameResultTypes.TournamentResult) => {
         try {
             db.prepare(`
-                INSERT INTO tournaments (id, player1Id, player2Id, player3Id, player4Id, matchSemifinale1, matchSemifinale2, matchFinale, matchBronze, createdAt)
+                INSERT INTO tournaments (id, rank1PlayerId, rank2PlayerId, rank3PlayerId, rank4PlayerId, matchSemifinale1Id, matchSemifinale2Id, matchFinaleId, matchBronzeId, createdAt)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(
                 tournamentData.tournamentId,

@@ -3,6 +3,7 @@ import { ChatUserStateStore } from "./chatUserStateStore";
 import { GameStateStore } from "./gameStateStore";
 import { LanguageStateStore } from "./languageStateStore/languageStateStore";
 import { MatchmakingStateStore } from "./matchmakingStateStore";
+import { ModalStateStore } from "./modalStateStore";
 import { NotificationStateStore } from "./notificationStateStore";
 import { OneVOneLocalStateStore } from "./oneVOneLocalStateStore";
 import { PlayerNamesStateStore } from "./playerNamesStateStore";
@@ -22,6 +23,7 @@ class Store {
   chatUserStore: ChatUserStateStore;
   currentTournamentStore: TournamentStateStore;
   playerNamesStore: PlayerNamesStateStore;
+  modalStore: ModalStateStore;
   constructor() {
     this.userStore = new UserStateStore();
     this.gameStore = new GameStateStore();
@@ -34,6 +36,22 @@ class Store {
     this.chatUserStore = new ChatUserStateStore();
     this.currentTournamentStore = new TournamentStateStore();
     this.playerNamesStore = new PlayerNamesStateStore();
+    this.modalStore = new ModalStateStore();
+  }
+
+  reset()
+  {
+    this.userStore.init();
+    this.gameStore.init();
+    this.notificationStore.init();
+    this.matchmakingStore.init();
+    this.oneVOneLocalStore.init();
+    this.registerStore.init();
+    this.chatMessageStore.init();
+    this.chatUserStore.init();
+    this.currentTournamentStore.init();
+    this.playerNamesStore.init();
+    this.modalStore.reset();
   }
 
 }

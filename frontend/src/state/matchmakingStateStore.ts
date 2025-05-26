@@ -1,6 +1,5 @@
 import {
   isDefined,
-  jlog,
   MatchMakingTypes,
   tournamentIsEmpty,
   tournamentIsFull,

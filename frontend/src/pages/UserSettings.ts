@@ -30,6 +30,10 @@ class UserSettings extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(
       this.render.bind(this)
     );
+    const userId = window.store.userStore.get().details.otherUserId ?? window.store.userStore.get().details.id; 
+    UserInterface.getAllUserDetails(userId, true);
+    UserInterface.getMatches(userId, false);
+    UserInterface.getTournaments(userId);
   }
 
   disconnectedCallback() {
@@ -38,17 +42,30 @@ class UserSettings extends HTMLElement {
   }
 
   render() {
+    const ownSettingsPage = window.store.userStore.get().details.otherUserId === null;
+
     this.innerHTML = `
       <div class="p-4 w-full h-full mx-auto bg-gray-800 text-white rounded-lg shadow-md">
         <h2 class="text-lg font-semibold mb-4">${window.store.languageStore.state.userSettings.userSettings}</h2>
         <div id="inputEditContainer"></div>
+      
         <div class="bg-gray-800" id="userFriends"></div>
         <div class="bg-gray-800" id="userMatchHistory"></div>
       </div>
     `;
 
-    (this.querySelector("#userFriends") as HTMLDivElement).innerHTML =
-      this.renderFriends();
+    const pwGuidlines = createHtmlElementFromString(`
+        <ul class="text-sm text-gray-400 list-disc pl-5 mb-4 space-y-1">
+            <li>Must be at least <span class="text-white font-medium">8 characters</span> long</li>
+            <li>Must not exceed <span class="text-white font-medium">256 characters</span></li>
+            <li>Must contain at least one <span class="text-white font-medium">uppercase letter</span></li>
+            <li>Must contain at least one <span class="text-white font-medium">lowercase letter</span></li>
+            <li>Must contain at least one <span class="text-white font-medium">digit</span></li>
+            <li>Must contain at least one <span class="text-white font-medium">special character</span></li>
+          </ul>`);
+
+    // (this.querySelector("#userFriends") as HTMLDivElement).innerHTML =
+    //   this.renderFriends();
     (this.querySelector("#userMatchHistory") as HTMLDivElement).innerHTML =
       this.renderMatchHistory();
 
@@ -56,29 +73,42 @@ class UserSettings extends HTMLElement {
       "#inputEditContainer"
     ) as HTMLDivElement;
 
-    inputEditContainer.appendChild(this.renderProfileImage());
+    inputEditContainer.appendChild(this.renderProfileImage(ownSettingsPage));
 
     inputEditContainer.appendChild(
       this.renderOneInput(
         "displayName",
-        window.store.languageStore.state.userSettings.displayName
+        window.store.languageStore.state.userSettings.displayName,
+        this.saveDisplayName,
+        ownSettingsPage
       )
     );
     inputEditContainer.appendChild(
       this.renderOneInput(
         "email",
-        window.store.languageStore.state.userSettings.email
+        window.store.languageStore.state.userSettings.email,
+        this.saveEmail,
+        ownSettingsPage
       )
     );
-    inputEditContainer.appendChild(
-      this.renderOneInput(
-        "password",
-        window.store.languageStore.state.userSettings.password
-      )
-    );
+
+    if (ownSettingsPage) {
+      inputEditContainer.appendChild(
+        this.renderOneInput(
+          "password",
+          window.store.languageStore.state.userSettings.password,
+          this.savePassword,
+          ownSettingsPage
+        )
+      );
+      inputEditContainer.appendChild(pwGuidlines);
+    }
   }
 
-  renderProfileImage() {
+  renderProfileImage(ownSettingsPage: boolean) {
+    const classWhenOwnSettings = ownSettingsPage ?
+    "cursor-pointer hover:opacity-80 transition duration-300"
+    : ""
     const imageToRender =
       window.store.userStore.get().editState.image ??
       window.store.userStore.get().details.image;
@@ -94,10 +124,10 @@ class UserSettings extends HTMLElement {
         </button>
       </div>
         <div class="flex flex-col mb-4">
-            <img id="profileImage" src="${getImgSrcFromBuffer(imageToRender)}" 
-              class="cursor-pointer w-full max-w-xl border border-gray-600 hover:opacity-80 transition duration-300" 
+            <img id="profileImage" src="${getImgSrcFromBuffer(imageToRender)}"
+              class=" w-full max-w-xl border border-gray-600  ${classWhenOwnSettings}"
               title="Click to change profile picture"/>
-          <input type="file" id="imageUpload" class="hidden" 
+          <input type="file" id="imageUpload" class="hidden"
           accept="image/png, image/jpeg">
       </div>
     </div>
@@ -110,86 +140,169 @@ class UserSettings extends HTMLElement {
       `#resetBtnEditImage`
     ) as HTMLButtonElement;
 
-    if (!isDefined(window.store.userStore.get().editState.image)) {
+    if (ownSettingsPage) {
+      if (!isDefined(window.store.userStore.get().editState.image)) {
+        saveBtn.classList.add("hidden");
+        resetBtn.classList.add("hidden");
+      }
+
+      resetBtn.addEventListener("click", () => {
+        const newState = {} as Partial<UserState["editState"]>;
+        newState.image = null;
+        window.store.userStore.updateSetEditState(newState);
+      });
+
+      saveBtn.addEventListener("click", async () => {
+        const newImage = window.store.userStore.get().editState.image;
+        if (isDefined(newImage)) {
+          const res = await UserInterface.updateUserImage({
+            image: newImage,
+          });
+          if (res.ok) {
+            window.store.notificationStore.updateAddNotification({
+              id: generateUniqueId(),
+              message: "Profile picture updated successfully!",
+            });
+            window.store.userStore.updateUserImage(newImage);
+          } else {
+            window.store.notificationStore.updateAddNotification({
+              id: generateUniqueId(),
+              message: `Couldn't update profile picture! Reason: ${res.errorMessage}`,
+            });
+          }
+        }
+        const newState = {} as Partial<UserState["editState"]>;
+        newState["image"] = null;
+        window.store.userStore.updateSetEditState(newState);
+      });
+
+      const profileImage = htmlElem.querySelector(
+        "#profileImage"
+      ) as HTMLImageElement;
+
+      profileImage.addEventListener("click", (event) => {
+        event.preventDefault();
+        (this.querySelector("#imageUpload") as HTMLLabelElement).click();
+      });
+
+      htmlElem
+        .querySelector("#imageUpload")
+        ?.addEventListener("change", async function (event) {
+          const maxFileSize = 1024 * 1024 * 4;
+          const input = event.target as HTMLInputElement;
+          // to do, only allow certain file extensions
+          if (!input || !input.files || input.files.length === 0) return;
+          const file = input.files[0];
+          if (file.size > maxFileSize) {
+            window.store.notificationStore.updateAddNotification({
+              id: generateUniqueId(),
+              message:
+                "The file you chose is too big! Please select a file smaller than 4 MB!",
+            });
+            return;
+          }
+          const extension = file.name.split(".").pop()?.toLowerCase();
+          if (!extension || !["jpg", "jpeg", "png"].includes(extension)) {
+            window.store.notificationStore.updateAddNotification({
+              id: generateUniqueId(),
+              message:
+                "Only files with extensions 'jpg' or 'png' are supported!",
+            });
+            return;
+          }
+          const fileAsBufferLike = await fileToBufferLike(file);
+          window.store.userStore.updateSetEditState({
+            image: fileAsBufferLike,
+          });
+        });
+    } else {
       saveBtn.classList.add("hidden");
       resetBtn.classList.add("hidden");
     }
 
-    resetBtn.addEventListener("click", () => {
-      const newState = {} as Partial<UserState["editState"]>;
-      newState.image = null;
-      window.store.userStore.updateSetEditState(newState);
-    });
-
-    saveBtn.addEventListener("click", async () => {
-      const newImage = window.store.userStore.get().editState.image;
-      if (isDefined(newImage)) {
-        const res = await UserInterface.updateUserImage({
-           image: newImage
-        });
-        if (res.ok) {
-          window.store.notificationStore.updateAddNotification({
-            id: generateUniqueId(),
-            message: "Profile picture updated successfully!",
-          });
-          window.store.userStore.updateUserImage(newImage);
-        } else {
-          window.store.notificationStore.updateAddNotification({
-            id: generateUniqueId(),
-            message: `Couldn't update profile picture! Reason: ${res.errorMessage}`,
-          });
-        }
-      }
-      const newState = {} as Partial<UserState["editState"]>;
-      newState["image"] = null;
-      window.store.userStore.updateSetEditState(newState);
-    });
-
-    const profileImage = htmlElem.querySelector(
-      "#profileImage"
-    ) as HTMLImageElement;
-
-    profileImage.addEventListener("click", (event) => {
-      event.preventDefault();
-      (this.querySelector("#imageUpload") as HTMLLabelElement).click();
-    });
-
-    htmlElem
-      .querySelector("#imageUpload")
-      ?.addEventListener("change", async function (event) {
-        const maxFileSize = 1024 * 1024 * 4;
-        const input = event.target as HTMLInputElement;
-        // to do, only allow certain file extensions
-        if (!input || !input.files || input.files.length === 0) return;
-        const file = input.files[0];
-        if (file.size > maxFileSize) {
-          window.store.notificationStore.updateAddNotification({
-            id: generateUniqueId(),
-            message:
-              "The file you chose is too big! Please select a file smaller than 4 MB!",
-          });
-          return;
-        }
-        const extension = file.name.split('.').pop()?.toLowerCase();
-        if(!extension || !(["jpg", "png",].includes(extension)))
-        {
-          window.store.notificationStore.updateAddNotification({
-            id: generateUniqueId(),
-            message:
-              "Only files with extensions 'jpg' or 'png' are supported!",
-          });
-          return;
-        }
-        const fileAsBufferLike = await fileToBufferLike(file);
-        window.store.userStore.updateSetEditState({
-          image: fileAsBufferLike,
-        });
-      });
-
     return htmlElem;
   }
 
-  renderOneInput(which: keyof EditableFields, label: string) {
+  async saveEmail() {
+    if (isDefined(window.store.userStore.get().editState.email)) {
+      const res = await UserInterface.updateUserEmail({
+        email: window.store.userStore.get().editState.email as string,
+      });
+      if (res.ok) {
+        window.store.notificationStore.updateAddNotification({
+          id: generateUniqueId(),
+          message: "Email updated successfully!",
+        });
+        window.store.userStore.updateUserSettings({
+          email: window.store.userStore.get().editState.email as string,
+        });
+        const newState = {} as Partial<UserState["editState"]>;
+        newState["displayName"] = undefined;
+        window.store.userStore.updateSetEditState(newState);
+      } else {
+        window.store.notificationStore.updateAddNotification({
+          id: generateUniqueId(),
+          message: `Couldn't update email! Reason: ${res.errorMessage}`,
+        });
+      }
+    }
+  }
+
+  async savePassword() {
+    if (isDefined(window.store.userStore.get().editState.password)) {
+      const res = await UserInterface.updateUserPassword({
+        password: window.store.userStore.get().editState.password as string,
+      });
+      if (res.ok) {
+        window.store.notificationStore.updateAddNotification({
+          id: generateUniqueId(),
+          message: "Password updated successfully!",
+        });
+        const newState = {} as Partial<UserState["editState"]>;
+        newState["displayName"] = undefined;
+        window.store.userStore.updateSetEditState(newState);
+      } else {
+        window.store.notificationStore.updateAddNotification({
+          id: generateUniqueId(),
+          message: `Couldn't update password! Reason: ${res.errorMessage}`,
+        });
+      }
+    }
+  }
+
+  async saveDisplayName() {
+    if (isDefined(window.store.userStore.get().editState.displayName)) {
+      const res = await UserInterface.updateDisplayName({
+        displayName: window.store.userStore.get().editState
+          .displayName as string,
+      });
+      if (res.ok) {
+        window.store.notificationStore.updateAddNotification({
+          id: generateUniqueId(),
+          message: "Displayname updated successfully!",
+        });
+        window.store.userStore.updateUserSettings({
+          displayName: window.store.userStore.get().editState
+            .displayName as string,
+        });
+        const newState = {} as Partial<UserState["editState"]>;
+        newState["displayName"] = undefined;
+        window.store.userStore.updateSetEditState(newState);
+      } else {
+        window.store.notificationStore.updateAddNotification({
+          id: generateUniqueId(),
+          message: `Couldn't update displayName! Reason: ${res.errorMessage}`,
+        });
+      }
+    }
+  }
+
+  renderOneInput(
+    which: keyof EditableFields,
+    label: string,
+    saveFunc: () => {},
+    ownSettingsPage: boolean
+  ) {
     const htmlElem = createHtmlElementFromString(`
     <div>
       <div class="flex gap-2">
@@ -204,7 +317,10 @@ class UserSettings extends HTMLElement {
         <input type="text" id="input${which}" value="${
       window.store.userStore.get().editState[which] ??
       window.store.userStore.get().details[which]
-    }" class="w-full p-2 mb-3 rounded bg-gray-700 text-white border border-gray-600">
+    }" class="w-full p-2 mb-3 rounded bg-gray-700 text-white border border-gray-600 ${ownSettingsPage ? "" : "pointer-events-none select-none cursor-default"}"
+    ${ownSettingsPage ?  "": "readonly"}
+    ${ownSettingsPage ? "" : 'onfocus="this.blur();"'}
+    >
       </div>
     `);
 
@@ -215,50 +331,49 @@ class UserSettings extends HTMLElement {
       `#resetBtnEdit${which}`
     ) as HTMLButtonElement;
 
-    if (!isDefined(window.store.userStore.get().editState[which])) {
+    if (ownSettingsPage) {
+      if (!isDefined(window.store.userStore.get().editState[which])) {
+        saveBtn.classList.add("hidden");
+        resetBtn.classList.add("hidden");
+      }
+
+      resetBtn.addEventListener("click", () => {
+        const newState = {} as Partial<UserState["editState"]>;
+        newState[which] = undefined;
+        window.store.userStore.updateSetEditState(newState);
+      });
+
+      saveBtn.addEventListener("click", async () => {
+        saveFunc();
+      });
+
+      const inputElem = htmlElem.querySelector(
+        `#input${which}`
+      ) as HTMLInputElement;
+      let debounceTimeout: number | null = null;
+
+      inputElem.addEventListener("input", () => {
+        if (debounceTimeout) clearTimeout(debounceTimeout);
+        debounceTimeout = window.setTimeout(() => {
+          const newState = {} as EditableFields;
+          newState[which] = sanitizeAndCleanInput(inputElem.value.trim());
+          window.store.userStore.updateSetEditState(newState);
+          window.setTimeout(() => {
+            (
+              document.querySelector(`#input${which}`) as HTMLInputElement
+            ).focus();
+          }, 0);
+        }, 500);
+      });
+      inputElem.addEventListener("focus", () => {
+        const length = inputElem.value.length;
+        inputElem.setSelectionRange(length, length);
+      });
+    } else {
       saveBtn.classList.add("hidden");
       resetBtn.classList.add("hidden");
     }
 
-    resetBtn.addEventListener("click", () => {
-      const newState = {} as Partial<UserState["editState"]>;
-      newState[which] = undefined;
-      window.store.userStore.updateSetEditState(newState);
-    });
-
-    saveBtn.addEventListener("click", async () => {
-      // const res = await UserInterface.updateDisplayName({
-      //   displayName:  window.store.userStore.get().editState.displayName as string
-      // });
-      // colog("dipslayNameUpdate");
-      // colog(res);
-      const newState = {} as Partial<UserState["editState"]>;
-      newState[which] = undefined;
-      window.store.userStore.updateSetEditState(newState);
-    });
-
-    const inputElem = htmlElem.querySelector(
-      `#input${which}`
-    ) as HTMLInputElement;
-    let debounceTimeout: number | null = null;
-
-    inputElem.addEventListener("input", () => {
-      if (debounceTimeout) clearTimeout(debounceTimeout);
-      debounceTimeout = window.setTimeout(() => {
-        const newState = {} as EditableFields;
-        newState[which] = sanitizeAndCleanInput(inputElem.value.trim());
-        window.store.userStore.updateSetEditState(newState);
-        window.setTimeout(() => {
-          (
-            document.querySelector(`#input${which}`) as HTMLInputElement
-          ).focus();
-        }, 0);
-      }, 500);
-    });
-    inputElem.addEventListener("focus", () => {
-      const length = inputElem.value.length;
-      inputElem.setSelectionRange(length, length);
-    });
     return htmlElem;
   }
 
