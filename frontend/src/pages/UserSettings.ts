@@ -107,6 +107,7 @@ class UserSettings extends HTMLElement {
     }
   }
 
+    //LEO change all the hard coded text
   renderProfileImage(ownSettingsPage: boolean) {
     const classWhenOwnSettings = ownSettingsPage ?
     "cursor-pointer hover:opacity-80 transition duration-300"
@@ -117,7 +118,7 @@ class UserSettings extends HTMLElement {
     const htmlElem = createHtmlElementFromString(`
     <div>
       <div class="flex gap-2">
-      <label class="block text-sm">Profile Picture</label>
+      <label class="block text-sm">${window.store.languageStore.state.register.profilePicture}</label>
         <button id="saveBtnEditImage" title=${window.store.languageStore.state.register.save}>
           💾
         </button>
@@ -163,13 +164,13 @@ class UserSettings extends HTMLElement {
           if (res.ok) {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message: "Profile picture updated successfully!",
+              message: window.store.languageStore.state.register.imageUpdateSuccess,
             });
             window.store.userStore.updateUserImage(newImage);
           } else {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message: `Couldn't update profile picture! Reason: ${res.errorMessage}`,
+             message: `${window.store.languageStore.state.register.imageUpdateFail} ${res.errorMessage}`, //LEO
             });
           }
         }
@@ -198,8 +199,7 @@ class UserSettings extends HTMLElement {
           if (file.size > maxFileSize) {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message:
-                "The file you chose is too big! Please select a file smaller than 4 MB!", //LEO
+              message: window.store.languageStore.state.register.fileTooBig,
             });
             return;
           }
@@ -207,8 +207,7 @@ class UserSettings extends HTMLElement {
           if (!extension || !["jpg", "jpeg", "png"].includes(extension)) {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message:
-                "Only files with extensions 'jpg' or 'png' are supported!", //LEO
+              message: window.store.languageStore.state.register.invalidFileFormat,
             });
             return;
           }

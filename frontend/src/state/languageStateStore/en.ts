@@ -27,6 +27,11 @@ const en: LanguageState = {
     passwordRuleSpecialChar: "Must contain at least one special character",
     errorPasswordMismatch: "Password does not match confirm password!",
     success: "Registered successfully! Redirecting to Login!",
+    imageUpdateSuccess: "Profile picture updated successfully!",
+    imageUpdateFail: "Couldn't update profile picture! Reason:",
+    fileTooBig: "The file you chose is too big! Please select a file smaller than 4 MB!",
+    invalidFileFormat: "Only files with extensions 'jpg' or 'png' are supported!",
+
 },
 
   matchMaking: {
