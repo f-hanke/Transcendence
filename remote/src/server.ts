@@ -44,8 +44,8 @@ const clientIdToSocket = new Map<string, WebSocket>();
 // const queue = 'matchMaking-results';
 const queue = 'matchmaking-service-queue';
 
-async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult | MatchMakingTypes.TournamentNotification) {
-  if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message) && !matchmakingTypeGuards.isTournamentNotification(message))
+async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult | MatchMakingTypes.TournamentNotification | MatchMakingTypes.ServerStartTournament) {
+  if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message) && !matchmakingTypeGuards.isTournamentNotification(message) && !matchmakingTypeGuards.isServerStartTournament(message))
     console.error("Trying to publish unknown type");
   let connection;
   try {
@@ -433,11 +433,12 @@ async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinT
       console.error("Error scheduling match:", err);
     }
 
-    sendMessageToManyClients(participants, {
+    const serverTournamentStartObj: MatchMakingTypes.ServerStartTournament = {
       type: "startTournament",
       data: correspondingTournament as MatchMakingTypes.TournamentFull,
-      // TODO: let them know about game schedule i.e. SCHEDULE publish the info for Flo
-    });
+    } as MatchMakingTypes.ServerStartTournament;
+    publishMessage(serverTournamentStartObj); // pub by MatchMaking, ack by chat-service, nack by usersAndAuth
+    sendMessageToManyClients(participants, serverTournamentStartObj);  // read by frontend
   }
 }
 
