@@ -65,10 +65,19 @@ type LanguageState = {
     matchHistory: string,
     friends: string,
     profilePicture: string,
-    imageUpdateSuccess: string;
-    imageUpdateFail: string;
-    fileTooBig: string;
-    invalidFileFormat: string;
+    imageUpdateSuccess: string,
+    imageUpdateFail: string,
+    fileTooBig: string,
+    invalidFileFormat: string,
+    emailUpdateSuccess: string,
+    emailUpdateFail: string,
+    passwordUpdateSuccess: string,
+    passwordUpdateFail: string,
+    displayNameUpdateSuccess: string,
+    displayNameUpdateFail: string,
+    tournament: string,
+    clickToChangeProfilePicture: string,
+
 }
   oneVOneLocal: {
     player1: string;

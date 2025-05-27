@@ -31,9 +31,19 @@ const en: LanguageState = {
     imageUpdateFail: "Couldn't update profile picture! Reason:",
     fileTooBig: "The file you chose is too big! Please select a file smaller than 4 MB!",
     invalidFileFormat: "Only files with extensions 'jpg' or 'png' are supported!",
+    save: string,
+    reset: string,
+    matchHistory: string,
+    friends: string,
+    profilePicture: string,
+    emailUpdateSuccess: string,
+    emailUpdateFail: string,
+    passwordUpdateSuccess: string,
+    passwordUpdateFail: string,
+    displayNameUpdateSuccess: string,
+    displayNameUpdateFail: string,
 
 },
-
   matchMaking: {
     publicMatches: "Public Matches",
     privateMatches: "Private Matches",

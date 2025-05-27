@@ -129,7 +129,7 @@ class UserSettings extends HTMLElement {
         <div class="flex flex-col mb-4">
             <img id="profileImage" src="${getImgSrcFromBuffer(imageToRender)}"
               class=" w-full max-w-xl border border-gray-600  ${classWhenOwnSettings}"
-              title="Click to change profile picture"/>
+              title="${window.store.languageStore.state.register.clickToChangeProfilePicture}"
           <input type="file" id="imageUpload" class="hidden"
           accept="image/png, image/jpeg">
       </div>
@@ -232,7 +232,7 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: "Email updated successfully!", //LEO
+          message: window.store.languageStore.state.register.emailUpdateSuccess,
         });
         window.store.userStore.updateUserSettings({
           email: window.store.userStore.get().editState.email as string,
@@ -243,7 +243,7 @@ class UserSettings extends HTMLElement {
       } else {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `Couldn't update email! Reason: ${res.errorMessage}`, //LEO
+          message: `${window.store.languageStore.state.register.emailUpdateFail} ${res.errorMessage}`,
         });
       }
     }
@@ -257,7 +257,7 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: "Password updated successfully!", //LEO
+          message: window.store.languageStore.state.register.passwordUpdateSuccess,
         });
         const newState = {} as Partial<UserState["editState"]>;
         newState["displayName"] = undefined;
@@ -265,7 +265,7 @@ class UserSettings extends HTMLElement {
       } else {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `Couldn't update password! Reason: ${res.errorMessage}`, //LEO
+          message: `${window.store.languageStore.state.register.passwordUpdateFail} ${res.errorMessage}`,
         });
       }
     }
@@ -280,7 +280,7 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: "Displayname updated successfully!", //LEO
+          message: window.store.languageStore.state.register.displayNameUpdateSuccess,
         });
         window.store.userStore.updateUserSettings({
           displayName: window.store.userStore.get().editState
@@ -292,7 +292,7 @@ class UserSettings extends HTMLElement {
       } else {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `Couldn't update displayName! Reason: ${res.errorMessage}`, //LEO
+          message: `${window.store.languageStore.state.register.displayNameUpdateFail} ${res.errorMessage}`,
         });
       }
     }
@@ -407,7 +407,9 @@ class UserSettings extends HTMLElement {
     ]; //LEO CHANGE THE WIN ??
     return `
     <div class="mt-6">
-      <h3 class="text-md font-semibold mb-2">Match History</h3>
+      <h3 class="text-md font-semibold mb-2">
+  ${window.store.languageStore.state.register.matchHistory}
+    </h3>
       <div class="space-y-2">
         ${matches
           .map(
@@ -424,7 +426,7 @@ class UserSettings extends HTMLElement {
               <div class="truncate">${match.type}</div>
               <div class="truncate">${match.score}</div>
               <div class="truncate">${
-                match.tournament ? "🏆 Tournament" : ""
+                match.tournament ? `🏆 ${window.store.languageStore.state.register.tournament}` : ""}
               }</div>
             </div>
           </div>
@@ -439,7 +441,9 @@ class UserSettings extends HTMLElement {
   renderFriends() {
     return `
      <div class="mt-6">
-        <h3 class="text-md font-semibold mb-2">Friends</h3>
+        <h3 class="text-md font-semibold mb-2">
+        ${window.store.languageStore.state.register.friends}
+      </h3>
         <ul class="space-y-2">
           ${[
             { name: "Alice", online: true },
@@ -450,9 +454,13 @@ class UserSettings extends HTMLElement {
               (friend) => `
             <li class="flex items-center justify-between px-4 py-2 bg-gray-700 rounded">
               <span>${friend.name}</span>
-              <span class="text-sm ${
-                friend.online ? "text-green-400" : "text-gray-400"
-              }">${friend.online ? "Online" : "Offline"}</span>
+            <span class="text-sm ${
+              friend.online ? "text-green-400" : "text-gray-400"
+            }">
+              ${friend.online
+                ? window.store.languageStore.state.chat.sections.online
+                : window.store.languageStore.state.chat.sections.offline}
+            </span>
             </li>
           `
             )
