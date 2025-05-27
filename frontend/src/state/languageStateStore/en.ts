@@ -17,7 +17,9 @@ const en: LanguageState = {
     password: "Password",
     confirmPassword: "Confirm Password",
     submit: "Register",
-    alreadyRegistered: "Already registered?",
+    alreadyRegistered: "Already registered? Login here",
+    submitLogin: "Login",
+    notregistered: "Not Registered? Register here",
     testUsers: "Register Test_Users",
     passwordRuleMinLength: "Must be at least 8 characters long",
     passwordRuleMaxLength: "Must not exceed 256 characters",
@@ -67,6 +69,7 @@ const en: LanguageState = {
     localGameOnSame: "Local game on same keyboard",
     aIOrHumanBtnHuman: "Human Opponent",
     aIOrHumanBtnAi: "AI Opponent",
+    enterPlayer2NamePlaceholder: "Enter Player2 name",
   },
   manageMatch: {
   waitingServerStart: "Waiting for the server to start...",

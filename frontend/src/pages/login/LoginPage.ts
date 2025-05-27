@@ -41,13 +41,13 @@ class LoginPage extends HTMLElement {
 
 
             <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 p-2 rounded">
-                ${lang.submit}
+                ${lang.submitLogin}
             </button>
             </form>
           </div>
 
           <button id="loginGoToRegister" class="w-96 bg-blue-500 text-white p-2 my-8 rounded hover:bg-blue-600">
-            ${lang.alreadyRegistered}
+            ${lang.notregistered}
           </button>
 
           ${testUserConfig

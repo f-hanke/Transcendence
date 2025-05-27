@@ -51,6 +51,8 @@ type LanguageState = {
     confirmPassword: string,
     submit: string,
     alreadyRegistered: string,
+    submitLogin: string,
+    notregistered: string,
     testUsers: string,
     passwordRuleMinLength: string,
     passwordRuleMaxLength: string,
@@ -78,29 +80,30 @@ type LanguageState = {
     tournament: string,
     clickToChangeProfilePicture: string,
 
-}
+};
   oneVOneLocal: {
-    player1: string;
-    player2: string;
-    aIOrHumanBtnHuman: string;
-    aIOrHumanBtnAi: string;
-    startGame: string;
-    localGameOnSame: string;
+    player1: string,
+    player2: string,
+    aIOrHumanBtnHuman: string,
+    aIOrHumanBtnAi: string,
+    startGame: string,
+    localGameOnSame: string,
+    enterPlayer2NamePlaceholder: string,
   };
   userSettings: {
-    userSettings: string;
-    displayName: string;
-    email: string;
-    save: string;
-    password: string;
+    userSettings: string,
+    displayName: string,
+    email: string,
+    save: string,
+    password: string,
   };
     matchItem: {
-    matchId: string;
-    gameOf: string;
-    waitingForOpponent: string;
-    typeOfGame: string;
-    join: string;
-    gameRunning: string;
+    matchId: string,
+    gameOf: string,
+    waitingForOpponent: string,
+    typeOfGame: string,
+    join: string,
+    gameRunning: string,
   };
     tournamentItem: {
     tournamentId: string,

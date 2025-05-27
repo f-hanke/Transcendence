@@ -51,6 +51,7 @@ const fr: LanguageState = {
     localGameOnSame: "Partie locale sur le même clavier",
     aIOrHumanBtnHuman: "Adversaire humain",
     aIOrHumanBtnAi: "Adversaire IA",
+    enterPlayer2NamePlaceholder: "Entrez le nom du·de la joueur·euse 2"
   },
   userSettings: {
     userSettings: "Paramètres utilisateur·rice",
@@ -84,6 +85,8 @@ register: {
   password: "Mot de passe",
   confirmPassword: "Confirmer le mot de passe",
   submit: "S'inscrire",
+  submitLogin: "Se connecter",
+  notregistered: "Pas encore de compte? S'inscrire",
   alreadyRegistered: "Déjà inscrit·e ? Se connecter",
   testUsers: "Connexion en tant que test_user_{n}",
   passwordRuleMinLength: "Doit comporter au moins 8 caractères",
@@ -110,6 +113,7 @@ register: {
   displayNameUpdateSuccess: "Nom d'affichage mis à jour avec succès !",
   displayNameUpdateFail: "Erreur lors de la mise à jour du nom d'affichage : ",
   clickToChangeProfilePicture: "Cliquez pour changer la photo de profil",
+  tournament: "Tournoi",
 
 },
 
