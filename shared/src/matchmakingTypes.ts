@@ -27,6 +27,7 @@ declare namespace MatchMakingTypes {
     matchResultBronze: GameResultTypes.MatchResult | null;
     started: boolean;
     playedAt: string | null;
+    playersWhoClickedToLeave: string[]; // playerIds
   };
 
   type TournamentNotification = {
