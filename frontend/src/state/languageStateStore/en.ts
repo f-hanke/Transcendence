@@ -138,6 +138,7 @@ const en: LanguageState = {
       declineRequest: "Decline",
       withdrawRequest: "Withdraw Request",
       pending: "Pending",
+      goToGameArea: "Go to game area",
     },
     placeholders: {
       searchUsers: "Search users...",

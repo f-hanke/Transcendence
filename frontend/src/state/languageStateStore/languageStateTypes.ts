@@ -137,6 +137,7 @@ type LanguageState = {
       declineRequest: string;
       withdrawRequest: string;
       pending: string;
+      goToGameArea: string,
 
     };
     placeholders: {

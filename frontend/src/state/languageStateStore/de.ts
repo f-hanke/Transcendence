@@ -138,6 +138,7 @@ const de: LanguageState = {
       declineRequest: "Ablehnen",
       withdrawRequest: "Anfrage zurückziehen",
       pending: "Ausstehend",
+      goToGameArea: "Zum Spielbereich gehen",
     },
     placeholders: {
       searchUsers: "Benutzer suchen...",

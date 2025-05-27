@@ -104,7 +104,7 @@ class ChatUserComponent extends HTMLElement {
 
             </div>
             <div id="${this.id}_friendsRequestsBarPending" class= "flex">
-              <button class="${btnAll} mr-1 border-gray-500 text-gray-500 border-dashed">PENDING</button>
+              <button class="${btnAll} mr-1 border-gray-500 text-gray-500 border-dashed">${lang.buttons.pending}</button>
               <button id="${this.id}_withdrawBtn" class="${btnAll} ${btnActive} mr-1">${lang.buttons.withdrawRequest}</button>
             </div>
             <div id="${this.id}_blockedBar" class= "flex">

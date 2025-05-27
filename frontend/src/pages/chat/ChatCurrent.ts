@@ -83,6 +83,7 @@ class ChatCurrent extends HTMLElement {
   }
 
   createAndAppend(container: HTMLDivElement, msg: ChatServiceTypes.Message) {
+    const lang = window.store.languageStore.state.chat;
     const styleMsgOwner =
       window.store.userStore.get().details.id === msg.authorId
         ? "self-end border-green-300"
@@ -97,7 +98,7 @@ class ChatCurrent extends HTMLElement {
           ${msg.message}
         </div>
         <button id="${id}_joinInviteBtn" class="text-white bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg">
-                  ▶ Go to Game Area
+                  ▶ ${lang.buttons.goToGameArea}
         </button>
       </div>
       `

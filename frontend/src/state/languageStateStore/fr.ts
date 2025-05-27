@@ -137,8 +137,9 @@ register: {
       unblockUser: "Débloquer l'utilisateur·rice",
       acceptRequest: "Accepter",
       declineRequest: "Refuser",
-	  withdrawRequest: "Retirer la demande",
-	  pending: "En attente",
+      withdrawRequest: "Retirer la demande",
+      pending: "En attente",
+      goToGameArea: "Aller à l'aire de jeu",
     },
     placeholders: {
       searchUsers: "Rechercher des utilisateur·rice...",
