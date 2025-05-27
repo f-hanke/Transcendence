@@ -85,42 +85,57 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
           let finaleOpponentId: string | null = null;
           let bronzeOpponentId: string | null = null;
           finaleOpponentId = (tournament.matchResultSemifinale1.player1Id === matchResult.winnerId) ? tournament.matchResultSemifinale2.winnerId : tournament.matchResultSemifinale1.winnerId;
-          if (tournament.matchSemifinale1?.matchId === matchResult.matchId)
+          if (tournament.matchSemifinale1!.matchId as string === matchResult.matchId)
             bronzeOpponentId = tournament.matchResultSemifinale2.player1Id === tournament.matchResultSemifinale2.winnerId ? tournament.matchResultSemifinale2.player2Id : tournament.matchResultSemifinale2.player1Id;
           else
             bronzeOpponentId = tournament.matchResultSemifinale1.player1Id === tournament.matchResultSemifinale1.winnerId ? tournament.matchResultSemifinale1.player2Id : tournament.matchResultSemifinale1.player1Id;
+          if (!tournament.matchFinale) {
+            const newMatchId: string = await Tournament.scheduleMatch(
+              tournament.tournamentId as string,
+              "matchFinale",
+              matchResult.winnerId,
+              finaleOpponentId as string
+            );
+            const newMatch: MatchMakingTypes.BasicGame = {
+              matchId: newMatchId,
+              hostId: matchResult.winnerId,
+              oponentId: null,
+              tournamentId: tournament.tournamentId as string,
+              type: "tournament",
+              invitedPlayerId: finaleOpponentId as string
+            };
+            tournament.matchFinale = newMatch;
+          }
+          else if (tournament.matchFinale.invitedPlayerId === null) {
+            // if final match already exists, we just update the invited player id
+            tournament.matchFinale.invitedPlayerId = finaleOpponentId as string;
+            await Tournament.addOpponentToMatch(tournament.tournamentId as string, tournament.matchFinale.matchId as string, "matchFinale", finaleOpponentId as string);
+            // and if ( hostId || (hostId && invitedId)) is found in ClickedToLeave, generate the match result for the final match and be done with it
+          }
 
-          let newMatchId: string = await Tournament.scheduleMatch(
-            tournament.tournamentId as string,
-            "matchFinale",
-            matchResult.winnerId,
-            finaleOpponentId as string
-          );
-          let newMatch: MatchMakingTypes.BasicGame = {
-            matchId: newMatchId,
-            hostId: matchResult.winnerId,
-            oponentId: null,
-            tournamentId: tournament.tournamentId as string,
-            type: "tournament",
-            invitedPlayerId: finaleOpponentId as string
-          };
-          tournament.matchFinale = newMatch;
-
-          newMatchId = await Tournament.scheduleMatch(
-            tournament.tournamentId as string,
-            "matchBronze",
-            matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
-            bronzeOpponentId as string
-          );
-          newMatch = {
-            matchId: newMatchId,
-            hostId: matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
-            oponentId: null,
-            tournamentId: tournament.tournamentId as string,
-            type: "tournament",
-            invitedPlayerId: bronzeOpponentId as string
-          };
-          tournament.matchBronze = newMatch;
+          if (!tournament.matchBronze) {
+            const newMatchId: string = await Tournament.scheduleMatch(
+              tournament.tournamentId as string,
+              "matchBronze",
+              matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
+              bronzeOpponentId as string
+            );
+            const newMatch: MatchMakingTypes.BasicGame = {
+              matchId: newMatchId,
+              hostId: matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
+              oponentId: null,
+              tournamentId: tournament.tournamentId as string,
+              type: "tournament",
+              invitedPlayerId: bronzeOpponentId as string
+            };
+            tournament.matchBronze = newMatch;
+          }
+          else if (tournament.matchBronze.invitedPlayerId === null) {
+            // if bronze match already exists, we just update the invited player id
+            tournament.matchBronze.invitedPlayerId = bronzeOpponentId as string;
+            await Tournament.addOpponentToMatch(tournament.tournamentId as string, tournament.matchBronze.matchId as string, "matchBronze", bronzeOpponentId as string);
+            // and if ( hostId || (hostId && invitedId)) is found in ClickedToLeave, generate the match result for the bronze match and be done with it
+          }
 
           // console.log("Scheduled final matches: ", tournament);
 
@@ -389,7 +404,6 @@ async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinT
 
   // startTournament logic INDEED when lobby full
   if (correspondingTournament.player1Id && correspondingTournament.player2Id && correspondingTournament.player3Id && correspondingTournament.player4Id) {
-    correspondingTournament.started = true;
     correspondingTournament.playedAt = new Date().toISOString();
     console.log(" ~ startTournament", correspondingTournament.tournamentId);
     const participants = [correspondingTournament.player1Id as string, correspondingTournament.player2Id as string, correspondingTournament.player3Id as string, correspondingTournament.player4Id as string,];
@@ -431,6 +445,8 @@ async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinT
 
       correspondingTournament.matchFinale = null;
       correspondingTournament.matchBronze = null;
+
+      correspondingTournament.started = true;  // semifinales are scheduled === tournament has started
 
     } catch (err) {
       console.error("Error scheduling match:", err);
@@ -474,74 +490,80 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
     {
       // TODO: store any unfinished matches with opponent as winner, emulating Leo over here
       if (!tournament.matchBronze && !tournament.matchFinale) {
-        if (tournament.matchSemifinale1?.player1Id === dataJson.data.playerId || tournament.matchSemifinale1?.player2Id === dataJson.data.playerId && !tournament.matchResultSemifinale1) {
+        let matchResult: GameResultTypes.MatchResult | null = null;
+        if (tournament.matchSemifinale1?.hostId === dataJson.data.playerId || tournament.matchSemifinale1?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultSemifinale1) {
           // player leaving was in semifinal 1 but there's no result for it, so we need to generate a match result for semifinal 1
           // generate a match result with the player leaving as loser
-          const matchResult: GameResultTypes.MatchResult = {
-            type: "matchResult",
-            matchId: tournament.matchSemifinale1?.matchId as string,
-            player1Id: tournament.matchSemifinale1?.player1Id as string,
-            player2Id: tournament.matchSemifinale1?.player2Id as string,
-            winnerId: tournament.matchSemifinale1?.player1Id === dataJson.data.playerId ? tournament.matchSemifinale1?.player2Id : tournament.matchSemifinale1?.player1Id,
-            player1Score: tournament.matchSemifinale1?.player1Id === dataJson.data.playerId ? 0 : gameSettings.maxScore,
-            player2Score: tournament.matchSemifinale1?.player2Id === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+          matchResult = {
+            matchId: tournament.matchSemifinale1!.matchId as string,
+            player1Id: tournament.matchSemifinale1!.hostId as string,
+            player2Id: tournament.matchSemifinale1!.invitedPlayerId as string,
+            winnerId: tournament.matchSemifinale1!.hostId === dataJson.data.playerId ? tournament.matchSemifinale1!.invitedPlayerId as string : tournament.matchSemifinale1!.hostId as string,
+            player1Score: tournament.matchSemifinale1!.hostId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+            player2Score: tournament.matchSemifinale1!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           };
-          tournament.matchResultSemifinale1 = matchResult;
+          tournament.matchResultSemifinale1 = matchResult;  // this...?
+          handleMatchResultProcessed(matchResult); // ...or this? But not both, right?
           tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
         }
-        else if (tournament.matchSemifinale2?.player1Id === dataJson.data.playerId || tournament.matchSemifinale2?.player2Id === dataJson.data.playerId && !tournament.matchResultSemifinale2) {
+        else if (tournament.matchSemifinale2?.hostId === dataJson.data.playerId || tournament.matchSemifinale2?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultSemifinale2) {
           // player leaving was in semifinal 2 but there's no result for it, so we need to generate a match result for semifinal 2
           // generate a match result with the player leaving as loser
-          const matchResult: GameResultTypes.MatchResult = {
-            type: "matchResult",
-            matchId: tournament.matchSemifinale2?.matchId as string,
-            player1Id: tournament.matchSemifinale2?.player1Id as string,
-            player2Id: tournament.matchSemifinale2?.player2Id as string,
-            winnerId: tournament.matchSemifinale2?.player1Id === dataJson.data.playerId ? tournament.matchSemifinale2?.player2Id : tournament.matchSemifinale2?.player1Id,
-            player1Score: tournament.matchSemifinale2?.player1Id === dataJson.data.playerId ? 0 : gameSettings.maxScore,
-            player2Score: tournament.matchSemifinale2?.player2Id === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+          matchResult = {
+            matchId: tournament.matchSemifinale2!.matchId as string,
+            player1Id: tournament.matchSemifinale2!.hostId as string,
+            player2Id: tournament.matchSemifinale2!.invitedPlayerId as string,
+            winnerId: tournament.matchSemifinale2!.hostId === dataJson.data.playerId ? tournament.matchSemifinale2?.invitedPlayerId as string : tournament.matchSemifinale2?.hostId as string,
+            player1Score: tournament.matchSemifinale2!.hostId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+            player2Score: tournament.matchSemifinale2!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           };
-          tournament.matchResultSemifinale2 = matchResult;
-          tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
         }
         else {
-          console.error("Player tried to leave a tournament, but wasn't in any of the semifinales, wtf");
+          console.error("Player tried to leave a tournament, but wasn't in any of the semifinales OR they were and semifinales have been played but bronze/finale unscheduled, which can't happen");
+          return;
         }
-      // TODO: schedule a bronzeMatch with the player leaving assigned? But what about score?
+        // TODO: schedule a bronzeMatch with the player leaving assigned? But what about score?
+        tournament. = await Tournament.scheduleMatch(tournament.tournamentId as string, "matchBronze", dataJson.data.playerId as string, "");
+        tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
+        handleMatchResultProcessed(matchResult); // 
       }
       else {
-        // this means the player has already played in the semifinales, so we only need to generate a match result for either finale or bronze match
-        if (tournament.matchFinale?.player1Id === dataJson.data.playerId || tournament.matchFinale?.player2Id === dataJson.data.playerId && !tournament.matchResultFinale) {
+        // this means the player has already played in the semifinales, so we only need to generate a match result (IF NOT ALREADY PRESENT) for either finale or bronze match
+        if (tournament.matchFinale?.hostId === dataJson.data.playerId || tournament.matchFinale?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultFinale) {
           // player leaving was in finale but there's no result for it, so we need to generate a match result for finale
           // generate a match result with the player leaving as loser
           const matchResult: GameResultTypes.MatchResult = {
-            type: "matchResult",
             matchId: tournament.matchFinale?.matchId as string,
-            player1Id: tournament.matchFinale?.player1Id as string,
-            player2Id: tournament.matchFinale?.player2Id as string,
-            winnerId: tournament.matchFinale?.player1Id === dataJson.data.playerId ? tournament.matchFinale?.player2Id : tournament.matchFinale?.player1Id,
-            player1Score: tournament.matchFinale?.player1Id === dataJson.data.playerId ? 0 : gameSettings.maxScore,
-            player2Score: tournament.matchFinale?.player2Id === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+            player1Id: tournament.matchFinale?.hostId as string,
+            player2Id: tournament.matchFinale?.invitedPlayerId as string,
+            winnerId: tournament.matchFinale?.hostId === dataJson.data.playerId ? tournament.matchFinale?.invitedPlayerId as string : tournament.matchFinale?.hostId as string,
+            player1Score: tournament.matchFinale?.hostId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+            player2Score: tournament.matchFinale?.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           };
           tournament.matchResultFinale = matchResult;
           tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
         }
-        else if (tournament.matchBronze?.player1Id === dataJson.data.playerId || tournament.matchBronze?.player2Id === dataJson.data.playerId && !tournament.matchResultBronze) {
+        else if (tournament.matchBronze?.hostId === dataJson.data.playerId || tournament.matchBronze?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultBronze) {
           // player leaving was in bronze match but there's no result for it, so we need to generate a match result for bronze match
           // generate a match result with the player leaving as loser
           const matchResult: GameResultTypes.MatchResult = {
-            type: "matchResult",
             matchId: tournament.matchBronze?.matchId as string,
-            player1Id: tournament.matchBronze?.player1Id as string,
-            player2Id: tournament.matchBronze?.player2Id as string,
-            winnerId: tournament.matchBronze?.player1Id === dataJson.data.playerId ? tournament.matchBronze?.player2Id : tournament.matchBronze?.player1Id,
-            player1Score: tournament.matchBronze?.player1Id === dataJson.data.playerId ? 0 : gameSettings.maxScore,
-            player2Score: tournament.match
+            player1Id: tournament.matchBronze?.hostId as string,
+            player2Id: tournament.matchBronze?.invitedPlayerId as string,
+            winnerId: tournament.matchBronze?.hostId === dataJson.data.playerId ? tournament.matchBronze?.invitedPlayerId as string : tournament.matchBronze?.hostId as string,
+            player1Score: tournament.matchBronze?.hostId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+            player2Score: tournament.matchBronze?.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+            createdAt: new Date().toISOString()
+          }
+          // TODO: let Florian know?
+        }
+        else {
+          // sendMessage with fake tournament data to Steffen
+        }
       }
-      // TODO: let Florian know?
     }
   } catch (err) {
     console.error("Error removing player from tournament:", err);
