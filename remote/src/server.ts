@@ -79,62 +79,78 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       else if (tournament.matchSemifinale2?.matchId === matchResult.matchId)
         tournament.matchResultSemifinale2 = matchResult;
 
-      // SCHEDULE or HANDLE FINAL MATCHES (if semifinals are done)
-      if (tournament.matchResultSemifinale1 && tournament.matchResultSemifinale2) {
+      // SCHEDULE FINAL MATCHES (if semifinals are done and final matches unscheduled)
+      if (tournament.matchResultSemifinale1 && tournament.matchResultSemifinale2 && !tournament.matchFinale && !tournament.matchBronze)
+      {
         try {
           let finaleOpponentId: string | null = null;
           let bronzeOpponentId: string | null = null;
           finaleOpponentId = (tournament.matchResultSemifinale1.player1Id === matchResult.winnerId) ? tournament.matchResultSemifinale2.winnerId : tournament.matchResultSemifinale1.winnerId;
-          if (tournament.matchSemifinale1!.matchId as string === matchResult.matchId)
+          if (tournament.matchSemifinale1?.matchId === matchResult.matchId)
             bronzeOpponentId = tournament.matchResultSemifinale2.player1Id === tournament.matchResultSemifinale2.winnerId ? tournament.matchResultSemifinale2.player2Id : tournament.matchResultSemifinale2.player1Id;
           else
             bronzeOpponentId = tournament.matchResultSemifinale1.player1Id === tournament.matchResultSemifinale1.winnerId ? tournament.matchResultSemifinale1.player2Id : tournament.matchResultSemifinale1.player1Id;
-          if (!tournament.matchFinale) {
-            const newMatchId: string = await Tournament.scheduleMatch(
-              tournament.tournamentId as string,
-              "matchFinale",
-              matchResult.winnerId,
-              finaleOpponentId as string
-            );
-            const newMatch: MatchMakingTypes.BasicGame = {
+
+          let newMatchId: string = await Tournament.scheduleMatch(
+            tournament.tournamentId as string,
+            "matchFinale",
+            matchResult.winnerId,
+            finaleOpponentId as string
+          );
+          let newMatch: MatchMakingTypes.BasicGame = {
+            matchId: newMatchId,
+            hostId: matchResult.winnerId,
+            oponentId: null,
+            tournamentId: tournament.tournamentId as string,
+            type: "tournament",
+            invitedPlayerId: finaleOpponentId as string
+          };
+          tournament.matchFinale = newMatch;
+          // if at least 1 player who clicked to leave is on final games schedule, generate the res now and be done with it
+          if (tournament.playersWhoClickedToLeave?.includes(tournament.matchFinale.hostId) || tournament.playersWhoClickedToLeave?.includes(finaleOpponentId as string)) {
+            const onePlayerProvenToHaveClickedLeaveId = tournament.playersWhoClickedToLeave.includes(tournament.matchFinale.hostId) ? tournament.matchFinale.hostId : finaleOpponentId as string;  // there could be more than one, but we determine one proven
+            const matchFinaleResult: GameResultTypes.MatchResult = {
               matchId: newMatchId,
-              hostId: matchResult.winnerId,
-              oponentId: null,
-              tournamentId: tournament.tournamentId as string,
-              type: "tournament",
-              invitedPlayerId: finaleOpponentId as string
+              player1Id: tournament.matchFinale.hostId,
+              player2Id: finaleOpponentId as string,
+              winnerId: tournament.matchFinale.hostId === onePlayerProvenToHaveClickedLeaveId ? finaleOpponentId : tournament.matchFinale.hostId,
+              player1Score: tournament.matchFinale.hostId === onePlayerProvenToHaveClickedLeaveId ? 0 : gameSettings.maxScore,
+              player2Score: finaleOpponentId === onePlayerProvenToHaveClickedLeaveId ? 0 : gameSettings.maxScore,
+              createdAt: new Date().toISOString()
             };
-            tournament.matchFinale = newMatch;
-          }
-          else if (tournament.matchFinale.invitedPlayerId === null) {
-            // if final match already exists, we just update the invited player id
-            tournament.matchFinale.invitedPlayerId = finaleOpponentId as string;
-            await Tournament.addOpponentToMatch(tournament.tournamentId as string, tournament.matchFinale.matchId as string, "matchFinale", finaleOpponentId as string);
-            // and if ( hostId || (hostId && invitedId)) is found in ClickedToLeave, generate the match result for the final match and be done with it
+            await Tournament.updateOngoingTournamentDatabase(matchFinaleResult.player1Score, matchFinaleResult.player2Score, matchFinaleResult.createdAt, matchFinaleResult.matchId);
+            console.log("Ongoing Tournament updated in DB");
           }
 
-          if (!tournament.matchBronze) {
-            const newMatchId: string = await Tournament.scheduleMatch(
-              tournament.tournamentId as string,
-              "matchBronze",
-              matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
-              bronzeOpponentId as string
-            );
-            const newMatch: MatchMakingTypes.BasicGame = {
+          newMatchId = await Tournament.scheduleMatch(
+            tournament.tournamentId as string,
+            "matchBronze",
+            matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
+            bronzeOpponentId as string
+          );
+          newMatch = {
+            matchId: newMatchId,
+            hostId: matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
+            oponentId: null,
+            tournamentId: tournament.tournamentId as string,
+            type: "tournament",
+            invitedPlayerId: bronzeOpponentId as string
+          };
+          tournament.matchBronze = newMatch;
+          // if at least 1 player who clicked to leave is on bronze games schedule, generate the res now and be done with it
+          if (tournament.playersWhoClickedToLeave?.includes(tournament.matchBronze.hostId) || tournament.playersWhoClickedToLeave?.includes(bronzeOpponentId as string)) {
+            const onePlayerProvenToHaveClickedLeaveId = tournament.playersWhoClickedToLeave.includes(tournament.matchBronze.hostId) ? tournament.matchBronze.hostId : bronzeOpponentId as string;  // there could be more than one, but we determine one proven
+            const matchBronzeResult: GameResultTypes.MatchResult = {
               matchId: newMatchId,
-              hostId: matchResult.winnerId === matchResult.player1Id ? matchResult.player2Id : matchResult.player1Id,
-              oponentId: null,
-              tournamentId: tournament.tournamentId as string,
-              type: "tournament",
-              invitedPlayerId: bronzeOpponentId as string
+              player1Id: tournament.matchBronze.hostId,
+              player2Id: bronzeOpponentId as string,
+              winnerId: tournament.matchBronze.hostId === onePlayerProvenToHaveClickedLeaveId ? bronzeOpponentId : tournament.matchBronze.hostId,
+              player1Score: tournament.matchBronze.hostId === onePlayerProvenToHaveClickedLeaveId ? 0 : gameSettings.maxScore,
+              player2Score: bronzeOpponentId === onePlayerProvenToHaveClickedLeaveId ? 0 : gameSettings.maxScore,
+              createdAt: new Date().toISOString()
             };
-            tournament.matchBronze = newMatch;
-          }
-          else if (tournament.matchBronze.invitedPlayerId === null) {
-            // if bronze match already exists, we just update the invited player id
-            tournament.matchBronze.invitedPlayerId = bronzeOpponentId as string;
-            await Tournament.addOpponentToMatch(tournament.tournamentId as string, tournament.matchBronze.matchId as string, "matchBronze", bronzeOpponentId as string);
-            // and if ( hostId || (hostId && invitedId)) is found in ClickedToLeave, generate the match result for the bronze match and be done with it
+            await Tournament.updateOngoingTournamentDatabase(matchBronzeResult.player1Score, matchBronzeResult.player2Score, matchBronzeResult.createdAt, matchBronzeResult.matchId);
+            console.log("Ongoing Tournament updated in DB");
           }
 
           // console.log("Scheduled final matches: ", tournament);
@@ -488,12 +504,12 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
     }
     else if (tournament.started === true)
     {
-      // TODO: store any unfinished matches with opponent as winner, emulating Leo over here
-      if (!tournament.matchBronze && !tournament.matchFinale) {
-        let matchResult: GameResultTypes.MatchResult | null = null;
+      // DONE: store any unfinished matches with opponent as winner, emulating Leo over here
+      let matchResult: GameResultTypes.MatchResult | null = null;
+      if (!tournament.matchBronze && !tournament.matchFinale)
+      {
         if (tournament.matchSemifinale1?.hostId === dataJson.data.playerId || tournament.matchSemifinale1?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultSemifinale1) {
-          // player leaving was in semifinal 1 but there's no result for it, so we need to generate a match result for semifinal 1
-          // generate a match result with the player leaving as loser
+          // player leaving was in semifinal 1 but there's no result for it, generate a match result with the player leaving as loser
           matchResult = {
             matchId: tournament.matchSemifinale1!.matchId as string,
             player1Id: tournament.matchSemifinale1!.hostId as string,
@@ -503,13 +519,9 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
             player2Score: tournament.matchSemifinale1!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           };
-          tournament.matchResultSemifinale1 = matchResult;  // this...?
-          handleMatchResultProcessed(matchResult); // ...or this? But not both, right?
-          tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
         }
         else if (tournament.matchSemifinale2?.hostId === dataJson.data.playerId || tournament.matchSemifinale2?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultSemifinale2) {
-          // player leaving was in semifinal 2 but there's no result for it, so we need to generate a match result for semifinal 2
-          // generate a match result with the player leaving as loser
+          // player leaving was in semifinal 2 but there's no result for it, generate a match result with the player leaving as loser
           matchResult = {
             matchId: tournament.matchSemifinale2!.matchId as string,
             player1Id: tournament.matchSemifinale2!.hostId as string,
@@ -524,46 +536,56 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
           console.error("Player tried to leave a tournament, but wasn't in any of the semifinales OR they were and semifinales have been played but bronze/finale unscheduled, which can't happen");
           return;
         }
-        // TODO: schedule a bronzeMatch with the player leaving assigned? But what about score?
-        tournament. = await Tournament.scheduleMatch(tournament.tournamentId as string, "matchBronze", dataJson.data.playerId as string, "");
-        tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
-        handleMatchResultProcessed(matchResult); // 
       }
-      else {
+      else
+      {
         // this means the player has already played in the semifinales, so we only need to generate a match result (IF NOT ALREADY PRESENT) for either finale or bronze match
         if (tournament.matchFinale?.hostId === dataJson.data.playerId || tournament.matchFinale?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultFinale) {
-          // player leaving was in finale but there's no result for it, so we need to generate a match result for finale
-          // generate a match result with the player leaving as loser
-          const matchResult: GameResultTypes.MatchResult = {
-            matchId: tournament.matchFinale?.matchId as string,
-            player1Id: tournament.matchFinale?.hostId as string,
-            player2Id: tournament.matchFinale?.invitedPlayerId as string,
-            winnerId: tournament.matchFinale?.hostId === dataJson.data.playerId ? tournament.matchFinale?.invitedPlayerId as string : tournament.matchFinale?.hostId as string,
-            player1Score: tournament.matchFinale?.hostId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
-            player2Score: tournament.matchFinale?.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+          // player leaving was in finale but there's no result for it, generate a match result with the player leaving as loser
+          matchResult = {
+            matchId: tournament.matchFinale!.matchId as string,
+            player1Id: tournament.matchFinale!.hostId as string,
+            player2Id: tournament.matchFinale!.invitedPlayerId as string,
+            winnerId: tournament.matchFinale!.hostId === dataJson.data.playerId ? tournament.matchFinale?.invitedPlayerId as string : tournament.matchFinale?.hostId as string,
+            player1Score: tournament.matchFinale!.hostId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+            player2Score: tournament.matchFinale!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           };
-          tournament.matchResultFinale = matchResult;
-          tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
         }
         else if (tournament.matchBronze?.hostId === dataJson.data.playerId || tournament.matchBronze?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultBronze) {
-          // player leaving was in bronze match but there's no result for it, so we need to generate a match result for bronze match
-          // generate a match result with the player leaving as loser
-          const matchResult: GameResultTypes.MatchResult = {
-            matchId: tournament.matchBronze?.matchId as string,
-            player1Id: tournament.matchBronze?.hostId as string,
-            player2Id: tournament.matchBronze?.invitedPlayerId as string,
-            winnerId: tournament.matchBronze?.hostId === dataJson.data.playerId ? tournament.matchBronze?.invitedPlayerId as string : tournament.matchBronze?.hostId as string,
-            player1Score: tournament.matchBronze?.hostId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
-            player2Score: tournament.matchBronze?.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+          // player leaving was in bronze match but there's no result for it, generate a match result with the player leaving as loser
+          matchResult = {
+            matchId: tournament.matchBronze!.matchId as string,
+            player1Id: tournament.matchBronze!.hostId as string,
+            player2Id: tournament.matchBronze!.invitedPlayerId as string,
+            winnerId: tournament.matchBronze!.hostId === dataJson.data.playerId ? tournament.matchBronze?.invitedPlayerId as string : tournament.matchBronze?.hostId as string,
+            player1Score: tournament.matchBronze!.hostId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
+            player2Score: tournament.matchBronze!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           }
-          // TODO: let Florian know?
         }
         else {
-          // sendMessage with fake tournament data to Steffen
+          // player has played all the matches and is leaving, anything we must do? I'm informing Steffen below anyway
         }
       }
+      
+      // scope reminder: if started === true
+      tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
+      if (matchResult)
+        handleMatchResultProcessed(matchResult);
+
+      let fakeTournament: MatchMakingTypes.Tournament = tournament;
+      if (fakeTournament.player1Id === dataJson.data.playerId)
+        fakeTournament.player1Id = null;
+      else if (fakeTournament.player2Id === dataJson.data.playerId)
+        fakeTournament.player2Id = null;
+      else if (fakeTournament.player3Id === dataJson.data.playerId)
+        fakeTournament.player3Id = null;
+      else if (fakeTournament.player4Id === dataJson.data.playerId)
+        fakeTournament.player4Id = null;
+      sendMessageToAllClients({type: "updateOneTournament", data: fakeTournament});
+      // TODO: let Florian know so remaining players are informed about some automatic resolvement? 
+      // TODO: and what if all of them leave after tournament has started?
     }
   } catch (err) {
     console.error("Error removing player from tournament:", err);
