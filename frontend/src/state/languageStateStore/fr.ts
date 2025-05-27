@@ -84,7 +84,7 @@ register: {
   password: "Mot de passe",
   confirmPassword: "Confirmer le mot de passe",
   submit: "S'inscrire",
-  alreadyRegistered: "Déjà inscrit ?",
+  alreadyRegistered: "Déjà inscrit·e ? Se connecter",
   testUsers: "Connexion en tant que test_user_{n}",
   passwordRuleMinLength: "Doit comporter au moins 8 caractères",
   passwordRuleMaxLength: "Ne doit pas dépasser 256 caractères",
@@ -109,6 +109,8 @@ register: {
   passwordUpdateFail: "Erreur lors de la mise à jour du mot de passe : ",
   displayNameUpdateSuccess: "Nom d'affichage mis à jour avec succès !",
   displayNameUpdateFail: "Erreur lors de la mise à jour du nom d'affichage : ",
+  clickToChangeProfilePicture: "Cliquez pour changer la photo de profil",
+
 },
 
   chat: {
@@ -135,7 +137,7 @@ register: {
 	  pending: "En attente",
     },
     placeholders: {
-      searchUsers: "Rechercher des utilisateur·rice ...",
+      searchUsers: "Rechercher des utilisateur·rice...",
       typeMessage: "Tapez votre message ici...",
     },
     notifications: {
