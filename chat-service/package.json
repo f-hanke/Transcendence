@@ -3,7 +3,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
-    "dev": "npm run build && npm run start"
+    "dev": "npm run build && npm run start",
+    "db": "node db/db-init.js"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.1",

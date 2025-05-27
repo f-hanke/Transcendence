@@ -376,7 +376,7 @@ function	getUnreadMessage(recipientId: string, authorId: string){
 	}
 }
 
-function updateUnreadMessages(recipientId: string, authorId: string, unreadMessages: boolean): void {
+export function updateUnreadMessages(recipientId: string, authorId: string, unreadMessages: boolean): void {
 	try {
 		db.prepare(databaseQuerys.updateUnreadMessage).run(recipientId, authorId, unreadMessages ? 1 : 0, unreadMessages ? 1 : 0);
 	} catch (err) {

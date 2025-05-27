@@ -98,4 +98,8 @@ export namespace databaseQuerys {
 				(username != excluded.username) OR
 				(small_image != excluded.small_image)
 		`;
+
+	export const	getUsername = `
+			SELECT username FROM users WHERE id = ?
+		`;
 };
