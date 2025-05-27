@@ -32,27 +32,27 @@ class ChatCurrent extends HTMLElement {
   }
 
   render() {
+    const lang = window.store.languageStore.state.chat;
+
     const recipientIdIsDefined =
       window.store.chatMessageStore.get().recipientId.length > 0;
-    this.innerHTML = `
-          <!-- Right Panel: Chat Window -->
-          <div class="h-full flex flex-col bg-gray-100 p-4 ${
-            recipientIdIsDefined ? "" : "hidden"
-          }">
-            <h2 class="text-lg font-bold mb-2">Chat</h2>
+  this.innerHTML = `
+    <div class="h-full flex flex-col bg-gray-100 p-4 ${
+      recipientIdIsDefined ? "" : "hidden"
+    }">
+      <h2 class="text-lg font-bold mb-2">${lang.tabs.users}</h2>
 
-            <!-- Messages Container -->
-            <div id="messagesContainer" class="flex flex-col overflow-y-auto bg-white p-2 rounded shadow-inner">
-            </div>
-  
-            <!-- Input Area -->
-            <div class="mt-2 flex">
-              <input id="chatInput" type="text" placeholder="Type a message..."
-                class="flex-grow p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <button id="chatSendButton" class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600">Send</button>
-            </div>
-          </div>
-      `;
+      <div id="messagesContainer" class="flex flex-col overflow-y-auto bg-white p-2 rounded shadow-inner"></div>
+
+      <div class="mt-2 flex">
+        <input id="chatInput" type="text" placeholder="${lang.placeholders.typeMessage}"
+          class="flex-grow p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button id="chatSendButton" class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600">
+          ${lang.buttons.sendMessage}
+        </button>
+      </div>
+    </div>
+  `;
     const msgContainer = document.querySelector(
       `#messagesContainer`
     ) as HTMLDivElement;
@@ -83,6 +83,7 @@ class ChatCurrent extends HTMLElement {
   }
 
   createAndAppend(container: HTMLDivElement, msg: ChatServiceTypes.Message) {
+    const lang = window.store.languageStore.state.chat;
     const styleMsgOwner =
       window.store.userStore.get().details.id === msg.authorId
         ? "self-end border-green-300"
@@ -97,7 +98,7 @@ class ChatCurrent extends HTMLElement {
           ${msg.message}
         </div>
         <button id="${id}_joinInviteBtn" class="text-white bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg">
-                  ▶ Go to Game Area
+                  ▶ ${lang.buttons.goToGameArea}
         </button>
       </div>
       `

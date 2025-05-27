@@ -30,45 +30,46 @@ class RegisterPage extends HTMLElement {
   }
 
   render() {
+    const lang = window.store.languageStore.state.register;
     // if user is logged in, redirect to landing page
     this.innerHTML = `
       <div class="flex flex-col justify-center items-center h-screen bg-gray-800 select-none">
         <form id="registerForm" class="p-6 rounded-lg shadow-lg w-96">
-          <h2 class="text-xl font-bold mb-4 text-center">Register</h2>
+          <h2 class="text-xl font-bold mb-4 text-center">${lang.title}</h2>
 
-          <label class="block mb-2 text-gray-700">Email</label>
+          <label class="block mb-2 text-gray-700">${lang.email}</label>
           <input id="registerEmail" type="email" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required value=${
             window.store.registerStore.get().email
           }>
 
-          <label class="block mb-2 text-gray-700">Display Name</label>
+          <label class="block mb-2 text-gray-700">${lang.displayName}</label>
           <input id="registerDisplayName" type="text" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required value=${
             window.store.registerStore.get().displayName
           }>
 
-          <label class="block mb-2 text-gray-700">Password</label>
+          <label class="block mb-2 text-gray-700">${lang.password}</label>
           <input id="registerPassword" type="password" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required>
 
-          <label class="block mb-2 text-gray-700">Confirm Password</label>
+          <label class="block mb-2 text-gray-700">${lang.confirmPassword}</label>
           <input id="registerConfirmPassword" type="password" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required>
           <ul class="text-sm text-gray-400 list-disc pl-5 mb-4 space-y-1">
-            <li>Must be at least <span class="text-white font-medium">8 characters</span> long</li>
-            <li>Must not exceed <span class="text-white font-medium">256 characters</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">uppercase letter</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">lowercase letter</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">digit</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">special character</span></li>
+          <li>${lang.passwordRuleMinLength.replace("{n}", "8")}</li>
+          <li>${lang.passwordRuleMaxLength.replace("{n}", "256")}</li>
+          <li>${lang.passwordRuleUppercase}</li>
+          <li>${lang.passwordRuleLowercase}</li>
+          <li>${lang.passwordRuleDigit}</li>
+          <li>${lang.passwordRuleSpecialChar}</li>
           </ul>
           <p id="errorMessage" class="text-red-500 text-sm mb-4"></p>
           <button type="submit" class="w-full bg-blue-500 p-2 rounded hover:bg-blue-600">
-            Register
+             ${lang.submit}
           </button>
         </form>
         <button id="registerGoToLogin" class="w-96 bg-blue-500 text-white p-2 my-8 rounded hover:bg-blue-600">
-              Already registered?
+              ${lang.alreadyRegistered}
         </button>
         <button id="registerTestUserX" class="w-96 bg-blue-500 text-white p-2 my-8 rounded hover:bg-blue-600">
-              Register Test_Users
+              ${lang.testUsers}
         </button>
       </div>
     `;
@@ -110,6 +111,7 @@ class RegisterPage extends HTMLElement {
 
   async handleSubmit(event: Event) {
     event.preventDefault();
+    const lang = window.store.languageStore.state.register;
     const registerPassword = document.querySelector(
       "#registerPassword"
     ) as HTMLInputElement;
@@ -118,7 +120,7 @@ class RegisterPage extends HTMLElement {
     ) as HTMLInputElement;
 
     if (registerPassword.value !== registerConfirmPassword.value) {
-      this.msgBox.innerText = "Password does not match confirm password!";
+      this.msgBox.innerText = lang.errorPasswordMismatch;
       return;
     }
 
@@ -129,7 +131,7 @@ class RegisterPage extends HTMLElement {
     };
     const res = await AuthInterface.registerClient(details);
     if (res.ok) {
-      this.msgBox.innerText = "Registered Successful! Redirecting to Login!";
+      this.msgBox.innerText =lang.success;
       setTimeout(() => navigateToSite("/loginPage"), 1000);
     } else {
       this.msgBox.innerText = res.errorMessage as string;

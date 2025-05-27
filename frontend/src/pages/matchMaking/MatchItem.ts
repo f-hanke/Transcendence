@@ -47,44 +47,46 @@ class MatchItem extends HTMLElement {
 
   connectedCallback() {}
 
-  render() {
-    this.innerHTML = `
-        <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg text-white">
-          <div>
-            <div class="font-medium">Match ID: ${this.matchId}</div>
-            <div class="font-medium">${this.hostName}'s Game</div>
-            <div class="text-gray-300 text-sm">🟢 ${this.hostName} vs 🔴 ${
-      this.oponentName ? this.oponentName : "Waiting for oponent!"
-    }</div>
-            <div class="font-medium">Type of Game: ${this.type}</div>
-            <div class="font-medium">InivitedPlayerId: ${
-              this.invitedPlayerId
-            }</div>
-            <div class="font-medium">TournamentId: ${this.tournamentId}</div>
-          </div>
-          ${
-            this.renderJoin
-              ? `<button class="join-match-btn bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg">
-                  ▶ Join
-                </button>`
-              : ""
-          }
-          <!-- "Waiting for oponent!" -->
-          <!-- "Could be you!" -->
-          ${
-            this.matchIsRunning
-              ? `<div class="relative top-0 right-0 h-full bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">
-                Game Running
-              </div>`
-              : ""
-          }
-        </li>
-      `;
-    const joinButton = this.querySelector(".join-match-btn");
-    if (joinButton) {
-      joinButton.addEventListener("click", () => this.onJoinClick());
-    }
+render() {
+  const lang = window.store.languageStore.state.matchItem;
+
+  this.innerHTML = `
+    <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg text-white">
+      <div>
+        <div class="font-medium">${lang.matchId}: ${this.matchId}</div>
+        <div class="font-medium">${this.hostName} ${lang.gameOf}</div>
+        <div class="text-gray-300 text-sm">🟢 ${this.hostName} vs 🔴 ${
+          this.oponentName ? this.oponentName : lang.waitingForOpponent
+        }</div>
+        <div class="font-medium">${lang.typeOfGame}: ${this.type}</div>
+        <div class="font-medium">InvitedPlayerId: ${
+          this.invitedPlayerId
+        }</div>
+        <div class="font-medium">TournamentId: ${this.tournamentId}</div>
+      </div>
+      ${
+        this.renderJoin
+          ? `<button class="join-match-btn bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg">
+              ▶ ${lang.join}
+            </button>`
+          : ""
+      }
+      ${
+        this.matchIsRunning
+          ? `<div class="relative top-0 right-0 h-full bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">
+              ${lang.gameRunning}
+            </div>`
+          : ""
+      }
+    </li>
+  `;
+
+  const joinButton = this.querySelector(".join-match-btn");
+  if (joinButton) {
+    joinButton.addEventListener("click", () => this.onJoinClick());
   }
+}
+
 
   setData(
     data: MatchMakingTypes.BasicGame,

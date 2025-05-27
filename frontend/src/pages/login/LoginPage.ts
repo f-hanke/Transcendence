@@ -21,39 +21,40 @@ class LoginPage extends HTMLElement {
   }
 
   render() {
+    const lang = window.store.languageStore.state.register;
     // if user is logged in, redirect to landing page
     this.innerHTML = `
         <div class="bg-gray-800 h-screen flex flex-col justify-center items-center select-none">
           <div class="p-8 rounded-lg shadow-lg w-96">
-            <h2 class="text-2xl font-bold text-center mb-6">Login to Pong</h2>
+            <h2 class="text-2xl font-bold text-center mb-6">${lang.title}</h2>
             <form id="loginForm" class="space-y-4">
             <div>
-                <label for="username" class="block font-medium">Email</label>
+                <label for="username" class="block font-medium">${lang.email}</label>
                 <input id="username" type="text" class="w-full p-2 rounded bg-gray-700 focus:outline-none" required>
             </div>
 
             <div>
-                <label for="password" class="block font-medium">Password</label>
+                <label for="password" class="block font-medium">${lang.password}</label>
                 <input id="password" type="password" class="w-full p-2 rounded bg-gray-700 focus:outline-none" required>
             </div>
             <p id="errorMessage" class="text-red-500 text-sm mb-4"></p>
 
 
             <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 p-2 rounded">
-                Login
+                ${lang.submitLogin}
             </button>
             </form>
           </div>
 
           <button id="loginGoToRegister" class="w-96 bg-blue-500 text-white p-2 my-8 rounded hover:bg-blue-600">
-            Not registered?
+            ${lang.notregistered}
           </button>
 
           ${testUserConfig
             .map((_, index) => {
               return `
             <button id="loginTestUser${index}" class="w-96 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 my-1">
-              Login as test_user_${index}
+               ${lang.testUsers.replace("{n}", index.toString())}
             </button>
             `;
             })

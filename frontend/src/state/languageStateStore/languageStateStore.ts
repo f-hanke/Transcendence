@@ -1,4 +1,5 @@
 import { StoreCallback } from "../types";
+import { fr } from "./fr";
 import { de } from "./de";
 import { en } from "./en";
 import { LanguageState, SupportedLanguages } from "./languageStateTypes";
@@ -8,11 +9,13 @@ class LanguageStateStore {
   state: LanguageState;
   en: LanguageState;
   de: LanguageState;
+  fr: LanguageState;
   selectedLanguage: SupportedLanguages;
   constructor() {
     this.en = en;
     this.state = en;
     this.de = de;
+    this.fr = fr;
     this.selectedLanguage = "en";
     this.listeners = new Set<StoreCallback>();
   }

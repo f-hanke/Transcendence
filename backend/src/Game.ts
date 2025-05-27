@@ -168,7 +168,11 @@ export class Game {
     let date = new Date();
     let sqllite_date = date.toISOString();
 
-    let id_win =  (this.player1.score > this.player1.score ? this.player1.id : this.player1.id  );
+    let id_win =
+  this.player1.score > this.player2.score
+    ? this.player1.id
+    : this.player2.id;
+
 
     publishMatchResult({
         matchId: this.matchId,

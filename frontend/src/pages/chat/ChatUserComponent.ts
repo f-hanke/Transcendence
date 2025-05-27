@@ -53,6 +53,7 @@ class ChatUserComponent extends HTMLElement {
   }
 
   render() {
+    const lang = window.store.languageStore.state.chat;
     const unfriend = `
     <div class="relative w-5 h-5 text-xs flex items-center justify-center">
      <span class="inset-0 flex items-center justify-center">
@@ -98,15 +99,16 @@ class ChatUserComponent extends HTMLElement {
           <div class="w-40 flex flex-col">
             <p class="text-white">${this.displayName}</p>
             <div id="${this.id}_friendsRequestsBarToAnswer" class= "flex">
-              <button id="${this.id}_acceptBtn" class="${btnAll} ${btnActive} mr-1">Accept</button>
-              <button id="${this.id}_declineBtn" class="${btnAll} ${btnActive} ml-1">Decline</button>
+            <button id="${this.id}_acceptBtn" class="${btnAll} ${btnActive} mr-1">${lang.buttons.acceptRequest}</button>
+            <button id="${this.id}_declineBtn" class="${btnAll} ${btnActive} ml-1">${lang.buttons.declineRequest}</button>
+
             </div>
             <div id="${this.id}_friendsRequestsBarPending" class= "flex">
-              <button class="${btnAll} mr-1 border-gray-500 text-gray-500 border-dashed">PENDING</button>
-              <button id="${this.id}_withdrawBtn" class="${btnAll} ${btnActive} mr-1">Withdraw</button>
+              <button class="${btnAll} mr-1 border-gray-500 text-gray-500 border-dashed">${lang.buttons.pending}</button>
+              <button id="${this.id}_withdrawBtn" class="${btnAll} ${btnActive} mr-1">${lang.buttons.withdrawRequest}</button>
             </div>
             <div id="${this.id}_blockedBar" class= "flex">
-              <button id="${this.id}_unblockBtn" class="${btnAll} ${btnActive}">Unblock</button>
+              <button id="${this.id}_unblockBtn" class="${btnAll} ${btnActive}">${lang.buttons.pending}</button>
             </div>
             <p  id="${this.id}_lastMessageDisplay" class="text-sm text-gray-500 truncate w-full overflow-hidden text-ellipsis whitespace-nowrap">${this.lastMessage}</p>
           </div>

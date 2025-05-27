@@ -36,10 +36,11 @@ class ManageMatch extends HTMLElement {
       // colog("reset");
       // colog(window.store.gameStore.get().state);
       window.store.gameStore.reset();
-    } 
+    }
   }
 
   async render() {
+
     // colog("in manage match");
     // colog(window.store.gameStore.get().state);
     if (window.store.gameStore.get().state === "none") navigateToSite("/");
@@ -71,13 +72,15 @@ class ManageMatch extends HTMLElement {
   }
 
   renderWaitingServerStartModal() {
+    const t = window.store.languageStore.state.manageMatch;
+
     window.store.modalStore.updateAddKeyDownCallback(
       "KeyN",
       this.leaveGame.bind(this)
     );
     window.store.modalStore.updateSetContent([
-      "Waiting for Server to start game",
-      "Press 'n' to cancel game",
+      t.waitingServerStart,
+      t.cancelKeyInstruction,
     ]);
     window.store.modalStore.updateSetOpen();
     const modal = createHtmlElementFromString(`
@@ -87,6 +90,7 @@ class ManageMatch extends HTMLElement {
   }
 
   async renderWaitingClientStartModal() {
+    const t = window.store.languageStore.state.manageMatch;
     window.store.modalStore.updateAddKeyDownCallback("KeyY", () => {
       window.store.gameStore.updateGameStateState("waitingForServerStart");
       GameServiceInterface.sendMessageToServer({
@@ -102,8 +106,8 @@ class ManageMatch extends HTMLElement {
       this.leaveGame.bind(this)
     );
     window.store.modalStore.updateSetContent([
-      "Press 'y' when you are ready",
-      "Press 'n' to cancel game",
+      t.readyKeyInstruction,
+      t.cancelKeyInstruction,
     ]);
     window.store.modalStore.updateSetOpen();
     const modal = createHtmlElementFromString(`
