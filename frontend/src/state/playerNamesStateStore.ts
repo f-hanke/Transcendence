@@ -26,6 +26,19 @@ class PlayerNamesStateStore {
     };
   }
 
+  /*LEO*/
+  setIdToNameMap(idNameMap: Record<string, string>) {
+  for (const id in idNameMap) {
+    const displayName = idNameMap[id];
+    if (!isDefined(displayName)) {
+      throw new Error(`NO DISPLAY NAME FOR ID ${id}`);
+    }
+    this.state[id] = displayName;
+  }
+  this.updateListenersOnChange();
+}
+
+
   updateAddNames(newIdNameMap: string[]) {
     for (const id in Object.keys(newIdNameMap)) {
       this.state[id] = newIdNameMap[id];

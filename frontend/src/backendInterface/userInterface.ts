@@ -46,29 +46,52 @@ class UserInterface {
   }
 
   /*Is this the methode to get the display names? LEo 28/05 */
-  static async getNames(body: string[]): AuthInterfaceAnswer {
-    const address = buildApiRouteRelative({
-      service: "authService",
-      route: "/api/users/getusernames",
+  // static async getNames(body: string[]): AuthInterfaceAnswer {
+  //   const address = buildApiRouteRelative({
+  //     service: "authService",
+  //     route: "/api/users/getusernames",
+  //   });
+  //   try {
+  //     const response = await fetch(address, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(body),
+  //     });
+  //     if (response.ok) {
+  //       //window.store.playerNamesStore.updateAddNames(await response.json());
+  //       const idNameMap = await response.json(); // objet { id: displayName, ... }
+  //       window.store.playerNamesStore.setIdToNameMap(idNameMap);
+  //       return {
+  //         ok: true,
+  //       };
+  //     } else return this.handleApiResponseError(response);
+  //   } catch {
+  //     throw new Error(`Error: Fetch request to auth service`);
+  //   }
+  // }
+  static async getNames(body: string[]): Promise<AuthInterfaceAnswer> {
+  const address = buildApiRouteRelative({
+    service: "authService",
+    route: "/api/users/getusernames",
+  });
+  try {
+    const response = await fetch(address, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
-    try {
-      const response = await fetch(address, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
-      if (response.ok) {
-        window.store.playerNamesStore.updateAddNames(await response.json());
-        return {
-          ok: true,
-        };
-      } else return this.handleApiResponseError(response);
-    } catch {
-      throw new Error(`Error: Fetch request to auth service`);
-    }
+    if (response.ok) {
+      const namesMap: Record<string, string> = await response.json();
+      window.store.playerNamesStore.setIdToNameMap(namesMap);
+      return { ok: true };
+    } else return this.handleApiResponseError(response);
+  } catch {
+    throw new Error(`Error: Fetch request to auth service`);
   }
+}
+
 
   static async updateDisplayName(
     body: AuthServiceTypes.UpdateDisplayNameBody
