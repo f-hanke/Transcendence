@@ -45,6 +45,7 @@ class UserInterface {
     }
   }
 
+  /*Is this the methode to get the display names? LEo 28/05 */
   static async getNames(body: string[]): AuthInterfaceAnswer {
     const address = buildApiRouteRelative({
       service: "authService",

@@ -257,7 +257,13 @@ class ChatUserComponent extends HTMLElement {
   }
 
   setData(data: ChatServiceTypes.ChatUser, type: UserComponentType) {
-    this.displayName = data.recipientId;
+    //this.displayName = data.recipientId;
+      if ('displayName' in data) {
+    console.log("displayName exists:", data.displayName);
+  } else {
+    console.log("displayName does NOT exist");
+  }
+    this.displayName = data.displayName ?? data.recipientId;
     this.userId = data.recipientId;
     this.lastMessage = data.lastMessage;
     this.unreadMessages = data.unreadMessages;
