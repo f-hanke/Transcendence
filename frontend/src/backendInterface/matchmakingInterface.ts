@@ -48,32 +48,6 @@ class MatchMakingInterface {
       throw new Error(`Error: Fetch request to Remote service`);
     }
   }
-    static async getNames(ids: string[]): Promise<void> {
-    const address = buildApiRouteRelative({
-      service: "authService",
-      route: "/api/users/getusernames",
-    });
-
-    try {
-      const response = await fetch(address, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(ids),
-      });
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la récupération des noms");
-      }
-
-      const namesMap: Record<string, string> = await response.json();
-      // Met à jour le store playerNamesStore avec le mapping ID => displayName
-      window.store.playerNamesStore.setIdToNameMap(namesMap);
-    } catch (error) {
-      console.error("Erreur fetch getNames:", error);
-    }
-  }
 
   static connect(): Promise<void> {
     if (!isDefined(this.websocket)) {

@@ -15,10 +15,6 @@ class TournamentItem extends HTMLElement {
     super();
     this.data = {
       tournamentId: null,
-      // player1displayName: null,
-      // player2displayName: null,
-      // player3displayName: null,
-      // player4displayName: null,
       player1Id: null,
       player2Id: null,
       player3Id: null,
@@ -38,33 +34,17 @@ class TournamentItem extends HTMLElement {
 
   connectedCallback() {}
 
-render() {
+  render() {
   const lang = window.store.languageStore.state.tournamentItem;
 
-  const player1Name = this.data.player1Id
-    ? window.store.playerNamesStore.getName(this.data.player1Id) || this.data.player1Id
-    : "Empty";
-
-  const player2Name = this.data.player2Id
-    ? window.store.playerNamesStore.getName(this.data.player2Id) || this.data.player2Id
-    : "Empty";
-
-  const player3Name = this.data.player3Id
-    ? window.store.playerNamesStore.getName(this.data.player3Id) || this.data.player3Id
-    : "Empty";
-
-  const player4Name = this.data.player4Id
-    ? window.store.playerNamesStore.getName(this.data.player4Id) || this.data.player4Id
-    : "Empty";
-  
   this.innerHTML = `
     <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg text-white">
       <div>
         <div class="font-medium">${lang.tournamentId}: ${this.data.tournamentId}</div>
-        <div class="font-medium">${lang.player1}: ${this.displayEmptySpot(player1Name)}</div>
-        <div class="font-medium">${lang.player2}: ${this.displayEmptySpot(player2Name)}</div>
-        <div class="font-medium">${lang.player3}: ${this.displayEmptySpot(player3Name)}</div>
-        <div class="font-medium">${lang.player4}: ${this.displayEmptySpot(player4Name)}</div>
+        <div class="font-medium">${lang.player1}: ${this.displayEmptySpot(this.data.player1Id)}</div>
+        <div class="font-medium">${lang.player2}: ${this.displayEmptySpot(this.data.player2Id)}</div>
+        <div class="font-medium">${lang.player3}: ${this.displayEmptySpot(this.data.player3Id)}</div>
+        <div class="font-medium">${lang.player4}: ${this.displayEmptySpot(this.data.player4Id)}</div>
       </div>
       ${
         this.renderJoin
@@ -83,8 +63,6 @@ render() {
     </li>
   `;
 
-
-
   const joinButton = this.querySelector(".join-tournament-btn");
   if (joinButton) {
     joinButton.addEventListener("click", () => this.onJoinClick());
@@ -96,20 +74,12 @@ render() {
 }
 
 
-async setData(data: MatchMakingTypes.Tournament, optns: OptnsTournamentItem) {
-  this.data = deepCopyObj(data);
-  this.renderJoin = optns.renderJoin;
-  this.renderLeave = optns.renderLeave;
-
-  const ids = [data.player1Id, data.player2Id, data.player3Id, data.player4Id].filter(id => id != null);
-
-  if (ids.length > 0) {
-    await MatchMakingInterface.getNames(ids);
+  setData(data: MatchMakingTypes.Tournament, optns: OptnsTournamentItem) {
+    this.data = deepCopyObj(data);
+    this.renderJoin = optns.renderJoin;
+    this.renderLeave = optns.renderLeave;
+    this.render();
   }
-
-  this.render();
-}
-
 
   onJoinClick() {
     console.log(`Joining tournament: ${this.data.tournamentId}`);
