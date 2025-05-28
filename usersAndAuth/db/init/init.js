@@ -21,6 +21,7 @@ import { db } from '../db.js';
         image BLOB DEFAULT NULL,
         small_image BLOB DEFAULT NULL,
         online_status INTEGER DEFAULT 0,
+        language TEXT DEFAULT 'en',
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
     `);

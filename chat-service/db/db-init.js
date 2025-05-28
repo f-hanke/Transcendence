@@ -12,7 +12,8 @@ try {
 			id          TEXT    PRIMARY KEY,
 			username    TEXT    UNIQUE,
 			small_image BLOB,
-			online      INTEGER DEFAULT 0
+			online      INTEGER DEFAULT 0,
+			lang	TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS messages (

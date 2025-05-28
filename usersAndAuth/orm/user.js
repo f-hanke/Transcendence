@@ -48,7 +48,7 @@ const User = {
      */
     async findById(id) {
         try {
-            const stmt = db.prepare('SELECT id, email, display_name, image, online_status, created_at FROM users WHERE id = ?');
+            const stmt = db.prepare('SELECT id, email, display_name, image, online_status, language, created_at FROM users WHERE id = ?');
             return stmt.get(Number(id)) || null;
         }
         catch (db_error) {
@@ -170,6 +170,29 @@ const User = {
           WHERE id = ?
         `);
             const result = stmt.run(image, small_image, id);
+            if (result.changes === 0) {
+                throw new Error('User could not be updated');
+            }
+            return this.findById(id);
+        }
+        catch (db_error) {
+            throw db_error;
+        }
+    },
+    /**
+     * Set user's language
+     * @param {string} id User ID
+     * @param {string} language Language code ('en' | 'de' | 'fr')
+     * @returns {Object} Updated user
+     */
+    async setLanguage(id, language) {
+        try {
+            const stmt = db.prepare(`
+        UPDATE users
+        SET language = ?
+        WHERE id = ?
+      `);
+            const result = stmt.run(language, id);
             if (result.changes === 0) {
                 throw new Error('User could not be updated');
             }

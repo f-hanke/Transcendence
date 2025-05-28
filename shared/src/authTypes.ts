@@ -116,6 +116,12 @@ declare namespace AuthServiceTypes {
     image: BufferLike;
   }
 
+  type Language = 'en' | 'de' | 'fr';
+
+  type UpdateLanguageBody = {
+    language: Language;
+  }
+
   type UserType = {
     id: string;
     email: string;
@@ -124,6 +130,7 @@ declare namespace AuthServiceTypes {
     image: BufferLike;
     online_status: number;
     login_count: number;
+    language: Language;
     created_at: string;
   };
 
@@ -217,6 +224,15 @@ function isUpdateImageBody(arg: any): arg is AuthServiceTypes.UpdateImageBody {
   )
 }
 
+function isUpdateLanguageBody(arg: any): arg is AuthServiceTypes.UpdateLanguageBody {
+  return (
+    typeof arg === "object" &&
+    arg !== null &&
+    typeof arg.language === "string" &&
+    ['en', 'de', 'fr'].includes(arg.language)
+  )
+}
+
 const testUserConfig: AuthServiceTypes.RegSubmissionBody[] = new Array(5).fill(0).map(
   (elem, i) => {
     const user = `test_user_${i}`;
@@ -236,6 +252,7 @@ const authServiceTypeGuards = {
   isUpdatePasswordBody,
   isUpdateDisplayNameBody,
   isUpdateImageBody,
+  isUpdateLanguageBody,
   isBufferLike
 } as const;
 

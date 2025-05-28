@@ -6,6 +6,7 @@ import {
 } from "transcendence";
 import { buildApiRouteRelative } from "../utils/utils";
 import { AuthInterfaceAnswer } from "./authInterface";
+import { SupportedLanguages } from "../state/languageStateStore/languageStateTypes";
 
 class UserInterface {
   constructor() {
@@ -32,10 +33,12 @@ class UserInterface {
           displayName: string;
         };
         res.displayName = res.display_name;
-        if (updateId) window.store.userStore.updateUserId(res.id);
+        if (updateId)
+          window.store.userStore.updateUserId(res.id.toString());
         window.store.userStore.updateUserSettings(res);
         window.store.userStore.updateUserImage(res.image);
         window.store.userStore.updateSetFetchNeeded(false);
+        window.store.languageStore.set(res.language as SupportedLanguages)
         return {
           ok: true,
         };
@@ -130,6 +133,33 @@ class UserInterface {
     const address = buildApiRouteRelative({
       service: "authService",
       route: `/api/users/updatepassword/${
+        window.store.userStore.get().details.id
+      }`,
+    });
+    try {
+      const response = await fetch(address, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        return {
+          ok: true,
+        };
+      } else return this.handleApiResponseError(response);
+    } catch {
+      throw new Error(`Error: Fetch request to auth service`);
+    }
+  }
+
+  static async updateUserLanguage(
+    body: AuthServiceTypes.UpdateLanguageBody
+  ): AuthInterfaceAnswer {
+    const address = buildApiRouteRelative({
+      service: "authService",
+      route: `/api/users/updatelanguage/${
         window.store.userStore.get().details.id
       }`,
     });

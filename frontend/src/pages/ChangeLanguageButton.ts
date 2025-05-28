@@ -1,14 +1,16 @@
+import { AuthServiceTypes } from "transcendence";
+import { UserInterface } from "../backendInterface/userInterface";
 import { SupportedLanguages } from "../state/languageStateStore/languageStateTypes";
 
 class ChangeLanguageButton extends HTMLElement {
     private changeLanguageBtn: HTMLButtonElement;
     private dropdown: HTMLElement | null = null;
-  
+
     constructor() {
       super();
       this.changeLanguageBtn = this.createChangeLanguageButton();
     }
-  
+
     connectedCallback() {
       this.appendChild(this.changeLanguageBtn);
       this.changeLanguageBtn.addEventListener("click", this.toggleDropdown.bind(this));
@@ -34,7 +36,7 @@ class ChangeLanguageButton extends HTMLElement {
       button.innerHTML = "🌍";
       return button;
     }
-  
+
     private toggleDropdown() {
       if (this.dropdown) {
         this.dropdown.classList.toggle('hidden');
@@ -42,7 +44,7 @@ class ChangeLanguageButton extends HTMLElement {
         this.createDropdown();
       }
     }
-  
+
     private createDropdown() {
       this.dropdown = document.createElement('div');
       this.dropdown.className = "fixed top-16 right-4 bg-white text-black rounded-lg shadow-lg p-4 w-40 flex flex-col items-center";
@@ -51,20 +53,32 @@ class ChangeLanguageButton extends HTMLElement {
         <button class="language-option py-2 px-4 w-full text-left hover:bg-gray-200" data-lang="de">Deutsch</button>
         <button class="language-option py-2 px-4 w-full text-left hover:bg-gray-200" data-lang="fr">Français</button>
       `;
-      
+
       const languageOptions = this.dropdown.querySelectorAll('.language-option');
       languageOptions.forEach((button) => {
         button.addEventListener('click', this.handleLanguageChange.bind(this));
       });
-  
+
       document.body.appendChild(this.dropdown);
     }
-  
+
     private handleLanguageChange(event: Event) {
       const language = (event.target as HTMLButtonElement).getAttribute('data-lang');
       if (language) {
-        window.store.languageStore.set(language as SupportedLanguages);
-        this.closeDropdown();
+        //todo api to usersAndAuth service to change language
+
+       (async () => {
+            const res = await UserInterface.updateUserLanguage({
+              language: language as AuthServiceTypes.Language,
+            });
+            if (res)
+              window.store.languageStore.set(language as SupportedLanguages);
+            else{
+              console.log("failed to update language in db, not changing languageStore");
+            }
+            this.closeDropdown();
+          }
+        )();
       }
     }
 
@@ -77,8 +91,8 @@ class ChangeLanguageButton extends HTMLElement {
     private handleClickOutside(event: MouseEvent) {
         // Check if the click is outside of the button and the dropdown
         if (
-          this.dropdown && 
-          !this.dropdown.contains(event.target as Node) && 
+          this.dropdown &&
+          !this.dropdown.contains(event.target as Node) &&
           !this.changeLanguageBtn.contains(event.target as Node)
         ) {
           this.closeDropdown();
@@ -86,10 +100,10 @@ class ChangeLanguageButton extends HTMLElement {
       }
 
   }
-  
+
 
   customElements.define('change-language-button', ChangeLanguageButton);
-  
+
 
   export {
     ChangeLanguageButton

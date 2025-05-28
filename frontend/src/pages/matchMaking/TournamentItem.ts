@@ -28,7 +28,8 @@ class TournamentItem extends HTMLElement {
       matchResultFinale: null,
       matchResultBronze: null,
       started: false,
-      playedAt: null
+      playedAt: null,
+      playersWhoClickedToLeave: [],
     };
   }
 

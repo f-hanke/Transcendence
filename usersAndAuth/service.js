@@ -89,6 +89,7 @@ server.post("/api/auth/register", async (request, reply) => {
             id: newUser.id,
             displayName: newUser.display_name,
             smallImage: smallImgBuffer,
+            language: newUser.language,
         };
         publishMessage(publication).catch(console.error);
         // HACK: hardcoded publication
@@ -356,13 +357,13 @@ server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) 
             return reply
                 .code(500)
                 .send({ reason: AuthErrors.BackendError });
-        // // TODO
-        // const publication: RabbitMQTypes.UserChange = {
-        //   id: updatedUser.id,
-        //   displayName: updatedUser.display_name,
-        //   smallImage: updatedUser.,
-        // };
-        // publishMessage(publication).catch(console.error);
+        const publication = {
+            id: updatedUser.id,
+            displayName: updatedUser.display_name,
+            smallImage: null,
+            language: null
+        };
+        publishMessage(publication).catch(console.error);
         return reply.code(201).send(updatedUser);
     }
     catch (e) {
@@ -406,8 +407,51 @@ server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
         // TODO: publish for Flo
         const publication = {
             id: updatedUser.id,
-            displayName: updatedUser.display_name,
+            displayName: null,
             smallImage: smallImgBuffer,
+            language: null,
+        };
+        publishMessage(publication).catch(console.error);
+        return reply.code(201).send(updatedUser);
+    }
+    catch (e) {
+        if (e instanceof Error) {
+            console.error(e.message);
+            if (e.message.includes("UNIQUE constraint failed: users.display_name"))
+                return reply
+                    .code(400)
+                    .send({ reason: AuthErrors.DuplicateDisplayName });
+            return reply
+                .code(500)
+                .send({ reason: AuthErrors.BackendError });
+        }
+        else
+            console.error(e);
+    }
+});
+server.post("/api/users/updatelanguage/:inputUserId", async (request, reply) => {
+    const { inputUserId } = request.params;
+    if (!inputUserId)
+        return reply
+            .code(400)
+            .send({
+            reason: AuthErrors.LackingIdParamInUri,
+        });
+    if (!authServiceTypeGuards.isUpdateLanguageBody(request.body))
+        return reply
+            .code(400)
+            .send({ reason: AuthErrors.BadBodyFormat });
+    try {
+        const updatedUser = (await User.setLanguage(inputUserId, request.body.language));
+        if (updatedUser === null)
+            return reply
+                .code(500)
+                .send({ reason: AuthErrors.BackendError });
+        const publication = {
+            id: updatedUser.id,
+            displayName: null,
+            smallImage: null,
+            language: updatedUser.language,
         };
         publishMessage(publication).catch(console.error);
         return reply.code(201).send(updatedUser);

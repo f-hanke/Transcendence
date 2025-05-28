@@ -15,7 +15,7 @@ RUN npm install
 
 COPY chat-service/tsconfig.json ./
 COPY chat-service/src ./src
-COPY chat-service/publisher.ts ./
+#COPY chat-service/publisher.ts ./
 COPY chat-service/db ./db
 
 # Copy the shared package build

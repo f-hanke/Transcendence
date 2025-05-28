@@ -40,6 +40,7 @@ type LogoutSuccessResponseBody = AuthServiceTypes.LogoutSuccessResponseBody;
 type RegSuccessResponseBody = AuthServiceTypes.RegSuccessResponseBody;
 type MatchResult = GameResultTypes.MatchResult;
 type TournamentResult = GameResultTypes.TournamentResult;
+type UpdateLanguageBody = AuthServiceTypes.UpdateLanguageBody;
 
 const queue = "auth-ChatService"; // for publishing
 
@@ -140,6 +141,7 @@ server.post<{
       id: newUser.id,
       displayName: newUser.display_name,
       smallImage: smallImgBuffer,
+      language: newUser.language,
     };
     publishMessage(publication).catch(console.error);
 
@@ -489,13 +491,13 @@ server.post<{
       return reply
         .code(500)
         .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
-    // // TODO
-    // const publication: RabbitMQTypes.UserChange = {
-    //   id: updatedUser.id,
-    //   displayName: updatedUser.display_name,
-    //   smallImage: updatedUser.,
-    // };
-    // publishMessage(publication).catch(console.error);
+    const publication: RabbitMQTypes.UserChange = {
+      id: updatedUser.id,
+      displayName: updatedUser.display_name,
+      smallImage: null,
+      language: null
+    };
+    publishMessage(publication).catch(console.error);
     return reply.code(201).send(updatedUser);
   } catch (e) {
     if (e instanceof Error) {
@@ -548,11 +550,62 @@ server.post<{
     // TODO: publish for Flo
     const publication: RabbitMQTypes.UserChange = {
       id: updatedUser.id,
-      displayName: updatedUser.display_name,
+      displayName: null,
       smallImage: smallImgBuffer,
+      language: null,
     };
     publishMessage(publication).catch(console.error);
 
+    return reply.code(201).send(updatedUser);
+  } catch (e) {
+    if (e instanceof Error) {
+      console.error(e.message);
+      if (e.message.includes("UNIQUE constraint failed: users.display_name"))
+        return reply
+          .code(400)
+          .send({ reason: AuthErrors.DuplicateDisplayName });
+      return reply
+        .code(500)
+        .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+    } else console.error(e);
+  }
+});
+
+server.post<{
+  Body: UpdateLanguageBody;
+  Reply: {
+    201: UserType;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  };
+}>("/api/users/updatelanguage/:inputUserId", async (request, reply) => {
+  const { inputUserId } = request.params as { inputUserId: string };
+  if (!inputUserId)
+    return reply
+      .code(400)
+      .send({
+        reason: AuthErrors.LackingIdParamInUri,
+      } satisfies ErrorResponseBody);
+  if (!authServiceTypeGuards.isUpdateLanguageBody(request.body))
+    return reply
+      .code(400)
+      .send({ reason: AuthErrors.BadBodyFormat } satisfies ErrorResponseBody);
+  try {
+    const updatedUser = (await User.setLanguage(
+      inputUserId,
+      request.body.language
+    )) as UserType;
+    if (updatedUser === null)
+      return reply
+        .code(500)
+        .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+    const publication: RabbitMQTypes.UserChange = {
+      id: updatedUser.id,
+      displayName: null,
+      smallImage: null,
+      language: updatedUser.language,
+    };
+    publishMessage(publication).catch(console.error);
     return reply.code(201).send(updatedUser);
   } catch (e) {
     if (e instanceof Error) {

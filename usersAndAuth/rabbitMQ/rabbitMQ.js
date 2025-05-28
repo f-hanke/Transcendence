@@ -42,7 +42,7 @@ export async function startConsumer() {
                 await updateUserTournamentRecords(message);
             else if (gameResultTypeGuards.isMatchResult(message))
                 await updateUserSimpleMatchRecords(message);
-            if (matchmakingTypeGuards.isTournamentNotification(message) || matchmakingTypeGuards.isServerStartTournament(message)) {
+            if (matchmakingTypeGuards.isTournamentNotification(message) || matchmakingTypeGuards.isServerStartTournament(message) || matchmakingTypeGuards.isPlayerLeftSinceTournamentStarted(message)) {
                 console.log("Received TournamentNotification or ServerStartTournament:", message, ", not for usersAndAuth service, nack() it.");
                 channel.nack(msg, false, true);
                 return;
