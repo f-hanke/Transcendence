@@ -180,6 +180,29 @@ const User = {
         }
     },
     /**
+     * Set user's language
+     * @param {string} id User ID
+     * @param {string} language Language code ('en' | 'de' | 'fr')
+     * @returns {Object} Updated user
+     */
+    async setLanguage(id, language) {
+        try {
+            const stmt = db.prepare(`
+        UPDATE users
+        SET language = ?
+        WHERE id = ?
+      `);
+            const result = stmt.run(language, id);
+            if (result.changes === 0) {
+                throw new Error('User could not be updated');
+            }
+            return this.findById(id);
+        }
+        catch (db_error) {
+            throw db_error;
+        }
+    },
+    /**
      * Update user's online status
      * @param {string} id User ID
      * @param {number} status Online status (0: offline, 1: online)

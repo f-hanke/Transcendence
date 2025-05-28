@@ -45,7 +45,7 @@ const clientIdToSocket = new Map<string, WebSocket>();
 // const queue = 'matchMaking-results';
 const queue = 'matchmaking-service-queue';
 
-async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult | MatchMakingTypes.TournamentNotification | MatchMakingTypes.ServerStartTournament) {
+async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult | MatchMakingTypes.TournamentNotification | MatchMakingTypes.ServerStartTournament | MatchMakingTypes.PlayerLeftSinceTournamentStarted) {
   if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message) && !matchmakingTypeGuards.isTournamentNotification(message) && !matchmakingTypeGuards.isServerStartTournament(message))
     console.error("Trying to publish unknown type");
   let connection;
@@ -289,7 +289,8 @@ fastify.register(async function (fastify) {
       } else if (matchmakingTypeGuards.isClientDeleteTournament(dataJson)) {
         handleClientDeleteTournament(dataJson);
       } else {
-        console.error("Matchmaking server received unknown message from client!");
+        console.error("Matchmaking server received unknown Message from client!");
+        console.error("Message: ", dataJson);
       }
     });
     socket.on("close", () => {
@@ -584,7 +585,11 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
       else if (fakeTournament.player4Id === dataJson.data.playerId)
         fakeTournament.player4Id = null;
       sendMessageToAllClients({type: "updateOneTournament", data: fakeTournament});
-      // TODO: let Florian know so remaining players are informed about some automatic resolvement? 
+      // TODO: let Florian know so remaining players are informed about some automatic resolvement? Here is good
+      publishMessage({
+        playerLeavingId: dataJson.data.playerId,
+        tournament: tournament,
+      } as MatchMakingTypes.PlayerLeftSinceTournamentStarted); // read by chat-service, nack() by usersAndAuth
       // TODO: and what if all of them leave after tournament has started?
     }
   } catch (err) {

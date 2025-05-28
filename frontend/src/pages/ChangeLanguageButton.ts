@@ -64,6 +64,7 @@ class ChangeLanguageButton extends HTMLElement {
       const language = (event.target as HTMLButtonElement).getAttribute('data-lang');
       if (language) {
         window.store.languageStore.set(language as SupportedLanguages);
+        //todo api to usersAndAuth service to change language
         this.closeDropdown();
       }
     }

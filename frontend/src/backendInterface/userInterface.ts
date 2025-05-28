@@ -32,7 +32,7 @@ class UserInterface {
           displayName: string;
         };
         res.displayName = res.display_name;
-        if (updateId) window.store.userStore.updateUserId(res.id);
+        if (updateId) window.store.userStore.updateUserId(res.id.toString());
         window.store.userStore.updateUserSettings(res);
         window.store.userStore.updateUserImage(res.image);
         window.store.userStore.updateSetFetchNeeded(false);
