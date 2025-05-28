@@ -27,12 +27,18 @@ declare namespace MatchMakingTypes {
     matchResultBronze: GameResultTypes.MatchResult | null;
     started: boolean;
     playedAt: string | null;
+    playersWhoClickedToLeave: string[]; // playerIds
   };
 
   type TournamentNotification = {
     tournamentData: Tournament;
     updateForMatch: UpdateForMatch;
   }
+
+  type PlayerLeftSinceTournamentStarted = {
+    playerLeavingId: string;
+    tournament: Tournament;
+  };
 
   type RawDBMatch = {
     id: string;
@@ -334,6 +340,16 @@ function isTournamentNotification(obj: any): obj is MatchMakingTypes.TournamentN
   );
 }
 
+function isPlayerLeftSinceTournamentStarted(obj: any): obj is MatchMakingTypes.PlayerLeftSinceTournamentStarted {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    typeof obj.playerLeavingId === "string" &&
+    obj.playerLeavingId !== null &&
+    isTournament(obj.tournament)
+  );
+}
+
 function isServerUpdateOneTournament(
   value: any
 ): value is MatchMakingTypes.ServerUpdateOneTournament {
@@ -433,6 +449,7 @@ const matchmakingTypeGuards = {
   isServerUpdateOneTournament,
   isTournament,
   isTournamentNotification,
+  isPlayerLeftSinceTournamentStarted,
 } as const;
 
 export { MatchMakingTypes, matchmakingTypeGuards };

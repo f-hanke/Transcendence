@@ -24,7 +24,8 @@ const utils = {
       rank3PlayerId: null,
       rank4PlayerId: null,
       started: tournament.matchResultSemifinale1? true : false,
-      playedAt: null
+      playedAt: null,
+      playersWhoClickedToLeave: tournament.playersWhoClickedToLeave,
     }
 
     if (tournament.matchResultFinale) {

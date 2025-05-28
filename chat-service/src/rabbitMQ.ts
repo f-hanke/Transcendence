@@ -10,9 +10,9 @@ const queue = 'auth-ChatService';
 const tournamentQueue = 'matchmaking-service-queue';
 
 function	updateUserDatabase(msg: RabbitMQTypes.UserChange){
-	console.log("update user db");
+	console.log("update user db", msg);
 	try {
-		db.prepare(databaseQuerys.updateUserDatabase).run(msg.id, msg.displayName, msg.smallImage);
+		db.prepare(databaseQuerys.updateUserDatabase).run(msg.id, msg.displayName, msg.smallImage, msg.language);
 	} catch (err) {
 		console.error("DB error updating/inserting user db", err);
 	}
@@ -43,6 +43,7 @@ export async function startConsumer() {
 				updateUserDatabase(message);
 			}else {
 				console.error("Wrong data read from rabbitMQ : ChatService.");
+				console.log(message);
 				channel.nack(msg, false, true);
 			}
 		}

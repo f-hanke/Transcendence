@@ -36,7 +36,8 @@ const dbConverters = {
       matchResultFinale: null,
       matchResultBronze: null,
       started: rawDBTournament.matchSemifinale1Id? true : false,
-      playedAt: null
+      playedAt: null,
+      playersWhoClickedToLeave: [],  // TODO: oops, I guess we're not storing this in the DB, so just empty initialize
     }
     if (rawDBTournament.matchSemifinale1Id !== null) {
       const rawDBMatch = db.prepare('SELECT * FROM matches WHERE id = ?').get(rawDBTournament.matchSemifinale1Id) as MatchMakingTypes.RawDBMatch;

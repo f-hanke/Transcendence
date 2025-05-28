@@ -161,7 +161,14 @@ const Tournament = {
       throw db_error;
     }
   },
-
+  
+  /**
+   * 
+   * @param id Tournament ID
+   * @param matchId 
+   * @param matchName 
+   * @param player2Id 
+   */
   async addOpponentToMatch(id: string, matchId: string, matchName: string, player2Id: string) {
     try {
       db.prepare(`UPDATE matches SET player2Id = ? WHERE id = ?`).run(player2Id, matchId);
