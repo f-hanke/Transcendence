@@ -129,8 +129,15 @@ fclean: stop clean-npm
 	docker network rm rabbitmq-network 2>/dev/null || true
 	@echo "Full Docker cleanup complete!"
 
-reDev: clean-npm all
-re: fclean all
+reDev:	clean-npm all
+
+rebuild:fclean all
+
+re:	stop
+	@echo "Rebuilding services.."
+	docker compose build --no-cache
+	docker compose up -d
+	@echo "Services have been rebuilt and started, check status with 'make status'"
 
 help:
 	@echo "Available Commands:"
