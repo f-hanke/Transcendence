@@ -48,7 +48,7 @@ const User = {
      */
     async findById(id) {
         try {
-            const stmt = db.prepare('SELECT id, email, display_name, image, online_status, created_at FROM users WHERE id = ?');
+            const stmt = db.prepare('SELECT id, email, display_name, image, online_status, language, created_at FROM users WHERE id = ?');
             return stmt.get(Number(id)) || null;
         }
         catch (db_error) {

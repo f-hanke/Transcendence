@@ -24,13 +24,13 @@ const User = {
         INSERT INTO users (email, pw_hash, display_name)
         VALUES (?, ?, ?)
       `);
-      
+
       const result = stmt.run(userData.email, pw_hash, userData.displayName);
-      
+
       // if (result.changes === 0 ) {
       //   throw new Error('User could not be created');
       // }
-      
+
       return this.findById((result.lastInsertRowid).toString());
     } catch (db_error) {
       throw db_error;  // just passing along without trying to interpret
@@ -51,7 +51,7 @@ const User = {
       throw db_error;
     }
   },
-  
+
   /**
    * Find user by ID
    * @param {string} id User ID
@@ -59,7 +59,7 @@ const User = {
    */
   async findById(id: string) {
     try {
-      const stmt = db.prepare('SELECT id, email, display_name, image, online_status, created_at FROM users WHERE id = ?');
+      const stmt = db.prepare('SELECT id, email, display_name, image, online_status, language, created_at FROM users WHERE id = ?');
       return stmt.get(Number(id)) || null;
     } catch (db_error) {
       throw db_error;
@@ -81,7 +81,7 @@ const User = {
       throw db_error;
     }
   },
-  
+
   /**
    * Find user by email
    * @param {string} email User email
@@ -95,7 +95,7 @@ const User = {
       throw db_error;
     }
   },
-  
+
   /**
    * Find user by display name
    * @param {string} displayName User display name
@@ -109,7 +109,7 @@ const User = {
       throw db_error;
     }
   },
-  
+
   /**
    * Set user's password
    * @param {string} id User ID
@@ -119,10 +119,10 @@ const User = {
   async setPassword(id: string, password: string) {
     try {
       const pw_hash = await passwordUtils.hashPassword(password);
-      
+
       const stmt = db.prepare('UPDATE users SET pw_hash = ? WHERE id = ?');
       const result = stmt.run(pw_hash, id);
-      
+
       return result.changes > 0;
     } catch (db_error) {
       throw db_error;
@@ -139,7 +139,7 @@ const User = {
     try {
       const stmt = db.prepare('UPDATE users SET email = ? WHERE id = ?');
       const result = stmt.run(email, id);
-      
+
       return result.changes > 0;
     } catch (db_error) {
       throw db_error;
@@ -160,13 +160,13 @@ const User = {
         SET display_name = ?
         WHERE id = ?
       `);
-      
+
       const result = stmt.run(displayName, id);
-      
+
       if (result.changes === 0) {
         throw new Error('User could not be updated');
       }
-      
+
       return this.findById(id);
     } catch (db_error) {
       throw db_error;
@@ -182,19 +182,19 @@ const User = {
    */
     async setImage(id: string, image: Buffer, small_image: Buffer) {
       try {
-  
+
         const stmt = db.prepare(`
           UPDATE users
           SET image = ?, small_image = ?
           WHERE id = ?
         `);
-        
+
         const result = stmt.run(image, small_image, id);
-        
+
         if (result.changes === 0) {
           throw new Error('User could not be updated');
         }
-        
+
         return this.findById(id);
       } catch (db_error) {
         throw db_error;
@@ -215,13 +215,13 @@ const User = {
         SET language = ?
         WHERE id = ?
       `);
-      
+
       const result = stmt.run(language, id);
-      
+
       if (result.changes === 0) {
         throw new Error('User could not be updated');
       }
-      
+
       return this.findById(id);
     } catch (db_error) {
       throw db_error;
@@ -238,13 +238,13 @@ const User = {
     try {
       const stmt = db.prepare('UPDATE users SET online_status = ? WHERE id = ?');
       const result = stmt.run(status, id);
-      
+
       return result.changes > 0;
     } catch (db_error) {
       throw db_error;
     }
   },
-  
+
   /**
    * Increment login count for user
    * @param {string} id User ID
@@ -254,13 +254,13 @@ const User = {
     try {
       const stmt = db.prepare('UPDATE users SET login_count = login_count + 1 WHERE id = ?');
       const result = stmt.run(id);
-      
+
       return result.changes > 0;
     } catch (db_error) {
       throw db_error;
     }
   },
-  
+
   /**
    * Get all users
    * @returns {Array} List of users

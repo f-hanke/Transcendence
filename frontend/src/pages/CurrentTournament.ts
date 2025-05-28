@@ -36,6 +36,7 @@ class CurrentTournament extends HTMLElement {
   }
 
   render() {
+    const lang = window.store.languageStore.state.currentTournament;
     const tournamentState = window.store.currentTournamentStore.get();
     if (isDefined(tournamentState)) {
       const semi1Finished = isDefined(
@@ -51,14 +52,14 @@ class CurrentTournament extends HTMLElement {
 
       this.innerHTML = `
     <div class="p-4 w-full bg-gray-800 text-white rounded-lg shadow-md">
-     <h2 class="text-lg font-semibold mb-4">🏓 Tournament Overview</h2>
+     <h2 class="text-lg font-semibold mb-4">🏓 ${lang.title || "Tournament Overview"}</h2>
      <div class="mb-6">
-       <h3 class="text-md font-semibold mb-2">Player Rankings</h3>
+       <h3 class="text-md font-semibold mb-2">${lang.rankings || "Player Rankings"}</h3>
        <table class="w-full text-sm table-auto border-collapse">
          <thead>
            <tr class="bg-gray-700 text-left">
-             <th class="px-4 py-2">Rank</th>
-             <th class="px-4 py-2">Name</th>
+            <th class="px-4 py-2">${lang.rank || "Rank"}</th>
+            <th class="px-4 py-2">${lang.name || "Name"}</th>
            </tr>
          </thead>
          <tbody>
@@ -86,7 +87,7 @@ class CurrentTournament extends HTMLElement {
 
       const btn =
         createHtmlElementFromString(`<button id="getDataTournament" class="leave-tournament-btn bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-lg">
-                  ❌ GET DATA VIA API
+                  ❌ ${lang.getDataBtn || "GET DATA VIA API"}
       </button>`);
 
       btn.addEventListener("click", async () => {
@@ -131,12 +132,13 @@ class CurrentTournament extends HTMLElement {
     heading: string,
     match: MatchMakingTypes.BasicGame | GameResultTypes.MatchResult | null
   ) {
+    const lang = window.store.languageStore.state.currentTournament;
     if (!isDefined(match))
       return createHtmlElementFromString(`
       <div class="my-2 bg-gray-700 p-4 border-gray-500 border-2">
         <h3>${heading}</h3>
         <div class="flex justify-between mb-1">
-          <span>To be determined</span>
+          <span>${lang.toBeDetermined || "To be determined"}</span>
         </div>
     </div>
     `);
@@ -148,6 +150,7 @@ class CurrentTournament extends HTMLElement {
   }
 
   renderMatchToBePlayed(heading: string, match: MatchMakingTypes.BasicGame) {
+    const lang = window.store.languageStore.state.currentTournament;
     const amHost = window.store.userStore.get().details.id === match.hostId;
     const amPartOfGame = amHost || window.store.userStore.get().details.id === match.invitedPlayerId
 
@@ -155,17 +158,18 @@ class CurrentTournament extends HTMLElement {
     <div class="my-2 bg-gray-700 p-4 border-white border-2">
         <h3>${heading}</h3>
         <div class="flex justify-between mb-1">
-          <span>Player 1: ${match.hostId}</span>
-          <span>Player 2: ${match.invitedPlayerId}</span>
+        <span>${lang.player1 || "Player 1"}: ${match.hostId}</span>
+        <span>${lang.player2 || "Player 2"}: ${match.invitedPlayerId}</span>
           <span>
             ${
               amHost
                 ? `<button id="createGameBtnTourni" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg">
-                  ➕ Create Game
+                  ➕ ${lang.createGame || "Create Game"}
                   </button>`
-                : amPartOfGame ? 
+                : amPartOfGame ?
                 `<button class="mr-1 border-gray-500 text-gray-500 border-2 border-dashed">Wait for Host</button>`
-                : `<div>None of your business!</div>`
+                : `<div>${lang.notParticipant || "None of your business!"}
+</div>`
             }
           </span>
         </div>
@@ -186,14 +190,15 @@ class CurrentTournament extends HTMLElement {
   }
 
   renderMatchFinished(heading: string, match: GameResultTypes.MatchResult) {
+    const lang = window.store.languageStore.state.currentTournament;
     const htmlElem = createHtmlElementFromString(`
     <div class="my-2 bg-gray-700 p-4 border-2 border-black">
         <h3>${heading}</h3>
         <div class="flex justify-between mb-1">
-          <span>Player 1: ${match.player1Id}</span>
-          <span>Player 2: ${match.player2Id}</span>
-          <span>Result: ${match.player1Score} : ${match.player2Score}</span>
-          <span>Winner: ${match.winnerId}</span>
+        <span>${lang.player1 || "Player 1"}: ${match.player1Id}</span>
+        <span>${lang.player2 || "Player 2"}: ${match.player2Id}</span>
+        <span>${lang.result || "Result"}: ${match.player1Score} : ${match.player2Score}</span>
+        <span>${lang.winner || "Winner"}: ${match.winnerId}</span>
         </div>
     </div>
     `);

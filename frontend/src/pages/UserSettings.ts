@@ -30,7 +30,7 @@ class UserSettings extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(
       this.render.bind(this)
     );
-    const userId = window.store.userStore.get().details.otherUserId ?? window.store.userStore.get().details.id; 
+    const userId = window.store.userStore.get().details.otherUserId ?? window.store.userStore.get().details.id;
     UserInterface.getAllUserDetails(userId, true);
     UserInterface.getMatches(userId, false);
     UserInterface.getTournaments(userId);
@@ -48,21 +48,23 @@ class UserSettings extends HTMLElement {
       <div class="p-4 w-full h-full mx-auto bg-gray-800 text-white rounded-lg shadow-md">
         <h2 class="text-lg font-semibold mb-4">${window.store.languageStore.state.userSettings.userSettings}</h2>
         <div id="inputEditContainer"></div>
-      
+
         <div class="bg-gray-800" id="userFriends"></div>
         <div class="bg-gray-800" id="userMatchHistory"></div>
       </div>
     `;
 
-    const pwGuidlines = createHtmlElementFromString(`
-        <ul class="text-sm text-gray-400 list-disc pl-5 mb-4 space-y-1">
-            <li>Must be at least <span class="text-white font-medium">8 characters</span> long</li>
-            <li>Must not exceed <span class="text-white font-medium">256 characters</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">uppercase letter</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">lowercase letter</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">digit</span></li>
-            <li>Must contain at least one <span class="text-white font-medium">special character</span></li>
-          </ul>`);
+  const guidelines = window.store.languageStore.state.register;
+  const pwGuidlines = createHtmlElementFromString(`
+    <ul class="text-sm text-gray-400 list-disc pl-5 mb-4 space-y-1">
+      <li>${guidelines.passwordRuleMinLength}</li>
+      <li>${guidelines.passwordRuleMaxLength}</li>
+      <li>${guidelines.passwordRuleUppercase}</li>
+      <li>${guidelines.passwordRuleLowercase}</li>
+      <li>${guidelines.passwordRuleDigit}</li>
+      <li>${guidelines.passwordRuleSpecialChar}</li>
+    </ul>
+  `);
 
     // (this.querySelector("#userFriends") as HTMLDivElement).innerHTML =
     //   this.renderFriends();
@@ -105,6 +107,7 @@ class UserSettings extends HTMLElement {
     }
   }
 
+    //LEO change all the hard coded text
   renderProfileImage(ownSettingsPage: boolean) {
     const classWhenOwnSettings = ownSettingsPage ?
     "cursor-pointer hover:opacity-80 transition duration-300"
@@ -115,18 +118,18 @@ class UserSettings extends HTMLElement {
     const htmlElem = createHtmlElementFromString(`
     <div>
       <div class="flex gap-2">
-      <label class="block text-sm">Profile Picture</label>
-        <button id="saveBtnEditImage" title="Save">
+      <label class="block text-sm">${window.store.languageStore.state.register.profilePicture}</label>
+        <button id="saveBtnEditImage" title=${window.store.languageStore.state.register.save}>
           💾
         </button>
-        <button id="resetBtnEditImage" title="Reset">
+        <button id="resetBtnEditImage" title=${window.store.languageStore.state.register.reset}>
           🔄
         </button>
       </div>
         <div class="flex flex-col mb-4">
             <img id="profileImage" src="${getImgSrcFromBuffer(imageToRender)}"
               class=" w-full max-w-xl border border-gray-600  ${classWhenOwnSettings}"
-              title="Click to change profile picture"/>
+              title="${window.store.languageStore.state.register.clickToChangeProfilePicture}"
           <input type="file" id="imageUpload" class="hidden"
           accept="image/png, image/jpeg">
       </div>
@@ -161,13 +164,13 @@ class UserSettings extends HTMLElement {
           if (res.ok) {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message: "Profile picture updated successfully!",
+              message: window.store.languageStore.state.register.imageUpdateSuccess,
             });
             window.store.userStore.updateUserImage(newImage);
           } else {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message: `Couldn't update profile picture! Reason: ${res.errorMessage}`,
+             message: `${window.store.languageStore.state.register.imageUpdateFail} ${res.errorMessage}`, //LEO
             });
           }
         }
@@ -196,8 +199,7 @@ class UserSettings extends HTMLElement {
           if (file.size > maxFileSize) {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message:
-                "The file you chose is too big! Please select a file smaller than 4 MB!",
+              message: window.store.languageStore.state.register.fileTooBig,
             });
             return;
           }
@@ -205,8 +207,7 @@ class UserSettings extends HTMLElement {
           if (!extension || !["jpg", "jpeg", "png"].includes(extension)) {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message:
-                "Only files with extensions 'jpg' or 'png' are supported!",
+              message: window.store.languageStore.state.register.invalidFileFormat,
             });
             return;
           }
@@ -231,7 +232,7 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: "Email updated successfully!",
+          message: window.store.languageStore.state.register.emailUpdateSuccess,
         });
         window.store.userStore.updateUserSettings({
           email: window.store.userStore.get().editState.email as string,
@@ -242,7 +243,7 @@ class UserSettings extends HTMLElement {
       } else {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `Couldn't update email! Reason: ${res.errorMessage}`,
+          message: `${window.store.languageStore.state.register.emailUpdateFail} ${res.errorMessage}`,
         });
       }
     }
@@ -256,7 +257,7 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: "Password updated successfully!",
+          message: window.store.languageStore.state.register.passwordUpdateSuccess,
         });
         const newState = {} as Partial<UserState["editState"]>;
         newState["displayName"] = undefined;
@@ -264,7 +265,7 @@ class UserSettings extends HTMLElement {
       } else {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `Couldn't update password! Reason: ${res.errorMessage}`,
+          message: `${window.store.languageStore.state.register.passwordUpdateFail} ${res.errorMessage}`,
         });
       }
     }
@@ -279,7 +280,7 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: "Displayname updated successfully!",
+          message: window.store.languageStore.state.register.displayNameUpdateSuccess,
         });
         window.store.userStore.updateUserSettings({
           displayName: window.store.userStore.get().editState
@@ -291,7 +292,7 @@ class UserSettings extends HTMLElement {
       } else {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `Couldn't update displayName! Reason: ${res.errorMessage}`,
+          message: `${window.store.languageStore.state.register.displayNameUpdateFail} ${res.errorMessage}`,
         });
       }
     }
@@ -307,10 +308,10 @@ class UserSettings extends HTMLElement {
     <div>
       <div class="flex gap-2">
       <label class="block text-sm">${label}</label>
-        <button id="saveBtnEdit${which}" title="Save">
+        <button id="saveBtnEdit${which}" title=${window.store.languageStore.state.register.save}>
           💾
         </button>
-        <button id="resetBtnEdit${which}" title="Reset">
+        <button id="resetBtnEdit${which}" title=${window.store.languageStore.state.register.save}>
           🔄
         </button>
       </div>
@@ -403,10 +404,12 @@ class UserSettings extends HTMLElement {
         type: "localPvAi",
         tournament: false,
       },
-    ];
+    ]; //LEO CHANGE THE WIN ??
     return `
     <div class="mt-6">
-      <h3 class="text-md font-semibold mb-2">Match History</h3>
+      <h3 class="text-md font-semibold mb-2">
+  ${window.store.languageStore.state.register.matchHistory}
+    </h3>
       <div class="space-y-2">
         ${matches
           .map(
@@ -423,7 +426,7 @@ class UserSettings extends HTMLElement {
               <div class="truncate">${match.type}</div>
               <div class="truncate">${match.score}</div>
               <div class="truncate">${
-                match.tournament ? "🏆 Tournament" : ""
+                match.tournament ? `🏆 ${window.store.languageStore.state.register.tournament}` : ""}
               }</div>
             </div>
           </div>
@@ -438,7 +441,9 @@ class UserSettings extends HTMLElement {
   renderFriends() {
     return `
      <div class="mt-6">
-        <h3 class="text-md font-semibold mb-2">Friends</h3>
+        <h3 class="text-md font-semibold mb-2">
+        ${window.store.languageStore.state.register.friends}
+      </h3>
         <ul class="space-y-2">
           ${[
             { name: "Alice", online: true },
@@ -449,9 +454,13 @@ class UserSettings extends HTMLElement {
               (friend) => `
             <li class="flex items-center justify-between px-4 py-2 bg-gray-700 rounded">
               <span>${friend.name}</span>
-              <span class="text-sm ${
-                friend.online ? "text-green-400" : "text-gray-400"
-              }">${friend.online ? "Online" : "Offline"}</span>
+            <span class="text-sm ${
+              friend.online ? "text-green-400" : "text-gray-400"
+            }">
+              ${friend.online
+                ? window.store.languageStore.state.chat.sections.online
+                : window.store.languageStore.state.chat.sections.offline}
+            </span>
             </li>
           `
             )
