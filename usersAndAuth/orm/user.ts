@@ -267,7 +267,7 @@ const User = {
    */
   async findAll() {
     try {
-      const stmt = db.prepare('SELECT id, display_name, image, language, online_status FROM users');
+      const stmt = db.prepare('SELECT * FROM users');
       return stmt.all();
     } catch (db_error) {
       throw db_error;
