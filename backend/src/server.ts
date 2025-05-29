@@ -63,7 +63,7 @@ fastify.get("/api/routes", async (request, reply) => {
   reply.type("text/plain").send(routes);
 });
 
-fastify.post("/api/game/start", async (request, reply) => {
+fastify.post("/api/game/init", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
    console.log(chalk.cyan.bold("=== Incoming Game Start Request ==="));
   console.log(chalk.cyan.bold(message));
@@ -78,8 +78,25 @@ fastify.post("/api/game/start", async (request, reply) => {
       error: `Invalid typeOfGame "${typeOfGame}". Must be one of: ${validGameTypes.join(", ")}`,
     });
   }
-  console.log(chalk.yellow.bold(`➡️ typeOfGame: ${typeOfGame}`));
-  console.log(chalk.yellow(`➡️ matchId: ${matchId}, hostId: ${hostId}, opponentId: ${oponentId}`));
+  console.log(chalk.yellow.bold(` typeOfGame: ${typeOfGame}`));
+  console.log(chalk.yellow(` matchId: ${matchId}, hostId: ${hostId}, opponentId: ${oponentId}`));
+
+  const game = new Game(typeOfGame, matchId, hostId, oponentId);
+  games.set(matchId, game);
+
+  clientsGames.set(hostId, matchId);
+  clientsGames.set(oponentId, matchId);
+
+  reply.send({ message: "Game started!", matchId });
+
+});
+
+fastify.post("/api/game/start", async (request, reply) => {
+  const message = JSON.stringify(request.body, null, 2);
+  console.log(chalk.cyan.bold(message));
+
+  const { typeOfGame, hostId, oponentId, matchId } =
+    request.body as GameServiceTypes.StaticGameProperties;
 
   const game = new Game(typeOfGame, matchId, hostId, oponentId);
   games.set(matchId, game);
@@ -149,10 +166,20 @@ fastify.get("/api/game/active", async (request, reply) => {
 
 fastify.post("/api/game/leave", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
+  console.log(chalk.cyan.bold("=== Game Leave Request ==="))
+  console.log(chalk.cyan(message));
   const { matchId, clientId } = request.body as GameServiceTypes.APIClientLeave;
   const game = games.get(matchId);
 
   if (!game) return reply.status(404).send({ error: "Game not found" });
+  const isHost = game.player1?.id === clientId;
+  const isOpponent = game.player2?.id === clientId;
+
+  if (!isHost && !isOpponent) {
+    return reply.status(403).send({
+      error: `Client ${clientId} is not a player in match ${matchId}`,
+    });
+  }
 
   game.stopGame("playerLeftGame");
   games.delete(matchId);
