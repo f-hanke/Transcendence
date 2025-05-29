@@ -1,28 +1,56 @@
 global:
   scrape_interval: 15s
-  evaluation_interval: 15s
 
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'auth-service'
+  - job_name: 'elasticsearch'
+    metrics_path: '/_prometheus/metrics'  # optional; default Elasticsearch doesn't expose Prometheus metrics
     static_configs:
-      - targets: ['auth-service:8080']
+      - targets: ['elasticsearch:9200']
 
-  - job_name: 'user-service'
+  - job_name: 'kibana'
+    metrics_path: '/internal/metrics/usage'  # Kibana doesn’t expose Prometheus metrics out of the box
     static_configs:
-      - targets: ['user-service:8080']
+      - targets: ['kibana:5601']
+
+  - job_name: 'grafana'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['grafana:3000']
+
+  - job_name: 'api-gateway'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['api-gateway:8443']
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true  # Because of self-signed certs
+
+  - job_name: 'webserver'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['webserver:10005']
+
+  - job_name: 'users-auth'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['users-auth:10004']
+
+  - job_name: 'remote'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['remote:10002']
 
   - job_name: 'game-service'
+    metrics_path: '/metrics'
     static_configs:
-      - targets: ['game-service:8080']
+      - targets: ['game-service:10003']
 
   - job_name: 'chat-service'
+    metrics_path: '/metrics'
     static_configs:
-      - targets: ['chat-service:8080']
-
-  - job_name: 'notification-service'
-    static_configs:
-      - targets: ['notification-service:8080'] 
+      - targets: ['chat-service:10001']
+    
