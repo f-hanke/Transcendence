@@ -65,10 +65,21 @@ fastify.get("/api/routes", async (request, reply) => {
 
 fastify.post("/api/game/start", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
+   console.log(chalk.cyan.bold("=== Incoming Game Start Request ==="));
   console.log(chalk.cyan.bold(message));
 
   const { typeOfGame, hostId, oponentId, matchId } =
     request.body as GameServiceTypes.StaticGameProperties;
+
+  const validGameTypes = ["localPvP", "localPvAi", "remote"] as const;
+  if (!validGameTypes.includes(typeOfGame)) {
+    console.error(chalk.red(`Invalid game type: "${typeOfGame}"`));
+    return reply.status(400).send({
+      error: `Invalid typeOfGame "${typeOfGame}". Must be one of: ${validGameTypes.join(", ")}`,
+    });
+  }
+  console.log(chalk.yellow.bold(`➡️ typeOfGame: ${typeOfGame}`));
+  console.log(chalk.yellow(`➡️ matchId: ${matchId}, hostId: ${hostId}, opponentId: ${oponentId}`));
 
   const game = new Game(typeOfGame, matchId, hostId, oponentId);
   games.set(matchId, game);
@@ -126,7 +137,6 @@ fastify.get("/api/game/active", async (request, reply) => {
   }
 
   const response = {
-    status: "success",
     count: activeGames.length,
     activeGames
   };
@@ -170,7 +180,7 @@ fastify.post("/api/game/paddle", async (request, reply) => {
   } else if (player === 2) {
     data = {
       matchId,
-      player1: { playerId: "", paddleY: 0, paddleSpeed: 0 }, 
+      player1: { playerId: "", paddleY: 0, paddleSpeed: 0 },
       player2: { playerId: "", paddleY: newY, paddleSpeed: 0 },
     };
   } else {
