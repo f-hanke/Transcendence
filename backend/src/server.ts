@@ -20,6 +20,9 @@ import {
 import fastifyWebsocket from "@fastify/websocket";
 import { request } from "http";
 import { json } from "stream/consumers";
+import esClient, { checkElasticsearch } from './lib/elasticsearch.js';
+import logger from './lib/logger.js';
+import { setupMetrics } from './lib/metrics.js';
 
 type ReadyClient = {
   hostIdReady: boolean;
@@ -33,11 +36,18 @@ const clients = new Map();
 const clientsGames = new Map<string, string>(); //clientId -> matchId
 const readyClients = new Map<string, ReadyClient>();
 
+//JACKS CODE
+setupMetrics(fastify);
+logger.info("Metrics and logger initialized.");
+//keep commented out unless docker is running requires elsasticsearch to be running
+// await checkElasticsearch();
+
+
 // Add health check endpoint for Docker
 fastify.get('/health', async () => {
   return { status: 'ok' };
 });
-
+//
 //debuging after auth
 fastify.options('/api/auth/verify-jwt', (request, reply) => {
   reply
