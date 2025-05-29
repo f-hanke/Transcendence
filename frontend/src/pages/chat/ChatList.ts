@@ -133,13 +133,19 @@ render() {
   createAndAppend(
     container: HTMLDivElement,
     user: ChatServiceTypes.ChatUser,
-    type: UserComponentType
+    type: UserComponentType,
+    isBot: boolean = false
   ) {
     const elem = createHtmlElementFromString(
       `<chat-user-component></chat-user-component>`
     ) as ChatUserComponent;
     container.appendChild(elem);
-    elem.setData(user, type);
+    if(isBot)
+    {
+      user.displayName = "I AM BOT";
+      user.lastMessage = "GONNADESTROYYOU!"
+    }
+    elem.setData(user, type, isBot);
   }
 
   renderBlockedList() {
@@ -187,7 +193,7 @@ render() {
     const userGroups = window.store.chatUserStore.getUserGroups();
 
     for (const user of userGroups.notifierBots) {
-      this.createAndAppend(chatNotifierBotList, user, "user");
+      this.createAndAppend(chatNotifierBotList, user, "user", true);
     }
     for (const user of userGroups.friends) {
       this.createAndAppend(friendsContainer, user, "user");

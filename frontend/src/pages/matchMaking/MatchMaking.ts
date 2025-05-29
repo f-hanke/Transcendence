@@ -8,6 +8,7 @@ import { MatchMakingInterface } from "../../backendInterface/matchmakingInterfac
 import { createHtmlElementFromString, navigateToSite } from "../../utils/utils";
 import { MatchItem, OptnsMatchItem } from "./MatchItem";
 import { OptnsTournamentItem, TournamentItem } from "./TournamentItem";
+import { MatchmakingStateStore } from "../../state/matchmakingStateStore";
 
 class MatchMaking extends HTMLElement {
   unsubscribeMatchmakingState: null | (() => void);
@@ -109,24 +110,29 @@ class MatchMaking extends HTMLElement {
       });
     }
 
-    const hasAnyOwnTournament = window.store.matchmakingStore
-      .get()
-      .tournaments.some((t) =>
-        isOwnTournament(t, window.store.userStore.get().details.id)
-      );
+    const tournamentGroups =
+      window.store.matchmakingStore.getTournamentGroups();
 
-    if (!hasAnyOwnTournament)
+    console.log("TOURNAMENT GROUPS");
+    console.log(tournamentGroups);
+
+    if (!tournamentGroups.playerIsPartOfATournament) {
       this.createAppendCreateTournamentBtn(tournamentContainer);
-
-    for (const tournament of window.store.matchmakingStore.get().tournaments) {
-      const own = isOwnTournament(
-        tournament,
-        window.store.userStore.get().details.id
+      for (const tournament of tournamentGroups.tournamentsToJoin) {
+        this.createAndAppendTournament(tournamentContainer, tournament, {
+          renderJoin: true,
+          renderLeave: false,
+        });
+      }
+    } else {
+      this.createAndAppendTournament(
+        tournamentContainer,
+        tournamentGroups.tournamentsPlayerAlreadyJoined[0],
+        {
+          renderJoin: false,
+          renderLeave: true,
+        }
       );
-      this.createAndAppendTournament(tournamentContainer, tournament, {
-        renderJoin: !hasAnyOwnTournament,
-        renderLeave: own,
-      });
     }
   }
 

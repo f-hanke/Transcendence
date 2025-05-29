@@ -22,6 +22,9 @@ export function addRequestCheckHook(fastify: FastifyInstance) {
     console.log(chalk.yellow(url));
     console.log("\n\n\n");
 
+    // also include health
+    // also include metrics
+
     const skipAuth =
       url === "/AUTHENTICATION/api/auth/register" ||
       url === "/AUTHENTICATION/api/auth/login" ||
@@ -38,6 +41,7 @@ export function addRequestCheckHook(fastify: FastifyInstance) {
       url === "/home" ||
       url === "/chat" ||
       url === "/userSettingsOther" ||
+      url === "/currentTournament" ||
       url === "/userSettingsOwn";
 
     if (!skipAuth) {

@@ -203,6 +203,8 @@ restrict to local and remote */
 fastify.post("/api/game/paddle", async (request, reply) => {
   const { matchId, player, newY } = request.body as GameServiceTypes.APIPaddle;
 
+  console.log(chalk.cyan.yellow("SOMEONE CALLED UPDATE PADDLE"));
+
   const game = games.get(matchId);
   if (!game) return reply.status(404).send({ error: "Game not found" });
 
@@ -220,12 +222,14 @@ fastify.post("/api/game/paddle", async (request, reply) => {
       player1: { playerId: "", paddleY: clampedY, paddleSpeed: 0 },
       player2: null,
     };
+    reply.status(200).send({ msg: "Updated Player 1 Pos" });
   } else if (player === 2) {
     data = {
       matchId,
       player1: { playerId: "", paddleY: 0, paddleSpeed: 0 },
       player2: { playerId: "", paddleY: clampedY, paddleSpeed: 0 },
     };
+    reply.status(200).send({ msg: "Updated Player 2 Pos" });
   } else {
     return reply.status(400).send({ error: "Invalid player number" });
   }

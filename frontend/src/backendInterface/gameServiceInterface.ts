@@ -109,7 +109,6 @@ class GameServiceInterface {
 
   static handleMessage(event: MessageEvent) {
     const dataJson = JSON.parse(event.data);
-    colog(dataJson);
     if (gameServiceTypeGuards.isServerUpdateGameState(dataJson) || gameServiceTypeGuards.isServerUpdateGameStateRestAPI(dataJson)) {
       this.correctUpdateHandlingFunction(dataJson);
     } else if (gameServiceTypeGuards.isServerGameIsOver(dataJson)) {
