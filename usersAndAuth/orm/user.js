@@ -56,14 +56,14 @@ const User = {
         }
     },
     /**
-   * Find users by IDs
-   * @param {string[]} ids User IDs
-   * @returns {AuthServiceTypes.UserType[]} List of users or empty array if not found
-   */
+     * Find users by IDs
+     * @param {string[]} ids User IDs
+     * @returns {AuthServiceTypes.UserType[]} List of users or empty array if not found
+     */
     async findByIds(ids) {
         try {
             const idList = ids.map(() => '?').join(', ');
-            const stmt = db.prepare(`SELECT id, email, display_name, image, online_status, created_at FROM users WHERE id IN (${idList})`);
+            const stmt = db.prepare(`SELECT id, email, display_name, image, online_status, language, created_at FROM users WHERE id IN (${idList})`);
             const results = stmt.all(...ids);
             return results;
         }
@@ -92,7 +92,7 @@ const User = {
      */
     async findByDisplayName(displayName) {
         try {
-            const stmt = db.prepare('SELECT id, email, display_name, image, online_status, created_at FROM users WHERE display_name = ?');
+            const stmt = db.prepare('SELECT id, email, display_name, image, online_status, language, created_at FROM users WHERE display_name = ?');
             return stmt.get(displayName) || null;
         }
         catch (db_error) {
@@ -239,7 +239,7 @@ const User = {
      */
     async findAll() {
         try {
-            const stmt = db.prepare('SELECT id, display_name, image, online_status FROM users');
+            const stmt = db.prepare('SELECT * FROM users');
             return stmt.all();
         }
         catch (db_error) {

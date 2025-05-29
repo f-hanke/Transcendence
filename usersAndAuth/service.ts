@@ -383,6 +383,29 @@ server.post<{
   }
 });
 
+server.get<{
+  Reply: {
+    200: UserIdsToNamesMapping;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  };
+}>("/api/users/alluseridsmappedtodisplaynames", async (request, reply) => {
+  try {
+    const users = (await User.findAll()) as UserType[];
+    const usersMap: UserIdsToNamesMapping = {};
+    for (const user of users) {
+      usersMap[user.id] = user.display_name;
+    }
+    return reply.code(200).send(usersMap);
+  } catch (error) {
+    console.error(error);
+    reply
+      .code(500)
+      .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+  }
+}
+);
+
 server.post<{
   Body: UpdatePasswordBody;
   Reply: {

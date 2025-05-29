@@ -278,6 +278,22 @@ server.post("/api/users/getusernames", async (request, reply) => {
             .send({ reason: AuthErrors.BackendError });
     }
 });
+server.get("/api/users/alluseridsmappedtodisplaynames", async (request, reply) => {
+    try {
+        const users = (await User.findAll());
+        const usersMap = {};
+        for (const user of users) {
+            usersMap[user.id] = user.display_name;
+        }
+        return reply.code(200).send(usersMap);
+    }
+    catch (error) {
+        console.error(error);
+        reply
+            .code(500)
+            .send({ reason: AuthErrors.BackendError });
+    }
+});
 server.post("/api/users/updatepassword/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
