@@ -113,6 +113,12 @@ class MatchmakingStateStore {
         playerLeftThisTournament
       ) {
         groups.tournamentsThatAreFull.push(tournCopy);
+      } else if (
+        !hasStarted &&
+        !playerIsPartOfTournament &&
+        !playerLeftThisTournament
+      ) {
+        groups.tournamentsToJoin.push(tournCopy);
       } else {
         throw new Error("Tournament not assigned to any matchmaking-group!");
       }

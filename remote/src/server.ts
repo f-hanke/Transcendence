@@ -577,16 +577,16 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
       if (matchResult)
         handleMatchResultProcessed(matchResult);
 
-      let fakeTournament: MatchMakingTypes.Tournament = tournament;
-      if (fakeTournament.player1Id === dataJson.data.playerId)
-        fakeTournament.player1Id = null;
-      else if (fakeTournament.player2Id === dataJson.data.playerId)
-        fakeTournament.player2Id = null;
-      else if (fakeTournament.player3Id === dataJson.data.playerId)
-        fakeTournament.player3Id = null;
-      else if (fakeTournament.player4Id === dataJson.data.playerId)
-        fakeTournament.player4Id = null;
-      sendMessageToAllClients({type: "updateOneTournament", data: fakeTournament});
+      // let fakeTournament: MatchMakingTypes.Tournament = tournament;
+      // if (fakeTournament.player1Id === dataJson.data.playerId)
+      //   fakeTournament.player1Id = null;
+      // else if (fakeTournament.player2Id === dataJson.data.playerId)
+      //   fakeTournament.player2Id = null;
+      // else if (fakeTournament.player3Id === dataJson.data.playerId)
+      //   fakeTournament.player3Id = null;
+      // else if (fakeTournament.player4Id === dataJson.data.playerId)
+      //   fakeTournament.player4Id = null;
+      sendMessageToAllClients({type: "updateOneTournament", data: tournament});
       // TODO: let Florian know so remaining players are informed about some automatic resolvement? Here is good
       publishMessage({
         playerLeavingId: dataJson.data.playerId,
