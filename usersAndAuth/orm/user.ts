@@ -227,7 +227,7 @@ const User = {
       throw db_error;
     }
   },
-  
+
   /**
    * Update user's online status
    * @param {string} id User ID

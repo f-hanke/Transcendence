@@ -171,8 +171,9 @@ const de: LanguageState = {
       userUnblocked: "Benutzer erfolgreich entblockt.",
       friendRequestAccepted: "Freundschaftsanfrage angenommen.",
       friendRequestDeclined: "Freundschaftsanfrage abgelehnt.",
-    },
-  },
+      invite: "Der Benutzer hat Sie zu einem Spiel eingeladen\nKlicken Sie hier, um beizutreten",
+    }
+  }
 } as const;
 
 export { de };

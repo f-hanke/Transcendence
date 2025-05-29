@@ -167,6 +167,7 @@ type LanguageState = {
       userUnblocked: string;
       friendRequestAccepted: string;
       friendRequestDeclined: string;
+      invite: string;
     };
   };
 };

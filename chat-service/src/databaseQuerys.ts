@@ -89,15 +89,19 @@ export namespace databaseQuerys {
 		`;
 
 	export const	updateUserDatabase = `
-			INSERT INTO users (id, username, small_image, lang)
+			INSERT INTO users (id, username, small_image, language)
 				VALUES (?, ?, ?, ?)
 			ON CONFLICT(id) DO UPDATE SET
 				username = COALESCE(excluded.username, users.username),
 				small_image = COALESCE(excluded.small_image, users.small_image),
-				lang = COALESCE(excluded.lang, users.lang)
+				language = COALESCE(excluded.language, users.language)
 		`;
 
 	export const	getUsername = `
 			SELECT username FROM users WHERE id = ?
+		`;
+
+	export const	getLanguage = `
+			SELECT language FROM users WHERE id = ?
 		`;
 };
