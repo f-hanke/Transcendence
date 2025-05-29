@@ -326,7 +326,7 @@ function getMatchResultsMockup() {
 
 function getTournamentResultsMockup()
 {
-[
+return [
           {
             createdAt: new Date().toISOString(),
             rank1PlayerId: "1",

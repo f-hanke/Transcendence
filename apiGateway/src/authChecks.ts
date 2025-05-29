@@ -65,28 +65,29 @@ export function addRequestCheckHook(fastify: FastifyInstance) {
 // JWT auth middleware
 async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
   try {
-   
     const authHeader = request.headers.authorization;
-     console.log("\n\n\n");
-      console.log(chalk.yellow("HERE 111!"));
-      console.log(chalk.yellow(authHeader));
-      console.log("\n\n\n");
+    console.log("\n\n\n");
+    console.log(chalk.yellow("HERE 111!"));
+    console.log(chalk.yellow(authHeader));
+    console.log("\n\n\n");
     if (!authHeader) throw new Error("No token");
 
     const token = authHeader.split(" ")[1];
-      console.log("\n\n\n");
-      console.log(chalk.yellow("HERE 2222!"));
-      console.log(chalk.yellow(token));
-      console.log("\n\n\n");
+    console.log("\n\n\n");
+    console.log(chalk.yellow("HERE 2222!"));
+    console.log(chalk.yellow(token));
+    console.log("\n\n\n");
     const payload = request.server.jwt.verify(token) as { userId: string };
 
- console.log("\n\n\n");
-      console.log(chalk.yellow("HERE 3333!"));
-      console.log(chalk.yellow(payload));
-      console.log("\n\n\n");
+    console.log("\n\n\n");
+    console.log(chalk.yellow("HERE 3333!"));
+    console.log(chalk.yellow(payload));
+    console.log("\n\n\n");
 
     (request as any).user = payload;
   } catch (err) {
+    console.log(chalk.red("JWT VERIFICATION FAILED"));
     reply.code(401).send({ error: "Unauthorized" });
+    return; // ✅ Stop request lifecycle here
   }
 }
