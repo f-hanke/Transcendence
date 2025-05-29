@@ -16,6 +16,10 @@ import chalk from 'chalk';
 import { AuthErrors, AuthServiceTypes, transNetworkSettings } from 'transcendence';
 import fastifyJwt from '@fastify/jwt'
 
+import esClient, { checkElasticsearch } from './lib/elasticsearch.js';
+import logger from './lib/logger.js';
+import { setupMetrics } from './lib/metrics.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -41,6 +45,10 @@ fastify.register(fastifyJwt, {
 // fastify.register(cors, { origin: "*" });
 
 // await fastify.register(websocketPlugin);
+setupMetrics(fastify);
+logger.info("Metrics and logger initialized.");
+//keep commented out unless docker is running requires elsasticsearch to be running
+await checkElasticsearch();
 
 async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
   try {

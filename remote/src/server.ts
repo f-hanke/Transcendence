@@ -21,10 +21,13 @@ import { dbConverters } from "./utils/rawDBTypeConverters.js";
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
 import { match } from "assert";
 import { stringify } from "querystring";
+import { setupMetrics } from "./lib/metrics.js";
 
 const fastify = Fastify();
 fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
+
+setupMetrics(fastify);
 
 // Add health check endpoint for Docker
 fastify.get('/health', async () => {

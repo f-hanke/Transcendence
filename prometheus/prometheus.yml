@@ -6,15 +6,17 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'elasticsearch'
-    metrics_path: '/_prometheus/metrics'  # optional; default Elasticsearch doesn't expose Prometheus metrics
-    static_configs:
-      - targets: ['elasticsearch:9200']
+  # Elasticsearch doesn't expose Prometheus metrics by default - commenting out
+  # - job_name: 'elasticsearch'
+  #   metrics_path: '/_prometheus/metrics'
+  #   static_configs:
+  #     - targets: ['elasticsearch:9200']
 
-  - job_name: 'kibana'
-    metrics_path: '/internal/metrics/usage'  # Kibana doesn’t expose Prometheus metrics out of the box
-    static_configs:
-      - targets: ['kibana:5601']
+  # Kibana doesn't expose Prometheus metrics by default - commenting out
+  # - job_name: 'kibana'
+  #   metrics_path: '/internal/metrics/usage'
+  #   static_configs:
+  #     - targets: ['kibana:5601']
 
   - job_name: 'grafana'
     metrics_path: '/metrics'
