@@ -1,10 +1,11 @@
-import { isDefined } from "transcendence";
+import { GameResultTypes, isDefined } from "transcendence";
 import { EditableFields, UserState } from "../state/userStateTypes";
 import {
   createHtmlElementFromString,
   fileToBufferLike,
   getImgSrcFromBuffer,
   sanitizeAndCleanInput,
+  userReadableDate,
 } from "../utils/utils";
 import { generateUniqueId } from "transcendence";
 import { UserInterface } from "../backendInterface/userInterface";
@@ -30,7 +31,9 @@ class UserSettings extends HTMLElement {
     this.unsubscribeLanguage = window.store.languageStore.subscribe(
       this.render.bind(this)
     );
-    const userId = window.store.userStore.get().details.otherUserId ?? window.store.userStore.get().details.id;
+    const userId =
+      window.store.userStore.get().details.otherUserId ??
+      window.store.userStore.get().details.id;
     UserInterface.getAllUserDetails(userId, true);
     UserInterface.getMatches(userId, false);
     UserInterface.getTournaments(userId);
@@ -42,20 +45,20 @@ class UserSettings extends HTMLElement {
   }
 
   render() {
-    const ownSettingsPage = window.store.userStore.get().details.otherUserId === null;
-
+    const ownSettingsPage =
+      window.store.userStore.get().details.otherUserId === null;
     this.innerHTML = `
       <div class="p-4 w-full h-full mx-auto bg-gray-800 text-white rounded-lg shadow-md">
         <h2 class="text-lg font-semibold mb-4">${window.store.languageStore.state.userSettings.userSettings}</h2>
         <div id="inputEditContainer"></div>
-
-        <div class="bg-gray-800" id="userFriends"></div>
+        <div class="bg-gray-800" id="userStats"></div>
         <div class="bg-gray-800" id="userMatchHistory"></div>
+        <div class="bg-gray-800" id="userTournamentHistory"></div>
       </div>
     `;
 
-  const guidelines = window.store.languageStore.state.register;
-  const pwGuidlines = createHtmlElementFromString(`
+    const guidelines = window.store.languageStore.state.register;
+    const pwGuidlines = createHtmlElementFromString(`
     <ul class="text-sm text-gray-400 list-disc pl-5 mb-4 space-y-1">
       <li>${guidelines.passwordRuleMinLength}</li>
       <li>${guidelines.passwordRuleMaxLength}</li>
@@ -70,6 +73,10 @@ class UserSettings extends HTMLElement {
     //   this.renderFriends();
     (this.querySelector("#userMatchHistory") as HTMLDivElement).innerHTML =
       this.renderMatchHistory();
+    (this.querySelector("#userTournamentHistory") as HTMLDivElement).innerHTML =
+      this.renderTournamentHistory();
+    (this.querySelector("#userStats") as HTMLDivElement).innerHTML =
+      this.renderUserStats();
 
     const inputEditContainer = this.querySelector(
       "#inputEditContainer"
@@ -107,29 +114,38 @@ class UserSettings extends HTMLElement {
     }
   }
 
-    //LEO change all the hard coded text
+  //LEO change all the hard coded text
   renderProfileImage(ownSettingsPage: boolean) {
-    const classWhenOwnSettings = ownSettingsPage ?
-    "cursor-pointer hover:opacity-80 transition duration-300"
-    : ""
+    const classWhenOwnSettings = ownSettingsPage
+      ? "cursor-pointer hover:opacity-80 transition duration-300"
+      : "";
     const imageToRender =
       window.store.userStore.get().editState.image ??
       window.store.userStore.get().details.image;
     const htmlElem = createHtmlElementFromString(`
     <div>
       <div class="flex gap-2">
-      <label class="block text-sm">${window.store.languageStore.state.register.profilePicture}</label>
-        <button id="saveBtnEditImage" title=${window.store.languageStore.state.register.save}>
+      <label class="block text-sm">${
+        window.store.languageStore.state.register.profilePicture
+      }</label>
+        <button id="saveBtnEditImage" title=${
+          window.store.languageStore.state.register.save
+        }>
           💾
         </button>
-        <button id="resetBtnEditImage" title=${window.store.languageStore.state.register.reset}>
+        <button id="resetBtnEditImage" title=${
+          window.store.languageStore.state.register.reset
+        }>
           🔄
         </button>
       </div>
-        <div class="flex flex-col mb-4">
+        <div class="flex flex-col mb-4" id="profileImageContainer">
             <img id="profileImage" src="${getImgSrcFromBuffer(imageToRender)}"
               class=" w-full max-w-xl border border-gray-600  ${classWhenOwnSettings}"
-              title="${window.store.languageStore.state.register.clickToChangeProfilePicture}"
+              title="${
+                window.store.languageStore.state.register
+                  .clickToChangeProfilePicture
+              }"/>
           <input type="file" id="imageUpload" class="hidden"
           accept="image/png, image/jpeg">
       </div>
@@ -164,13 +180,14 @@ class UserSettings extends HTMLElement {
           if (res.ok) {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message: window.store.languageStore.state.register.imageUpdateSuccess,
+              message:
+                window.store.languageStore.state.register.imageUpdateSuccess,
             });
             window.store.userStore.updateUserImage(newImage);
           } else {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-             message: `${window.store.languageStore.state.register.imageUpdateFail} ${res.errorMessage}`, //LEO
+              message: `${window.store.languageStore.state.register.imageUpdateFail} ${res.errorMessage}`, //LEO
             });
           }
         }
@@ -179,18 +196,28 @@ class UserSettings extends HTMLElement {
         window.store.userStore.updateSetEditState(newState);
       });
 
-      const profileImage = htmlElem.querySelector(
+      const profileImageContainer = htmlElem.querySelector(
+        "#profileImageContainer"
+      ) as HTMLDivElement;
+
+      const profileImage = profileImageContainer.querySelector(
         "#profileImage"
       ) as HTMLImageElement;
 
       profileImage.addEventListener("click", (event) => {
         event.preventDefault();
-        (this.querySelector("#imageUpload") as HTMLLabelElement).click();
+        (
+          profileImageContainer.querySelector(
+            "#imageUpload"
+          ) as HTMLLabelElement
+        ).click();
       });
 
-      htmlElem
+      profileImageContainer
         .querySelector("#imageUpload")
         ?.addEventListener("change", async function (event) {
+          console.log("2");
+
           const maxFileSize = 1024 * 1024 * 4;
           const input = event.target as HTMLInputElement;
           // to do, only allow certain file extensions
@@ -207,7 +234,8 @@ class UserSettings extends HTMLElement {
           if (!extension || !["jpg", "jpeg", "png"].includes(extension)) {
             window.store.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message: window.store.languageStore.state.register.invalidFileFormat,
+              message:
+                window.store.languageStore.state.register.invalidFileFormat,
             });
             return;
           }
@@ -257,7 +285,8 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: window.store.languageStore.state.register.passwordUpdateSuccess,
+          message:
+            window.store.languageStore.state.register.passwordUpdateSuccess,
         });
         const newState = {} as Partial<UserState["editState"]>;
         newState["displayName"] = undefined;
@@ -280,7 +309,8 @@ class UserSettings extends HTMLElement {
       if (res.ok) {
         window.store.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: window.store.languageStore.state.register.displayNameUpdateSuccess,
+          message:
+            window.store.languageStore.state.register.displayNameUpdateSuccess,
         });
         window.store.userStore.updateUserSettings({
           displayName: window.store.userStore.get().editState
@@ -308,18 +338,24 @@ class UserSettings extends HTMLElement {
     <div>
       <div class="flex gap-2">
       <label class="block text-sm">${label}</label>
-        <button id="saveBtnEdit${which}" title=${window.store.languageStore.state.register.save}>
+        <button id="saveBtnEdit${which}" title=${
+      window.store.languageStore.state.register.save
+    }>
           💾
         </button>
-        <button id="resetBtnEdit${which}" title=${window.store.languageStore.state.register.save}>
+        <button id="resetBtnEdit${which}" title=${
+      window.store.languageStore.state.register.save
+    }>
           🔄
         </button>
       </div>
         <input type="text" id="input${which}" value="${
       window.store.userStore.get().editState[which] ??
       window.store.userStore.get().details[which]
-    }" class="w-full p-2 mb-3 rounded bg-gray-700 text-white border border-gray-600 ${ownSettingsPage ? "" : "pointer-events-none select-none cursor-default"}"
-    ${ownSettingsPage ?  "": "readonly"}
+    }" class="w-full p-2 mb-3 rounded bg-gray-700 text-white border border-gray-600 ${
+      ownSettingsPage ? "" : "pointer-events-none select-none cursor-default"
+    }"
+    ${ownSettingsPage ? "" : "readonly"}
     ${ownSettingsPage ? "" : 'onfocus="this.blur();"'}
     >
       </div>
@@ -378,96 +414,173 @@ class UserSettings extends HTMLElement {
     return htmlElem;
   }
 
+  renderUserStats() {
+    const matchHistory = window.store.userStore.get().details.matchHistory;
+  const currentUserId = window.store.userStore.get().details.id;
+
+  const wins = matchHistory.filter(m => m.winnerId === currentUserId).length;
+  const losses = matchHistory.length - wins;
+  const total = wins + losses;
+  const winPercent = total > 0 ? Math.round((wins / total) * 100) : 0;
+  const lossPercent = total > 0 ? 100 - winPercent : 0;
+
+  return `
+    <div class="mt-6">
+      <h2 class="block">${window.store.languageStore.state.userSettings.statsCaption}</h2>
+      <div class="space-y-2 text-sm">
+        <div class="p-3 bg-gray-700 rounded shadow">
+          <div class="flex justify-between mb-1">
+            <span class="text-green-400 font-semibold">${window.store.languageStore.state.userSettings.wins}</span>
+            <span>${wins}</span>
+          </div>
+          <div class="flex justify-between text-gray-300 text-xs mb-2">
+            <span>${window.store.languageStore.state.userSettings.winPercentage}</span>
+            <span>${winPercent}%</span>
+          </div>
+          <div class="flex justify-between mb-1">
+            <span class="text-red-400 font-semibold">${window.store.languageStore.state.userSettings.losses}</span>
+            <span>${losses}</span>
+          </div>
+          <div class="flex justify-between text-gray-300 text-xs">
+            <span>${window.store.languageStore.state.userSettings.lossPercentage}</span>
+            <span>${lossPercent}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
   renderMatchHistory() {
-    const matches = [
-      {
-        opponent: "Alice",
-        result: "Win",
-        score: "11–7",
-        datetime: "2024-11-02 14:32",
-        type: "Remote",
-        tournament: true,
-      },
-      {
-        opponent: "Bob",
-        result: "Loss",
-        score: "9–11",
-        datetime: "2024-10-20 18:45",
-        type: "localPvP",
-        tournament: false,
-      },
-      {
-        opponent: "AI",
-        result: "Win",
-        score: "15–13",
-        datetime: "2024-09-12 09:12",
-        type: "localPvAi",
-        tournament: false,
-      },
-    ]; //LEO CHANGE THE WIN ??
+    const matchHistory = window.store.userStore.get().details.matchHistory;
+    const currentUserId = window.store.userStore.get().details.id;
     return `
     <div class="mt-6">
-      <h3 class="text-md font-semibold mb-2">
-  ${window.store.languageStore.state.register.matchHistory}
-    </h3>
+      <h2 class="block">${
+        window.store.languageStore.state.userSettings.matchHistoryCaption
+      }</h2>
       <div class="space-y-2">
-        ${matches
-          .map(
-            (match) => `
-          <div class="p-3 bg-gray-700 rounded shadow text-sm">
-            <div class="flex justify-between mb-1">
-              <span class="font-semibold">${match.opponent}</span>
-              <span class="${
-                match.result === "Win" ? "text-green-400" : "text-red-400"
-              }">${match.result}</span>
-            </div>
-            <div class="grid grid-cols-4 gap-4 text-gray-300 text-xs">
-              <div class="truncate">${match.datetime}</div>
-              <div class="truncate">${match.type}</div>
-              <div class="truncate">${match.score}</div>
-              <div class="truncate">${
-                match.tournament ? `🏆 ${window.store.languageStore.state.register.tournament}` : ""}
-              }</div>
-            </div>
-          </div>
-        `
-          )
+        ${matchHistory
+          .map((match) => {
+            const isWinner = match.winnerId === currentUserId;
+            const opponentId =
+              match.player1Id === currentUserId
+                ? match.player2Id
+                : match.player1Id;
+            const userScore =
+              match.player1Id === currentUserId
+                ? match.player1Score
+                : match.player2Score;
+            const opponentScore =
+              match.player1Id === currentUserId
+                ? match.player2Score
+                : match.player1Score;
+
+            return `
+              <div class="p-3 bg-gray-700 rounded shadow text-sm">
+                <div class="flex justify-between mb-1">
+                  <span class="font-semibold">${
+                    window.store.languageStore.state.userSettings.oponent
+                  } ${opponentId}</span>
+                  <span class="${
+                    isWinner ? "text-green-400" : "text-red-400"
+                  }">${
+              isWinner
+                ? window.store.languageStore.state.userSettings.win
+                : window.store.languageStore.state.userSettings.loss
+            }</span>
+                </div>
+                <div class="grid grid-cols-3 gap-4 text-gray-300 text-xs">
+                  <div class="truncate">${userReadableDate(
+                    match.createdAt
+                  )}</div>
+                  <div class="truncate">${
+                    window.store.languageStore.state.userSettings.score
+                  } ${userScore} - ${opponentScore}</div>
+                </div>
+              </div>
+            `;
+          })
           .join("")}
       </div>
     </div>
   `;
   }
 
-  renderFriends() {
+  renderTournamentHistory() {
+    const tournamentHistory =
+      window.store.userStore.get().details.tournamentHistory;
     return `
-     <div class="mt-6">
-        <h3 class="text-md font-semibold mb-2">
-        ${window.store.languageStore.state.register.friends}
-      </h3>
-        <ul class="space-y-2">
-          ${[
-            { name: "Alice", online: true },
-            { name: "Bob", online: false },
-            { name: "Charlie", online: true },
-          ]
-            .map(
-              (friend) => `
-            <li class="flex items-center justify-between px-4 py-2 bg-gray-700 rounded">
-              <span>${friend.name}</span>
-            <span class="text-sm ${
-              friend.online ? "text-green-400" : "text-gray-400"
-            }">
-              ${friend.online
-                ? window.store.languageStore.state.chat.sections.online
-                : window.store.languageStore.state.chat.sections.offline}
-            </span>
-            </li>
-          `
-            )
-            .join("")}
-        </ul>
+    <div class="mt-6">
+       <h2 class="block">${
+         window.store.languageStore.state.userSettings.tournamentHistoryCaption
+       }</h2>
+      <div class="space-y-4">
+        ${tournamentHistory
+          .map((tournament) => {
+            return `
+              <div class="p-4 bg-gray-700 rounded-lg shadow text-white">
+               <h3 class="block text-sm">${userReadableDate(
+                 tournament.createdAt
+               )}</h3>
+               <h3 class="block text-sm">${
+                 window.store.languageStore.state.userSettings.ranking
+               }</h3>
+                <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-left">
+                   <div class="justify-self-start">🥇 ${
+                     window.store.languageStore.state.userSettings.first
+                   }</div><div class="justify-self-start">${
+              tournament.rank1PlayerId
+            }</div>
+  <div class="justify-self-start">🥈 ${
+    window.store.languageStore.state.userSettings.second
+  }</div><div class="justify-self-start">${tournament.rank2PlayerId}</div>
+  <div class="justify-self-start">🥉 ${
+    window.store.languageStore.state.userSettings.third
+  }</div><div class="justify-self-start">${tournament.rank3PlayerId}</div>
+  <div class="justify-self-start">💩 ${
+    window.store.languageStore.state.userSettings.fourth
+  }</div><div class="justify-self-start">${tournament.rank4PlayerId}</div>
+                </div>
+                <div class="grid grid-cols-1 gap-2 mt-4">
+                 ${this.formatMatchTournament(
+                   `${window.store.languageStore.state.userSettings.semifinale} 1`,
+                   tournament.matchSemifinale1
+                 )}
+                 ${this.formatMatchTournament(
+                   `${window.store.languageStore.state.userSettings.semifinale} 2`,
+                   tournament.matchSemifinale2
+                 )}
+                 ${this.formatMatchTournament(
+                   window.store.languageStore.state.userSettings.bronzeMatch,
+                   tournament.matchBronze
+                 )}
+                 ${this.formatMatchTournament(
+                   window.store.languageStore.state.userSettings.finale,
+                   tournament.matchFinale
+                 )}
+                </div>
+              </div>
+            `;
+          })
+          .join("")}
       </div>
-    `;
+    </div>
+  `;
+  }
+
+  formatMatchTournament(title: string, match: GameResultTypes.MatchResult) {
+    return `
+                <div class="p-2 bg-gray-600 rounded text-sm shadow">
+                  <div class="flex justify-between mb-1 font-semibold">${title}</div>
+                  <div class="grid grid-cols-5 text-xs text-gray-300">
+                    <div>${match.player1Id} : ${match.player1Score}</div>
+                    <div>-</div>
+                    <div>${match.player2Score} : ${match.player2Id}</div>
+                    <div class="text-green-400">${match.winnerId}</div>
+                  </div>
+                </div>
+              `;
   }
 }
 

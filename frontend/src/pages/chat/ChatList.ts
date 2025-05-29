@@ -62,6 +62,10 @@ render() {
       <div id="friendsTab" class="tab-content ${
         this.selectedTab === "userList" ? "" : "hidden"
       }">
+        <div id="chatNotifierBotList">
+          <h2 class="text-lg font-bold py-4">${lang.sections.notifierBots}</h2>
+          <!-- Populate friend users here -->
+        </div>
         <div id="chatFriendsList">
           <h2 class="text-lg font-bold py-4">${lang.sections.friends}</h2>
           <!-- Populate friend users here -->
@@ -167,6 +171,9 @@ render() {
   }
 
   renderUserList() {
+    const chatNotifierBotList = this.querySelector(
+      "#chatNotifierBotList"
+    ) as HTMLDivElement;
     const friendsContainer = this.querySelector(
       "#chatFriendsList"
     ) as HTMLDivElement;
@@ -179,6 +186,9 @@ render() {
 
     const userGroups = window.store.chatUserStore.getUserGroups();
 
+    for (const user of userGroups.notifierBots) {
+      this.createAndAppend(chatNotifierBotList, user, "user");
+    }
     for (const user of userGroups.friends) {
       this.createAndAppend(friendsContainer, user, "user");
     }

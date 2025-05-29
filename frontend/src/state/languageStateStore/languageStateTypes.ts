@@ -23,98 +23,116 @@ type LanguageState = {
     noMatchesAvailable: string;
     yourMatch: string;
   };
-    manageMatch: {
+  manageMatch: {
     waitingServerStart: string;
     cancelKeyInstruction: string;
     readyKeyInstruction: string;
   };
-   currentTournament: {
-  title: string,
-  rankings: string,
-  rank: string,
-  name: string,
-  getDataBtn: string,
-  toBeDetermined: string,
-  player1: string,
-  player2: string,
-  result: string,
-  winner: string,
-  createGame: string,
-  waitingForHost: string,
-  notParticipant: string
-  },
+  currentTournament: {
+    title: string;
+    rankings: string;
+    rank: string;
+    name: string;
+    getDataBtn: string;
+    toBeDetermined: string;
+    player1: string;
+    player2: string;
+    result: string;
+    winner: string;
+    createGame: string;
+    waitingForHost: string;
+    notParticipant: string;
+  };
   register: {
-    title: string,
-    email: string,
-    displayName: string,
-    password: string,
-    confirmPassword: string,
-    submit: string,
-    alreadyRegistered: string,
-    submitLogin: string,
-    notregistered: string,
-    testUsers: string,
-    passwordRuleMinLength: string,
-    passwordRuleMaxLength: string,
-    passwordRuleUppercase: string,
-    passwordRuleLowercase: string,
-    passwordRuleDigit: string,
-    passwordRuleSpecialChar: string,
-    errorPasswordMismatch: string,
-    success: string,
-    save: string,
-    reset: string,
-    matchHistory: string,
-    friends: string,
-    profilePicture: string,
-    imageUpdateSuccess: string,
-    imageUpdateFail: string,
-    fileTooBig: string,
-    invalidFileFormat: string,
-    emailUpdateSuccess: string,
-    emailUpdateFail: string,
-    passwordUpdateSuccess: string,
-    passwordUpdateFail: string,
-    displayNameUpdateSuccess: string,
-    displayNameUpdateFail: string,
-    tournament: string,
-    clickToChangeProfilePicture: string,
-
-};
+    title: string;
+    email: string;
+    displayName: string;
+    password: string;
+    confirmPassword: string;
+    submit: string;
+    alreadyRegistered: string;
+    submitLogin: string;
+    notregistered: string;
+    testUsers: string;
+    passwordRuleMinLength: string;
+    passwordRuleMaxLength: string;
+    passwordRuleUppercase: string;
+    passwordRuleLowercase: string;
+    passwordRuleDigit: string;
+    passwordRuleSpecialChar: string;
+    errorPasswordMismatch: string;
+    success: string;
+    save: string;
+    reset: string;
+    matchHistory: string;
+    friends: string;
+    profilePicture: string;
+    imageUpdateSuccess: string;
+    imageUpdateFail: string;
+    fileTooBig: string;
+    invalidFileFormat: string;
+    emailUpdateSuccess: string;
+    emailUpdateFail: string;
+    passwordUpdateSuccess: string;
+    passwordUpdateFail: string;
+    displayNameUpdateSuccess: string;
+    displayNameUpdateFail: string;
+    tournament: string;
+    clickToChangeProfilePicture: string;
+  };
   oneVOneLocal: {
-    player1: string,
-    player2: string,
-    aIOrHumanBtnHuman: string,
-    aIOrHumanBtnAi: string,
-    startGame: string,
-    localGameOnSame: string,
-    enterPlayer2NamePlaceholder: string,
+    player1: string;
+    player2: string;
+    aIOrHumanBtnHuman: string;
+    aIOrHumanBtnAi: string;
+    startGame: string;
+    localGameOnSame: string;
+    enterPlayer2NamePlaceholder: string;
   };
   userSettings: {
-    userSettings: string,
-    displayName: string,
-    email: string,
-    save: string,
-    password: string,
+    userSettings: string;
+    displayName: string;
+    email: string;
+    save: string;
+    password: string;
+    matchHistoryCaption: string;
+    score: string;
+    oponent: string;
+    win: string;
+    loss: string;
+    tournamentHistoryCaption: string;
+    ranking: string;
+    semifinale: string;
+    bronzeMatch: string;
+    finale: string;
+    first: string;
+    second: string;
+    third: string;
+    fourth: string;
+    statsCaption: string;
+    wins: string;
+    losses: string;
+    winPercentage: string;
+    lossPercentage: string;
   };
-    matchItem: {
-    matchId: string,
-    gameOf: string,
-    waitingForOpponent: string,
-    typeOfGame: string,
-    join: string,
-    gameRunning: string,
+  matchItem: {
+    matchId: string;
+    gameOf: string;
+    waitingForOpponent: string;
+    typeOfGame: string;
+    join: string;
+    gameRunning: string;
   };
-    tournamentItem: {
-    tournamentId: string,
-    player1: string,
-    player2: string,
-    player3: string,
-    player4: string,
-    join: string,
-    leave: string,
-    freeSpot: string,
-  },
+  tournamentItem: {
+    tournamentId: string;
+    player1: string;
+    player2: string;
+    player3: string;
+    player4: string;
+    join: string;
+    leave: string;
+    freeSpot: string;
+  };
   chat: {
     tabs: {
       users: string;
@@ -122,6 +140,7 @@ type LanguageState = {
       friendRequests: string;
     };
     sections: {
+      notifierBots: string;
       friends: string;
       online: string;
       offline: string;
@@ -137,8 +156,7 @@ type LanguageState = {
       declineRequest: string;
       withdrawRequest: string;
       pending: string;
-      goToGameArea: string,
-
+      goToGameArea: string;
     };
     placeholders: {
       searchUsers: string;
@@ -152,7 +170,6 @@ type LanguageState = {
     };
   };
 };
-
 
 type SupportedLanguages = "en" | "de" | "fr";
 

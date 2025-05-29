@@ -15,6 +15,7 @@ import jwt from 'jsonwebtoken';
 import chalk from 'chalk';
 import { AuthErrors, AuthServiceTypes, transNetworkSettings } from 'transcendence';
 import fastifyJwt from '@fastify/jwt'
+import { addRequestCheckHook } from './authChecks.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,28 +43,7 @@ fastify.register(fastifyJwt, {
 
 // await fastify.register(websocketPlugin);
 
-
-async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
-  try {
-    const authHeader = request.headers.authorization;
-    if (!authHeader) throw new Error('No token');
-
-    const token = authHeader.split(' ')[1];
-    const payload = jwt.verify(token, process.env.JWT_SECRET!);
-
-    (request as any).user = payload;
-  } catch (err) {
-    reply.code(401).send({ error: 'Unauthorized' });
-  }
-}
-
-// // 🔐 JWT auth middleware (skip for static + auth)
-// fastify.addHook('onRequest', async (req, reply) => {
-//   const skipAuth = req.raw.url?.startsWith('/auth') || req.raw.url?.match(/\.(js|css|html|png)$/);
-//   if (!skipAuth) {
-//     await authMiddleware(req, reply);
-//   }
-// });
+addRequestCheckHook(fastify);
 
 fastify.addHook('onRequest', async (request, reply) => {
   console.log("\n");

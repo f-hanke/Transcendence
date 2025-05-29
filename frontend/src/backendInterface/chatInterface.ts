@@ -12,6 +12,7 @@ import {
   getCurDateString,
   navigateToSite,
 } from "../utils/utils";
+import { AuthInterface } from "./authInterface";
 
 class ChatInterface {
   constructor() {
@@ -35,6 +36,7 @@ class ChatInterface {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          authorization: AuthInterface.getAuthHeader(),
         },
         body: JSON.stringify(data),
       });
@@ -64,6 +66,7 @@ class ChatInterface {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          authorization: AuthInterface.getAuthHeader(),
         },
         body: JSON.stringify(inviteData),
       });
@@ -113,6 +116,7 @@ class ChatInterface {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          authorization: AuthInterface.getAuthHeader(),
         },
         body: JSON.stringify(data),
       });
@@ -146,6 +150,7 @@ class ChatInterface {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          authorization: AuthInterface.getAuthHeader(),
         },
         body: JSON.stringify(data),
       });
@@ -188,6 +193,7 @@ class ChatInterface {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          authorization: AuthInterface.getAuthHeader(),
         },
       });
       colog(response);

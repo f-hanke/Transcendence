@@ -31,8 +31,10 @@ const en: LanguageState = {
     success: "Registered successfully! Redirecting to Login!",
     imageUpdateSuccess: "Profile picture updated successfully!",
     imageUpdateFail: "Couldn't update profile picture! Reason:",
-    fileTooBig: "The file you chose is too big! Please select a file smaller than 4 MB!",
-    invalidFileFormat: "Only files with extensions 'jpg' or 'png' are supported!",
+    fileTooBig:
+      "The file you chose is too big! Please select a file smaller than 4 MB!",
+    invalidFileFormat:
+      "Only files with extensions 'jpg' or 'png' are supported!",
     save: "Save",
     reset: "Reset",
     matchHistory: "Match History",
@@ -45,8 +47,8 @@ const en: LanguageState = {
     displayNameUpdateSuccess: "Display name updated successfully!",
     displayNameUpdateFail: "Failed to update display name!",
     tournament: "Tournament",
-    clickToChangeProfilePicture: "Click to change profile picture"
-},
+    clickToChangeProfilePicture: "Click to change profile picture",
+  },
   matchMaking: {
     publicMatches: "Public Matches",
     privateMatches: "Private Matches",
@@ -72,9 +74,9 @@ const en: LanguageState = {
     enterPlayer2NamePlaceholder: "Enter Player2 name",
   },
   manageMatch: {
-  waitingServerStart: "Waiting for the server to start...",
-  cancelKeyInstruction: "Press 'n' to cancel the game",
-  readyKeyInstruction: "Press 'y' when you are ready",
+    waitingServerStart: "Waiting for the server to start...",
+    cancelKeyInstruction: "Press 'n' to cancel the game",
+    readyKeyInstruction: "Press 'y' when you are ready",
   },
   currentTournament: {
     title: "Tournament Overview",
@@ -115,6 +117,25 @@ const en: LanguageState = {
     email: "Email",
     save: "Save",
     password: "Password",
+    matchHistoryCaption: "Match History",
+    oponent: "Oponent",
+    loss: "Loss",
+    win: "Win",
+    tournamentHistoryCaption: "Tournament History",
+    ranking: "Ranking",
+    semifinale: "Semi Finale",
+    bronzeMatch: "Bronze Match",
+    finale: "Finale",
+    score: "Score",
+    first: "1st",
+    second: "2nd",
+    third: "3rd",
+    fourth: "4th",
+    statsCaption: "Stats",
+    wins: "Wins",
+    losses: "Losses",
+    winPercentage: "Win Percentage",
+    lossPercentage: "Loss Percentage",
   },
   chat: {
     tabs: {
@@ -123,6 +144,7 @@ const en: LanguageState = {
       friendRequests: "Friend Requests",
     },
     sections: {
+      notifierBots: "Notifications",
       friends: "Friends",
       online: "Online",
       offline: "Offline",
@@ -149,8 +171,8 @@ const en: LanguageState = {
       userUnblocked: "User unblocked successfully.",
       friendRequestAccepted: "Friend request accepted.",
       friendRequestDeclined: "Friend request declined.",
-    }
-  }
+    },
+  },
 } as const;
 
 export { en };

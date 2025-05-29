@@ -51,8 +51,10 @@ const de: LanguageState = {
     profilePicture: "Profilbild",
     imageUpdateSuccess: "Profilbild erfolgreich aktualisiert!",
     imageUpdateFail: "Profilbild konnte nicht aktualisiert werden! Grund:",
-    fileTooBig: "Die ausgewählte Datei ist zu groß! Bitte eine Datei kleiner als 4 MB wählen!",
-    invalidFileFormat: "Nur Dateien mit den Endungen 'jpg' oder 'png' sind erlaubt!",
+    fileTooBig:
+      "Die ausgewählte Datei ist zu groß! Bitte eine Datei kleiner als 4 MB wählen!",
+    invalidFileFormat:
+      "Nur Dateien mit den Endungen 'jpg' oder 'png' sind erlaubt!",
     emailUpdateSuccess: "E-Mail erfolgreich aktualisiert!",
     emailUpdateFail: "E-Mail konnte nicht aktualisiert werden!",
     passwordUpdateSuccess: "Passwort erfolgreich aktualisiert!",
@@ -60,7 +62,7 @@ const de: LanguageState = {
     displayNameUpdateSuccess: "Anzeigename erfolgreich aktualisiert!",
     displayNameUpdateFail: "Anzeigename konnte nicht aktualisiert werden!",
     tournament: "Turnier",
-    clickToChangeProfilePicture: "Klicken, um das Profilbild zu ändern"
+    clickToChangeProfilePicture: "Klicken, um das Profilbild zu ändern",
   },
   manageMatch: {
     waitingServerStart: "Warten auf den Serverstart...",
@@ -97,6 +99,25 @@ const de: LanguageState = {
     email: "E-Mail",
     save: "Speichern",
     password: "Passwort",
+    matchHistoryCaption: "Spielverlauf",
+    oponent: "Gegner",
+    loss: "Niederlage",
+    win: "Sieg",
+    tournamentHistoryCaption: "Turnierverlauf",
+    ranking: "Rangliste",
+    semifinale: "Halbfinale",
+    bronzeMatch: "Spiel um Platz 3",
+    finale: "Finale",
+    score: "Ergebnis",
+    first: "1.",
+    second: "2.",
+    third: "3.",
+    fourth: "4.",
+    statsCaption: "Statistiken",
+    wins: "Siege",
+    losses: "Niederlagen",
+    winPercentage: "Siegquote",
+    lossPercentage: "Niederlagenquote",
   },
   tournamentItem: {
     tournamentId: "Turnier-ID",
@@ -123,6 +144,7 @@ const de: LanguageState = {
       friendRequests: "Freundschaftsanfragen",
     },
     sections: {
+      notifierBots: "Benachrichtigungen",
       friends: "Freunde",
       online: "Online",
       offline: "Offline",
@@ -149,8 +171,8 @@ const de: LanguageState = {
       userUnblocked: "Benutzer erfolgreich entblockt.",
       friendRequestAccepted: "Freundschaftsanfrage angenommen.",
       friendRequestDeclined: "Freundschaftsanfrage abgelehnt.",
-    }
-  }
+    },
+  },
 } as const;
 
 export { de };

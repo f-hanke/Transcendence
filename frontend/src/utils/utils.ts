@@ -265,8 +265,25 @@ function fileToBufferLike(file: File): Promise<ChatServiceTypes.BufferLike> {
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+function userReadableDate(dateInput: string | Date) {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+
+  hours = hours % 12 || 12;
+
+  return `${day}.${month}.${year} - ${hours}:${minutes} ${ampm}`;
+}
+
+// Example usage
 
 export {
   deepCopyObj,
@@ -285,5 +302,6 @@ export {
   guessImageTypeFromBuffer,
   getImgSrcFromBuffer,
   fileToBufferLike,
-  sleep
+  sleep,
+  userReadableDate
 };
