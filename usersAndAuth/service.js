@@ -231,8 +231,6 @@ server.get("/api/auth/logout/:inputUserId", async (request, reply) => {
 server.get("/api/users/:inputUserId", async (request, reply) => {
     // location found when no inputUserId, but findById() correctly returns null for empty string input
     const { inputUserId } = request.params;
-    console.log("HERE 1");
-    console.log(inputUserId);
     if (!inputUserId)
         return reply
             .code(400)
@@ -241,8 +239,6 @@ server.get("/api/users/:inputUserId", async (request, reply) => {
         });
     try {
         const user = (await User.findById(inputUserId));
-        console.log("HERE 2");
-        console.log(user);
         if (user === null)
             return reply
                 .code(400)

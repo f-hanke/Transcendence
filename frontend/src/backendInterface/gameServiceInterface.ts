@@ -6,6 +6,7 @@ import {
   isDefined,
 } from "transcendence";
 import { buildApiRouteRelative, buildWsRoute } from "../utils/utils";
+import { AuthInterface } from "./authInterface";
 
 class GameServiceInterface {
   constructor() {
@@ -36,6 +37,7 @@ class GameServiceInterface {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          authorization: AuthInterface.getAuthHeader(),
         },
         body: JSON.stringify(data),
       });

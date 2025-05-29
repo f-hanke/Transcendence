@@ -517,7 +517,7 @@ class UserSettings extends HTMLElement {
        }</h2>
       <div class="space-y-4">
         ${tournamentHistory
-          .map((tournament, index) => {
+          .map((tournament) => {
             return `
               <div class="p-4 bg-gray-700 rounded-lg shadow text-white">
                <h3 class="block text-sm">${userReadableDate(
