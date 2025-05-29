@@ -146,6 +146,7 @@ const fr: LanguageState = {
       friendRequests: "Demandes d'amis",
     },
     sections: {
+      notifierBots: "Notifications",
       friends: "Ami·es",
       online: "En ligne",
       offline: "Hors ligne",

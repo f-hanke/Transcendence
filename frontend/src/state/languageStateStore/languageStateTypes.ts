@@ -140,6 +140,7 @@ type LanguageState = {
       friendRequests: string;
     };
     sections: {
+      notifierBots: string;
       friends: string;
       online: string;
       offline: string;
