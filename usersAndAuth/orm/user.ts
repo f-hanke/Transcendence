@@ -66,7 +66,7 @@ const User = {
     }
   },
 
-    /**
+  /**
    * Find users by IDs
    * @param {string[]} ids User IDs
    * @returns {AuthServiceTypes.UserType[]} List of users or empty array if not found
@@ -74,7 +74,7 @@ const User = {
   async findByIds(ids: string[]) {
     try {
       const idList: string = ids.map(() => '?').join(', ');
-      const stmt = db.prepare(`SELECT id, email, display_name, image, online_status, created_at FROM users WHERE id IN (${idList})`);
+      const stmt = db.prepare(`SELECT id, email, display_name, image, online_status, language, created_at FROM users WHERE id IN (${idList})`);
       const results = stmt.all(...ids) as AuthServiceTypes.UserType[];
       return results;
     } catch (db_error) {
@@ -103,7 +103,7 @@ const User = {
    */
   async findByDisplayName(displayName: string) {
     try {
-      const stmt = db.prepare('SELECT id, email, display_name, image, online_status, created_at FROM users WHERE display_name = ?');
+      const stmt = db.prepare('SELECT id, email, display_name, image, online_status, language, created_at FROM users WHERE display_name = ?');
       return stmt.get(displayName) || null;
     } catch (db_error) {
       throw db_error;
@@ -267,7 +267,7 @@ const User = {
    */
   async findAll() {
     try {
-      const stmt = db.prepare('SELECT id, display_name, image, online_status FROM users');
+      const stmt = db.prepare('SELECT id, display_name, image, language, online_status FROM users');
       return stmt.all();
     } catch (db_error) {
       throw db_error;
