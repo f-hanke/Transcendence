@@ -60,6 +60,7 @@ class ChatUserStateStore {
 
   getUserGroups(): ChatUserGroups {
     const groups: ChatUserGroups = {
+      notifierBots: [],
       friends: [],
       online: [],
       offline: [],
@@ -73,7 +74,8 @@ class ChatUserStateStore {
         groups.pendingClientInvite.push(userCopy);
       if (userObj.friendRequestStatus === "pendingRecipientInvite")
         groups.pendingRecipientInvite.push(userCopy);
-      if (userObj.blocked) groups.blocked.push(userCopy);
+      if (userObj.recipientId === "0") groups.notifierBots.push(userCopy);
+      else if (userObj.blocked) groups.blocked.push(userCopy);
       else if (userObj.friend) groups.friends.push(userCopy);
       else if (userObj.online) groups.online.push(userCopy);
       else if (!userObj.online) groups.offline.push(userCopy);

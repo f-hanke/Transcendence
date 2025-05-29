@@ -7,7 +7,7 @@ import {
   MatchMakingTypes,
 } from "transcendence";
 import {  buildApiRouteRelative, buildWsRoute, navigateToSite } from "../utils/utils";
-import { AuthInterfaceAnswer } from "./authInterface";
+import { AuthInterface, AuthInterfaceAnswer } from "./authInterface";
 
 class MatchMakingInterface {
   constructor() {
@@ -33,6 +33,7 @@ class MatchMakingInterface {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          authorization: AuthInterface.getAuthHeader(),
         },
       });
       if (response.ok) {
