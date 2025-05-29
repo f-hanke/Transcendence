@@ -222,9 +222,37 @@ class UserInterface {
       console.log(
         `GETTING MATCHES FOR USER ${id}`
       );
-      console.log(response);
       if (response.ok) {
-        const res = await response.json();
+        // const res = await response.json();
+        const res: GameResultTypes.MatchResult[] = [
+          {
+            player1Id: "3",
+            player2Id: "4",
+            matchId: "10",
+            createdAt: new Date().toISOString(),
+            player1Score: 2,
+            player2Score: 4,
+            winnerId: "4"
+          },
+          {
+            player1Id: "3",
+            player2Id: "4",
+            matchId: "10",
+            createdAt: new Date().toISOString(),
+            player1Score: 2,
+            player2Score: 4,
+            winnerId: "4"
+          },
+          {
+            player1Id: "3",
+            player2Id: "4",
+            matchId: "10",
+            createdAt: new Date().toISOString(),
+            player1Score: 2,
+            player2Score: 4,
+            winnerId: "4"
+          },
+        ]
         window.store.userStore.updateMatchHistory(res, rerender);
         console.log(res);
         return {
@@ -258,7 +286,141 @@ class UserInterface {
       );
       console.log(response);
       if (response.ok) {
-        const res = await response.json();
+        // const res = await response.json();
+         const res: GameResultTypes.TournamentResult[] = [
+          {
+            createdAt: new Date().toISOString(),
+            rank1PlayerId: "1",
+            rank2PlayerId: "2",
+            rank3PlayerId: "3",
+            rank4PlayerId: "4",
+            tournamentId: "123",
+            matchSemifinale1: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "1",
+              player2Id: "2",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "1"
+            },
+            matchSemifinale2: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "3",
+              player2Id: "4",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "3"
+            },
+            matchBronze: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "2",
+              player2Id: "4",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "2"
+            },
+            matchFinale: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "1",
+              player2Id: "3",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "1"
+            },
+          },
+          {
+            createdAt: new Date().toISOString(),
+            rank1PlayerId: "1",
+            rank2PlayerId: "2",
+            rank3PlayerId: "3",
+            rank4PlayerId: "4",
+            tournamentId: "123",
+            matchSemifinale1: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "1",
+              player2Id: "2",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "1"
+            },
+            matchSemifinale2: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "3",
+              player2Id: "4",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "3"
+            },
+            matchBronze: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "2",
+              player2Id: "4",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "2"
+            },
+            matchFinale: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "1",
+              player2Id: "3",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "1"
+            },
+          },
+          {
+            createdAt: new Date().toISOString(),
+            rank1PlayerId: "1",
+            rank2PlayerId: "2",
+            rank3PlayerId: "3",
+            rank4PlayerId: "4",
+            tournamentId: "123",
+            matchSemifinale1: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "1",
+              player2Id: "2",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "1"
+            },
+            matchSemifinale2: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "3",
+              player2Id: "4",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "3"
+            },
+            matchBronze: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "2",
+              player2Id: "4",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "2"
+            },
+            matchFinale: {
+              createdAt: new Date().toISOString(),
+              matchId: "123",
+              player1Id: "1",
+              player2Id: "3",
+              player1Score: 4,
+              player2Score: 2,
+              winnerId: "1"
+            },
+          },
+        ]
         window.store.userStore.updateTournamentHistory(res, rerender);
         console.log(res);
         return {

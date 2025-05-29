@@ -40,7 +40,6 @@ class ManageMatch extends HTMLElement {
   }
 
   async render() {
-
     // colog("in manage match");
     // colog(window.store.gameStore.get().state);
     if (window.store.gameStore.get().state === "none") navigateToSite("/");
