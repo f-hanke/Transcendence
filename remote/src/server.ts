@@ -86,6 +86,7 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
           let finaleOpponentId: string | null = null;
           let bronzeOpponentId: string | null = null;
           finaleOpponentId = (tournament.matchResultSemifinale1.player1Id === matchResult.winnerId) ? tournament.matchResultSemifinale2.winnerId : tournament.matchResultSemifinale1.winnerId;
+          // if (tournament.playersWhoClickedToLeave.includes(bronzeOpponentId))
           if (tournament.matchSemifinale1?.matchId === matchResult.matchId)
             bronzeOpponentId = tournament.matchResultSemifinale2.player1Id === tournament.matchResultSemifinale2.winnerId ? tournament.matchResultSemifinale2.player2Id : tournament.matchResultSemifinale2.player1Id;
           else
@@ -572,6 +573,7 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
       
       // scope reminder: if started === true
       tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
+      await Tournament.removePlayerFromPlayerTournamentsOnly(dataJson.data.tournamentId as string, dataJson.data.playerId as string);
       if (matchResult)
         handleMatchResultProcessed(matchResult);
 
