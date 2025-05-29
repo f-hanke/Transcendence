@@ -62,6 +62,8 @@ export async function startConsumer() {
 			} else if (matchmakingTypeGuards.isServerStartTournament(message)){
 				console.log("Tournament upcoming Match Nofitication!");
 				tournamentStartNotification(message);
+			} else if (matchmakingTypeGuards.isPlayerLeftSinceTournamentStarted(message)) {
+				;
 			} else {
 				console.error("Wrong data read from rabbitMQ : ChatService.");
 				console.log("Message: ", message)
