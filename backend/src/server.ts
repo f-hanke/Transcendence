@@ -196,19 +196,25 @@ fastify.post("/api/game/paddle", async (request, reply) => {
   const game = games.get(matchId);
   if (!game) return reply.status(404).send({ error: "Game not found" });
 
+    if (game.typeOfGame !== "localPvP" && game.typeOfGame !== "localPvAi") {
+    return reply.status(403).send({ error: "Paddle control is only allowed in localPvP or localPvAi games." });
+  }
+
+    const clampedY = Math.max(gameSettings.paddleMinY, Math.min(newY, gameSettings.paddleMaxY));
+
   let data: GameServiceTypes.DataClientUpdatePaddlePosition;
 
   if (player === 1) {
     data = {
       matchId,
-      player1: { playerId: "", paddleY: newY, paddleSpeed: 0 },
+      player1: { playerId: "", paddleY: clampedY, paddleSpeed: 0 },
       player2: null,
     };
   } else if (player === 2) {
     data = {
       matchId,
       player1: { playerId: "", paddleY: 0, paddleSpeed: 0 },
-      player2: { playerId: "", paddleY: newY, paddleSpeed: 0 },
+      player2: { playerId: "", paddleY: clampedY, paddleSpeed: 0 },
     };
   } else {
     return reply.status(400).send({ error: "Invalid player number" });
