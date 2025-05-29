@@ -145,6 +145,8 @@ class GameStateStore {
   updateBallPositionNBothPaddles(
     newState: GameServiceTypes.DataServerUpdateGameState
   ) {
+    console.log("UPDATING BOTH PADDLES");
+    console.log(newState);
     this.state.ball.x = newState.ball.x;
     this.state.ball.y = newState.ball.y + gameSettings.bumperHeight;
     const newOponentPaddle =

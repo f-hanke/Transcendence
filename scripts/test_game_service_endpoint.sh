@@ -1,4 +1,5 @@
-JWT=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0ODUyNTUxNiwiZXhwIjoxNzQ4NTI5MTE2fQ.ldmcTEJ0tj7AGJaZGTb7X_3oTIMl89whJNGtPOGn0c8
+JWT=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0ODUyOTg3MiwiZXhwIjoxNzQ4NTMzNDcyfQ.hp99QeDBVSu0pATk8PeSQ3YH4hwdpgpNyaSglqb6puI
+ACTIVE_MATCH_ID=id-1748531830348-cjgfboksd
 
 
 echo PLEASE ENSURE YOU SET THE JWT IN THE SCRIPT BEFORE CALLING ENPOINTS
@@ -6,7 +7,7 @@ echo CURRENT JWT IS $JWT
 
 echo TRYING TO START A GAME ROM GAMESERVICE VIA THE API GATEWAY
 echo
-curl -k -X POST https://localhost:8443/GAMESERVICE/api/game/start \
+curl -k -X POST https://localhost:8443/GAMESERVICE/api/game/init \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT" \
   -d '{
@@ -27,4 +28,20 @@ curl -k -X GET https://localhost:8443/GAMESERVICE/api/game/active \
 
 echo
 echo
+
+echo TRYING TO UPDATE PADDLE POSITION
+echo
+curl -k -X POST https://localhost:8443/GAMESERVICE/api/game/paddle \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $JWT" \
+  -d "{
+    \"matchId\": \"${ACTIVE_MATCH_ID}\",
+    \"player\": 1,
+    \"newY\": 20
+  }"
+
+echo
+echo
+
+
 

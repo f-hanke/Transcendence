@@ -13,7 +13,7 @@ try {
 			username    TEXT    UNIQUE,
 			small_image BLOB,
 			online      INTEGER DEFAULT 0,
-			lang	TEXT
+			language	TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS messages (

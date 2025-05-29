@@ -61,23 +61,23 @@ start-frontend:
 # Build the frontend (for production)
 build-frontend:
 	@echo "Building frontend for production..."
+	cd shared && npm install && npm run build
 	cd frontend && npm install && npm run build
 
 # Build the frontend with TypeScript checking skipped
 build-frontend-skip-ts-check:
 	@echo "Building frontend for production (skipping TypeScript checks)..."
+	cd shared && npm install && npm run build
 	cd frontend && npm install && npm run build-skip-ts-check
 
-# Rebuild just the webserver with the latest frontend
-rebuild-webserver-with-frontend:
-	@echo "Creating mock frontend build..."
-	cd frontend && npm install && npm run mock-build
-	@echo "Building and starting the webserver with the new frontend..."
+# Rebuild just the webserver (which includes frontend build)
+rebuild-webserver:
+	@echo "Building and starting the webserver (includes frontend build)..."
 	docker compose stop webserver
 	docker compose rm -f webserver
 	docker compose build --no-cache webserver
 	docker compose up -d webserver
-	@echo "Webserver rebuilt with frontend. Check status with 'make status'"
+	@echo "Webserver rebuilt. Check status with 'make status'"
 
 # Rebuild just the frontend service (for development)
 rebuild-frontend:

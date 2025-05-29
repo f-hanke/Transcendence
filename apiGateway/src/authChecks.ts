@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { AuthErrors, AuthServiceTypes } from "transcendence";
 
 function isSensitiveUserUpdate(url: string): boolean {
   return [
@@ -21,6 +22,9 @@ export function addRequestCheckHook(fastify: FastifyInstance) {
     console.log(chalk.yellow(url));
     console.log("\n\n\n");
 
+    // also include health
+    // also include metrics
+
     const skipAuth =
       url === "/AUTHENTICATION/api/auth/register" ||
       url === "/AUTHENTICATION/api/auth/login" ||
@@ -37,6 +41,7 @@ export function addRequestCheckHook(fastify: FastifyInstance) {
       url === "/home" ||
       url === "/chat" ||
       url === "/userSettingsOther" ||
+      url === "/currentTournament" ||
       url === "/userSettingsOwn";
 
     if (!skipAuth) {
@@ -45,13 +50,23 @@ export function addRequestCheckHook(fastify: FastifyInstance) {
       if (isSensitiveUserUpdate(url)) {
         console.log("\n\n\n");
         console.log(chalk.yellow("Sensitive Route Check happening!"));
-        console.log("\n\n\n");
-        const userIdInToken = (req as any).user?.userId;
 
-        const userIdInUrl = url.split("/").filter(Boolean).pop();
 
-        if (!userIdInToken || !userIdInUrl || userIdInToken !== userIdInUrl) {
-          return reply.code(403).send({ error: "Forbidden: User mismatch" });
+        if (!req.headers.authorization)
+          return reply.code(400).send({ reason: AuthErrors.LackingAuthorizationHeader } satisfies AuthServiceTypes.ErrorResponseBody);
+        const token = req.headers.authorization.split(' ')[1];
+
+        try {
+          const jwtPayload = await fastify.jwt.verify<{ userId: string }>(token);
+          const userIdInUrl = url.split("/").filter(Boolean).pop();
+
+          if (!jwtPayload.userId || !userIdInUrl || jwtPayload.userId != userIdInUrl) {
+            return reply.code(403).send({ error: "Forbidden: User mismatch" });
+          }
+          console.log("\n\n\n");
+        } catch (err) {
+          console.error("Invalid token:", err);
+          return null;
         }
       }
     } else {

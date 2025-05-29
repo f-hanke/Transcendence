@@ -2,14 +2,15 @@ docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 r
 
 
 TODO:
-	update Displayname publih milos -> chat
-		-->language
 	noctification for Tournament
-	sql init scipt
+
+---->> milos: tournament notification if player left
+----->>
 
 -Steffan frontend
 	-->Tournament noctification at top
 	---> client shouldnt be able to write to them
+	---> remove send game invite and block
 
 - Tournament noctification with BOT
 
@@ -22,55 +23,3 @@ Connecting to Database while using Docker:
 		- sqlite3 /app/db/chat_service_db.db
 
 	Use SQL commands...
-
-
-
-Host created a game
-	--> players join
-Host starts game
-	-->other 3 players get a noctification
-			{
-				Host (username), has started the Tournament
-				Semifinalmatch will be against (username)
-				Go to game Area to join
-			}
-
-After game end
-	--> gets noctification
-		{
-			You / Username won the Semifinalmatch against you/username
-		}
-
-After both Semifinalmatch ended
-	--> players get noctification:
-		{
-			your next match will be against username
-
-			??? (wait for the host to start the match / open the match so the other player can join)
-
-			Go to the game area to join the final / relegation
-		}
-
-After game end
-	--> gets noctification
-		{
-			You / Username won the final / relegation against you/username
-		}
-
-type Tournament = {
-    tournamentId: string | null;
-    player1Id: string | null;
-    player2Id: string | null;
-    player3Id: string | null;
-    player4Id: string | null;
-    matchSemifinale1: BasicGame | null;
-    matchSemifinale2: BasicGame | null;
-    matchFinale: BasicGame | null;
-    matchBronze: BasicGame | null;
-    matchResultSemifinale1: GameResultTypes.MatchResult | null;
-    matchResultSemifinale2: GameResultTypes.MatchResult | null;
-    matchResultFinale: GameResultTypes.MatchResult | null;
-    matchResultBronze: GameResultTypes.MatchResult | null;
-    started: boolean;
-    playedAt: string | null;
-  };

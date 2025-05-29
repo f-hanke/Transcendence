@@ -14,4 +14,11 @@ type MatchMakingMatchGroups = {
   tournament: MatchMakingTypes.BasicGame[],
 }
 
-export type { MatchmakingState, MatchMakingMatchGroups };
+type TournamentGroups = {
+  tournamentsPlayerAlreadyJoined: MatchMakingTypes.Tournament[];
+  tournamentsToJoin: MatchMakingTypes.Tournament[];
+  tournamentsThatAreFull: MatchMakingTypes.Tournament[];
+  playerIsPartOfATournament: boolean;
+}
+
+export type { MatchmakingState, MatchMakingMatchGroups, TournamentGroups };

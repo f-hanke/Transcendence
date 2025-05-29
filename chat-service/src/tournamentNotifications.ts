@@ -1,5 +1,6 @@
+import { AuthServiceTypes } from 'transcendence';
 import { databaseQuerys } from './databaseQuerys.js';
-import { db, sendToClient, updateUnreadMessages } from "./server.js";
+import { db, getLanguage, messagesArray, sendToClient, updateUnreadMessages } from "./server.js";
 import { MatchMakingTypes } from 'transcendence';
 import { GameResultTypes } from 'transcendence';
 
@@ -13,9 +14,11 @@ function	getPlayerName(id: string){
 	}
 }
 
-function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tournament){
-	let msg = "[Tournament Notification] - Match Result\n";
+function format(template: string, data: Record<string, string | number>): string {
+	return template.replace(/\${(.*?)}/g, (_, key) => String(data[key]));
+}
 
+function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tournament, clientId: string){
 	let matchResult: GameResultTypes.MatchResult | null = null;
 	switch (type) {
 		case "semifinale1":
@@ -34,6 +37,7 @@ function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tourname
 			break;
 	}
 	if (!matchResult) {
+		console.warn(`No tournamentmatch result found for type: ${type}`);
 		return `[Tournament Notification] - No results found for ${type}.`;
 	}
 	const player1Name = getPlayerName(matchResult.player1Id);
@@ -45,13 +49,30 @@ function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tourname
 	const loserScore = isPlayer1Winner ? matchResult.player2Score : matchResult.player1Score;
 	const loserName = isPlayer1Winner ? player2Name : player1Name;
 
-	msg += `${winnerName} won the ${type} match against ${loserName} with a score of ${winnerScore} to ${loserScore}.\n`;
+	const lang = getLanguage(clientId) as AuthServiceTypes.Language;
+
+	const matchMsg = format(messagesArray[lang].matchResult, {
+		winner: winnerName!,
+		loser: loserName!,
+		type: type,
+		winnerScore: winnerScore,
+		loserScore: loserScore
+	});
+
+	const msg = matchMsg;
 	return msg;
 }
 
-function sendTournamentNotification(players: string[], message: string){
+function sendTournamentNotification(players: string[], type: string, data: MatchMakingTypes.Tournament | null) {
 	const date = new Date().toISOString().replace('T', ' ').substring(0, 19);
 	players.forEach((player) => {
+		let message;
+		if (type == "start"){
+			const lang = getLanguage(player) as AuthServiceTypes.Language;
+			message = messagesArray[lang].tournamentStart;
+		}else
+			message = generateTournamentMessage(type, data!, player);
+
 		const notification = {
 			type: "sentMessage",
 			data: {
@@ -84,25 +105,24 @@ export function	tournamentResultNotification(msg: MatchMakingTypes.TournamentNot
 	].filter((id): id is string => typeof id === 'string');
 
 	console.log("TYPE OF NOTIFICATION: ", type);
-	const message = generateTournamentMessage(type, data);
 	switch (type){
 		case "semifinale1":
 			console.log("Handling semifinal1 match logic");
-			sendTournamentNotification(players, message);
+			sendTournamentNotification(players, type, data);
 			break;
 		case "semifinale2":
 			console.log("Handling semifinal2 match logic");
-			sendTournamentNotification(players, message);
+			sendTournamentNotification(players, type, data);
 			break;
 
 		case "finale":
 			console.log("Handling final match logic");
-			sendTournamentNotification(players, message);
+			sendTournamentNotification(players, type, data);
 			break;
 
 		case "bronze":
 			console.log("Handling bronze match logic");
-			sendTournamentNotification(players, message);
+			sendTournamentNotification(players, type, data);
 			break;
 	}
 }
@@ -115,6 +135,5 @@ export function tournamentStartNotification(msg: MatchMakingTypes.ServerStartTou
 		msg.data.player3Id,
 		msg.data.player4Id
 	].filter((id): id is string => typeof id === 'string');
-	const message = "The tournament has started, if you are the Host go to tournaments to schedule the match or wait for the Host to send you a invitation";
-	sendTournamentNotification(players, message);
+	sendTournamentNotification(players, "start", null);
 }

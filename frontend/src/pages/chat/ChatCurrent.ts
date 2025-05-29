@@ -90,6 +90,8 @@ class ChatCurrent extends HTMLElement {
         : "self-start border-blue-300";
     const id = generateUniqueId();
     const isGameInvite = msg?.type === "sendGameInvite";
+    if (isGameInvite)
+      msg.message = lang.notifications.invite;
     const elem = createHtmlElementFromString(
       `
       <div class="flex flex-col ${styleMsgOwner} w-3/4 max-w-5xl mb-2">

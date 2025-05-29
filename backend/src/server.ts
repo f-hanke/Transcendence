@@ -20,6 +20,9 @@ import {
 import fastifyWebsocket from "@fastify/websocket";
 import { request } from "http";
 import { json } from "stream/consumers";
+import esClient, { checkElasticsearch } from './lib/elasticsearch.js';
+import logger from './lib/logger.js';
+import { setupMetrics } from './lib/metrics.js';
 
 type ReadyClient = {
   hostIdReady: boolean;
@@ -33,11 +36,18 @@ const clients = new Map();
 const clientsGames = new Map<string, string>(); //clientId -> matchId
 const readyClients = new Map<string, ReadyClient>();
 
+//JACKS CODE
+setupMetrics(fastify);
+logger.info("Metrics and logger initialized.");
+//keep commented out unless docker is running requires elsasticsearch to be running
+// await checkElasticsearch();
+
+
 // Add health check endpoint for Docker
 fastify.get('/health', async () => {
   return { status: 'ok' };
 });
-
+//
 //debuging after auth
 fastify.options('/api/auth/verify-jwt', (request, reply) => {
   reply
@@ -193,6 +203,8 @@ restrict to local and remote */
 fastify.post("/api/game/paddle", async (request, reply) => {
   const { matchId, player, newY } = request.body as GameServiceTypes.APIPaddle;
 
+  console.log(chalk.cyan.yellow("SOMEONE CALLED UPDATE PADDLE"));
+
   const game = games.get(matchId);
   if (!game) return reply.status(404).send({ error: "Game not found" });
 
@@ -210,12 +222,14 @@ fastify.post("/api/game/paddle", async (request, reply) => {
       player1: { playerId: "", paddleY: clampedY, paddleSpeed: 0 },
       player2: null,
     };
+    reply.status(200).send({ msg: "Updated Player 1 Pos" });
   } else if (player === 2) {
     data = {
       matchId,
       player1: { playerId: "", paddleY: 0, paddleSpeed: 0 },
       player2: { playerId: "", paddleY: clampedY, paddleSpeed: 0 },
     };
+    reply.status(200).send({ msg: "Updated Player 2 Pos" });
   } else {
     return reply.status(400).send({ error: "Invalid player number" });
   }

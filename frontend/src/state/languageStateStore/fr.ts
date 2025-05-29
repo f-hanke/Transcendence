@@ -173,7 +173,8 @@ const fr: LanguageState = {
       userUnblocked: "utilisateur·rice  débloqué·e avec succès.",
       friendRequestAccepted: "Demande d'ami acceptée.",
       friendRequestDeclined: "Demande d'ami refusée.",
-    },
+      invite: "L'utilisateur vous a invité à jouer une partie avec lui\nCliquez ici pour rejoindre.",
+    }
   },
 } as const;
 

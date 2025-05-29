@@ -95,6 +95,6 @@ echo "============================================"
 
 echo "============================================" 
 echo "Check out the frontend at:"
-echo "http://localhost:8080"
+echo "https://localhost:8443"
 
 

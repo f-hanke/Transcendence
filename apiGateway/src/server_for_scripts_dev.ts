@@ -48,7 +48,7 @@ fastify.register(fastifyJwt, {
 
 // await fastify.register(websocketPlugin);
 
-addRequestCheckHook(fastify);
+// addRequestCheckHook(fastify);
 
 fastify.addHook("onRequest", async (request, reply) => {
   console.log("\n");
