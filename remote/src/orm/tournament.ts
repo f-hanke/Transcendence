@@ -99,7 +99,7 @@ const Tournament = {
   },
 
   /**
-   * Remove player from tournament lobby
+   * Remove player from tournament lobby (only used when player leaves the lobby prior to started === true)
    * @param {string} id Tournament ID
    * @param {string} playerId Player ID
    */
@@ -123,6 +123,36 @@ const Tournament = {
         throw new Error(`Player ID ${playerId} not found in tournament ${id}`);
       }
       db.prepare(`UPDATE tournaments SET ${columnToUnset} = NULL WHERE id = ?`).run(id);
+      db.prepare(`DELETE FROM playerTournaments WHERE playerId = ?`).run(playerId);
+    } catch (db_error) {
+      throw db_error;
+    }
+  },
+
+    /**
+   * Remove player from playerTournaments table
+   * @param {string} id Tournament ID
+   * @param {string} playerId Player ID
+   */
+  async removePlayerFromPlayerTournamentsOnly(id: string, playerId: string) {
+    try {
+      const players: { [key: string]: string | null } = db.prepare(`
+        SELECT player1Id, player2Id, player3Id, player4Id
+        FROM tournaments
+        WHERE id = ?
+      `).get(id) as { [key: string]: string | null };
+
+      let columnToUnset: string | null = null;
+      for (const column of ['player1Id', 'player2Id', 'player3Id', 'player4Id']) {
+        if (players[column] === playerId) {
+          columnToUnset = column;
+          break;
+        }
+      }
+      if (!columnToUnset) {
+        console.error(`Player ID ${playerId} not found in tournament ${id}`);
+        throw new Error(`Player ID ${playerId} not found in tournament ${id}`);
+      }
       db.prepare(`DELETE FROM playerTournaments WHERE playerId = ?`).run(playerId);
     } catch (db_error) {
       throw db_error;
