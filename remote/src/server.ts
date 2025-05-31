@@ -86,7 +86,6 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       if (tournament.matchResultSemifinale1 && tournament.matchResultSemifinale2 && !tournament.matchFinale && !tournament.matchBronze)
       {
         try {
-
           // if 2+ players who clicked to leave
           if (tournament.playersWhoClickedToLeave.length > 1) {
             let newMatchId = await Tournament.scheduleMatch(
@@ -115,12 +114,18 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
               createdAt: new Date().toISOString()
             };
             await Tournament.updateOngoingTournamentDatabase(matchBronzeResult.player1Score, matchBronzeResult.player2Score, matchBronzeResult.createdAt, matchBronzeResult.matchId);
+            const tournamentNotification: MatchMakingTypes.TournamentNotification = {
+              updateForMatch: "bronze",
+              tournamentData: tournamentToHandle
+            } as MatchMakingTypes.TournamentNotification;
+            publishMessage(tournamentNotification); // read by chat-service
             console.log("Ongoing Tournament updated in DB");
 
             const finalistsWhoClickedToLeave = tournament.playersWhoClickedToLeave.slice(2);
             let finalistsWhoDidntClickToLeave = [tournament.matchResultSemifinale1.winnerId, tournament.matchResultSemifinale2.winnerId].filter((id) => !tournament.playersWhoClickedToLeave.includes(id));
-            // if (finalistsWhoClickedToLeave.length === 1)
-            //   finalistsWhoClickedToLeave.push()
+            if (finalistsWhoDidntClickToLeave.length === 1) {
+              finalistsWhoDidntClickToLeave = [tournament.player1Id as string, tournament.player2Id as string, tournament.player3Id as string, tournament.player4Id as string].filter((id) => !tournament.playersWhoClickedToLeave.includes(id));
+            }
             let clickedToLeavePopable = finalistsWhoClickedToLeave;
             let didntClickToLeavePopable = finalistsWhoDidntClickToLeave;
             let finalist1Id: string = didntClickToLeavePopable.length > 0 ? didntClickToLeavePopable.pop() as string : clickedToLeavePopable.pop() as string;
@@ -155,6 +160,11 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
                 matchFinaleResult.player1Score = gameSettings.maxScore;
               }
               await Tournament.updateOngoingTournamentDatabase(matchFinaleResult.player1Score, matchFinaleResult.player2Score, matchFinaleResult.createdAt, matchFinaleResult.matchId);
+              const tournamentNotification: MatchMakingTypes.TournamentNotification = {
+                updateForMatch: "finale",
+                tournamentData: tournamentToHandle
+              } as MatchMakingTypes.TournamentNotification;
+              publishMessage(tournamentNotification); // read by chat-service
               console.log("Ongoing Tournament updated in DB");
             }
             else {
@@ -198,6 +208,12 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
                 player2Score: finaleOpponentId === onePlayerProvenToHaveClickedLeaveId ? 0 : gameSettings.maxScore,
                 createdAt: new Date().toISOString()
               };
+              const tournamentNotification: MatchMakingTypes.TournamentNotification = {
+                updateForMatch: "finale",
+                tournamentData: tournamentToHandle
+              } as MatchMakingTypes.TournamentNotification;
+              publishMessage(tournamentNotification); // read by chat-service
+              console.log("Ongoing Tournament updated in DB");
               await Tournament.updateOngoingTournamentDatabase(matchFinaleResult.player1Score, matchFinaleResult.player2Score, matchFinaleResult.createdAt, matchFinaleResult.matchId);
               console.log("Ongoing Tournament updated in DB");
             }
@@ -229,6 +245,11 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
                 player2Score: bronzeOpponentId === onePlayerProvenToHaveClickedLeaveId ? 0 : gameSettings.maxScore,
                 createdAt: new Date().toISOString()
               };
+              const tournamentNotification: MatchMakingTypes.TournamentNotification = {
+                updateForMatch: "bronze",
+                tournamentData: tournamentToHandle
+              } as MatchMakingTypes.TournamentNotification;
+              publishMessage(tournamentNotification); // read by chat-service
               await Tournament.updateOngoingTournamentDatabase(matchBronzeResult.player1Score, matchBronzeResult.player2Score, matchBronzeResult.createdAt, matchBronzeResult.matchId);
               console.log("Ongoing Tournament updated in DB");
             }
@@ -564,8 +585,6 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
     const tournament = tournaments.find((tournament) => tournament.tournamentId === dataJson.data.tournamentId) as MatchMakingTypes.Tournament || null;
     if (!tournament)
       throw new Error("Client tried to leave a tournament that didn't exist!");
-    if (!tournament.playersWhoClickedToLeave.includes(dataJson.data.playerId as string))
-      tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
 
     if (tournament.started === false)
     {
@@ -576,7 +595,7 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
         tournament.player2Id = null;
       else if (tournament.player3Id === dataJson.data.playerId)
         tournament.player3Id = null;
-      else if (tournament.player4Id === dataJson.data.playerId)
+      else if (tournament.player4Id === dataJson.data.playerId) 
         tournament.player4Id = null;
       // delete Tournament (1.) from DB and also (2.) from memory if no players left
       if (tournament.player1Id === null && tournament.player2Id === null && tournament.player3Id === null && tournament.player4Id === null)
@@ -590,6 +609,8 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
     else if (tournament.started === true)
     {
       // DONE: store any unfinished matches with opponent as winner, emulating Leo over here
+      if (!tournament.playersWhoClickedToLeave.includes(dataJson.data.playerId as string))
+        tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
       let matchResult: GameResultTypes.MatchResult | null = null;
       if (!tournament.matchBronze && !tournament.matchFinale)
       {
@@ -649,6 +670,7 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
             player2Score: tournament.matchFinale!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           };
+          console.log("Player leaving was scheduled to play for finale but left and there's no result, now generating match result with the player leaving as loser");
         }
         else if (tournament.matchBronze?.hostId === dataJson.data.playerId || tournament.matchBronze?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultBronze) {
           // player leaving was in bronze match but there's no result for it, generate a match result with the player leaving as loser
@@ -661,6 +683,7 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
             player2Score: tournament.matchBronze!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           }
+          console.log("Player leaving was scheduled to play for bronze but left and there's no result, now generating match result with the player leaving as loser");
         }
         else {
           // player has played all the matches and is leaving, anything we must do? I'm informing Steffen below anyway
@@ -672,15 +695,6 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
       if (matchResult)
         handleMatchResultProcessed(matchResult);
 
-      // let fakeTournament: MatchMakingTypes.Tournament = tournament;
-      // if (fakeTournament.player1Id === dataJson.data.playerId)
-      //   fakeTournament.player1Id = null;
-      // else if (fakeTournament.player2Id === dataJson.data.playerId)
-      //   fakeTournament.player2Id = null;
-      // else if (fakeTournament.player3Id === dataJson.data.playerId)
-      //   fakeTournament.player3Id = null;
-      // else if (fakeTournament.player4Id === dataJson.data.playerId)
-      //   fakeTournament.player4Id = null;
       sendMessageToAllClients({type: "updateOneTournament", data: tournament});
       // DONE: let Florian know so remaining players are informed about some automatic resolvement? Here is good
       publishMessage({
