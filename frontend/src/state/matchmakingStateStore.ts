@@ -113,7 +113,8 @@ class MatchmakingStateStore {
         playerLeftThisTournament
       ) {
         groups.tournamentsThatAreFull.push(tournCopy);
-      } else if (
+      }
+      else if (
         !hasStarted &&
         !playerIsPartOfTournament &&
         !playerLeftThisTournament

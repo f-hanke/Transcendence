@@ -36,7 +36,12 @@ class ChatCurrent extends HTMLElement {
 
     const recipientIdIsDefined =
       window.store.chatMessageStore.get().recipientId.length > 0;
-  this.innerHTML = `
+
+    const isBot = window.store.chatMessageStore.get().recipientId == "0";
+
+    const hideWhenBot = isBot ? "hidden" : "";
+
+    this.innerHTML = `
     <div class="h-full flex flex-col bg-gray-100 p-4 ${
       recipientIdIsDefined ? "" : "hidden"
     }">
@@ -45,9 +50,11 @@ class ChatCurrent extends HTMLElement {
       <div id="messagesContainer" class="flex flex-col overflow-y-auto bg-white p-2 rounded shadow-inner"></div>
 
       <div class="mt-2 flex">
-        <input id="chatInput" type="text" placeholder="${lang.placeholders.typeMessage}"
-          class="flex-grow p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button id="chatSendButton" class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600">
+        <input id="chatInput" type="text" placeholder="${
+          lang.placeholders.typeMessage
+        }"
+          class="flex-grow p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500 ${hideWhenBot}">
+        <button id="chatSendButton" class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 ${hideWhenBot}">
           ${lang.buttons.sendMessage}
         </button>
       </div>
@@ -90,8 +97,7 @@ class ChatCurrent extends HTMLElement {
         : "self-start border-blue-300";
     const id = generateUniqueId();
     const isGameInvite = msg?.type === "sendGameInvite";
-    if (isGameInvite)
-      msg.message = lang.notifications.invite;
+    if (isGameInvite) msg.message = lang.notifications.invite;
     const elem = createHtmlElementFromString(
       `
       <div class="flex flex-col ${styleMsgOwner} w-3/4 max-w-5xl mb-2">

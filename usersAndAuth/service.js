@@ -10,6 +10,9 @@ import { config } from "./config/config.js";
 import { User } from "./orm/user.js";
 import { GameResultModel } from "./orm/gameResultModel.js";
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
+import { setupMetrics } from './lib/metrics.js';
+import logger from './lib/logger.js';
+import { checkElasticsearch } from './lib/elasticsearch.js';
 import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSettings, } from "transcendence";
 const queue = "auth-ChatService"; // for publishing
 async function publishMessage(message) {
@@ -42,6 +45,10 @@ const server = fastify({
         },
     },
 });
+setupMetrics(server);
+logger.info("Metrics and logger initialized.");
+//keep commented out unless docker is running requires elsasticsearch to be running
+await checkElasticsearch();
 server.register(fastifyJwt, {
     secret: "supersecret",
 });

@@ -36,11 +36,10 @@ const clients = new Map();
 const clientsGames = new Map<string, string>(); //clientId -> matchId
 const readyClients = new Map<string, ReadyClient>();
 
-//JACKS CODE
 setupMetrics(fastify);
 logger.info("Metrics and logger initialized.");
 //keep commented out unless docker is running requires elsasticsearch to be running
-// await checkElasticsearch();
+await checkElasticsearch();
 
 
 // Add health check endpoint for Docker

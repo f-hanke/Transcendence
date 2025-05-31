@@ -48,23 +48,24 @@ class UserInterface {
     }
   }
 
-  /*Is this the methode to get the display names? LEo 28/05 */
-  static async getNames(body: string[]): AuthInterfaceAnswer {
+  static async getAllDisplayNames(): AuthInterfaceAnswer {
+    console.log("FETCH DISPLAY NAMES");
     const address = buildApiRouteRelative({
       service: "authService",
-      route: "/api/users/getusernames",
+      route: "/api/users/alluseridsmappedtodisplaynames",
     });
     try {
       const response = await fetch(address, {
-        method: "POST",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
           authorization: AuthInterface.getAuthHeader(),
         },
-        body: JSON.stringify(body),
       });
       if (response.ok) {
-        window.store.playerNamesStore.updateAddNames(await response.json());
+        const res = await response.json();
+        console.log(res);
+        window.store.playerNamesStore.update(res);
         return {
           ok: true,
         };
@@ -230,8 +231,8 @@ class UserInterface {
       console.log(`GETTING MATCHES FOR USER ${id}`);
       if (response.ok) {
         // const res = await response.json();
-        const res: GameResultTypes.MatchResult[] =getMatchResultsMockup();
-          window.store.userStore.updateMatchHistory(res, rerender);
+        const res: GameResultTypes.MatchResult[] = getMatchResultsMockup();
+        window.store.userStore.updateMatchHistory(res, rerender);
         console.log(res);
         return {
           ok: true,
@@ -263,7 +264,8 @@ class UserInterface {
       console.log(response);
       if (response.ok) {
         // const res = await response.json();
-        const res: GameResultTypes.TournamentResult[] = getTournamentResultsMockup();
+        const res: GameResultTypes.TournamentResult[] =
+          getTournamentResultsMockup();
         window.store.userStore.updateTournamentHistory(res, rerender);
         console.log(res);
         return {
@@ -325,140 +327,139 @@ function getMatchResultsMockup() {
   ];
 }
 
-function getTournamentResultsMockup()
-{
-return [
-          {
-            createdAt: new Date().toISOString(),
-            rank1PlayerId: "1",
-            rank2PlayerId: "2",
-            rank3PlayerId: "3",
-            rank4PlayerId: "4",
-            tournamentId: "123",
-            matchSemifinale1: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "1",
-              player2Id: "2",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "1",
-            },
-            matchSemifinale2: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "3",
-              player2Id: "4",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "3",
-            },
-            matchBronze: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "2",
-              player2Id: "4",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "2",
-            },
-            matchFinale: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "1",
-              player2Id: "3",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "1",
-            },
-          },
-          {
-            createdAt: new Date().toISOString(),
-            rank1PlayerId: "1",
-            rank2PlayerId: "2",
-            rank3PlayerId: "3",
-            rank4PlayerId: "4",
-            tournamentId: "123",
-            matchSemifinale1: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "1",
-              player2Id: "2",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "1",
-            },
-            matchSemifinale2: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "3",
-              player2Id: "4",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "3",
-            },
-            matchBronze: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "2",
-              player2Id: "4",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "2",
-            },
-            matchFinale: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "1",
-              player2Id: "3",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "1",
-            },
-          },
-          {
-            createdAt: new Date().toISOString(),
-            rank1PlayerId: "1",
-            rank2PlayerId: "2",
-            rank3PlayerId: "3",
-            rank4PlayerId: "4",
-            tournamentId: "123",
-            matchSemifinale1: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "1",
-              player2Id: "2",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "1",
-            },
-            matchSemifinale2: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "3",
-              player2Id: "4",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "3",
-            },
-            matchBronze: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "2",
-              player2Id: "4",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "2",
-            },
-            matchFinale: {
-              createdAt: new Date().toISOString(),
-              matchId: "123",
-              player1Id: "1",
-              player2Id: "3",
-              player1Score: 4,
-              player2Score: 2,
-              winnerId: "1",
-            },
-          },
-        ];
+function getTournamentResultsMockup() {
+  return [
+    {
+      createdAt: new Date().toISOString(),
+      rank1PlayerId: "1",
+      rank2PlayerId: "2",
+      rank3PlayerId: "3",
+      rank4PlayerId: "4",
+      tournamentId: "123",
+      matchSemifinale1: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "1",
+        player2Id: "2",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "1",
+      },
+      matchSemifinale2: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "3",
+        player2Id: "4",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "3",
+      },
+      matchBronze: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "2",
+        player2Id: "4",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "2",
+      },
+      matchFinale: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "1",
+        player2Id: "3",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "1",
+      },
+    },
+    {
+      createdAt: new Date().toISOString(),
+      rank1PlayerId: "1",
+      rank2PlayerId: "2",
+      rank3PlayerId: "3",
+      rank4PlayerId: "4",
+      tournamentId: "123",
+      matchSemifinale1: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "1",
+        player2Id: "2",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "1",
+      },
+      matchSemifinale2: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "3",
+        player2Id: "4",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "3",
+      },
+      matchBronze: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "2",
+        player2Id: "4",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "2",
+      },
+      matchFinale: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "1",
+        player2Id: "3",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "1",
+      },
+    },
+    {
+      createdAt: new Date().toISOString(),
+      rank1PlayerId: "1",
+      rank2PlayerId: "2",
+      rank3PlayerId: "3",
+      rank4PlayerId: "4",
+      tournamentId: "123",
+      matchSemifinale1: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "1",
+        player2Id: "2",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "1",
+      },
+      matchSemifinale2: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "3",
+        player2Id: "4",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "3",
+      },
+      matchBronze: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "2",
+        player2Id: "4",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "2",
+      },
+      matchFinale: {
+        createdAt: new Date().toISOString(),
+        matchId: "123",
+        player1Id: "1",
+        player2Id: "3",
+        player1Score: 4,
+        player2Score: 2,
+        winnerId: "1",
+      },
+    },
+  ];
 }

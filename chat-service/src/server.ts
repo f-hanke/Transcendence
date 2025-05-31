@@ -12,6 +12,9 @@ import { acceptFriendRequest, removeFriendRequest, sendFriendRequest } from './f
 import { databaseQuerys } from './databaseQuerys.js';
 import { startConsumer } from './rabbitMQ.js';
 import { start } from 'repl';
+import esClient, { checkElasticsearch } from './lib/elasticsearch.js';
+import logger from './lib/logger.js';
+import { setupMetrics } from './lib/metrics.js';
 
 const fastify = Fastify();
 fastify.register(fastifyWebsocket);
@@ -21,7 +24,10 @@ fastify.register(cors, { origin: "*" });
 fastify.get('/health', async () => {
 	return { status: 'ok' };
 });
-
+setupMetrics(fastify);
+logger.info("Metrics and logger initialized.");
+//keep commented out unless docker is running requires elsasticsearch to be running
+// await checkElasticsearch();
 export const db = new Database('./db/chat_service_db.db');
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket[]>();

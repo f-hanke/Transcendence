@@ -30,7 +30,15 @@ async function updateUserSimpleMatchRecords(msg) {
     }
 }
 export async function startConsumer() {
-    const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
+    // const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
+    let connection;
+    try {
+        connection = await amqp.connect("amqp://admin:admin@rabbitmq-service:5672");
+    }
+    catch (err) {
+        console.warn("Failed to connect to rabbitmq-service, trying localhost...");
+        connection = await amqp.connect("amqp://localhost");
+    }
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: false });
     console.log('[Consumer] Waiting for messages...');
