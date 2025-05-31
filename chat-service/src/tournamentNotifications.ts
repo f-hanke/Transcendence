@@ -1,8 +1,9 @@
-import { AuthServiceTypes } from 'transcendence';
+import { AuthServiceTypes, matchmakingTypeGuards } from 'transcendence';
 import { databaseQuerys } from './databaseQuerys.js';
 import { db, getLanguage, messagesArray, sendToClient, updateUnreadMessages } from "./server.js";
 import { MatchMakingTypes } from 'transcendence';
 import { GameResultTypes } from 'transcendence';
+import { match } from 'assert';
 
 function	getPlayerName(id: string){
 	try {
@@ -10,7 +11,7 @@ function	getPlayerName(id: string){
 		return result.username;
 	} catch (err) {
 		console.error("error fetching username from db");
-		return null;
+		return "default name";
 	}
 }
 
@@ -63,15 +64,20 @@ function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tourname
 	return msg;
 }
 
-function sendTournamentNotification(players: string[], type: string, data: MatchMakingTypes.Tournament | null) {
+function sendTournamentNotification(players: string[], type: string, data: MatchMakingTypes.Tournament | MatchMakingTypes.PlayerLeftSinceTournamentStarted | MatchMakingTypes.ServerStartTournament) {
 	const date = new Date().toISOString().replace('T', ' ').substring(0, 19);
 	players.forEach((player) => {
 		let message;
-		if (type == "start"){
-			const lang = getLanguage(player) as AuthServiceTypes.Language;
+		const lang = getLanguage(player) as AuthServiceTypes.Language;
+		if (matchmakingTypeGuards.isServerStartTournament(data)){
 			message = messagesArray[lang].tournamentStart;
-		}else
-			message = generateTournamentMessage(type, data!, player);
+		} else if (matchmakingTypeGuards.isPlayerLeftSinceTournamentStarted(data)) {
+			const playerName = getPlayerName(data.playerLeavingId);
+			message = format(messagesArray[lang].playerLeft, {Player: playerName})
+		} else if (matchmakingTypeGuards.isTournament(data))
+			message = generateTournamentMessage(type, data, player);
+		else
+			message = "failed to send Tournament Notification";
 
 		const notification = {
 			type: "sentMessage",
@@ -80,7 +86,7 @@ function sendTournamentNotification(players: string[], type: string, data: Match
 				recipientId: player,
 				message: message,
 				date: date,
-				type: null,
+				type: "refreshTournamentSite",
 			},
 		} as const;
 		try {
@@ -104,36 +110,32 @@ export function	tournamentResultNotification(msg: MatchMakingTypes.TournamentNot
 		data.player4Id
 	].filter((id): id is string => typeof id === 'string');
 
-	console.log("TYPE OF NOTIFICATION: ", type);
-	switch (type){
-		case "semifinale1":
-			console.log("Handling semifinal1 match logic");
-			sendTournamentNotification(players, type, data);
-			break;
-		case "semifinale2":
-			console.log("Handling semifinal2 match logic");
-			sendTournamentNotification(players, type, data);
-			break;
+	const remainingPlayers = players.filter((id) => !msg.tournamentData.playersWhoClickedToLeave.includes(id))
 
-		case "finale":
-			console.log("Handling final match logic");
-			sendTournamentNotification(players, type, data);
-			break;
-
-		case "bronze":
-			console.log("Handling bronze match logic");
-			sendTournamentNotification(players, type, data);
-			break;
-	}
+	console.log("Handling ", type, " match logic");
+	sendTournamentNotification(remainingPlayers, type, data);
 }
 
 export function tournamentStartNotification(msg: MatchMakingTypes.ServerStartTournament) {
-	//const data = msg.data;
 	const players: string[] = [
 		msg.data.player1Id,
 		msg.data.player2Id,
 		msg.data.player3Id,
 		msg.data.player4Id
 	].filter((id): id is string => typeof id === 'string');
-	sendTournamentNotification(players, "start", null);
+
+	sendTournamentNotification(players, "startTournament", msg);
+}
+
+export function tournamentPlayerLeftNotification(msg: MatchMakingTypes.PlayerLeftSinceTournamentStarted) {
+	const players = [
+		msg.tournament.player1Id,
+		msg.tournament.player2Id,
+		msg.tournament.player3Id,
+		msg.tournament.player4Id
+	].filter((id): id is string => typeof id === 'string');
+
+	const remainingPlayers = players.filter((id) => !msg.tournament.playersWhoClickedToLeave.includes(id));
+
+	sendTournamentNotification(remainingPlayers, "playerLeft", msg);
 }

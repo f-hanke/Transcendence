@@ -39,17 +39,22 @@ class UserStateStore {
     };
   }
 
+  updateUsersOnChange(rerender: boolean = true) {
+    if (rerender) this.listeners.forEach((callback) => callback());
+  }
+
   get(): UserState {
     return this.state;
   }
 
   updateUserId(newId: string, rerender: boolean = true) {
     this.state.details.id = newId;
-    if (rerender) this.listeners.forEach((callback) => callback());
+    this.updateUsersOnChange(rerender);
   }
 
   updateUserSettings(
-    updatedState: Partial<Pick<UserState["details"], "displayName" | "email">>
+    updatedState: Partial<Pick<UserState["details"], "displayName" | "email">>,
+    rerender: boolean = true
   ) {
     const newState = deepCopyObj(this.state);
     for (const detail of Object.keys(updatedState)) {
@@ -62,30 +67,36 @@ class UserStateStore {
       }
     }
     this.state = newState;
-    this.listeners.forEach((callback) => callback());
+    this.updateUsersOnChange(rerender);
   }
 
-  updateUserImage(newImage: ChatServiceTypes.BufferLike) {
+  updateUserImage(
+    newImage: ChatServiceTypes.BufferLike,
+    rerender: boolean = true
+  ) {
     this.state.details.image = newImage;
-    this.listeners.forEach((callback) => callback());
+    this.updateUsersOnChange(rerender);
   }
 
-  updateSetEditState(updatedState: Partial<UserState["editState"]>) {
+  updateSetEditState(
+    updatedState: Partial<UserState["editState"]>,
+    rerender: boolean = true
+  ) {
     this.state.editState = deepCopyObj({
       ...this.state.editState,
       ...updatedState,
     });
-    this.listeners.forEach((callback) => callback());
+    this.updateUsersOnChange(rerender);
   }
 
   updateSetFetchNeeded(needed: boolean, rerender: boolean = true) {
     this.state.details.fetchNeeded = needed;
-    if (rerender) this.listeners.forEach((callback) => callback());
+    this.updateUsersOnChange(rerender);
   }
 
   updateSetOtherUserId(newId: string | null, rerender: boolean = true) {
     this.state.details.otherUserId = newId;
-    if (rerender) this.listeners.forEach((callback) => callback());
+    this.updateUsersOnChange(rerender);
   }
 
   updateMatchHistory(
@@ -93,7 +104,7 @@ class UserStateStore {
     rerender: boolean = true
   ) {
     this.state.details.matchHistory = deepCopyObj(newMatchHistory);
-    if (rerender) this.listeners.forEach((callback) => callback());
+    this.updateUsersOnChange(rerender);
   }
 
   updateTournamentHistory(
@@ -101,7 +112,7 @@ class UserStateStore {
     rerender: boolean = true
   ) {
     this.state.details.tournamentHistory = deepCopyObj(newTournamentHistory);
-    if (rerender) this.listeners.forEach((callback) => callback());
+    this.updateUsersOnChange(rerender);
   }
 
   // update(newState: UserState) {

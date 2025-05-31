@@ -4,8 +4,9 @@ docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 r
 TODO:
 	noctification for Tournament
 
----->> milos: tournament notification if player left
------>>
+---->> milos: tournament notification if player left ---> testing, should work
+----->> tournament rendering in different languages in the frontend
+--> each tournament msg has a type --> for playerLeft, steffen can update tournament page
 
 -Steffan frontend
 	-->Tournament noctification at top
