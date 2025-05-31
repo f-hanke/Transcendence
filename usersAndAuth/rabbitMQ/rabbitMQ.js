@@ -40,7 +40,7 @@ export async function startConsumer() {
         connection = await amqp.connect("amqp://localhost");
     }
     const channel = await connection.createChannel();
-    await channel.assertQueue(queue, { durable: false });
+    await channel.assertQueue(queue, { durable: true });
     console.log('[Consumer] Waiting for messages...');
     channel.consume(queue, async (msg) => {
         if (msg !== null) {

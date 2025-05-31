@@ -45,7 +45,7 @@ type MatchResult = GameResultTypes.MatchResult;
 type TournamentResult = GameResultTypes.TournamentResult;
 type UpdateLanguageBody = AuthServiceTypes.UpdateLanguageBody;
 
-const queue = "auth-ChatService"; // for publishing
+const queue = "auth-service-queue"; // for publishing
 
 async function publishMessage(message: RabbitMQTypes.UserChange) {
   if (!rabbitMQTypeGuards.isUserChangeBody(message))
@@ -63,7 +63,7 @@ async function publishMessage(message: RabbitMQTypes.UserChange) {
 
   const channel = await connection.createChannel();
 
-  await channel.assertQueue(queue, { durable: false });
+  await channel.assertQueue(queue, { durable: true });
 
   channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
   console.log("[Publisher] Sent:", message);

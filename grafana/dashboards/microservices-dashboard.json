@@ -66,9 +66,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(http_request_duration_seconds_count[5m])",
+          "expr": "avg(rate(http_requests_total[5m])) by (job, route)",
           "interval": "",
-          "legendFormat": "{{service}} - {{method}} {{route}}",
+          "legendFormat": "{{job}} - {{route}}",
           "refId": "A"
         }
       ],
@@ -161,9 +161,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service, route))",
+          "expr": "sum(http_requests_total) by (job)",
           "interval": "",
-          "legendFormat": "{{service}} - {{route}}",
+          "legendFormat": "{{job}} - Total Requests",
           "refId": "A"
         }
       ],
@@ -171,7 +171,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "95th Percentile Response Time",
+      "title": "Total Requests by Service",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -252,15 +252,15 @@
       "pluginVersion": "7.3.7",
       "targets": [
         {
-          "expr": "active_users",
+          "expr": "sum(up)",
           "interval": "",
-          "legendFormat": "{{service}}",
+          "legendFormat": "Services Up",
           "refId": "A"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Active Users",
+      "title": "Services Online",
       "type": "gauge"
     },
     {

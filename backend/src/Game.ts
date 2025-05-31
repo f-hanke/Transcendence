@@ -7,7 +7,7 @@ import amqp from 'amqplib';
 import { sendMessage } from './server.js';
 import { AIPlayer } from './aiPlayer.js';
 
-const queue = "match-results";
+const queue = "game-service-queue";
 
 async function publishMatchResult(message: GameResultTypes.MatchResult) {
   if (!gameResultTypeGuards.isMatchResult(message))
@@ -15,7 +15,7 @@ async function publishMatchResult(message: GameResultTypes.MatchResult) {
   const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
   const channel = await connection.createChannel();
 
-  await channel.assertQueue(queue, { durable: false });
+  await channel.assertQueue(queue, { durable: true });
 
   channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
   console.log('[Publisher] Sent:', message);
