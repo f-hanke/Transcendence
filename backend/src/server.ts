@@ -255,7 +255,7 @@ fastify.register(async function (fastify) {
         const data = message.toString("utf-8");
         const dataJson = JSON.parse(data);
 
-        console.log("Received message:", dataJson);
+     //   console.log("Received message:", dataJson);
 
         const current_game = games.get(dataJson.data.matchId);
 
