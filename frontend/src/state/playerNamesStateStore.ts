@@ -1,6 +1,8 @@
 import { isDefined } from "transcendence";
 import { StoreCallback } from "./types";
 import { PlayerNamesState } from "./playerNamesStateTypes";
+import { AuthServiceTypes } from "transcendence";
+import { deepCopyObj } from "../utils/utils";
 
 class PlayerNamesStateStore {
   listeners: Set<StoreCallback>;
@@ -26,18 +28,17 @@ class PlayerNamesStateStore {
     };
   }
 
-  updateAddNames(newIdNameMap: string[]) {
-    for (const id in Object.keys(newIdNameMap)) {
-      this.state[id] = newIdNameMap[id];
-      if (!isDefined(newIdNameMap[id]))
-        throw new Error(
-          `THERE IS NO DISPLAY NAME FOR THE ID ${newIdNameMap[id]}`
-        );
-    }
+  update(idNameMap: AuthServiceTypes.UserIdsToNamesMapping) {
+    this.state = deepCopyObj(idNameMap);
     this.updateListenersOnChange();
   }
 
   getName(playerId: string) {
+    if (!isDefined(this.state[playerId])) {
+      const msg = `DisplayName is not defined for the requested id!`;
+      console.log(msg);
+      throw new Error(msg);
+    }
     return this.state[playerId];
   }
 
@@ -45,5 +46,8 @@ class PlayerNamesStateStore {
     return this.state;
   }
 }
+
+
+
 
 export { PlayerNamesStateStore };

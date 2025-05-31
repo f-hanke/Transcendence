@@ -67,7 +67,7 @@ class CurrentTournament extends HTMLElement {
               return `
              <tr class="border-t border-gray-600 hover:bg-gray-700">
                <td class="px-4 py-2">${elem.rank}</td>
-               <td class="px-4 py-2">${elem.playerId}</td>
+               <td class="px-4 py-2">${window.store.playerNamesStore.getName(elem.playerId)}</td>
              </tr>
            `;
             })}
@@ -158,8 +158,8 @@ class CurrentTournament extends HTMLElement {
     <div class="my-2 bg-gray-700 p-4 border-white border-2">
         <h3>${heading}</h3>
         <div class="flex justify-between mb-1">
-        <span>${lang.player1 || "Player 1"}: ${match.hostId}</span>
-        <span>${lang.player2 || "Player 2"}: ${match.invitedPlayerId}</span>
+        <span>${lang.player1 || "Player 1"}: ${window.store.playerNamesStore.getName(match.hostId)}</span>
+        <span>${lang.player2 || "Player 2"}: ${window.store.playerNamesStore.getName(match.invitedPlayerId)}</span>
           <span>
             ${
               amHost
@@ -195,8 +195,8 @@ class CurrentTournament extends HTMLElement {
     <div class="my-2 bg-gray-700 p-4 border-2 border-black">
         <h3>${heading}</h3>
         <div class="flex justify-between mb-1">
-        <span>${lang.player1 || "Player 1"}: ${match.player1Id}</span>
-        <span>${lang.player2 || "Player 2"}: ${match.player2Id}</span>
+        <span>${lang.player1 || "Player 1"}: ${window.store.playerNamesStore.getName(match.player1Id)}</span>
+        <span>${lang.player2 || "Player 2"}: ${window.store.playerNamesStore.getName(match.player2Id)}</span>
         <span>${lang.result || "Result"}: ${match.player1Score} : ${match.player2Score}</span>
         <span>${lang.winner || "Winner"}: ${match.winnerId}</span>
         </div>

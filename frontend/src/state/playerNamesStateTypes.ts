@@ -1,3 +1,3 @@
-type PlayerNamesState = Record<string, string | null>;
+type PlayerNamesState = Record<string, string>;
 
 export type { PlayerNamesState };
