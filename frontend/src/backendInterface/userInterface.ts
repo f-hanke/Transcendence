@@ -266,7 +266,7 @@ class UserInterface {
       console.log(response);
       if (response.ok) {
         const res = await response.json();
-        //const res: GameResultTypes.TournamentResult[] =
+        // const res: GameResultTypes.TournamentResult[] =
           getTournamentResultsMockup();
         window.store.userStore.updateTournamentHistory(res, rerender);
         console.log(res);
