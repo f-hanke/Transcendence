@@ -108,6 +108,7 @@ class MatchScore extends HTMLElement {
 
   update() {
     const gameState = window.store.gameStore.get();
+
     this.leftPaddleY.innerHTML = `${String(gameState.paddleLeft.paddleY)}`;
     this.leftPaddleSpeed.innerHTML = `${padNumberToString(
       gameState.paddleLeft.paddleSpeed,
@@ -130,9 +131,12 @@ class MatchScore extends HTMLElement {
     this.scoreRight.innerHTML = `${gameState.paddleRight.score}`;
 
     this.leftPlayerNameDisplay.innerHTML =
-      window.store.playerNamesStore.getName(gameState.hostId);
-    this.rightPlayerNameDisplay.innerHTML =
-      window.store.playerNamesStore.getName(gameState.oponentId);
+      window.store.playerNamesStore.getName(gameState.paddleLeft.playerId);
+
+    if (["localPvP", "localPvAi"].includes(gameState.typeOfGame)) {
+      this.rightPlayerNameDisplay.innerHTML =
+        window.store.oneVOneLocalStore.get().player2Name;
+    }
   }
 
   render() {}
