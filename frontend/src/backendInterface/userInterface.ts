@@ -230,8 +230,9 @@ class UserInterface {
       });
       console.log(`GETTING MATCHES FOR USER ${id}`);
       if (response.ok) {
-        // const res = await response.json();
-        const res: GameResultTypes.MatchResult[] = getMatchResultsMockup();
+        const res = await response.json();
+        // const res: GameResultTypes.MatchResult[] = 
+          getMatchResultsMockup();
         window.store.userStore.updateMatchHistory(res, rerender);
         console.log(res);
         return {
@@ -263,8 +264,8 @@ class UserInterface {
       console.log(`GETTING TOURNAMENTS FOR USER ${id}`);
       console.log(response);
       if (response.ok) {
-        // const res = await response.json();
-        const res: GameResultTypes.TournamentResult[] =
+        const res = await response.json();
+        //const res: GameResultTypes.TournamentResult[] =
           getTournamentResultsMockup();
         window.store.userStore.updateTournamentHistory(res, rerender);
         console.log(res);

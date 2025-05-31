@@ -118,7 +118,9 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
             console.log("Ongoing Tournament updated in DB");
 
             const finalistsWhoClickedToLeave = tournament.playersWhoClickedToLeave.slice(2);
-            const finalistsWhoDidntClickToLeave = [tournament.matchResultSemifinale1.winnerId, tournament.matchResultSemifinale2.winnerId].filter((id) => !tournament.playersWhoClickedToLeave.includes(id));
+            let finalistsWhoDidntClickToLeave = [tournament.matchResultSemifinale1.winnerId, tournament.matchResultSemifinale2.winnerId].filter((id) => !tournament.playersWhoClickedToLeave.includes(id));
+            // if (finalistsWhoClickedToLeave.length === 1)
+            //   finalistsWhoClickedToLeave.push()
             let clickedToLeavePopable = finalistsWhoClickedToLeave;
             let didntClickToLeavePopable = finalistsWhoDidntClickToLeave;
             let finalist1Id: string = didntClickToLeavePopable.length > 0 ? didntClickToLeavePopable.pop() as string : clickedToLeavePopable.pop() as string;
@@ -562,6 +564,9 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
     const tournament = tournaments.find((tournament) => tournament.tournamentId === dataJson.data.tournamentId) as MatchMakingTypes.Tournament || null;
     if (!tournament)
       throw new Error("Client tried to leave a tournament that didn't exist!");
+    if (!tournament.playersWhoClickedToLeave.includes(dataJson.data.playerId as string))
+      tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
+
     if (tournament.started === false)
     {
       Tournament.removePlayer(dataJson.data.tournamentId as string, dataJson.data.playerId as string);
@@ -590,6 +595,7 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
       {
         if (tournament.matchSemifinale1?.hostId === dataJson.data.playerId || tournament.matchSemifinale1?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultSemifinale1) {
           // player leaving was in semifinal 1 but there's no result for it, generate a match result with the player leaving as loser
+          const opponentId = tournament.matchSemifinale1!.hostId === dataJson.data.playerId ? tournament.matchSemifinale1!.invitedPlayerId as string : tournament.matchSemifinale1!.hostId as string;
           matchResult = {
             matchId: tournament.matchSemifinale1!.matchId as string,
             player1Id: tournament.matchSemifinale1!.hostId as string,
@@ -599,9 +605,15 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
             player2Score: tournament.matchSemifinale1!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           };
+          if (tournament.playersWhoClickedToLeave.includes(opponentId)) {
+            // opponent also clicked to leave, so we generate a match result with both players as losers
+            matchResult.player1Score = 0;
+            matchResult.player2Score = 0;
+          }
         }
         else if (tournament.matchSemifinale2?.hostId === dataJson.data.playerId || tournament.matchSemifinale2?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultSemifinale2) {
           // player leaving was in semifinal 2 but there's no result for it, generate a match result with the player leaving as loser
+          const opponentId = tournament.matchSemifinale2!.hostId === dataJson.data.playerId ? tournament.matchSemifinale2!.invitedPlayerId as string : tournament.matchSemifinale2!.hostId as string;
           matchResult = {
             matchId: tournament.matchSemifinale2!.matchId as string,
             player1Id: tournament.matchSemifinale2!.hostId as string,
@@ -611,11 +623,17 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
             player2Score: tournament.matchSemifinale2!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           };
+          if (tournament.playersWhoClickedToLeave.includes(opponentId)) {
+            // opponent also clicked to leave, so we generate a match result with both players as losers
+            matchResult.player1Score = 0;
+            matchResult.player2Score = 0;
+          }
         }
         else {
           console.error("Player tried to leave a tournament, but wasn't in any of the semifinales OR they were and semifinales have been played but bronze/finale unscheduled, which can't happen");
-          return;
+          // return;
         }
+        // need to handle unplayed Semifinale2
       }
       else
       {
@@ -650,7 +668,6 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
       }
       
       // scope reminder: if started === true
-      tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
       await Tournament.removePlayerFromPlayerTournamentsOnly(dataJson.data.tournamentId as string, dataJson.data.playerId as string);
       if (matchResult)
         handleMatchResultProcessed(matchResult);
