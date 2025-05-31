@@ -1,3 +1,5 @@
-type PlayerNamesState = Record<string, string>;
+import { AuthServiceTypes } from "transcendence";
+
+type PlayerNamesState = AuthServiceTypes.UserIdsToNamesMapping;
 
 export type { PlayerNamesState };

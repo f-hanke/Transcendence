@@ -159,7 +159,7 @@ class CurrentTournament extends HTMLElement {
         <h3>${heading}</h3>
         <div class="flex justify-between mb-1">
         <span>${lang.player1 || "Player 1"}: ${window.store.playerNamesStore.getName(match.hostId)}</span>
-        <span>${lang.player2 || "Player 2"}: ${window.store.playerNamesStore.getName(match.invitedPlayerId)}</span>
+        <span>${lang.player2 || "Player 2"}: ${window.store.playerNamesStore.getName(match.invitedPlayerId as string)}</span>
           <span>
             ${
               amHost

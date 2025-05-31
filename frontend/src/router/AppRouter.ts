@@ -35,7 +35,6 @@ import { AppRouterUnprotected } from "./AppRouterUnprotected.ts";
 import { AppRouterProtected } from "./AppRouterProtected.ts";
 import { AuthInterface } from "../backendInterface/authInterface.ts";
 import { UserInterface } from "../backendInterface/userInterface.ts";
-import { generateUniqueId } from "transcendence";
 
 class AppRouter extends HTMLElement {
   // routes: Record<string, Page>;
@@ -90,13 +89,11 @@ class AppRouter extends HTMLElement {
         if (!resUserDetails.ok) {
           const msg = `Failed to fetch user details!`;
           console.log(msg);
-          throw new Error(msg);
         }
         const resDisplayNames = await UserInterface.getAllDisplayNames();
         if (!resDisplayNames.ok) {
           const msg = `Failed to fetch id to displayNames map!`;
           console.log(msg);
-          throw new Error(msg);
         }
       }
       this.appRouterProtected.handleRouteChange(isAuthenticated.ok);

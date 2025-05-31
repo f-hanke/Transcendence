@@ -7,7 +7,6 @@ import { MatchMakingInterface } from "../../backendInterface/matchmakingInterfac
 import { createHtmlElementFromString, navigateToSite } from "../../utils/utils";
 import { MatchItem, OptnsMatchItem } from "./MatchItem";
 import { OptnsTournamentItem, TournamentItem } from "./TournamentItem";
-import { MatchmakingStateStore } from "../../state/matchmakingStateStore";
 
 class MatchMaking extends HTMLElement {
   unsubscribeMatchmakingState: null | (() => void);
