@@ -172,6 +172,9 @@ const de: LanguageState = {
       friendRequestAccepted: "Freundschaftsanfrage angenommen.",
       friendRequestDeclined: "Freundschaftsanfrage abgelehnt.",
       invite: "Der Benutzer hat Sie zu einem Spiel eingeladen\nKlicken Sie hier, um beizutreten",
+      tournamentStart: "Das Turnier hat begonnen. Wenn du der Gastgeber bist, gehe zu „Turniere“, um das Spiel zu planen, oder warte auf die Einladung des Gastgebers.",
+      matchResult: "${winner} hat das ${type}-Spiel gegen ${loser} mit ${winnerScore} zu ${loserScore} gewonnen.\n",
+      playerLeft: "${Player} hat das Turnier verlassen, alle Spiele mit ihm werden automatisch entschieden",
     }
   }
 } as const;

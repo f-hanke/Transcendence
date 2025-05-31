@@ -172,6 +172,9 @@ const en: LanguageState = {
       friendRequestAccepted: "Friend request accepted.",
       friendRequestDeclined: "Friend request declined.",
       invite: "User invited you to play a game with them\nClick here to join",
+      tournamentStart: "The tournament has started. If you are the Host, go to tournaments to schedule the match or wait for the Host to send you an invitation.",
+      matchResult: "${winner} won the ${type} match against ${loser} with a score of ${winnerScore} to ${loserScore}.",
+      playerLeft: "${Player} has left the Tournament, all matches with him will be resolved automaticly",
     }
   }
 } as const;

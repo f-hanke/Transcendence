@@ -174,6 +174,9 @@ const fr: LanguageState = {
       friendRequestAccepted: "Demande d'ami acceptée.",
       friendRequestDeclined: "Demande d'ami refusée.",
       invite: "L'utilisateur vous a invité à jouer une partie avec lui\nCliquez ici pour rejoindre.",
+      tournamentStart: "Le tournoi a commencé. Si vous êtes l’hôte, allez dans « Tournois » pour programmer le match ou attendez que l’hôte vous envoie une invitation.",
+      matchResult: "${winner} a remporté le match ${type} contre ${loser} avec un score de ${winnerScore} à ${loserScore}.\n",
+      playerLeft: "${Player} a quitté le tournoi, tous les matchs avec lui seront automatiquement résolus",
     }
   },
 } as const;

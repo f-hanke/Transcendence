@@ -97,7 +97,13 @@ class ChatCurrent extends HTMLElement {
         : "self-start border-blue-300";
     const id = generateUniqueId();
     const isGameInvite = msg?.type === "sendGameInvite";
+    const isTournamentStart = msg?.type === "startTournament";
+    const isPlayerLeft = msg?.type === "playerLeft";
+    const isMatchResult = msg?.type === "matchResult";
     if (isGameInvite) msg.message = lang.notifications.invite;
+    else if (isTournamentStart) msg.message = lang.notifications.tournamentStart;
+    else if (isPlayerLeft) msg.message = lang.notifications.playerLeft;
+    else if (isMatchResult) msg.message = lang.notifications.matchResult;
     const elem = createHtmlElementFromString(
       `
       <div class="flex flex-col ${styleMsgOwner} w-3/4 max-w-5xl mb-2">
