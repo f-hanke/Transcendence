@@ -564,8 +564,6 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
     const tournament = tournaments.find((tournament) => tournament.tournamentId === dataJson.data.tournamentId) as MatchMakingTypes.Tournament || null;
     if (!tournament)
       throw new Error("Client tried to leave a tournament that didn't exist!");
-    if (!tournament.playersWhoClickedToLeave.includes(dataJson.data.playerId as string))
-      tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
 
     if (tournament.started === false)
     {
@@ -590,6 +588,8 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
     else if (tournament.started === true)
     {
       // DONE: store any unfinished matches with opponent as winner, emulating Leo over here
+      if (!tournament.playersWhoClickedToLeave.includes(dataJson.data.playerId as string))
+        tournament.playersWhoClickedToLeave.push(dataJson.data.playerId as string);
       let matchResult: GameResultTypes.MatchResult | null = null;
       if (!tournament.matchBronze && !tournament.matchFinale)
       {

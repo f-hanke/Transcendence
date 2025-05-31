@@ -142,7 +142,7 @@ render() {
     container.appendChild(elem);
     if(isBot)
     {
-      user.displayName = "I AM BOT";
+      // user.displayName = "I AM BOT";
       user.lastMessage = "GONNADESTROYYOU!"
     }
     elem.setData(user, type, isBot);

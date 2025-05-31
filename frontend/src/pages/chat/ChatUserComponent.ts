@@ -230,6 +230,7 @@ class ChatUserComponent extends HTMLElement {
       this.hideInviteToPlayButton();
       this.hideBlockButton();
       this.hideImage();
+      this.hideLastMessageDisplayBar();
       return;
     }
 

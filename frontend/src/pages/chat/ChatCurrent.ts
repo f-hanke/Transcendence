@@ -97,6 +97,7 @@ class ChatCurrent extends HTMLElement {
         : "self-start border-blue-300";
     const id = generateUniqueId();
     const isGameInvite = msg?.type === "sendGameInvite";
+
     const isTournamentStart = msg?.type === "startTournament";
     const isPlayerLeft = msg?.type === "playerLeft";
     const isMatchResult = msg?.type === "matchResult";
