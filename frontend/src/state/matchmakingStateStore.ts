@@ -88,7 +88,7 @@ class MatchmakingStateStore {
       // dont show
       if (hasStarted && !playerIsPartOfTournament) {
         groups.tournamentsThatAreFull.push(tournCopy);
-      } 
+      }
       // show as running with leave btn
       else if (
         hasStarted &&
@@ -97,7 +97,7 @@ class MatchmakingStateStore {
       ) {
         groups.tournamentsPlayerAlreadyJoined.push(tournCopy);
         groups.playerIsPartOfATournament = true;
-      } 
+      }
       // show as running with leave btn
       else if (
         !hasStarted &&
@@ -105,7 +105,7 @@ class MatchmakingStateStore {
       ) {
         groups.tournamentsPlayerAlreadyJoined.push(tournCopy);
         groups.playerIsPartOfATournament = true;
-      } 
+      }
       // dont show
       else if (
         hasStarted &&
