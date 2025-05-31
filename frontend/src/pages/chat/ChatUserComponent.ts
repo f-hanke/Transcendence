@@ -210,6 +210,18 @@ class ChatUserComponent extends HTMLElement {
   }
 
   renderUser() {
+
+    const wrapperChatOneUser = document.querySelector(
+      `#${this.id}_wrapperChatOneUser`
+    ) as HTMLDivElement;
+    wrapperChatOneUser.addEventListener("click", () => {
+      ChatInterface.requestChatHistory(this.recipientId);
+      window.store.chatUserStore.updateChangeUserUnreadMessageStatus(
+        this.recipientId,
+        false
+      );
+    });
+
     if (this.isBot) {
       this.hideFriendsRequestsBarToAnswer();
       this.hideBlockedBar();
@@ -261,16 +273,7 @@ class ChatUserComponent extends HTMLElement {
       });
     });
 
-    const wrapperChatOneUser = document.querySelector(
-      `#${this.id}_wrapperChatOneUser`
-    ) as HTMLDivElement;
-    wrapperChatOneUser.addEventListener("click", () => {
-      ChatInterface.requestChatHistory(this.recipientId);
-      window.store.chatUserStore.updateChangeUserUnreadMessageStatus(
-        this.recipientId,
-        false
-      );
-    });
+
   }
 
   setData(data: ChatServiceTypes.ChatUser, type: UserComponentType, isBot: boolean = false) {

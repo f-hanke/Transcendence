@@ -7,8 +7,7 @@ export async function checkElasticsearch() {
     }
     catch (err) {
         console.error("❌ Could not connect to Elasticsearch:", err);
-        console.warn("⚠️  Continuing without Elasticsearch connection...");
-        // process.exit(1);  // Don't exit, just continue without Elasticsearch
+        process.exit(1);
     }
 }
 export default esClient;
