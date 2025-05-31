@@ -168,6 +168,9 @@ type LanguageState = {
       friendRequestAccepted: string;
       friendRequestDeclined: string;
       invite: string;
+      tournamentStart: string;
+      matchResult: string;
+      playerLeft: string;
     };
   };
 };

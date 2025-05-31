@@ -666,7 +666,7 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
           // player has played all the matches and is leaving, anything we must do? I'm informing Steffen below anyway
         }
       }
-      
+
       // scope reminder: if started === true
       await Tournament.removePlayerFromPlayerTournamentsOnly(dataJson.data.tournamentId as string, dataJson.data.playerId as string);
       if (matchResult)

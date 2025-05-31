@@ -4,6 +4,7 @@ import { db, getLanguage, messagesArray, sendToClient, updateUnreadMessages } fr
 import { MatchMakingTypes } from 'transcendence';
 import { GameResultTypes } from 'transcendence';
 import { match } from 'assert';
+import { ChatServiceTypes } from 'transcendence';
 
 function	getPlayerName(id: string){
 	try {
@@ -68,15 +69,19 @@ function sendTournamentNotification(players: string[], type: string, data: Match
 	const date = new Date().toISOString().replace('T', ' ').substring(0, 19);
 	players.forEach((player) => {
 		let message;
+		let msgType: ChatServiceTypes.Message["type"];
 		const lang = getLanguage(player) as AuthServiceTypes.Language;
 		if (matchmakingTypeGuards.isServerStartTournament(data)){
 			message = messagesArray[lang].tournamentStart;
+			msgType = "startTournament";
 		} else if (matchmakingTypeGuards.isPlayerLeftSinceTournamentStarted(data)) {
 			const playerName = getPlayerName(data.playerLeavingId);
 			message = format(messagesArray[lang].playerLeft, {Player: playerName})
-		} else if (matchmakingTypeGuards.isTournament(data))
+			msgType = "playerLeft";
+		} else if (matchmakingTypeGuards.isTournament(data)){
 			message = generateTournamentMessage(type, data, player);
-		else
+			msgType = "matchResult";
+		}else
 			message = "failed to send Tournament Notification";
 
 		const notification = {
@@ -86,11 +91,11 @@ function sendTournamentNotification(players: string[], type: string, data: Match
 				recipientId: player,
 				message: message,
 				date: date,
-				type: "refreshTournamentSite",
+				type: msgType,
 			},
 		} as const;
 		try {
-			db.prepare(databaseQuerys.insertMessage).run("0", player, message, date, null);
+			db.prepare(databaseQuerys.insertMessage).run("0", player, message, date, msgType);
 			console.log("Message inserted successfully");
 			updateUnreadMessages(player, "0", true);
 		} catch (err) {

@@ -9,7 +9,7 @@ TODO:
 --> each tournament msg has a type --> for playerLeft, steffen can update tournament page
 
 -Steffan frontend
-	-->Tournament noctification at top
+	--> Tournament noctification at top
 	---> client shouldnt be able to write to them
 	---> remove send game invite and block
 
