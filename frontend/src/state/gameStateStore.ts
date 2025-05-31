@@ -151,12 +151,19 @@ class GameStateStore {
     this.state.ball.y = newState.ball.y + gameSettings.bumperHeight;
     const newOponentPaddle =
       window.store.userStore.get().details.id === newState.player1.id
-        ? newState.player2
-        : newState.player1;
+        ? newState.player1
+        : newState.player2;
     const newOwnPaddle =
       window.store.userStore.get().details.id === newState.player1.id
         ? newState.player2
         : newState.player1;
+
+console.log("newOwnPaddle");
+    console.log(newOwnPaddle);
+console.log("newOponentPaddle");
+    console.log(newOponentPaddle);
+
+        
     this.getPaddleByPlayerId(newOponentPaddle.id).paddleY =
       newOponentPaddle.paddleY + gameSettings.bumperHeight;
     this.getPaddleByPlayerId(newOwnPaddle.id).paddleY =
@@ -165,6 +172,7 @@ class GameStateStore {
       newState.player1.score;
     this.getPaddleByPlayerId(newState.player2.id).score =
       newState.player2.score;
+    console.log(this.state);
     this.updateListenersOnChange();
   }
 
