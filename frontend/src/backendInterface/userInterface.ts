@@ -34,8 +34,9 @@ class UserInterface {
           displayName: string;
         };
         res.displayName = res.display_name;
-        if (updateId) window.store.userStore.updateUserId(res.id.toString());
-        window.store.userStore.updateUserSettings(res);
+        if (updateId)
+          window.store.userStore.updateUserId(res.id.toString(), false);
+        window.store.userStore.updateUserSettings(res, false);
         window.store.userStore.updateUserImage(res.image);
         window.store.userStore.updateSetFetchNeeded(false);
         window.store.languageStore.set(res.language as SupportedLanguages);
