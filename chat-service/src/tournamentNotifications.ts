@@ -1,9 +1,8 @@
 import { AuthServiceTypes, matchmakingTypeGuards } from 'transcendence';
 import { databaseQuerys } from './databaseQuerys.js';
-import { db, getLanguage, messagesArray, sendToClient, updateUnreadMessages } from "./server.js";
+import { db, getLanguage, sendToClient, updateUnreadMessages } from "./server.js";
 import { MatchMakingTypes } from 'transcendence';
 import { GameResultTypes } from 'transcendence';
-import { match } from 'assert';
 import { ChatServiceTypes } from 'transcendence';
 
 function	getPlayerName(id: string){
@@ -51,17 +50,15 @@ function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tourname
 	const loserScore = isPlayer1Winner ? matchResult.player2Score : matchResult.player1Score;
 	const loserName = isPlayer1Winner ? player2Name : player1Name;
 
-	const lang = getLanguage(clientId) as AuthServiceTypes.Language;
+	const msgData = {
+		winnerName,
+		loserName,
+		winnerScore,
+		loserScore,
+		matchType: type,
+	};
 
-	const matchMsg = format(messagesArray[lang].matchResult, {
-		winner: winnerName!,
-		loser: loserName!,
-		type: type,
-		winnerScore: winnerScore,
-		loserScore: loserScore
-	});
-
-	const msg = matchMsg;
+	const msg = JSON.stringify(msgData);
 	return msg;
 }
 
@@ -72,11 +69,10 @@ function sendTournamentNotification(players: string[], type: string, data: Match
 		let msgType: ChatServiceTypes.Message["type"];
 		const lang = getLanguage(player) as AuthServiceTypes.Language;
 		if (matchmakingTypeGuards.isServerStartTournament(data)){
-			message = messagesArray[lang].tournamentStart;
+			message = "tournament Start...";
 			msgType = "startTournament";
 		} else if (matchmakingTypeGuards.isPlayerLeftSinceTournamentStarted(data)) {
-			const playerName = getPlayerName(data.playerLeavingId);
-			message = format(messagesArray[lang].playerLeft, {Player: playerName})
+			message = JSON.stringify({playerLeft: getPlayerName(data.playerLeavingId)});
 			msgType = "playerLeft";
 		} else if (matchmakingTypeGuards.isTournament(data)){
 			message = generateTournamentMessage(type, data, player);
