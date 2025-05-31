@@ -8,8 +8,10 @@ export async function checkElasticsearch() {
     console.log("✅ Elasticsearch is reachable");
   } catch (err) {
     console.error("❌ Could not connect to Elasticsearch:", err);
-    process.exit(1);
+    console.warn("⚠️  Continuing without Elasticsearch connection...");
+    // process.exit(1);  // Don't exit, just continue without Elasticsearch
   }
 }
+
 
 export default esClient;
