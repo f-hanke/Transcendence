@@ -8,7 +8,7 @@ import { createHtmlElementFromString } from "../utils/utils";
 import { ChatInterface } from "../backendInterface/chatInterface";
 import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
 import { TournamentState } from "../state/tournamentStateTypes";
-import { generateUniqueId } from "transcendence";
+// import { generateUniqueId } from "transcendence";
 
 class CurrentTournament extends HTMLElement {
   unsubscribe: null | (() => void);
