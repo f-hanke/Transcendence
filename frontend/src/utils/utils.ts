@@ -296,7 +296,7 @@ function renderTournamentNotification(msg: string, type: string){
   else if (type === "playerLeft") {
     const { playerLeft } = JSON.parse(msg);
     const template = lang.notifications.playerLeft;
-    msg = template.replace("${Player}", playerLeft)
+    msg = template.replace("${Player}", playerLeft).replace("${Player2}", playerLeft);
   }else if (type === "matchResult"){
     const { winnerName, loserName, winnerScore, loserScore, matchType } = JSON.parse(msg);
     const template = lang.notifications.matchResult;

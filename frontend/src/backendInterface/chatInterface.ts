@@ -370,7 +370,7 @@ class ChatInterface {
     if (!window.store.chatUserStore.getIsBlocked(authorId)) {
       let tmpMessage = dataJson.data.message;
       if (isGameInvite || isMatchResult || isTournamentStart || isPlayerLeft)
-        tmpMessage = renderTournamentNotification(dataJson.data.message, dataJson.data.type!);
+        tmpMessage = renderTournamentNotification(tmpMessage, dataJson.data.type!);
       window.store.notificationStore.updateAddNotification({
         id: generateUniqueId(),
         message: `${dataJson.data.authorId} : ${tmpMessage}`,

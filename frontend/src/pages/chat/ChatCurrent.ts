@@ -104,7 +104,7 @@ class ChatCurrent extends HTMLElement {
     let tmpMessage = msg.message;
 
     if (isTournamentStart || isPlayerLeft || isMatchResult || isGameInvite)
-      tmpMessage = renderTournamentNotification(msg.message, msg.type!);
+      tmpMessage = renderTournamentNotification(tmpMessage, msg.type!);
 
     const elem = createHtmlElementFromString(
       `
@@ -125,10 +125,6 @@ class ChatCurrent extends HTMLElement {
       `#${id}_joinInviteBtn`
     ) as HTMLButtonElement;
 
-    if (isMatchResult || isPlayerLeft){
-      msg.message = tmpMessage!;
-     // console.log("reconstructed Message: ", msg.message);
-    }
     if (isGameInvite) {
       joinBtn.addEventListener("click", (event) => {
         event.stopPropagation();
