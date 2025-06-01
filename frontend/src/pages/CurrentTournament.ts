@@ -139,10 +139,11 @@ class CurrentTournament extends HTMLElement {
       );
     }
     else{
-      window.store.notificationStore.updateAddNotification({
-        id: generateUniqueId(),
-        message: window.store.languageStore.state.currentTournament.notPartOfAnyTournament
-      });
+      this.innerHTML = `<h2>${window.store.languageStore.state.currentTournament.notPartOfAnyTournament}</h2>`
+      // window.store.notificationStore.updateAddNotification({
+      //   id: generateUniqueId(),
+      //   message: window.store.languageStore.state.currentTournament.notPartOfAnyTournament
+      // });
     }
   }
 
