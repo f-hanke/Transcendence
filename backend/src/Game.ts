@@ -194,6 +194,12 @@ export class Game {
 
     }
 
+    updateScore(player1score: number, player2score: number)
+    {
+        this.player1.score = player1score;
+        this.player2.score = player2score;
+    }
+
 	updatePaddlePositionRestAPI(data: GameServiceTypes.DataClientUpdatePaddlePosition, player : number) {
 
 

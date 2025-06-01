@@ -399,7 +399,12 @@ fastify.register(async function (fastify) {
           else
           {
                 const player1Id = game.player1.id;
-                let winner: Player, loser: Player;
+                //const player2Id = game.player2.id;
+
+                let winner: Player = {} as Player, loser: Player = {} as Player;
+
+                winner.score = gameSettings.maxScore;
+                loser.score = 0;
 
                 if (clientId === player1Id) {
                   winner = game.player2;
@@ -409,8 +414,6 @@ fastify.register(async function (fastify) {
                   loser = game.player2;
                 }
 
-                winner.score = gameSettings.maxScore;
-                loser.score = 0;
 
                 const socketWinner = (winner.id === player1Id)
                 ? game.websocketplayer1 : game.websocketplayer2;
@@ -432,6 +435,9 @@ fastify.register(async function (fastify) {
                     },
                   });
                 }
+
+              game?.updateScore(game.player1.score, game.player2.score)
+              game?.stopGame("playerDisconnected");
               games.delete(matchId);
 
             }
