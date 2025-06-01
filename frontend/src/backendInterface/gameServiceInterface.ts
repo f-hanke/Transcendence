@@ -94,14 +94,18 @@ class GameServiceInterface {
 
   static disconnect() {
     if (isDefined(window.store.gameStore.get().state === "running")) {
-      this.sendMessageToServer({
-        type: "clientLeftGame",
-        data: {
-          matchId: window.store.gameStore.get().matchId,
-          playerId: window.store.userStore.get().details.id,
-        },
-      });
-      window.store.gameStore.updateGameStateState("none");
+      try {
+        this.sendMessageToServer({
+          type: "clientLeftGame",
+          data: {
+            matchId: window.store.gameStore.get().matchId,
+            playerId: window.store.userStore.get().details.id,
+          },
+        });
+        window.store.gameStore.updateGameStateState("none");
+      } catch (err) {
+        console.log("Unable to notify game service about closing connection!");
+      }
     }
     if (isDefined(this.websocket)) {
       this.websocket.close();
@@ -188,14 +192,17 @@ class GameServiceInterface {
       );
     }
     const winner = score1 > score2 ? playerName1 : playerName2;
-    const reason = window.store.languageStore.state.manageMatch.gameEndsMap[dataJson.data.reason as GameServiceTypes.PossibleGameEnds];
+    const reason =
+      window.store.languageStore.state.manageMatch.gameEndsMap[
+        dataJson.data.reason as GameServiceTypes.PossibleGameEnds
+      ];
     return window.store.languageStore.state.manageMatch.matchIsOver({
       name1: playerName1,
       name2: playerName2,
       score1: score1,
       score2: score2,
       winner: winner,
-      reasonString: reason
+      reasonString: reason,
     });
   }
 

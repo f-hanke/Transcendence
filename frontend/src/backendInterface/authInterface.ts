@@ -4,6 +4,9 @@ import {
   AuthServiceTypes,
 } from "transcendence";
 import { buildApiRouteRelative, navigateToSite } from "../utils/utils";
+import { ChatInterface } from "./chatInterface";
+import { GameServiceInterface } from "./gameServiceInterface";
+import { MatchMakingInterface } from "./matchmakingInterface";
 
 type AuthInterfaceAnswer = Promise<{
   ok: boolean;
@@ -84,6 +87,9 @@ class AuthInterface {
       service: "authService",
       route: `/api/auth/logout/${window.store.userStore.get().details.id}`,
     });
+    await ChatInterface.disconnect();
+    await GameServiceInterface.disconnect();
+    await MatchMakingInterface.disconnect();
     try {
       const response = await fetch(address, {
         method: "GET",

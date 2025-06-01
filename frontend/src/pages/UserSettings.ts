@@ -312,9 +312,11 @@ class UserSettings extends HTMLElement {
           message:
             window.store.languageStore.state.register.displayNameUpdateSuccess,
         });
+        const displayName = window.store.userStore.get().editState
+          .displayName as string;
+        window.store.playerNamesStore.updateOwnEntry(displayName);
         window.store.userStore.updateUserSettings({
-          displayName: window.store.userStore.get().editState
-            .displayName as string,
+          displayName: displayName,
         });
         const newState = {} as Partial<UserState["editState"]>;
         newState["displayName"] = undefined;
@@ -416,15 +418,17 @@ class UserSettings extends HTMLElement {
 
   renderUserStats() {
     const matchHistory = window.store.userStore.get().details.matchHistory;
-  const currentUserId = window.store.userStore.get().details.id;
+    const currentUserId = window.store.userStore.get().details.id;
 
-  const wins = matchHistory.filter(m => m.winnerId === currentUserId).length;
-  const losses = matchHistory.length - wins;
-  const total = wins + losses;
-  const winPercent = total > 0 ? Math.round((wins / total) * 100) : 0;
-  const lossPercent = total > 0 ? 100 - winPercent : 0;
+    const wins = matchHistory.filter(
+      (m) => m.winnerId === currentUserId
+    ).length;
+    const losses = matchHistory.length - wins;
+    const total = wins + losses;
+    const winPercent = total > 0 ? Math.round((wins / total) * 100) : 0;
+    const lossPercent = total > 0 ? 100 - winPercent : 0;
 
-  return `
+    return `
     <div class="mt-6">
       <h2 class="block">${window.store.languageStore.state.userSettings.statsCaption}</h2>
       <div class="space-y-2 text-sm">
@@ -529,16 +533,24 @@ class UserSettings extends HTMLElement {
                 <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-left">
                    <div class="justify-self-start">🥇 ${
                      window.store.languageStore.state.userSettings.first
-                   }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(tournament.rank1PlayerId)}</div>
+                   }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(
+              tournament.rank1PlayerId
+            )}</div>
   <div class="justify-self-start">🥈 ${
     window.store.languageStore.state.userSettings.second
-  }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(tournament.rank2PlayerId)}</div>
+  }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(
+              tournament.rank2PlayerId
+            )}</div>
   <div class="justify-self-start">🥉 ${
     window.store.languageStore.state.userSettings.third
-  }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(tournament.rank3PlayerId)}</div>
+  }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(
+              tournament.rank3PlayerId
+            )}</div>
   <div class="justify-self-start">💩 ${
     window.store.languageStore.state.userSettings.fourth
-  }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(tournament.rank4PlayerId)}</div>
+  }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(
+              tournament.rank4PlayerId
+            )}</div>
                 </div>
                 <div class="grid grid-cols-1 gap-2 mt-4">
                  ${this.formatMatchTournament(
@@ -572,10 +584,18 @@ class UserSettings extends HTMLElement {
                 <div class="p-2 bg-gray-600 rounded text-sm shadow">
                   <div class="flex justify-between mb-1 font-semibold">${title}</div>
                   <div class="grid grid-cols-5 text-xs text-gray-300">
-                    <div>${window.store.playerNamesStore.getName(match.player1Id)} : ${match.player1Score}</div>
+                    <div>${window.store.playerNamesStore.getName(
+                      match.player1Id
+                    )} : ${match.player1Score}</div>
                     <div>-</div>
-                    <div>${match.player2Score} : ${window.store.playerNamesStore.getName(match.player2Id)}</div>
-                    <div class="text-green-400">${match.winnerId}</div>
+                    <div>${
+                      match.player2Score
+                    } : ${window.store.playerNamesStore.getName(
+      match.player2Id
+    )}</div>
+                    <div class="text-green-400">${window.store.playerNamesStore.getName(
+                      match.winnerId
+                    )}</div>
                   </div>
                 </div>
               `;
