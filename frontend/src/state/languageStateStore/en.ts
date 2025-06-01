@@ -92,6 +92,7 @@ const en: LanguageState = {
     createGame: "Create Game",
     waitingForHost: "Waiting for the host",
     notParticipant: "This is not your match!",
+    notPartOfAnyTournament: "You are currently not participating in any tournament!"
   },
   tournamentItem: {
     tournamentId: "Tournament ID",

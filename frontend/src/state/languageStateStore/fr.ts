@@ -43,6 +43,7 @@ const fr: LanguageState = {
     createGame: "Créer la Partie",
     waitingForHost: "En attente de l’hôte",
     notParticipant: "Ce n’est pas votre match !",
+    notPartOfAnyTournament: "Vous ne participez actuellement à aucun tournoi !",
   },
   oneVOneLocal: {
     player1: "Joueur·euse 1",
