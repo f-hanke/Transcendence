@@ -233,16 +233,16 @@ function isUpdateLanguageBody(arg: any): arg is AuthServiceTypes.UpdateLanguageB
   )
 }
 
-const testUserConfig: AuthServiceTypes.RegSubmissionBody[] = new Array(5).fill(0).map(
-  (elem, i) => {
-    const user = `test_user_${i}`;
+const testUserConfig: AuthServiceTypes.RegSubmissionBody[] = 
+  ["Flo", "Leo", "Milo", "Steffen", "Jack"].map((elem, i) => {
+    const user = `${elem}`;
     return {
-      email: `${user}@test.de`,
+      email: `${user}@${user}.${user}`,
       displayName: `${user}`,
       password: `12345aA?`,
     };
-  }
-);
+  })
+
 
 const authServiceTypeGuards = {
   isErrorResponseBody,
