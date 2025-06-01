@@ -8,6 +8,7 @@ import { createHtmlElementFromString } from "../utils/utils";
 import { ChatInterface } from "../backendInterface/chatInterface";
 import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
 import { TournamentState } from "../state/tournamentStateTypes";
+import { generateUniqueId } from "transcendence";
 
 class CurrentTournament extends HTMLElement {
   unsubscribe: null | (() => void);
@@ -39,22 +40,24 @@ class CurrentTournament extends HTMLElement {
     const lang = window.store.languageStore.state.currentTournament;
     const tournamentState = window.store.currentTournamentStore.get();
     if (isDefined(tournamentState)) {
-      const semi1Finished = isDefined(
-        tournamentState.matchResultSemifinale1
-      );
-      const semi2Finished = isDefined(
-        tournamentState.matchResultSemifinale2
-      );
-      // const bronzeFinished = isDefined(tournamentState1.matchResultBronze);
-      // const finaleFinished = isDefined(tournamentState1.matchResultFinale);
+      const semi1Finished = isDefined(tournamentState.matchResultSemifinale1);
+      const semi2Finished = isDefined(tournamentState.matchResultSemifinale2);
+      const bronzeFinished = isDefined(tournamentState.matchResultBronze);
+      const finaleFinished = isDefined(tournamentState.matchResultFinale);
 
-      const rankingOrder = this.getRankingStatsTable(tournamentState as NonNullable<TournamentState>);
+      const rankingOrder = this.getRankingStatsTable(
+        tournamentState as NonNullable<TournamentState>
+      );
 
       this.innerHTML = `
     <div class="p-4 w-full bg-gray-800 text-white rounded-lg shadow-md">
-     <h2 class="text-lg font-semibold mb-4">🏓 ${lang.title || "Tournament Overview"}</h2>
+     <h2 class="text-lg font-semibold mb-4">🏓 ${
+       lang.title || "Tournament Overview"
+     }</h2>
      <div class="mb-6">
-       <h3 class="text-md font-semibold mb-2">${lang.rankings || "Player Rankings"}</h3>
+       <h3 class="text-md font-semibold mb-2">${
+         lang.rankings || "Player Rankings"
+       }</h3>
        <table class="w-full text-sm table-auto border-collapse">
          <thead>
            <tr class="bg-gray-700 text-left">
@@ -67,7 +70,9 @@ class CurrentTournament extends HTMLElement {
               return `
              <tr class="border-t border-gray-600 hover:bg-gray-700">
                <td class="px-4 py-2">${elem.rank}</td>
-               <td class="px-4 py-2">${window.store.playerNamesStore.getName(elem.playerId)}</td>
+               <td class="px-4 py-2">${window.store.playerNamesStore.getName(
+                 elem.playerId
+               )}</td>
              </tr>
            `;
             })}
@@ -85,18 +90,18 @@ class CurrentTournament extends HTMLElement {
 
       // dev stuff******************
 
-      const btn =
-        createHtmlElementFromString(`<button id="getDataTournament" class="leave-tournament-btn bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-lg">
-                  ❌ ${lang.getDataBtn || "GET DATA VIA API"}
-      </button>`);
+      // const btn =
+      //   createHtmlElementFromString(`<button id="getDataTournament" class="leave-tournament-btn bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-lg">
+      //             ❌ ${lang.getDataBtn || "GET DATA VIA API"}
+      // </button>`);
 
-      btn.addEventListener("click", async () => {
-        const res = await MatchMakingInterface.getCurrentTournament();
-        console.log("GOT TOURNI DATA");
-        console.log(res);
-      });
+      // btn.addEventListener("click", async () => {
+      //   const res = await MatchMakingInterface.getCurrentTournament();
+      //   console.log("GOT TOURNI DATA");
+      //   console.log(res);
+      // });
 
-      matchContainerTourni.appendChild(btn);
+      // matchContainerTourni.appendChild(btn);
 
       // dev stuff******************
 
@@ -119,12 +124,26 @@ class CurrentTournament extends HTMLElement {
       matchContainerTourni.appendChild(
         this.renderMatch(
           "Third Place Decider",
-          tournamentState.matchBronze
+          bronzeFinished
+            ? tournamentState.matchResultBronze
+            : tournamentState.matchBronze
         )
       );
       matchContainerTourni.appendChild(
-        this.renderMatch("Final", tournamentState.matchFinale)
+        this.renderMatch(
+          "Final",
+          finaleFinished
+            ? tournamentState.matchResultFinale
+            : tournamentState.matchFinale
+        )
       );
+    }
+    else{
+      this.innerHTML = `<h2>${window.store.languageStore.state.currentTournament.notPartOfAnyTournament}</h2>`
+      // window.store.notificationStore.updateAddNotification({
+      //   id: generateUniqueId(),
+      //   message: window.store.languageStore.state.currentTournament.notPartOfAnyTournament
+      // });
     }
   }
 
@@ -152,22 +171,30 @@ class CurrentTournament extends HTMLElement {
   renderMatchToBePlayed(heading: string, match: MatchMakingTypes.BasicGame) {
     const lang = window.store.languageStore.state.currentTournament;
     const amHost = window.store.userStore.get().details.id === match.hostId;
-    const amPartOfGame = amHost || window.store.userStore.get().details.id === match.invitedPlayerId
+    const amPartOfGame =
+      amHost ||
+      window.store.userStore.get().details.id === match.invitedPlayerId;
 
     const htmlElem = createHtmlElementFromString(`
     <div class="my-2 bg-gray-700 p-4 border-white border-2">
         <h3>${heading}</h3>
         <div class="flex justify-between mb-1">
-        <span>${lang.player1 || "Player 1"}: ${window.store.playerNamesStore.getName(match.hostId)}</span>
-        <span>${lang.player2 || "Player 2"}: ${window.store.playerNamesStore.getName(match.invitedPlayerId as string)}</span>
+        <span>${
+          lang.player1 || "Player 1"
+        }: ${window.store.playerNamesStore.getName(match.hostId)}</span>
+        <span>${
+          lang.player2 || "Player 2"
+        }: ${window.store.playerNamesStore.getName(
+      match.invitedPlayerId as string
+    )}</span>
           <span>
             ${
               amHost
                 ? `<button id="createGameBtnTourni" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg">
                   ➕ ${lang.createGame || "Create Game"}
                   </button>`
-                : amPartOfGame ?
-                `<button class="mr-1 border-gray-500 text-gray-500 border-2 border-dashed">Wait for Host</button>`
+                : amPartOfGame
+                ? `<button class="mr-1 border-gray-500 text-gray-500 border-2 border-dashed">Wait for Host</button>`
                 : `<div>${lang.notParticipant || "None of your business!"}
 </div>`
             }
@@ -195,9 +222,15 @@ class CurrentTournament extends HTMLElement {
     <div class="my-2 bg-gray-700 p-4 border-2 border-black">
         <h3>${heading}</h3>
         <div class="flex justify-between mb-1">
-        <span>${lang.player1 || "Player 1"}: ${window.store.playerNamesStore.getName(match.player1Id)}</span>
-        <span>${lang.player2 || "Player 2"}: ${window.store.playerNamesStore.getName(match.player2Id)}</span>
-        <span>${lang.result || "Result"}: ${match.player1Score} : ${match.player2Score}</span>
+        <span>${
+          lang.player1 || "Player 1"
+        }: ${window.store.playerNamesStore.getName(match.player1Id)}</span>
+        <span>${
+          lang.player2 || "Player 2"
+        }: ${window.store.playerNamesStore.getName(match.player2Id)}</span>
+        <span>${lang.result || "Result"}: ${match.player1Score} : ${
+      match.player2Score
+    }</span>
         <span>${lang.winner || "Winner"}: ${match.winnerId}</span>
         </div>
     </div>
@@ -232,23 +265,26 @@ class CurrentTournament extends HTMLElement {
   // }
 
   getRankingStatsTable(tournamentState: NonNullable<TournamentState>) {
-
     const order = new Array(4).fill({
       playerId: "",
       rank: "-",
     }) as { playerId: string; rank: number | string }[];
 
     const rankPlayer1 = this.playerIsRanked(
-      tournamentState.player1Id as string, tournamentState
+      tournamentState.player1Id as string,
+      tournamentState
     );
     const rankPlayer2 = this.playerIsRanked(
-      tournamentState.player2Id as string, tournamentState
+      tournamentState.player2Id as string,
+      tournamentState
     );
     const rankPlayer3 = this.playerIsRanked(
-      tournamentState.player3Id as string, tournamentState
+      tournamentState.player3Id as string,
+      tournamentState
     );
     const rankPlayer4 = this.playerIsRanked(
-      tournamentState.player4Id as string, tournamentState
+      tournamentState.player4Id as string,
+      tournamentState
     );
 
     const unrankedPlayers: string[] = [];
@@ -293,7 +329,10 @@ class CurrentTournament extends HTMLElement {
     return order;
   }
 
-  playerIsRanked(playerId: string,tournamentState: NonNullable<TournamentState> ) {
+  playerIsRanked(
+    playerId: string,
+    tournamentState: NonNullable<TournamentState>
+  ) {
     switch (playerId) {
       case tournamentState.rank1PlayerId:
         return 1;

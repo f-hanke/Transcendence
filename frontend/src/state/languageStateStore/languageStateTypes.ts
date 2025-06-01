@@ -42,6 +42,7 @@ type LanguageState = {
     createGame: string;
     waitingForHost: string;
     notParticipant: string;
+    notPartOfAnyTournament: string;
   };
   register: {
     title: string;

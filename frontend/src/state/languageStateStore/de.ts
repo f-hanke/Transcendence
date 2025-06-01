@@ -83,6 +83,7 @@ const de: LanguageState = {
     createGame: "Spiel erstellen",
     waitingForHost: "Warten auf den Host",
     notParticipant: "Das ist nicht dein Spiel!",
+    notPartOfAnyTournament: "Sie nehmen derzeit an keinem Turnier teil!",
   },
   oneVOneLocal: {
     player1: "Spieler 1",
