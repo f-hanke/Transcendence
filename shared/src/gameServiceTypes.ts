@@ -68,8 +68,6 @@ declare namespace GameServiceTypes {
     ball: Ball;
   };
 
-
-
   type DataServerGameIsOver = {
     matchId: string;
     player1: {

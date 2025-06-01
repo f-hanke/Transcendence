@@ -161,6 +161,7 @@ class MatchMakingInterface {
   ) {
     colog("serverupdateOnetournament");
     window.store.matchmakingStore.updateOneTournament(dataJson.data);
+    
   }
 
   static handleServerUpdatedGames(

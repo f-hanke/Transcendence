@@ -8,7 +8,6 @@ import { createHtmlElementFromString } from "../utils/utils";
 import { ChatInterface } from "../backendInterface/chatInterface";
 import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
 import { TournamentState } from "../state/tournamentStateTypes";
-// import { generateUniqueId } from "transcendence";
 
 class CurrentTournament extends HTMLElement {
   unsubscribe: null | (() => void);
@@ -231,7 +230,7 @@ class CurrentTournament extends HTMLElement {
         <span>${lang.result || "Result"}: ${match.player1Score} : ${
       match.player2Score
     }</span>
-        <span>${lang.winner || "Winner"}: ${match.winnerId}</span>
+        <span>${lang.winner || "Winner"}: ${window.store.playerNamesStore.getName(match.winnerId)}</span>
         </div>
     </div>
     `);

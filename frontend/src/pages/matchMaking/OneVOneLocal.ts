@@ -110,7 +110,7 @@ class OneVOneLocal extends HTMLElement {
   }
 
   setGameState() {
-    const idSecondPlayer = window.store.gameStore.get().typeOfGame === "localPvAi" ? `AI_${window.store.oneVOneLocalStore.get().player2Name}_${generateUniqueId()}` : `Human_${window.store.oneVOneLocalStore.get().player2Name}_${generateUniqueId()}`;
+    const idSecondPlayer = window.store.gameStore.get().typeOfGame === "localPvAi" ? `AI_${window.store.oneVOneLocalStore.get().player2Name}` : `Human_${window.store.oneVOneLocalStore.get().player2Name}`;
       window.store.gameStore.updateMatchMakingSuccessful({
         hostId: window.store.userStore.get().details.id,
         oponentId: idSecondPlayer,

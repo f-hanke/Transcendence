@@ -194,7 +194,7 @@ class AuthInterface {
   }
 
   static async handleApiResponseError(response: Response): AuthInterfaceAnswer {
-    window.colog("API ERRROR");
+    window.colog("Verify JWT Endpoint says unauthorized!");
     if (response.status === 400) {
       const body = await response.json();
       if (authServiceTypeGuards.isErrorResponseBody(body)) {

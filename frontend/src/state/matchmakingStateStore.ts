@@ -12,6 +12,7 @@ import {
 } from "./matchmakingStateTypes";
 import { StoreCallback } from "./types";
 import { isOwnTournament } from "transcendence";
+import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
 
 class MatchmakingStateStore {
   listeners: Set<StoreCallback>;
@@ -99,10 +100,7 @@ class MatchmakingStateStore {
         groups.playerIsPartOfATournament = true;
       }
       // show as running with leave btn
-      else if (
-        !hasStarted &&
-        playerIsPartOfTournament
-      ) {
+      else if (!hasStarted && playerIsPartOfTournament) {
         groups.tournamentsPlayerAlreadyJoined.push(tournCopy);
         groups.playerIsPartOfATournament = true;
       }
@@ -113,14 +111,13 @@ class MatchmakingStateStore {
         playerLeftThisTournament
       ) {
         groups.tournamentsThatAreFull.push(tournCopy);
-      }
-      else if (
+      } else if (
         !hasStarted &&
         !playerIsPartOfTournament &&
         !playerLeftThisTournament
       ) {
         groups.tournamentsToJoin.push(tournCopy);
-      } 
+      }
       // new
       else if (
         !hasStarted &&
@@ -128,8 +125,7 @@ class MatchmakingStateStore {
         !playerLeftThisTournament
       ) {
         groups.tournamentsToJoin.push(tournCopy);
-      } 
-      else {
+      } else {
         throw new Error("Tournament not assigned to any matchmaking-group!");
       }
     });
@@ -195,7 +191,50 @@ class MatchmakingStateStore {
       newTournamentState.push(deepCopyObj(updateTournament));
     }
     this.state.tournaments = newTournamentState;
+    this.closeOwnMatchWhenIsTournamentAndPlayerLeft(updateTournament);
     this.updateListenersOnChange();
+  }
+
+  closeOwnMatchWhenIsTournamentAndPlayerLeft(
+    updateTournament: MatchMakingTypes.Tournament
+  ) {
+    if (isDefined(this.state.ownMatch)) {
+      console.log("1 IS OWN MATCH");
+      if (isDefined(this.state.ownMatch.invitedPlayerId)) {
+        const updatedTournamentId = updateTournament.tournamentId;
+        const ownMatchTournamentId = this.state.ownMatch.tournamentId;
+        if (updatedTournamentId == ownMatchTournamentId) {
+          this.closeWhenOpponentOrHostLeftTournament(updateTournament);
+        }
+      }
+    }
+    return false;
+  }
+
+  closeWhenOpponentOrHostLeftTournament(
+    updateTournament: MatchMakingTypes.Tournament
+  ) {
+    const invitedPlayerId = (this.state.ownMatch as MatchMakingTypes.BasicGame)
+      .invitedPlayerId;
+    const invitedPlayerLeft =
+      updateTournament.playersWhoClickedToLeave.includes(
+        invitedPlayerId as string
+      );
+    const hostLeft = updateTournament.playersWhoClickedToLeave.includes(
+      (this.state.ownMatch as MatchMakingTypes.BasicGame).hostId
+    );
+    if (invitedPlayerLeft || hostLeft) {
+      console.log("CLOSING MATCH BECAUSE INVITED OPONENT OR HOST LEFT");
+      console.log(`HOST LEFT ${hostLeft}`);
+      console.log(`INVITED LEFT ${invitedPlayerLeft}`);
+      MatchMakingInterface.sendMessageToServer({
+          type: "deleteGame",
+          data: window.store.matchmakingStore.get()
+            .ownMatch as MatchMakingTypes.BasicGame,
+        });
+      this.state.ownMatch = null;
+      return true;
+    }
   }
 
   update(newState: MatchmakingState) {

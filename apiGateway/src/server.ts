@@ -19,6 +19,7 @@ import fastifyJwt from '@fastify/jwt'
 import esClient, { checkElasticsearch } from './lib/elasticsearch.js';
 import logger from './lib/logger.js';
 import { setupMetrics } from './lib/metrics.js';
+import { enableJwtCheck } from './authChecks.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,35 +43,14 @@ fastify.register(fastifyJwt, {
   secret: 'supersecret'
 })
 
-// fastify.register(cors, { origin: "*" });
 
-// await fastify.register(websocketPlugin);
 setupMetrics(fastify);
 logger.info("Metrics and logger initialized.");
 //keep commented out unless docker is running requires elsasticsearch to be running
 await checkElasticsearch();
 
-async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
-  try {
-    const authHeader = request.headers.authorization;
-    if (!authHeader) throw new Error('No token');
 
-    const token = authHeader.split(' ')[1];
-    const payload = jwt.verify(token, process.env.JWT_SECRET!);
-
-    (request as any).user = payload;
-  } catch (err) {
-    reply.code(401).send({ error: 'Unauthorized' });
-  }
-}
-
-// 🔐 JWT auth middleware (skip for static + auth)
-// fastify.addHook('onRequest', async (req, reply) => {
-//   const skipAuth = req.raw.url?.startsWith('/auth') || req.raw.url?.match(/\.(js|css|html|png)$/);
-//   if (!skipAuth) {
-//     await authMiddleware(req, reply);
-//   }
-// });
+enableJwtCheck(fastify);
 
 // Add health check endpoint for Docker
 fastify.get('/health', async () => {
@@ -137,31 +117,6 @@ fastify.register(fastifyHttpProxy, {
 //   prefix: '/GAME',
 //   rewritePrefix: '', // removes /game before forwarding
 // });
-
-// >>>>>> for local testing only
-fastify.setNotFoundHandler((req, reply) => {
-  // Proxy all unmatched GET requests to Vite
-  if (req.raw.method === 'GET') {
-    const proxyReq = http.request(
-      {
-        hostname: 'frontend', // In docker-compose, use the service name
-        port: 80, // Nginx runs on port 80
-        path: req.raw.url,
-        method: req.raw.method,
-        headers: req.headers,
-      },
-      res => {
-        reply.status(res.statusCode!);
-        res.pipe(reply.raw);
-      }
-    );
-    req.raw.pipe(proxyReq);
-  } else {
-    reply.status(404).send({ error: 'Not found' });
-  }
-});
-// <<<<<< for local testing only
-
 
 
 // 🔁 WebSocket proxying
