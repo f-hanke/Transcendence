@@ -38,12 +38,14 @@ updateListenersOnChange() {
 
   updateSetOpen()
   {
+    console.log("Opening Modal");
     this.state.open = true;
     this.updateListenersOnChange();
   }
 
   updateSetClosed()
   {
+    console.log("Closing Modal");
     this.state.open = false;
     this.updateListenersOnChange();
   }
@@ -56,6 +58,8 @@ updateListenersOnChange() {
 
   updateSetContent(newContent: string[])
   {
+    console.log("Updating Modal Content");
+    console.log(newContent);
     this.state.content = deepCopyObj(newContent);
     this.updateListenersOnChange();
   }

@@ -45,6 +45,7 @@ class CentralModalListeners extends HTMLElement {
     if (isDefined(window.store.modalStore.get().keyDownCallback[validKeyCode])) {
       (window.store.modalStore.get().keyDownCallback[validKeyCode] as KeyDownCallback)() ; 
       window.store.modalStore.reset();
+      console.log("Closing modal Here!");
       window.store.modalStore.updateSetClosed();
     }
   }

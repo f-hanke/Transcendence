@@ -2,7 +2,7 @@ import amqp from 'amqplib';
 import { GameResultTypes, gameResultTypeGuards } from 'transcendence';
 import { db } from '../db/db.js';
 
-const queue = 'match-results';
+const queue = 'game-service-queue';
 
 function updateOngoingTournamentDatabase(msg: GameResultTypes.MatchResult){
   console.log("update Tournament db");
