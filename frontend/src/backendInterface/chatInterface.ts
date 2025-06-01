@@ -12,6 +12,7 @@ import {
   getCurDateString,
   getCurrentSite,
   navigateToSite,
+  renderTournamentNotification,
 } from "../utils/utils";
 import { AuthInterface } from "./authInterface";
 
@@ -359,15 +360,20 @@ class ChatInterface {
     );
     const isPlayerLeft = dataJson.data.type === "playerLeft";
     const isMatchResult = dataJson.data.type === "matchResult";
+    const isTournamentStart = dataJson.data.type === "startTournament";
+    const isGameInvite = dataJson.data.type === "sendGameInvite";
     if (isPlayerLeft || isMatchResult) {
       if (getCurrentSite() === "currentTournament")
         navigateToSite("currentTournament");
     }
 
     if (!window.store.chatUserStore.getIsBlocked(authorId)) {
+      let tmpMessage = dataJson.data.message;
+      if (isGameInvite || isMatchResult || isTournamentStart || isPlayerLeft)
+        tmpMessage = renderTournamentNotification(dataJson.data.message, dataJson.data.type!);
       window.store.notificationStore.updateAddNotification({
         id: generateUniqueId(),
-        message: `${dataJson.data.authorId} : ${dataJson.data.message}`,
+        message: `${dataJson.data.authorId} : ${tmpMessage}`,
       });
     }
     window.store.chatMessageStore.addMessage(authorId, dataJson.data);

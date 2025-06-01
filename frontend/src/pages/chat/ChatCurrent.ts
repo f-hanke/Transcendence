@@ -3,6 +3,7 @@ import {
   createHtmlElementFromString,
   getCurDateString,
   navigateToSite,
+  renderTournamentNotification,
   sanitizeAndCleanInput,
 } from "../../utils/utils";
 import { ChatInterface } from "../../backendInterface/chatInterface";
@@ -100,45 +101,17 @@ class ChatCurrent extends HTMLElement {
     const isTournamentStart = msg?.type === "startTournament";
     const isPlayerLeft = msg?.type === "playerLeft";
     const isMatchResult = msg?.type === "matchResult";
-    let tmpMessage;
-    if (isGameInvite) msg.message = lang.notifications.invite;
-    else if (isTournamentStart) msg.message = lang.notifications.tournamentStart;
-    else if (isPlayerLeft) {
-      tmpMessage = msg.message;
-      const {
-        playerLeft,
-      } = JSON.parse(msg.message); // ✅ because it's still a string
+    let tmpMessage = msg.message;
 
-      const template = lang.notifications.playerLeft;
-      msg.message = template.replace("${Player}", playerLeft)
+    if (isTournamentStart || isPlayerLeft || isMatchResult || isGameInvite)
+      tmpMessage = renderTournamentNotification(msg.message, msg.type!);
 
-    }else if (isMatchResult){
-      tmpMessage = msg.message;
-     // console.log("Incoming Message: ", msg.message);
-      const {
-        winnerName,
-        loserName,
-        winnerScore,
-        loserScore,
-        matchType
-      } = JSON.parse(msg.message); // ✅ because it's still a string
-
-      const template = lang.notifications.matchResult;
-
-      msg.message = template
-        .replace("${winner}", winnerName)
-        .replace("${loser}", loserName)
-        .replace("${winnerScore}", winnerScore.toString())
-        .replace("${loserScore}", loserScore.toString())
-        .replace("${type}", matchType);
-     // console.log("Outgoind Message: ", msg.message);
-    }
     const elem = createHtmlElementFromString(
       `
       <div class="flex flex-col ${styleMsgOwner} w-3/4 max-w-5xl mb-2">
         <span class="text-xs text-gray-400 ml-1">${msg.date}</span>
         <div class="w-full bg-white border-2 rounded-lg p-2 ${styleMsgOwner} overflow-x-auto">
-          ${msg.message}
+          ${tmpMessage}
         </div>
         <button id="${id}_joinInviteBtn" class="text-white bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg">
                   ▶ ${lang.buttons.goToGameArea}
