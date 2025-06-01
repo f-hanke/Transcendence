@@ -6,7 +6,11 @@ import {
   matchmakingTypeGuards,
   MatchMakingTypes,
 } from "transcendence";
-import {  buildApiRouteRelative, buildWsRoute, navigateToSite } from "../utils/utils";
+import {
+  buildApiRouteRelative,
+  buildWsRoute,
+  navigateToSite,
+} from "../utils/utils";
 import { AuthInterface, AuthInterfaceAnswer } from "./authInterface";
 
 class MatchMakingInterface {
@@ -26,7 +30,9 @@ class MatchMakingInterface {
     // });
     const address = buildApiRouteRelative({
       service: "matchmakingService",
-    route: `/matchmaking/playertournament/${window.store.userStore.get().details.id}`,
+      route: `/matchmaking/playertournament/${
+        window.store.userStore.get().details.id
+      }`,
     });
     try {
       const response = await fetch(address, {
@@ -107,11 +113,15 @@ class MatchMakingInterface {
   static disconnect() {
     const ownMatch = window.store.matchmakingStore.get().ownMatch;
     if (isDefined(ownMatch)) {
-      this.sendMessageToServer({
-        type: "deleteGame",
-        data: ownMatch as MatchMakingTypes.BasicGame,
-      });
-      window.store.matchmakingStore.deleteGame(ownMatch);
+      try {
+        this.sendMessageToServer({
+          type: "deleteGame",
+          data: ownMatch as MatchMakingTypes.BasicGame,
+        });
+        window.store.matchmakingStore.deleteGame(ownMatch);
+      } catch (err) {
+        console.log("Unable to notify matchmaking service about closing connection!");
+      }
     }
     if (isDefined(this.websocket)) {
       this.websocket.close();

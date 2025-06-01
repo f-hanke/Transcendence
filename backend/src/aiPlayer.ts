@@ -4,6 +4,7 @@ import { WebSocket } from 'ws';
 import { Ball } from './ball.js';
 import { gameSettings } from 'transcendence';
 
+
 export class AIPlayer extends Player {
 
     private targetY: number | undefined;
@@ -18,13 +19,13 @@ export class AIPlayer extends Player {
     }
 
 
-    startAI(ball: Ball, ) {
+    startAI(ball: Ball) {
         if (this.intervalId !== null) {
         clearInterval(this.intervalId);
         }
         this.intervalId = setInterval(() => {
         this.updateTarget(ball);
-        }, 1000);
+        }, 1000); // Updates target every second
     }
 
     stopAI() {
@@ -41,15 +42,18 @@ export class AIPlayer extends Player {
             return;
         }
 
-        if (Math.random() < 0.20) {
+        // Adds randomness: 20% chance to skip targeting this frame
+        if (Math.random() < 0.20)
             return;
-        }
 
+
+         // Predict where the ball will be when it reaches the AI paddle
         let remainingTime = (this.x - ball.x) / ball.speedX;
         let simulatedY = ball.y;
         let simulatedSpeedY = ball.speedY;
         const tableHeight = gameSettings.pongTableHeight;
 
+        // Simulate vertical bouncing off the top and bottom walls
         while (remainingTime > 0)
         {
             let timeToTop = (0 - simulatedY) / simulatedSpeedY;
@@ -118,9 +122,6 @@ export class AIPlayer extends Player {
         let simulatedY = this.targetY;
         const error = (Math.random() - 0.5) * errorRange;
         this.targetY = Math.max(this.paddleHeight / 2, Math.min(simulatedY + error, gameSettings.pongTableHeight - this.paddleHeight / 2));
-
-        console.log("Target with score adapt:", this.targetY);
-
     }
 
     updateAI(player1Score: number, aiScore: number) {
@@ -133,7 +134,7 @@ export class AIPlayer extends Player {
         this.player1Score = player1Score;
         this.aiScore = aiScore;
 
-
+        // Add buffer zone to avoid constant small movements
         const buffer = 4;
         if (this.y < this.targetY - buffer) {
             this.simulateKeyPress('down');

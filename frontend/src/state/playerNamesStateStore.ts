@@ -33,6 +33,11 @@ class PlayerNamesStateStore {
     this.updateListenersOnChange();
   }
 
+  updateOwnEntry(newOwnDisplayName: string) {
+    this.state[window.store.userStore.get().details.id] = newOwnDisplayName;
+    this.updateListenersOnChange();
+  }
+
   getName(playerId: string) {
     if (!isDefined(this.state[playerId])) {
       const msg = `DisplayName is not defined for the requested id!`;
@@ -46,8 +51,5 @@ class PlayerNamesStateStore {
     return this.state;
   }
 }
-
-
-
 
 export { PlayerNamesStateStore };

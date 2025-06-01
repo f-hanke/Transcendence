@@ -14,7 +14,9 @@ class GameServiceInterface {
   }
 
   static correctUpdateHandlingFunction: (
-    dataJson: GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
+    dataJson:
+      | GameServiceTypes.ServerUpdateGameState
+      | GameServiceTypes.serverUpdateGameStateRestAPI
   ) => void = GameServiceInterface.handleServerUpdateGameStateRemote;
 
   static websocket: WebSocket | null = null;
@@ -92,14 +94,18 @@ class GameServiceInterface {
 
   static disconnect() {
     if (isDefined(window.store.gameStore.get().state === "running")) {
-      this.sendMessageToServer({
-        type: "clientLeftGame",
-        data: {
-          matchId: window.store.gameStore.get().matchId,
-          playerId: window.store.userStore.get().details.id,
-        },
-      });
-      window.store.gameStore.updateGameStateState("none");
+      try {
+        this.sendMessageToServer({
+          type: "clientLeftGame",
+          data: {
+            matchId: window.store.gameStore.get().matchId,
+            playerId: window.store.userStore.get().details.id,
+          },
+        });
+        window.store.gameStore.updateGameStateState("none");
+      } catch (err) {
+        console.log("Unable to notify game service about closing connection!");
+      }
     }
     if (isDefined(this.websocket)) {
       this.websocket.close();
@@ -109,7 +115,10 @@ class GameServiceInterface {
 
   static handleMessage(event: MessageEvent) {
     const dataJson = JSON.parse(event.data);
-    if (gameServiceTypeGuards.isServerUpdateGameState(dataJson) || gameServiceTypeGuards.isServerUpdateGameStateRestAPI(dataJson)) {
+    if (
+      gameServiceTypeGuards.isServerUpdateGameState(dataJson) ||
+      gameServiceTypeGuards.isServerUpdateGameStateRestAPI(dataJson)
+    ) {
       this.correctUpdateHandlingFunction(dataJson);
     } else if (gameServiceTypeGuards.isServerGameIsOver(dataJson)) {
       this.handleServerGameIsOver(dataJson);
@@ -128,7 +137,9 @@ class GameServiceInterface {
   }
 
   static handleServerUpdateGameStateRemote(
-    dataJson:GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
+    dataJson:
+      | GameServiceTypes.ServerUpdateGameState
+      | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
     if (dataJson.type === "serverUpdateGameState")
       window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
@@ -136,7 +147,9 @@ class GameServiceInterface {
   }
 
   static handleServerUpdateGameStateLocalPvAi(
-    dataJson: GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
+    dataJson:
+      | GameServiceTypes.ServerUpdateGameState
+      | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
     if (dataJson.type === "serverUpdateGameState")
       window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
@@ -144,7 +157,9 @@ class GameServiceInterface {
   }
 
   static handleServerUpdateGameStateLocalPvp(
-    dataJson: GameServiceTypes.ServerUpdateGameState | GameServiceTypes.serverUpdateGameStateRestAPI
+    dataJson:
+      | GameServiceTypes.ServerUpdateGameState
+      | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
     if (dataJson.type === "serverUpdateGameState")
       window.store.gameStore.updateBallPosition(dataJson.data);
@@ -154,9 +169,40 @@ class GameServiceInterface {
   static handleServerGameIsOver(dataJson: GameServiceTypes.ServerGameIsOver) {
     colog("GAME IS OVER RECEIVED!");
     this.disconnect();
+    console.log(JSON.stringify(window.store.gameStore.get()));
     window.store.notificationStore.updateAddNotification({
       id: generateUniqueId(),
-      message: `Game ended, reason: ${dataJson.data.reason}`,
+      message: GameServiceInterface.generateGameOverMsg(dataJson),
+    });
+  }
+
+  static generateGameOverMsg(dataJson: GameServiceTypes.ServerGameIsOver) {
+    const gameThatJustEnded = window.store.gameStore.get();
+    const score1 = dataJson.data.player1.score;
+    const score2 = dataJson.data.player2.score;
+    const playerName1 = window.store.playerNamesStore.getName(
+      dataJson.data.player1.id
+    );
+    let playerName2 = "";
+    if (["localPvAi", "localPvP"].includes(gameThatJustEnded.typeOfGame)) {
+      playerName2 = dataJson.data.player2.id;
+    } else {
+      playerName2 = window.store.playerNamesStore.getName(
+        dataJson.data.player2.id
+      );
+    }
+    const winner = score1 > score2 ? playerName1 : playerName2;
+    const reason =
+      window.store.languageStore.state.manageMatch.gameEndsMap[
+        dataJson.data.reason as GameServiceTypes.PossibleGameEnds
+      ];
+    return window.store.languageStore.state.manageMatch.matchIsOver({
+      name1: playerName1,
+      name2: playerName2,
+      score1: score1,
+      score2: score2,
+      winner: winner,
+      reasonString: reason,
     });
   }
 

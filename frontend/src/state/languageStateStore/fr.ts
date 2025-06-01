@@ -28,6 +28,13 @@ const fr: LanguageState = {
     waitingServerStart: "En attente du démarrage du serveur...",
     cancelKeyInstruction: "Appuyez sur 'n' pour annuler la partie",
     readyKeyInstruction: "Appuyez sur 'y' quand vous êtes prêt.e",
+    gameEndsMap: {
+      normalMaxScoreReached: "Le score maximum a été atteint !",
+      playerDisconnected: "Un joueur s'est déconnecté !",
+      playerLeftGame: "Un joueur a quitté la partie !",
+      serverError: "Une erreur serveur est survenue !",
+    },
+    matchIsOver: matchIsOverMsg,
   },
   currentTournament: {
     title: "Aperçu du Tournoi",
@@ -177,9 +184,34 @@ const fr: LanguageState = {
       invite: "L'utilisateur vous a invité à jouer une partie avec lui\nCliquez ici pour rejoindre.",
       tournamentStart: "Le tournoi a commencé. Si vous êtes l’hôte, allez dans « Tournois » pour programmer le match ou attendez que l’hôte vous envoie une invitation.",
       matchResult: "${winner} a remporté le match ${type} contre ${loser} avec un score de ${winnerScore} à ${loserScore}.\n",
-      playerLeft: "${Player} a quitté le tournoi, tous les matchs avec lui seront automatiquement résolus",
+      playerLeft: "${Player} a quitté le tournoi, tous les matchs avec ${Player2} seront automatiquement résolus",
     }
   },
 } as const;
+
+
+function matchIsOverMsg(data: {
+  name1: string;
+  name2: string;
+  score1: number;
+  score2: number;
+  winner: string;
+  reasonString: string;
+}) {
+  return `
+  <div class="flex justify-center items-center">
+   <div class="grid grid-cols-2 grid-rows-4 w-96">
+      <div class="text-left h-6">${data.name1}:</div>
+      <div class="text-left h-6"> ${data.score1}</div>
+      <div class="text-left h-6">${data.name2}:</div>
+      <div class="text-left h-6"> ${data.score2}</div>
+      <div class="text-left h-6">Gagnant:</div>
+      <div class="text-left h-6">${data.winner}</div>
+      <div class="text-left h-6">Raison de fin:</div>
+      <div class="text-left h-6">${data.reasonString}</div>
+    </div>
+  </div>
+  `;
+}
 
 export { fr };

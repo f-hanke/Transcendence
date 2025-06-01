@@ -1,3 +1,5 @@
+import { GameServiceTypes } from "transcendence";
+
 type LanguageState = {
   navbar: {
     play: string;
@@ -27,6 +29,15 @@ type LanguageState = {
     waitingServerStart: string;
     cancelKeyInstruction: string;
     readyKeyInstruction: string;
+    matchIsOver: (data: {
+      name1: string;
+      name2: string;
+      score1: number;
+      score2: number;
+      winner: string;
+      reasonString: string;
+    }) => string;
+    gameEndsMap: Record<GameServiceTypes.PossibleGameEnds, string>;
   };
   currentTournament: {
     title: string;
