@@ -4,9 +4,9 @@ import { db, sendToClient, updateUnreadMessages } from './server.js';
 import { databaseQuerys } from './databaseQuerys.js';
 import { matchmakingTypeGuards } from 'transcendence';
 import { MatchMakingTypes } from 'transcendence';
-import { tournamentResultNotification, tournamentStartNotification } from './tournamentNotifications.js';
+import { tournamentPlayerLeftNotification, tournamentResultNotification, tournamentStartNotification } from './tournamentNotifications.js';
 
-const queue = 'auth-ChatService';
+const queue = 'auth-service-queue';
 const tournamentQueue = 'matchmaking-service-queue';
 
 function	updateUserDatabase(msg: RabbitMQTypes.UserChange){
@@ -28,7 +28,7 @@ export async function startConsumer() {
 	}
 
 	const channel = await connection.createChannel();
-	await channel.assertQueue(queue, { durable: false });
+	await channel.assertQueue(queue, { durable: true });
 
 	console.log('[Consumer] Waiting for messages...');
 	channel.consume(queue, (msg) => {
@@ -49,8 +49,8 @@ export async function startConsumer() {
 		}
 	});
 
-	await channel.assertQueue(tournamentQueue, { durable: false });
-	console.log('[Consumer] Waiting tournament notifications...');
+	await channel.assertQueue(tournamentQueue, { durable: true });
+	console.log('[Consumer] Waiting for tournament messages...');
 
 	channel.consume(tournamentQueue, (msg) => {
 		if (msg !== null) {
@@ -61,7 +61,12 @@ export async function startConsumer() {
 				tournamentResultNotification(message);
 			} else if (matchmakingTypeGuards.isServerStartTournament(message)){
 				console.log("Tournament upcoming Match Nofitication!");
+				channel.ack(msg);
 				tournamentStartNotification(message);
+			} else if (matchmakingTypeGuards.isPlayerLeftSinceTournamentStarted(message)){
+				console.log("Tournament player left running tournament notification");
+				channel.ack(msg);
+				tournamentPlayerLeftNotification(message);
 			} else {
 				console.error("Wrong data read from rabbitMQ : ChatService.");
 				console.log("Message: ", message)

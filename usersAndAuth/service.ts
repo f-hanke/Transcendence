@@ -13,6 +13,9 @@ import { User } from "./orm/user.js";
 import { GameResultModel } from "./orm/gameResultModel.js";
 
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
+import { setupMetrics } from './lib/metrics.js';
+import logger from './lib/logger.js';
+import { checkElasticsearch } from './lib/elasticsearch.js';
 
 import {
   AuthServiceTypes,
@@ -42,7 +45,7 @@ type MatchResult = GameResultTypes.MatchResult;
 type TournamentResult = GameResultTypes.TournamentResult;
 type UpdateLanguageBody = AuthServiceTypes.UpdateLanguageBody;
 
-const queue = "auth-ChatService"; // for publishing
+const queue = "auth-service-queue"; // for publishing
 
 async function publishMessage(message: RabbitMQTypes.UserChange) {
   if (!rabbitMQTypeGuards.isUserChangeBody(message))
@@ -60,7 +63,7 @@ async function publishMessage(message: RabbitMQTypes.UserChange) {
 
   const channel = await connection.createChannel();
 
-  await channel.assertQueue(queue, { durable: false });
+  await channel.assertQueue(queue, { durable: true });
 
   channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
   console.log("[Publisher] Sent:", message);
@@ -79,6 +82,11 @@ const server = fastify({
     },
   },
 });
+
+setupMetrics(server);
+logger.info("Metrics and logger initialized.");
+//keep commented out unless docker is running requires elsasticsearch to be running
+await checkElasticsearch();
 
 server.register(fastifyJwt, {
   secret: "supersecret",
@@ -382,6 +390,29 @@ server.post<{
       .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
   }
 });
+
+server.get<{
+  Reply: {
+    200: UserIdsToNamesMapping;
+    400: ErrorResponseBody;
+    500: ErrorResponseBody;
+  };
+}>("/api/users/alluseridsmappedtodisplaynames", async (request, reply) => {
+  try {
+    const users = (await User.findAll()) as UserType[];
+    const usersMap: UserIdsToNamesMapping = {};
+    for (const user of users) {
+      usersMap[user.id] = user.display_name;
+    }
+    return reply.code(200).send(usersMap);
+  } catch (error) {
+    console.error(error);
+    reply
+      .code(500)
+      .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
+  }
+}
+);
 
 server.post<{
   Body: UpdatePasswordBody;

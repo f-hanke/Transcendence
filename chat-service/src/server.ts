@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import fastifyWebsocket, { WebsocketHandler } from '@fastify/websocket';
 import cors from '@fastify/cors';
 import { WebSocket } from 'ws';
-import { chatServiceTypeGuards, ChatServiceTypes, SharedTypes, transNetworkSettings } from 'transcendence';
+import { AuthServiceTypes, chatServiceTypeGuards, ChatServiceTypes, SharedTypes, transNetworkSettings } from 'transcendence';
 import { FastifyRequest } from 'fastify/types/request';
 import Database from 'better-sqlite3';
 import { parse } from 'path';
@@ -12,6 +12,9 @@ import { acceptFriendRequest, removeFriendRequest, sendFriendRequest } from './f
 import { databaseQuerys } from './databaseQuerys.js';
 import { startConsumer } from './rabbitMQ.js';
 import { start } from 'repl';
+import esClient, { checkElasticsearch } from './lib/elasticsearch.js';
+import logger from './lib/logger.js';
+import { setupMetrics } from './lib/metrics.js';
 
 const fastify = Fastify();
 fastify.register(fastifyWebsocket);
@@ -21,22 +24,25 @@ fastify.register(cors, { origin: "*" });
 fastify.get('/health', async () => {
 	return { status: 'ok' };
 });
-
+setupMetrics(fastify);
+logger.info("Metrics and logger initialized.");
+//keep commented out unless docker is running requires elsasticsearch to be running
+// await checkElasticsearch();
 export const db = new Database('./db/chat_service_db.db');
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket[]>();
 
-//todo
-//RabbitMQ update database
-//subscribe to updateUserDatabase
-// type updateUserDatabase {
-// 	type: "updateUserDatabase";
-// 	data: {
-// 		id: string;
-// 		username: string;
-// 	}
-// }
-//publish updateFriendDatabase
+export const messagesArray = {
+	en: {
+		start: "Start a conversation",
+	},
+	fr: {
+		start: "Commencez une conversation",
+	},
+	de: {
+		start: "Beginnen Sie ein Gespräch",
+	}
+} as const;
 
 await startConsumer().catch(console.error);
 
@@ -129,13 +135,14 @@ fastify.post('/send-game-invite', async (req, reply) => {
 	const { authorId, recipientId, date } = req.body;
 
 	console.log(req.body);
+	const msg = "User invited you to play a game with them\nClick here to join";
 	try {
 		handleClientSentMessage({
 			type: "sentMessage",
 			data: {
 				authorId: authorId,
 				recipientId: recipientId,
-				message: "[Game invite] User invited you to play a game with them\n Click here to join",
+				message: msg,
 				date: date,
 				type:"sendGameInvite",
 			},
@@ -181,7 +188,7 @@ fastify.register(async function (fastify) {
 function registerClient(req: FastifyRequest, socket: WebSocket) {
 	const clientId = (req.query as { clientId?: string }).clientId;
 	//todo: check if client exists in db
-	if (!clientId) {
+	if (!clientId || clientId == null) {
 		console.log("No clientId provided in query");
 		socket.close(1008, "Missing clientId");
 		return;
@@ -257,7 +264,7 @@ function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 		let typeData = null;
 		if (type)
 			typeData = type;
-		const stmt = db.prepare(databaseQuerys.insertMessage).run(authorId, recipientId, message, date, typeData);
+		db.prepare(databaseQuerys.insertMessage).run(authorId, recipientId, message, date, typeData);
 
 		console.log("Message inserted successfully");
 		updateUnreadMessages(recipientId, authorId, true);
@@ -306,17 +313,32 @@ function getBlockedStatus(clientId: string, recipientId: string){
 	}
 }
 
+export function getLanguage(clientId: string): string {
+	try {
+		const result = db.prepare(databaseQuerys.getLanguage).get(clientId) as { language: string } | undefined;
+		if (!result || !result.language)
+			return "en";
+
+		return result.language;
+	} catch (err) {
+		console.error("Error retrieving language from db:", err);
+		return "en";
+	}
+}
+
 function getLastMessage(clientId: string, recipientId: string)
 {
+	const lang = getLanguage(clientId) as AuthServiceTypes.Language;
+	const msg = messagesArray[lang].start;
 	try {
 		const result = db.prepare(databaseQuerys.getLastMessage).get(clientId, recipientId, recipientId, clientId) as { message: string, date: string} | undefined;
 
 		if (!result)
-			return "start a conversation";
+			return msg;
 		return result.message;
 	} catch (err) {
 		console.error("Error checking retriving last msg:", err);
-		return "start a conversation";
+		return msg;
 	}
 }
 

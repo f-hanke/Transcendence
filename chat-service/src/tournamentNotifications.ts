@@ -1,7 +1,9 @@
+import { AuthServiceTypes, matchmakingTypeGuards } from 'transcendence';
 import { databaseQuerys } from './databaseQuerys.js';
-import { db, sendToClient, updateUnreadMessages } from "./server.js";
+import { db, getLanguage, sendToClient, updateUnreadMessages } from "./server.js";
 import { MatchMakingTypes } from 'transcendence';
 import { GameResultTypes } from 'transcendence';
+import { ChatServiceTypes } from 'transcendence';
 
 function	getPlayerName(id: string){
 	try {
@@ -9,13 +11,15 @@ function	getPlayerName(id: string){
 		return result.username;
 	} catch (err) {
 		console.error("error fetching username from db");
-		return null;
+		return "default name";
 	}
 }
 
-function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tournament){
-	let msg = "[Tournament Notification] - Match Result\n";
+function format(template: string, data: Record<string, string | number>): string {
+	return template.replace(/\${(.*?)}/g, (_, key) => String(data[key]));
+}
 
+function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tournament, clientId: string){
 	let matchResult: GameResultTypes.MatchResult | null = null;
 	switch (type) {
 		case "semifinale1":
@@ -34,6 +38,7 @@ function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tourname
 			break;
 	}
 	if (!matchResult) {
+		console.warn(`No tournamentmatch result found for type: ${type}`);
 		return `[Tournament Notification] - No results found for ${type}.`;
 	}
 	const player1Name = getPlayerName(matchResult.player1Id);
@@ -45,13 +50,36 @@ function	generateTournamentMessage(type: string, data: MatchMakingTypes.Tourname
 	const loserScore = isPlayer1Winner ? matchResult.player2Score : matchResult.player1Score;
 	const loserName = isPlayer1Winner ? player2Name : player1Name;
 
-	msg += `${winnerName} won the ${type} match against ${loserName} with a score of ${winnerScore} to ${loserScore}.\n`;
+	const msgData = {
+		winnerName,
+		loserName,
+		winnerScore,
+		loserScore,
+		matchType: type,
+	};
+
+	const msg = JSON.stringify(msgData);
 	return msg;
 }
 
-function sendTournamentNotification(players: string[], message: string){
+function sendTournamentNotification(players: string[], type: string, data: MatchMakingTypes.Tournament | MatchMakingTypes.PlayerLeftSinceTournamentStarted | MatchMakingTypes.ServerStartTournament) {
 	const date = new Date().toISOString().replace('T', ' ').substring(0, 19);
 	players.forEach((player) => {
+		let message;
+		let msgType: ChatServiceTypes.Message["type"];
+		const lang = getLanguage(player) as AuthServiceTypes.Language;
+		if (matchmakingTypeGuards.isServerStartTournament(data)){
+			message = "tournament Start...";
+			msgType = "startTournament";
+		} else if (matchmakingTypeGuards.isPlayerLeftSinceTournamentStarted(data)) {
+			message = JSON.stringify({playerLeft: getPlayerName(data.playerLeavingId)});
+			msgType = "playerLeft";
+		} else if (matchmakingTypeGuards.isTournament(data)){
+			message = generateTournamentMessage(type, data, player);
+			msgType = "matchResult";
+		}else
+			message = "failed to send Tournament Notification";
+
 		const notification = {
 			type: "sentMessage",
 			data: {
@@ -59,11 +87,11 @@ function sendTournamentNotification(players: string[], message: string){
 				recipientId: player,
 				message: message,
 				date: date,
-				type: null,
+				type: msgType,
 			},
 		} as const;
 		try {
-			db.prepare(databaseQuerys.insertMessage).run("0", player, message, date, null);
+			db.prepare(databaseQuerys.insertMessage).run("0", player, message, date, msgType);
 			console.log("Message inserted successfully");
 			updateUnreadMessages(player, "0", true);
 		} catch (err) {
@@ -83,38 +111,32 @@ export function	tournamentResultNotification(msg: MatchMakingTypes.TournamentNot
 		data.player4Id
 	].filter((id): id is string => typeof id === 'string');
 
-	console.log("TYPE OF NOTIFICATION: ", type);
-	const message = generateTournamentMessage(type, data);
-	switch (type){
-		case "semifinale1":
-			console.log("Handling semifinal1 match logic");
-			sendTournamentNotification(players, message);
-			break;
-		case "semifinale2":
-			console.log("Handling semifinal2 match logic");
-			sendTournamentNotification(players, message);
-			break;
+	const remainingPlayers = players.filter((id) => !msg.tournamentData.playersWhoClickedToLeave.includes(id))
 
-		case "finale":
-			console.log("Handling final match logic");
-			sendTournamentNotification(players, message);
-			break;
-
-		case "bronze":
-			console.log("Handling bronze match logic");
-			sendTournamentNotification(players, message);
-			break;
-	}
+	console.log("Handling ", type, " match logic");
+	sendTournamentNotification(remainingPlayers, type, data);
 }
 
 export function tournamentStartNotification(msg: MatchMakingTypes.ServerStartTournament) {
-	//const data = msg.data;
 	const players: string[] = [
 		msg.data.player1Id,
 		msg.data.player2Id,
 		msg.data.player3Id,
 		msg.data.player4Id
 	].filter((id): id is string => typeof id === 'string');
-	const message = "The tournament has started, if you are the Host go to tournaments to schedule the match or wait for the Host to send you a invitation";
-	sendTournamentNotification(players, message);
+
+	sendTournamentNotification(players, "startTournament", msg);
+}
+
+export function tournamentPlayerLeftNotification(msg: MatchMakingTypes.PlayerLeftSinceTournamentStarted) {
+	const players = [
+		msg.tournament.player1Id,
+		msg.tournament.player2Id,
+		msg.tournament.player3Id,
+		msg.tournament.player4Id
+	].filter((id): id is string => typeof id === 'string');
+
+	const remainingPlayers = players.filter((id) => !msg.tournament.playersWhoClickedToLeave.includes(id));
+
+	sendTournamentNotification(remainingPlayers, "playerLeft", msg);
 }

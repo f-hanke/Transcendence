@@ -10,8 +10,11 @@ import { config } from "./config/config.js";
 import { User } from "./orm/user.js";
 import { GameResultModel } from "./orm/gameResultModel.js";
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
+import { setupMetrics } from './lib/metrics.js';
+import logger from './lib/logger.js';
+import { checkElasticsearch } from './lib/elasticsearch.js';
 import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSettings, } from "transcendence";
-const queue = "auth-ChatService"; // for publishing
+const queue = "auth-service-queue"; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
         console.error("Trying to publish unknown type");
@@ -26,7 +29,7 @@ async function publishMessage(message) {
         connection = await amqp.connect("amqp://localhost");
     }
     const channel = await connection.createChannel();
-    await channel.assertQueue(queue, { durable: false });
+    await channel.assertQueue(queue, { durable: true });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
     console.log("[Publisher] Sent:", message);
 }
@@ -42,6 +45,10 @@ const server = fastify({
         },
     },
 });
+setupMetrics(server);
+logger.info("Metrics and logger initialized.");
+//keep commented out unless docker is running requires elsasticsearch to be running
+await checkElasticsearch();
 server.register(fastifyJwt, {
     secret: "supersecret",
 });
@@ -268,6 +275,22 @@ server.post("/api/users/getusernames", async (request, reply) => {
         for (const userId of request.body) {
             if (!usersMap[userId])
                 usersMap[userId] = null;
+        }
+        return reply.code(200).send(usersMap);
+    }
+    catch (error) {
+        console.error(error);
+        reply
+            .code(500)
+            .send({ reason: AuthErrors.BackendError });
+    }
+});
+server.get("/api/users/alluseridsmappedtodisplaynames", async (request, reply) => {
+    try {
+        const users = (await User.findAll());
+        const usersMap = {};
+        for (const user of users) {
+            usersMap[user.id] = user.display_name;
         }
         return reply.code(200).send(usersMap);
     }

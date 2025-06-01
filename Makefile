@@ -7,15 +7,13 @@ setup:
 	mkdir -p grafana/dashboards
 	mkdir -p grafana/provisioning/datasources
 	mkdir -p grafana/provisioning/dashboards
-	@echo "Creating RabbitMQ network..."
-	docker network inspect rabbitmq-network >/dev/null 2>&1 || docker network create rabbitmq-network
+	@echo "Building shared dependencies..."
+	npm run build --prefix ./shared
 
 # Start all services
 start: setup
-	@echo "Starting RabbitMQ service..."
-	cd rabbitmq && ./start-rabbitmq.sh
-	@echo "Starting monitoring stack with docker compose..."
-	docker compose up -d
+	@echo "Starting all services with docker compose (including RabbitMQ)..."
+	docker compose up -d --build
 	@echo "Services are starting up. Check status with 'make status'"
 	@cat service-info.txt
 
@@ -61,23 +59,23 @@ start-frontend:
 # Build the frontend (for production)
 build-frontend:
 	@echo "Building frontend for production..."
+	cd shared && npm install && npm run build
 	cd frontend && npm install && npm run build
 
 # Build the frontend with TypeScript checking skipped
 build-frontend-skip-ts-check:
 	@echo "Building frontend for production (skipping TypeScript checks)..."
+	cd shared && npm install && npm run build
 	cd frontend && npm install && npm run build-skip-ts-check
 
-# Rebuild just the webserver with the latest frontend
-rebuild-webserver-with-frontend:
-	@echo "Creating mock frontend build..."
-	cd frontend && npm install && npm run mock-build
-	@echo "Building and starting the webserver with the new frontend..."
+# Rebuild just the webserver (which includes frontend build)
+rebuild-webserver:
+	@echo "Building and starting the webserver (includes frontend build)..."
 	docker compose stop webserver
 	docker compose rm -f webserver
 	docker compose build --no-cache webserver
 	docker compose up -d webserver
-	@echo "Webserver rebuilt with frontend. Check status with 'make status'"
+	@echo "Webserver rebuilt. Check status with 'make status'"
 
 # Rebuild just the frontend service (for development)
 rebuild-frontend:
@@ -86,10 +84,8 @@ rebuild-frontend:
 
 # Stop all services
 stop:
-	@echo "Stopping the monitoring stack..."
+	@echo "Stopping all services..."
 	docker compose down -v
-	@echo "Stopping RabbitMQ..."
-	cd rabbitmq && docker compose down -v
 	@echo "All services have been stopped and removed."
 
 # Check status of all services (improved version with colors)
@@ -102,8 +98,6 @@ clean: stop
 	# Remove stopped containers and volumes
 	docker container prune -f
 	docker volume prune -f
-	# Remove RabbitMQ network, but not other networks or images
-	docker network rm rabbitmq-network 2>/dev/null || true
 	@echo "Less aggressive Docker cleanup complete!"
 
 # Clean npm build files
@@ -125,8 +119,6 @@ fclean: stop clean-npm
 	docker volume prune -f
 	# Optionally, remove the .docker directory if you want to completely reset Docker's data
 	# rm -rf ~/.docker
-	# Remove RabbitMQ network (this will be removed in both clean and fclean)
-	docker network rm rabbitmq-network 2>/dev/null || true
 	@echo "Full Docker cleanup complete!"
 
 reDev:	clean-npm all
@@ -142,8 +134,8 @@ re:	stop
 help:
 	@echo "Available Commands:"
 	@echo "  all        - Setup and start all services"
-	@echo "  setup      - Setup directories and network"
-	@echo "  start      - Start RabbitMQ and monitoring stack"
+	@echo "  setup      - Setup directories and build shared dependencies"
+	@echo "  start      - Start all services with docker-compose (including RabbitMQ)"
 	@echo "  start-remote - Build and start the remote service (for testing)"
 	@echo "  start-game-service - Build and start the game service (for testing)"
 	@echo "  start-chat-service - Build and start the chat service (for testing)"

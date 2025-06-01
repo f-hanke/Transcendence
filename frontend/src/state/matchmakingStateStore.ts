@@ -8,8 +8,11 @@ import { deepCopyObj } from "../utils/utils";
 import {
   MatchMakingMatchGroups,
   MatchmakingState,
+  TournamentGroups,
 } from "./matchmakingStateTypes";
 import { StoreCallback } from "./types";
+import { isOwnTournament } from "transcendence";
+import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
 
 class MatchmakingStateStore {
   listeners: Set<StoreCallback>;
@@ -51,7 +54,10 @@ class MatchmakingStateStore {
         matchObj.invitedPlayerId === window.store.userStore.get().details.id;
       const matchCopy = deepCopyObj(matchObj);
       if (matchObj.type === "public") groups.public.push(matchCopy);
-      else if ((matchObj.type === "private" || matchObj.type === "tournament") && curUserIsInvited)
+      else if (
+        (matchObj.type === "private" || matchObj.type === "tournament") &&
+        curUserIsInvited
+      )
         groups.private.push(matchCopy);
       else if (matchObj.type === "tournament")
         groups.tournament.push(matchCopy);
@@ -61,13 +67,75 @@ class MatchmakingStateStore {
     return groups;
   }
 
-  createGame(match: MatchMakingTypes.BasicGame) {
+  getTournamentGroups(): TournamentGroups {
+    const groups: TournamentGroups = {
+      tournamentsToJoin: [],
+      tournamentsPlayerAlreadyJoined: [],
+      tournamentsThatAreFull: [],
+      playerIsPartOfATournament: false,
+    };
+    this.state.tournaments.forEach((tournamentObj) => {
+      const hasStarted = tournamentObj.started;
+      const playerLeftThisTournament =
+        tournamentObj.playersWhoClickedToLeave.includes(
+          window.store.userStore.get().details.id
+        );
+      const playerIsPartOfTournament = isOwnTournament(
+        tournamentObj,
+        window.store.userStore.get().details.id
+      );
+      const tournCopy = deepCopyObj(tournamentObj);
 
-    if (match.hostId == window.store.userStore.get().details.id)
-    {
+      // dont show
+      if (hasStarted && !playerIsPartOfTournament) {
+        groups.tournamentsThatAreFull.push(tournCopy);
+      }
+      // show as running with leave btn
+      else if (
+        hasStarted &&
+        playerIsPartOfTournament &&
+        !playerLeftThisTournament
+      ) {
+        groups.tournamentsPlayerAlreadyJoined.push(tournCopy);
+        groups.playerIsPartOfATournament = true;
+      }
+      // show as running with leave btn
+      else if (!hasStarted && playerIsPartOfTournament) {
+        groups.tournamentsPlayerAlreadyJoined.push(tournCopy);
+        groups.playerIsPartOfATournament = true;
+      }
+      // dont show
+      else if (
+        hasStarted &&
+        playerIsPartOfTournament &&
+        playerLeftThisTournament
+      ) {
+        groups.tournamentsThatAreFull.push(tournCopy);
+      } else if (
+        !hasStarted &&
+        !playerIsPartOfTournament &&
+        !playerLeftThisTournament
+      ) {
+        groups.tournamentsToJoin.push(tournCopy);
+      }
+      // new
+      else if (
+        !hasStarted &&
+        !playerIsPartOfTournament &&
+        !playerLeftThisTournament
+      ) {
+        groups.tournamentsToJoin.push(tournCopy);
+      } else {
+        throw new Error("Tournament not assigned to any matchmaking-group!");
+      }
+    });
+    return groups;
+  }
+
+  createGame(match: MatchMakingTypes.BasicGame) {
+    if (match.hostId == window.store.userStore.get().details.id) {
       this.state.ownMatch = deepCopyObj(match);
-    }
-    else this.state.otherMatches.push(deepCopyObj(match));
+    } else this.state.otherMatches.push(deepCopyObj(match));
     this.updateListenersOnChange();
   }
 
@@ -86,6 +154,7 @@ class MatchmakingStateStore {
 
   updateFromAllMatches(allMatches: MatchMakingTypes.ServerUpdateGames["data"]) {
     console.log("UPDATE FROM ALL MATCHES");
+    console.log(allMatches);
     const newState: MatchmakingState = {
       otherMatches: [],
       tournaments: deepCopyObj(allMatches.tournaments),
@@ -122,7 +191,50 @@ class MatchmakingStateStore {
       newTournamentState.push(deepCopyObj(updateTournament));
     }
     this.state.tournaments = newTournamentState;
+    this.closeOwnMatchWhenIsTournamentAndPlayerLeft(updateTournament);
     this.updateListenersOnChange();
+  }
+
+  closeOwnMatchWhenIsTournamentAndPlayerLeft(
+    updateTournament: MatchMakingTypes.Tournament
+  ) {
+    if (isDefined(this.state.ownMatch)) {
+      console.log("1 IS OWN MATCH");
+      if (isDefined(this.state.ownMatch.invitedPlayerId)) {
+        const updatedTournamentId = updateTournament.tournamentId;
+        const ownMatchTournamentId = this.state.ownMatch.tournamentId;
+        if (updatedTournamentId == ownMatchTournamentId) {
+          this.closeWhenOpponentOrHostLeftTournament(updateTournament);
+        }
+      }
+    }
+    return false;
+  }
+
+  closeWhenOpponentOrHostLeftTournament(
+    updateTournament: MatchMakingTypes.Tournament
+  ) {
+    const invitedPlayerId = (this.state.ownMatch as MatchMakingTypes.BasicGame)
+      .invitedPlayerId;
+    const invitedPlayerLeft =
+      updateTournament.playersWhoClickedToLeave.includes(
+        invitedPlayerId as string
+      );
+    const hostLeft = updateTournament.playersWhoClickedToLeave.includes(
+      (this.state.ownMatch as MatchMakingTypes.BasicGame).hostId
+    );
+    if (invitedPlayerLeft || hostLeft) {
+      console.log("CLOSING MATCH BECAUSE INVITED OPONENT OR HOST LEFT");
+      console.log(`HOST LEFT ${hostLeft}`);
+      console.log(`INVITED LEFT ${invitedPlayerLeft}`);
+      MatchMakingInterface.sendMessageToServer({
+          type: "deleteGame",
+          data: window.store.matchmakingStore.get()
+            .ownMatch as MatchMakingTypes.BasicGame,
+        });
+      this.state.ownMatch = null;
+      return true;
+    }
   }
 
   update(newState: MatchmakingState) {

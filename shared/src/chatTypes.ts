@@ -4,7 +4,7 @@ declare namespace ChatServiceTypes {
     recipientId: string;
     message: string;
     date: string;
-    type?: "sendGameInvite" | null;
+    type?: "sendGameInvite" | "startTournament" | "playerLeft" | "matchResult" | null;
   };
 
   type FriendRequestStatus =

@@ -12,8 +12,14 @@ function run_in_terminal {
   gnome-terminal --title=$2 -- bash -c "$1 && TRANSCENDENCE_DEV=$1 exec bash"
 }
 
-# only start rabbitmq docker when not already running
+# Start RabbitMQ using docker-compose (integrated setup)
+# echo "Starting RabbitMQ service using docker compose..."
+# docker compose up -d rabbitmq-service
 
+# Wait until the HTTP API is ready
+# until curl -s -u admin:admin http://localhost:15672/api/overview > /dev/null; do
+
+# Only start docker if it is not already running
 if docker ps --filter "name=rabbitmq" --filter "status=running" | grep -q rabbitmq; then
   echo "Container is already running."
 elif docker ps -a --filter "name=rabbitmq" | grep -q rabbitmq; then

@@ -68,6 +68,13 @@ const de: LanguageState = {
     waitingServerStart: "Warten auf den Serverstart...",
     cancelKeyInstruction: "Drücke 'n', um das Spiel abzubrechen",
     readyKeyInstruction: "Drücke 'y', wenn du bereit bist",
+    gameEndsMap: {
+      normalMaxScoreReached: "Die maximale Punktzahl wurde erreicht!",
+      playerDisconnected: "Ein Spieler hat die Verbindung getrennt!",
+      playerLeftGame: "Ein Spieler hat das Spiel verlassen!",
+      serverError: "Ein Serverfehler ist aufgetreten!",
+    },
+    matchIsOver: matchIsOverMsg,
   },
   currentTournament: {
     title: "Turnierübersicht",
@@ -83,6 +90,7 @@ const de: LanguageState = {
     createGame: "Spiel erstellen",
     waitingForHost: "Warten auf den Host",
     notParticipant: "Das ist nicht dein Spiel!",
+    notPartOfAnyTournament: "Sie nehmen derzeit an keinem Turnier teil!",
   },
   oneVOneLocal: {
     player1: "Spieler 1",
@@ -171,8 +179,37 @@ const de: LanguageState = {
       userUnblocked: "Benutzer erfolgreich entblockt.",
       friendRequestAccepted: "Freundschaftsanfrage angenommen.",
       friendRequestDeclined: "Freundschaftsanfrage abgelehnt.",
-    },
-  },
+      invite: "Der Benutzer hat Sie zu einem Spiel eingeladen\nKlicken Sie hier, um beizutreten",
+      tournamentStart: "Das Turnier hat begonnen. Wenn du der Gastgeber bist, gehe zu „Turniere“, um das Spiel zu planen, oder warte auf die Einladung des Gastgebers.",
+      matchResult: "${winner} hat das ${type}-Spiel gegen ${loser} mit ${winnerScore} zu ${loserScore} gewonnen.\n",
+      playerLeft: "${Player} hat das Turnier verlassen, alle Spiele mit ${Player2} werden automatisch entschieden",
+    }
+  }
 } as const;
+
+function matchIsOverMsg(data: {
+  name1: string;
+  name2: string;
+  score1: number;
+  score2: number;
+  winner: string;
+  reasonString: string;
+}) {
+  return `
+  <div class="flex justify-center items-center">
+   <div class="grid grid-cols-2 grid-rows-4 w-96">
+      <div class="text-left h-6">${data.name1}:</div>
+      <div class="text-left h-6"> ${data.score1}</div>
+      <div class="text-left h-6">${data.name2}:</div>
+      <div class="text-left h-6"> ${data.score2}</div>
+      <div class="text-left h-6">Gewinner:</div>
+      <div class="text-left h-6">${data.winner}</div>
+      <div class="text-left h-6">Spiel-Ende-Grund: </div>
+      <div class="text-left h-6">${data.reasonString}</div>
+    </div>
+  </div>
+  `;
+}
+
 
 export { de };

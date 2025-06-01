@@ -31,9 +31,10 @@ class Navbar extends HTMLElement {
           getImgSrcFromBuffer(window.store.userStore.get().details.image)
         }" alt="Profile" class="h-32 rounded-lg" />
         <div>
-          <a href="/profile" class="text-lg font-semibold hover:underline">id = ${
-            window.store.userStore.get().details.id
+          <a href="/profile" class="text-lg font-semibold hover:underline">${
+            window.store.userStore.get().details.displayName
           }</a>
+          <div class="font-bold"><br><br>ID: '${window.store.userStore.get().details.id}'</div>
         </div>
       </div>
       <nav class="flex-1 p-4 overflow-y-auto">

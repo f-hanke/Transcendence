@@ -3,6 +3,7 @@ import {
   MatchMakingTypes,
   GameResultTypes
 } from "transcendence";
+import { Tournament } from "../orm/tournament.js";
 
 const dbConverters = {
 
@@ -11,7 +12,7 @@ const dbConverters = {
     const rawDBTournaments: MatchMakingTypes.RawDBTournament[] = stmt.all() as MatchMakingTypes.RawDBTournament[];
     const typedTournaments: MatchMakingTypes.Tournament[] = [];
     for (const rawDBTournament of rawDBTournaments) {
-      typedTournaments.push(this.constructTournamentFromRawDB(rawDBTournament));
+      typedTournaments.push(await this.constructTournamentFromRawDB(rawDBTournament));
     }
     return typedTournaments;
   },
@@ -20,7 +21,7 @@ const dbConverters = {
    * @param {any} rawDBTournament 
    * @returns {MatchMakingTypes.Tournament}
    */
-  constructTournamentFromRawDB(rawDBTournament: MatchMakingTypes.RawDBTournament): MatchMakingTypes.Tournament {
+  async constructTournamentFromRawDB(rawDBTournament: MatchMakingTypes.RawDBTournament) {
     const tournament: MatchMakingTypes.Tournament = {
       tournamentId: rawDBTournament.id.toString(),
       player1Id: rawDBTournament.player1Id,
@@ -37,7 +38,7 @@ const dbConverters = {
       matchResultBronze: null,
       started: rawDBTournament.matchSemifinale1Id? true : false,
       playedAt: null,
-      playersWhoClickedToLeave: [],  // TODO: oops, I guess we're not storing this in the DB, so just empty initialize
+      playersWhoClickedToLeave: [],
     }
     if (rawDBTournament.matchSemifinale1Id !== null) {
       const rawDBMatch = db.prepare('SELECT * FROM matches WHERE id = ?').get(rawDBTournament.matchSemifinale1Id) as MatchMakingTypes.RawDBMatch;
@@ -72,6 +73,14 @@ const dbConverters = {
       if (matchResult)
         tournament.matchResultBronze = matchResult;
     }
+
+    for (const playerId of [rawDBTournament.player1Id, rawDBTournament.player2Id, rawDBTournament.player3Id, rawDBTournament.player4Id]) {
+      if (await Tournament.getPlayerTournamentId(playerId as string) === null) {
+        tournament.playersWhoClickedToLeave.push(playerId as string);
+        console.log("TournamentObject Reconstructor: Did not find playerTournament for playerId", playerId, ", adding to playersWhoClickedToLeave");
+      }
+    }
+
     return tournament;
   },
 

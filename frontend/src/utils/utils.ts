@@ -34,6 +34,10 @@ function navigateToSite(newRoute: string) {
   window.dispatchEvent(new Event("popstate"));
 }
 
+function getCurrentSite() {
+  return window.location.pathname.replace(/^\/+/, '');
+}
+
 function getMicroservicePrefix(service: RouteBuilder.Service) {
   switch (service) {
     case "gameService":
@@ -283,6 +287,27 @@ function userReadableDate(dateInput: string | Date) {
   return `${day}.${month}.${year} - ${hours}:${minutes} ${ampm}`;
 }
 
+function renderTournamentNotification(msg: string, type: string){
+  const lang = window.store.languageStore.state.chat;
+  if (type === "sendGameInvite")
+    msg = lang.notifications.invite;
+  else if (type === "startTournament")
+    msg = lang.notifications.tournamentStart;
+  else if (type === "playerLeft") {
+    const { playerLeft } = JSON.parse(msg);
+    const template = lang.notifications.playerLeft;
+    msg = template.replace("${Player}", playerLeft).replace("${Player2}", playerLeft);
+  }else if (type === "matchResult"){
+    const { winnerName, loserName, winnerScore, loserScore, matchType } = JSON.parse(msg);
+    const template = lang.notifications.matchResult;
+
+    msg = template.replace("${winner}", winnerName).replace("${loser}", loserName)
+        .replace("${winnerScore}", winnerScore.toString()).replace("${loserScore}", loserScore.toString())
+        .replace("${type}", matchType);
+  }
+  return msg;
+}
+
 // Example usage
 
 export {
@@ -303,5 +328,7 @@ export {
   getImgSrcFromBuffer,
   fileToBufferLike,
   sleep,
-  userReadableDate
+  userReadableDate,
+  getCurrentSite,
+  renderTournamentNotification
 };

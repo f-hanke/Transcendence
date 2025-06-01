@@ -1,5 +1,6 @@
 import { MatchMakingTypes } from "transcendence";
 import { MatchMakingInterface } from "../../backendInterface/matchmakingInterface";
+import { isDefined } from "transcendence";
 
 type OptnsMatchItem = {
   renderJoin: boolean;
@@ -93,9 +94,9 @@ render() {
     optns: OptnsMatchItem,
   ) {
     this.hostId = data.hostId;
-    this.hostName = data.hostId;
+    this.hostName = window.store.playerNamesStore.getName(data.hostId);
     this.oponentId = data.oponentId;
-    this.oponentName = data.oponentId;
+    this.oponentName = isDefined(data.oponentId) ? window.store.playerNamesStore.getName(data.oponentId): null;
     this.matchId = data.matchId;
     this.renderJoin = optns.renderJoin;
     this.matchIsRunning = optns.matchIsRunning;

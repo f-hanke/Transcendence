@@ -8,6 +8,7 @@
     "strict": true, // Enable strict mode for better type-checking
     "esModuleInterop": true, // Ensure compatibility with CommonJS modules
     "moduleResolution": "node", // Make sure module resolution works well with Node.js
+    "types": ["node"] // Include Node.js type definitions
   },
   "include": [
     "./src/**/*" // Include all TypeScript files in the src folder

@@ -62,7 +62,7 @@ class ManageMatch extends HTMLElement {
       this.renderWaitingClientStartModal();
     }
     if (window.store.gameStore.get().state === "waitingForServerStart") {
-      this.renderWaitingServerStartModal();
+      setTimeout(() => this.renderWaitingServerStartModal(), 0);
     }
     if (window.store.gameStore.get().state === "running") {
       if (this.unsubscribeGameState) this.unsubscribeGameState();
@@ -71,6 +71,7 @@ class ManageMatch extends HTMLElement {
   }
 
   renderWaitingServerStartModal() {
+    console.log("RENDERING WAITING FOR SERVER START MODAL");
     const t = window.store.languageStore.state.manageMatch;
 
     window.store.modalStore.updateAddKeyDownCallback(
@@ -82,9 +83,9 @@ class ManageMatch extends HTMLElement {
       t.cancelKeyInstruction,
     ]);
     window.store.modalStore.updateSetOpen();
+    // this.innerHTML = "";
     const modal = createHtmlElementFromString(`
       <central-modal-listeners></central-modal-listeners>`) as CentralModalListeners;
-    // this.innerHTML = "";
     this.appendChild(modal);
   }
 

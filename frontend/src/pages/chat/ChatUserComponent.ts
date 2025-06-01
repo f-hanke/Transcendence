@@ -1,6 +1,10 @@
 import { ChatServiceTypes, generateUniqueId } from "transcendence";
 import { ChatInterface } from "../../backendInterface/chatInterface";
-import { getCurDateString, getImgSrcFromBuffer, navigateToSite } from "../../utils/utils";
+import {
+  getCurDateString,
+  getImgSrcFromBuffer,
+  navigateToSite,
+} from "../../utils/utils";
 
 type UserComponentType =
   | "user"
@@ -22,6 +26,7 @@ class ChatUserComponent extends HTMLElement {
   recipientId: string;
   focussed: boolean;
   type: UserComponentType;
+  isBot: boolean;
   friendRequestStatus: ChatServiceTypes.FriendRequestStatus;
   constructor() {
     super();
@@ -33,6 +38,7 @@ class ChatUserComponent extends HTMLElement {
     this.unreadMessages = false;
     this.online = false;
     this.blocked = false;
+    this.isBot = false;
     this.friend = false;
     this.focussed = false;
     this.image = "";
@@ -83,7 +89,7 @@ class ChatUserComponent extends HTMLElement {
       <div id="${this.id}_wrapperChatOneUser" class="flex items-center justify-between p-3  hover:bg-gray-600 cursor-pointer select-none ${focussedStyle} ${unreadMessagesStyle} min-h-[100px]">
         <div class="flex items-center space-x-3">
           <div class="flex flex-col">
-              <img id="${this.id}_userImage" src="${this.image}" alt="${this.displayName}" class="w-10 h-10 rounded-full shadow-[0_0_0_3px_black] ${onlineClass} mx-2">
+              <img id="${this.id}_userImage" src="${this.image}" alt="${this.displayName}" class="w-10 h-10 rounded-full shadow-[0_0_0_3px_black] ${onlineClass} mx-2"/>
               <div id="${this.id}_imageActionsBar" class="flex items-center justify-between mt-2">
                 <button id="${this.id}_inviteToPlayBtn" class="text-white text-xs rounded hover:bg-blue-600 text-center">
                 🏓
@@ -108,7 +114,7 @@ class ChatUserComponent extends HTMLElement {
               <button id="${this.id}_withdrawBtn" class="${btnAll} ${btnActive} mr-1">${lang.buttons.withdrawRequest}</button>
             </div>
             <div id="${this.id}_blockedBar" class= "flex">
-              <button id="${this.id}_unblockBtn" class="${btnAll} ${btnActive}">${lang.buttons.pending}</button>
+              <button id="${this.id}_unblockBtn" class="${btnAll} ${btnActive}">${lang.buttons.unblockUser}</button>
             </div>
             <p  id="${this.id}_lastMessageDisplay" class="text-sm text-gray-500 truncate w-full overflow-hidden text-ellipsis whitespace-nowrap">${this.lastMessage}</p>
           </div>
@@ -121,7 +127,7 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLButtonElement;
     image.addEventListener("click", (event) => {
       event.stopPropagation();
-      window.store.userStore.updateSetOtherUserId(this.userId ,false);
+      window.store.userStore.updateSetOtherUserId(this.userId, false);
       navigateToSite("userSettingsOther");
     });
 
@@ -204,6 +210,30 @@ class ChatUserComponent extends HTMLElement {
   }
 
   renderUser() {
+
+    const wrapperChatOneUser = document.querySelector(
+      `#${this.id}_wrapperChatOneUser`
+    ) as HTMLDivElement;
+    wrapperChatOneUser.addEventListener("click", () => {
+      ChatInterface.requestChatHistory(this.recipientId);
+      window.store.chatUserStore.updateChangeUserUnreadMessageStatus(
+        this.recipientId,
+        false
+      );
+    });
+
+    if (this.isBot) {
+      this.hideFriendsRequestsBarToAnswer();
+      this.hideBlockedBar();
+      this.hideFriendsRequestsBarPending();
+      this.hideFriendsButton();
+      this.hideInviteToPlayButton();
+      this.hideBlockButton();
+      this.hideImage();
+      this.hideLastMessageDisplayBar();
+      return;
+    }
+
     this.hideFriendsRequestsBarToAnswer();
     this.hideBlockedBar();
     this.hideFriendsRequestsBarPending();
@@ -244,20 +274,17 @@ class ChatUserComponent extends HTMLElement {
       });
     });
 
-    const wrapperChatOneUser = document.querySelector(
-      `#${this.id}_wrapperChatOneUser`
-    ) as HTMLDivElement;
-    wrapperChatOneUser.addEventListener("click", () => {
-      ChatInterface.requestChatHistory(this.recipientId);
-      window.store.chatUserStore.updateChangeUserUnreadMessageStatus(
-        this.recipientId,
-        false
-      );
-    });
+
   }
 
-  setData(data: ChatServiceTypes.ChatUser, type: UserComponentType) {
-    this.displayName = data.recipientId;
+  setData(data: ChatServiceTypes.ChatUser, type: UserComponentType, isBot: boolean = false) {
+    //this.displayName = data.recipientId;
+      if ('displayName' in data) {
+    console.log("displayName exists:", data.displayName);
+  } else {
+    console.log("displayName does NOT exist");
+  }
+    this.displayName = data.displayName ?? data.recipientId;
     this.userId = data.recipientId;
     this.lastMessage = data.lastMessage;
     this.unreadMessages = data.unreadMessages;
@@ -267,8 +294,8 @@ class ChatUserComponent extends HTMLElement {
     this.recipientId = data.recipientId;
     this.friendRequestStatus = data.friendRequestStatus;
     this.type = type;
-    if(data.image)
-    {
+    this.isBot = isBot;
+    if (data.image) {
       this.image = getImgSrcFromBuffer(data.image);
     }
     this.render();
@@ -279,6 +306,20 @@ class ChatUserComponent extends HTMLElement {
       `#${this.id}_friendBtn`
     ) as HTMLButtonElement;
     friendsBtn.classList.add("invisible");
+  }
+
+  hideBlockButton() {
+    const blockBtn = document.querySelector(
+      `#${this.id}_blockBtn`
+    ) as HTMLButtonElement;
+    blockBtn.classList.add("invisible");
+  }
+
+  hideImage() {
+    const image = document.querySelector(
+      `#${this.id}_userImage`
+    ) as HTMLImageElement;
+    image.classList.add("invisible");
   }
 
   hideInviteToPlayButton() {

@@ -108,7 +108,7 @@ class TournamentItem extends HTMLElement {
     if (!isDefined(playerIdOrName)) {
       return ">free<";
     }
-    return playerIdOrName;
+    return window.store.playerNamesStore.getName(playerIdOrName as string);
   }
 }
 

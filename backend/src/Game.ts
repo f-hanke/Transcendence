@@ -7,7 +7,7 @@ import amqp from 'amqplib';
 import { sendMessage } from './server.js';
 import { AIPlayer } from './aiPlayer.js';
 
-const queue = "match-results";
+const queue = "game-service-queue";
 
 async function publishMatchResult(message: GameResultTypes.MatchResult) {
   if (!gameResultTypeGuards.isMatchResult(message))
@@ -163,15 +163,10 @@ export class Game {
         sendMessage(this.websocket as WebSocket, gameOverMsg);
     }
 
-    // RabbitMQ publishing
-        // todo: right type of the date
     let date = new Date();
     let sqllite_date = date.toISOString();
 
-    let id_win =
-  this.player1.score > this.player2.score
-    ? this.player1.id
-    : this.player2.id;
+    let id_win = this.player1.score > this.player2.score ? this.player1.id : this.player2.id;
 
 
     publishMatchResult({
@@ -189,14 +184,20 @@ export class Game {
     }
 
     updatePaddlePosition(data: GameServiceTypes.DataClientUpdatePaddlePosition) {
-        this.player1.y = data.player1.paddleY;
+        this.player1.y = data.player1.paddleY - gameSettings.bumperHeight;
         this.player1.paddleSpeed = data.player1.paddleSpeed;
         if (this.typeOfGame === "localPvP")
         {
-            this.player2.y = data.player2!.paddleY;
+            this.player2.y = data.player2!.paddleY - gameSettings.bumperHeight;
             this.player2.paddleSpeed = data.player2!.paddleSpeed;
         }
 
+    }
+
+    updateScore(player1score: number, player2score: number)
+    {
+        this.player1.score = player1score;
+        this.player2.score = player2score;
     }
 
 	updatePaddlePositionRestAPI(data: GameServiceTypes.DataClientUpdatePaddlePosition, player : number) {
@@ -209,7 +210,6 @@ export class Game {
 		}
 
 		if (!this.isGameOver) {
-
 			const gameStateMsgNew: GameServiceTypes.serverUpdateGameStateRestAPI = {
 			type: "serverUpdateGameStateRestAPI",
 				data: {
@@ -257,9 +257,9 @@ export class Game {
 
     update() {
 
+        this.ball.move()
 
-        this.ball.move(this.screenWidth, this.screenHeight)
-        if (this.ball.y <= 0 || this.ball.y >= this.screenHeight) {
+        if (this.ball.y - this.ball.radius <= 0 || this.ball.y + this.ball.radius >= this.screenHeight) {
             this.ball.speedY *= -1;
         }
 
@@ -267,58 +267,39 @@ export class Game {
             this.player2.updateAI(this.player1.score, this.player2.score);
         }
 
-        //left player
+
+        //left player collision
         if (
-            this.ball.prevX - this.ball.radius >= this.player1.x + this.player1.paddleWidth &&
-            this.ball.x - this.ball.radius <= this.player1.x + this.player1.paddleWidth &&
-
-            this.ball.y >= this.player1.y - this.player1.paddleHeight / 2 &&
-            this.ball.y <= this.player1.y + this.player1.paddleHeight / 2
+            this.ball.speedX < 0 && // Ball moving left
+            this.ball.prevX - this.ball.radius > this.player1.x + this.player1.paddleWidth && // Was to the right of paddle
+            this.ball.x - this.ball.radius <= this.player1.x + this.player1.paddleWidth && // Now overlapping or past paddle
+            this.ball.y + this.ball.radius >= this.player1.y - this.player1.paddleHeight / 2 &&
+            this.ball.y - this.ball.radius <= this.player1.y + this.player1.paddleHeight / 2
         ) {
-            this.ball.speedX *= -1;
-
-            const minSpeedY = 2;
-            if (Math.abs(this.ball.speedY) < minSpeedY)
-                this.ball.speedY = (Math.random() < 0.5 ? -1 : 1) * minSpeedY;
-
-            // repositionne juste à droite de la paddle
-            this.ball.x = this.player1.x + this.player1.paddleWidth + this.ball.radius;
+            this.ball.speedX = Math.abs(this.ball.speedX); // Ensure ball bounces right
+            this.ball.x = this.player1.x + this.player1.paddleWidth + this.ball.radius + 1; // Reposition ball to prevent sticking
         }
 
-
-
-        //right player
+        //right player collision
         if (
-            this.ball.prevX + this.ball.radius <= this.player2.x &&
-            this.ball.x + this.ball.radius >= this.player2.x &&
-
-            this.ball.y >= this.player2.y - this.player2.paddleHeight / 2 &&
-            this.ball.y <= this.player2.y + this.player2.paddleHeight / 2
+            this.ball.speedX > 0 && // Ball moving right
+            this.ball.prevX + this.ball.radius < this.player2.x && // Was to the left of paddle
+            this.ball.x + this.ball.radius >= this.player2.x && // Now overlapping or past paddle
+            this.ball.y + this.ball.radius >= this.player2.y - this.player2.paddleHeight / 2 &&
+            this.ball.y - this.ball.radius <= this.player2.y + this.player2.paddleHeight / 2
         ) {
-            this.ball.speedX *= -1;
-
-            const minSpeedY = 2;
-            if (Math.abs(this.ball.speedY) < minSpeedY)
-                this.ball.speedY = (Math.random() < 0.5 ? -1 : 1) * minSpeedY;
-
-            // repositionne juste à gauche de la paddle
-            this.ball.x = this.player2.x - this.ball.radius;
+            this.ball.speedX = -Math.abs(this.ball.speedX); // Ensure ball bounces left
+            this.ball.x = this.player2.x - this.player2.paddleWidth - this.ball.radius -1; // Reposition ball to prevent sticking
         }
 
-
-        if (this.ball.x <= 0  ) {
+        // Score detection - only trigger if ball completely passes the paddle area
+        if (this.ball.x + this.ball.radius < 0) {
             this.player2.score += 1;
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
             this.ball.reset();
         }
 
-        // if (this.ball.x <= 0 + this.player2.paddleWidth ) {
-        //     this.player2.score += 1;
-        //     console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
-        //     this.ball.reset();
-        // }
-
-        if (this.ball.x >= this.screenWidth - this.player2.paddleWidth) {
+        if (this.ball.x - this.ball.radius > this.screenWidth) {
             this.player1.score += 1;
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
             this.ball.reset();

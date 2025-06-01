@@ -3,6 +3,7 @@ import {
   createHtmlElementFromString,
   getCurDateString,
   navigateToSite,
+  renderTournamentNotification,
   sanitizeAndCleanInput,
 } from "../../utils/utils";
 import { ChatInterface } from "../../backendInterface/chatInterface";
@@ -36,7 +37,12 @@ class ChatCurrent extends HTMLElement {
 
     const recipientIdIsDefined =
       window.store.chatMessageStore.get().recipientId.length > 0;
-  this.innerHTML = `
+
+    const isBot = window.store.chatMessageStore.get().recipientId == "0";
+
+    const hideWhenBot = isBot ? "hidden" : "";
+
+    this.innerHTML = `
     <div class="h-full flex flex-col bg-gray-100 p-4 ${
       recipientIdIsDefined ? "" : "hidden"
     }">
@@ -45,9 +51,11 @@ class ChatCurrent extends HTMLElement {
       <div id="messagesContainer" class="flex flex-col overflow-y-auto bg-white p-2 rounded shadow-inner"></div>
 
       <div class="mt-2 flex">
-        <input id="chatInput" type="text" placeholder="${lang.placeholders.typeMessage}"
-          class="flex-grow p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button id="chatSendButton" class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600">
+        <input id="chatInput" type="text" placeholder="${
+          lang.placeholders.typeMessage
+        }"
+          class="flex-grow p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500 ${hideWhenBot}">
+        <button id="chatSendButton" class="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 ${hideWhenBot}">
           ${lang.buttons.sendMessage}
         </button>
       </div>
@@ -90,12 +98,20 @@ class ChatCurrent extends HTMLElement {
         : "self-start border-blue-300";
     const id = generateUniqueId();
     const isGameInvite = msg?.type === "sendGameInvite";
+    const isTournamentStart = msg?.type === "startTournament";
+    const isPlayerLeft = msg?.type === "playerLeft";
+    const isMatchResult = msg?.type === "matchResult";
+    let tmpMessage = msg.message;
+
+    if (isTournamentStart || isPlayerLeft || isMatchResult || isGameInvite)
+      tmpMessage = renderTournamentNotification(tmpMessage, msg.type!);
+
     const elem = createHtmlElementFromString(
       `
       <div class="flex flex-col ${styleMsgOwner} w-3/4 max-w-5xl mb-2">
         <span class="text-xs text-gray-400 ml-1">${msg.date}</span>
         <div class="w-full bg-white border-2 rounded-lg p-2 ${styleMsgOwner} overflow-x-auto">
-          ${msg.message}
+          ${tmpMessage}
         </div>
         <button id="${id}_joinInviteBtn" class="text-white bg-blue-500 hover:bg-blue-600 py-1 px-3 rounded-lg">
                   ▶ ${lang.buttons.goToGameArea}

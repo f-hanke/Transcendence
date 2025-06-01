@@ -51,7 +51,7 @@ class NotificationModal extends HTMLElement {
       // notificationNode.remove();
       // let newState = notificationState.filter(([id2, msg]) => id2 !== id);
       // window.store.updateNotificationState(newState);
-    }, 3000);
+    }, 5000);
     this.appendChild(div);
   }
 

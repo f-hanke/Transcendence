@@ -10,8 +10,6 @@ import { fileURLToPath } from "url";
 
 import http from "http";
 
-import { FastifyRequest, FastifyReply } from "fastify";
-import jwt from "jsonwebtoken";
 import chalk from "chalk";
 import {
   AuthErrors,
@@ -19,7 +17,6 @@ import {
   transNetworkSettings,
 } from "transcendence";
 import fastifyJwt from "@fastify/jwt";
-import { addRequestCheckHook } from "./authChecks.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,7 +45,7 @@ fastify.register(fastifyJwt, {
 
 // await fastify.register(websocketPlugin);
 
-addRequestCheckHook(fastify);
+// addRequestCheckHook(fastify);
 
 fastify.addHook("onRequest", async (request, reply) => {
   console.log("\n");
