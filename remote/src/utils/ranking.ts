@@ -23,7 +23,7 @@ const utils = {
       rank2PlayerId: null,
       rank3PlayerId: null,
       rank4PlayerId: null,
-      started: tournament.matchResultSemifinale1? true : false,
+      started: tournament.started,
       playedAt: null,
       playersWhoClickedToLeave: tournament.playersWhoClickedToLeave,
     }

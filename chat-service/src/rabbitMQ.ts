@@ -6,7 +6,7 @@ import { matchmakingTypeGuards } from 'transcendence';
 import { MatchMakingTypes } from 'transcendence';
 import { tournamentPlayerLeftNotification, tournamentResultNotification, tournamentStartNotification } from './tournamentNotifications.js';
 
-const queue = 'chat-service-queue';
+const queue = 'auth-service-queue';
 const tournamentQueue = 'matchmaking-service-queue';
 
 function	updateUserDatabase(msg: RabbitMQTypes.UserChange){

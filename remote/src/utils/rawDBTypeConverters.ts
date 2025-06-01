@@ -77,7 +77,7 @@ const dbConverters = {
     for (const playerId of [rawDBTournament.player1Id, rawDBTournament.player2Id, rawDBTournament.player3Id, rawDBTournament.player4Id]) {
       if (await Tournament.getPlayerTournamentId(playerId as string) === null) {
         tournament.playersWhoClickedToLeave.push(playerId as string);
-        console.log("Did not find playerTournament for playerId", playerId, ", adding to playersWhoClickedToLeave");
+        console.log("TournamentObject Reconstructor: Did not find playerTournament for playerId", playerId, ", adding to playersWhoClickedToLeave");
       }
     }
 
