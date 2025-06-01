@@ -3,26 +3,30 @@
 import { Game } from "./Game.js";
 import { Player } from './player.js';
 import { gameSettings } from 'transcendence';
+
+// Web server & utilities
 import Fastify from "fastify";
-import path from "path";
 import fastifyStatic from "@fastify/static";
 import cors from "@fastify/cors";
 import { WebSocket } from "ws";
 import ws from "ws";
-// import { v4 as uuidv4 } from 'uuid';
+import fastifyWebsocket from "@fastify/websocket";
+
+// Logging & monitoring
 import chalk from "chalk";
+import logger from './lib/logger.js';
+import { setupMetrics } from './lib/metrics.js';
+
 import {
   gameServiceTypeGuards,
   GameServiceTypes,
   MatchMakingTypes,
   transNetworkSettings,
 } from "transcendence";
-import fastifyWebsocket from "@fastify/websocket";
-import { request } from "http";
-import { json } from "stream/consumers";
+
+// Elasticsearch integration
 import esClient, { checkElasticsearch } from './lib/elasticsearch.js';
-import logger from './lib/logger.js';
-import { setupMetrics } from './lib/metrics.js';
+
 
 type ReadyClient = {
   hostIdReady: boolean;
@@ -31,10 +35,12 @@ type ReadyClient = {
 };
 
 const fastify = Fastify({ logger: true });
-const games = new Map<string, Game>();
-const clients = new Map();
+
+const games = new Map<string, Game>(); // matchId → Game instance
+const clients = new Map();  // clientId → WebSocket
 const clientsGames = new Map<string, string>(); //clientId -> matchId
-const readyClients = new Map<string, ReadyClient>();
+const readyClients = new Map<string, ReadyClient>(); // matchId → ReadyClient
+
 
 setupMetrics(fastify);
 logger.info("Metrics and logger initialized.");
@@ -42,12 +48,12 @@ logger.info("Metrics and logger initialized.");
 await checkElasticsearch();
 
 
-// Add health check endpoint for Docker
+//health check endpoint for Docker
 fastify.get('/health', async () => {
   return { status: 'ok' };
 });
-//
-//debuging after auth
+
+// Temporary OPTIONS route for verifying JWT auth during development
 fastify.options('/api/auth/verify-jwt', (request, reply) => {
   reply
     .header('Access-Control-Allow-Origin', '*')
@@ -58,23 +64,26 @@ fastify.options('/api/auth/verify-jwt', (request, reply) => {
 
 fastify.register(fastifyWebsocket);
 
-export function sendMessage(
 
+export function sendMessage(
   socket: WebSocket,
   msg: GameServiceTypes.AllGameServiceMessageTypes
 ): void {
   socket.send(JSON.stringify(msg));
 }
 
+// Game REST API Endpoints
+/* ---------------------------------------------------------------------------------------------- */
 fastify.get("/api/routes", async (request, reply) => {
   const routes = fastify
     .printRoutes();
   reply.type("text/plain").send(routes);
 });
 
+
 fastify.post("/api/game/init", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
-   console.log(chalk.cyan.bold("=== Incoming Game Start Request ==="));
+  console.log(chalk.cyan.bold("=== Incoming Game init Request ==="));
   console.log(chalk.cyan.bold(message));
 
   const { typeOfGame, hostId, oponentId, matchId } =
@@ -100,8 +109,10 @@ fastify.post("/api/game/init", async (request, reply) => {
 
 });
 
+
 fastify.post("/api/game/start", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
+     console.log(chalk.cyan.bold("=== Incoming Game start Request ==="));
   console.log(chalk.cyan.bold(message));
 
   const { typeOfGame, hostId, oponentId, matchId } =
@@ -116,9 +127,12 @@ fastify.post("/api/game/start", async (request, reply) => {
 
 });
 
+// Returns current game state for given matchId
+// Includes player positions, scores, and game over status
 fastify.get("/api/game/state/:matchId", async (request, reply) => {
   const { matchId } = request.params as { matchId: string };
 
+   console.log(chalk.cyan.bold("=== Incoming state match Request ==="));
   const game = games.get(matchId);
 
   if (!game) {
@@ -144,9 +158,10 @@ fastify.get("/api/game/state/:matchId", async (request, reply) => {
 
 
 
-
+// Lists all currently active games
 fastify.get("/api/game/active", async (request, reply) => {
   const activeGames = [];
+   console.log(chalk.cyan.bold("=== Incoming active games Request ==="));
 
   for (const [matchId, game] of games.entries()) {
     if (!game.isGameOver) {
@@ -175,7 +190,7 @@ fastify.get("/api/game/active", async (request, reply) => {
 
 fastify.post("/api/game/leave", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
-  console.log(chalk.cyan.bold("=== Game Leave Request ==="))
+   console.log(chalk.cyan.bold("=== Incoming leave game Request ==="));
   console.log(chalk.cyan(message));
   const { matchId, clientId } = request.body as GameServiceTypes.APIClientLeave;
   const game = games.get(matchId);
@@ -196,13 +211,11 @@ fastify.post("/api/game/leave", async (request, reply) => {
   reply.send({ message: `Player ${clientId} left game ${matchId}` });
 });
 
-/*Not TESTED
-Add borders tests
-restrict to local and remote */
+
 fastify.post("/api/game/paddle", async (request, reply) => {
   const { matchId, player, newY } = request.body as GameServiceTypes.APIPaddle;
 
-  console.log(chalk.cyan.yellow("SOMEONE CALLED UPDATE PADDLE"));
+   console.log(chalk.cyan.bold("=== Incoming move paddle Request ==="));
 
   const game = games.get(matchId);
   if (!game) return reply.status(404).send({ error: "Game not found" });
@@ -238,7 +251,11 @@ fastify.post("/api/game/paddle", async (request, reply) => {
   reply.send({ message: "Paddle position updated" });
 });
 
+//WebSocket Route
+/* ---------------------------------------------------------------------------------------------- */
 
+// Main WebSocket entry point for real-time gameplay communication
+// Handles readiness, paddle updates, and player disconnections
 fastify.register(async function (fastify) {
   fastify.get(
     "/ws",
@@ -250,12 +267,11 @@ fastify.register(async function (fastify) {
       console.log(chalk.green(`A client with ID: ${clientId} connected via WebSocket`));
       clients.set(clientId, socket);
 
-      /*------------------------------------------------------------*/
       socket.on("message", (message) => {
         const data = message.toString("utf-8");
         const dataJson = JSON.parse(data);
 
-     //   console.log("Received message:", dataJson);
+      //console.log("Received message:", dataJson);
 
         const current_game = games.get(dataJson.data.matchId);
 
@@ -269,9 +285,10 @@ fastify.register(async function (fastify) {
           const { matchId } = dataJson.data;
 
           const clientId = urlParams.get("clientId");
-          console.log(chalk.yellow(`Handling remote game for matchId: ${matchId}`));
-          console.log(chalk.yellow(`Initializing match with hostId: ${hostId}, oponentId: ${oponentId}`));
-          console.log(chalk.yellow(`Client ${clientId} connected to match ${matchId}`));
+
+          // console.log(chalk.yellow(`Handling remote game for matchId: ${matchId}`));
+          // console.log(chalk.yellow(`Initializing match with hostId: ${hostId}, oponentId: ${oponentId}`));
+          // console.log(chalk.yellow(`Client ${clientId} connected to match ${matchId}`));
 
           if (!readyClients.has(matchId)) {
             const newReadyClient: ReadyClient = {
@@ -284,6 +301,7 @@ fastify.register(async function (fastify) {
           }
 
           const match = readyClients.get(matchId) as ReadyClient;
+
           console.log(`Current match status: hostIdReady: ${match.hostIdReady}, oponentIdReady: ${match.oponentIdReady}`);
 
 
@@ -291,8 +309,6 @@ fastify.register(async function (fastify) {
 
             console.log(chalk.green(`${clientId} is ready`));
             match.sockets.set(dataJson.data.clientId, socket);
-
-
 
             if (clientId === hostId) {
               match.hostIdReady = true;
@@ -359,12 +375,9 @@ fastify.register(async function (fastify) {
 
         }
 
-        /*Not sure*/
         if (gameServiceTypeGuards.isClientLeftGame(dataJson)) {
           const game = games.get(dataJson.data.matchId);
           game?.stopGame("playerLeftGame");
-          // games.delete(dataJson.data.matchId);
-
         }
       });
 
@@ -385,10 +398,7 @@ fastify.register(async function (fastify) {
             game?.stopGame("playerDisconnected");
           else
           {
-              //const otherPlayerId = game.player1.id === clientId ? game.player2.id : game.player1.id;
                 const player1Id = game.player1.id;
-                //const player2Id = game.player2.id;
-
                 let winner: Player, loser: Player;
 
                 if (clientId === player1Id) {
@@ -401,7 +411,6 @@ fastify.register(async function (fastify) {
 
                 winner.score = gameSettings.maxScore;
                 loser.score = 0;
-
 
                 const socketWinner = (winner.id === player1Id)
                 ? game.websocketplayer1 : game.websocketplayer2;
@@ -426,8 +435,8 @@ fastify.register(async function (fastify) {
               games.delete(matchId);
 
             }
-          } // close fastify.on("close")
-      }); //close fastify.get ws
+          }
+      });
     }
   );
 });
@@ -435,7 +444,6 @@ fastify.register(async function (fastify) {
 
 fastify.get("/favicon.ico", async (request, reply) => {
   reply.status(200);
-  //.send();
   reply.send({ message: "Game started!" });
 });
 

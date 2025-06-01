@@ -21,9 +21,10 @@ export class Ball {
 
     }
 
+    //updates the ball's position and slightly increases its speed over time
+    move() {
 
-    move(screenWidth: number, screenHeight: number) {
-
+        this.prevX = this.x;
         this.prevX = this.x;
         this.prevY = this.y;
 
@@ -34,11 +35,13 @@ export class Ball {
         this.speedX *= accelerationFactor;
         this.speedY *= accelerationFactor;
 
+        //cap the speed
         const maxSpeed = 10;
         this.speedX = Math.max(-maxSpeed, Math.min(this.speedX, maxSpeed));
         this.speedY = Math.max(-maxSpeed, Math.min(this.speedY, maxSpeed));
     }
 
+    //resets the ball to the center with random trajectory
     reset() {
         this.prevX = this.x;
         this.prevY = this.y;
@@ -49,11 +52,14 @@ export class Ball {
 
         let angleDeg = Math.random() * 90 - 45;
 
+        //Avoid very shallow angles
         if (Math.abs(angleDeg) < 15) {
             angleDeg = angleDeg < 0 ? -15 : 15;
         }
 
         const angleRad = angleDeg * (Math.PI / 180);
+
+        // Randomize initial horizontal direction (left or right)
         const direction = Math.random() < 0.5 ? 1 : -1;
 
         this.speedX = direction * speed * Math.cos(angleRad);

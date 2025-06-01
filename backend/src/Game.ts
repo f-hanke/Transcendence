@@ -15,7 +15,7 @@ async function publishMatchResult(message: GameResultTypes.MatchResult) {
   const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
   const channel = await connection.createChannel();
 
-  await channel.assertQueue(queue, { durable: true });
+  await channel.assertQueue(queue, { durable: false });
 
   channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
   console.log('[Publisher] Sent:', message);
@@ -163,15 +163,10 @@ export class Game {
         sendMessage(this.websocket as WebSocket, gameOverMsg);
     }
 
-    // RabbitMQ publishing
-        // todo: right type of the date
     let date = new Date();
     let sqllite_date = date.toISOString();
 
-    let id_win =
-  this.player1.score > this.player2.score
-    ? this.player1.id
-    : this.player2.id;
+    let id_win = this.player1.score > this.player2.score ? this.player1.id : this.player2.id;
 
 
     publishMatchResult({
@@ -209,7 +204,6 @@ export class Game {
 		}
 
 		if (!this.isGameOver) {
-
 			const gameStateMsgNew: GameServiceTypes.serverUpdateGameStateRestAPI = {
 			type: "serverUpdateGameStateRestAPI",
 				data: {
@@ -257,8 +251,7 @@ export class Game {
 
     update() {
 
-        this.ball.move(this.screenWidth, this.screenHeight)
-        console.log(`[Ball] x=${this.ball.x.toFixed(1)}, y=${this.ball.y.toFixed(1)} | speedX=${this.ball.speedX.toFixed(2)}, speedY=${this.ball.speedY.toFixed(2)}`);
+        this.ball.move()
 
         if (this.ball.y - this.ball.radius <= 0 || this.ball.y + this.ball.radius >= this.screenHeight) {
             this.ball.speedY *= -1;
@@ -268,7 +261,6 @@ export class Game {
             this.player2.updateAI(this.player1.score, this.player2.score);
         }
 
-        // Improved collision detection with better tunneling prevention
 
         //left player collision
         if (
@@ -279,13 +271,7 @@ export class Game {
             this.ball.y - this.ball.radius <= this.player1.y + this.player1.paddleHeight / 2
         ) {
             this.ball.speedX = Math.abs(this.ball.speedX); // Ensure ball bounces right
-
-            // const minSpeedY = 2;
-            // if (Math.abs(this.ball.speedY) < minSpeedY)
-            //     this.ball.speedY = (Math.random() < 0.5 ? -1 : 1) * minSpeedY;
-
-            // Reposition ball to prevent sticking
-            this.ball.x = this.player1.x + this.player1.paddleWidth + this.ball.radius + 1;
+            this.ball.x = this.player1.x + this.player1.paddleWidth + this.ball.radius + 1; // Reposition ball to prevent sticking
         }
 
         //right player collision
@@ -297,28 +283,19 @@ export class Game {
             this.ball.y - this.ball.radius <= this.player2.y + this.player2.paddleHeight / 2
         ) {
             this.ball.speedX = -Math.abs(this.ball.speedX); // Ensure ball bounces left
-
-            // const minSpeedY = 2;
-            // if (Math.abs(this.ball.speedY) < minSpeedY)
-            //     this.ball.speedY = (Math.random() < 0.5 ? -1 : 1) * minSpeedY;
-
-            // Reposition ball to prevent sticking
-            this.ball.x = this.player2.x - this.player2.paddleWidth - this.ball.radius -1;
+            this.ball.x = this.player2.x - this.player2.paddleWidth - this.ball.radius -1; // Reposition ball to prevent sticking
         }
 
         // Score detection - only trigger if ball completely passes the paddle area
         if (this.ball.x + this.ball.radius < 0) {
             this.player2.score += 1;
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
-            console.log(`[Player1] y=${this.player1.y.toFixed(1)},| speed=${this.player1.paddleSpeed.toFixed(2)}`);
             this.ball.reset();
         }
 
         if (this.ball.x - this.ball.radius > this.screenWidth) {
             this.player1.score += 1;
             console.log(`Player 1 score: ${this.player1.score}, Player 2 score: ${this.player2.score}`);
-            console.log(`[Player2] y=${this.player2.y.toFixed(1)},| speed=${this.player2.paddleSpeed.toFixed(2)}`);
-
             this.ball.reset();
         }
 
