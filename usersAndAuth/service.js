@@ -14,7 +14,7 @@ import { setupMetrics } from './lib/metrics.js';
 import logger from './lib/logger.js';
 import { checkElasticsearch } from './lib/elasticsearch.js';
 import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSettings, } from "transcendence";
-const queue = "auth-ChatService"; // for publishing
+const queue = "auth-service-queue"; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
         console.error("Trying to publish unknown type");
@@ -29,7 +29,7 @@ async function publishMessage(message) {
         connection = await amqp.connect("amqp://localhost");
     }
     const channel = await connection.createChannel();
-    await channel.assertQueue(queue, { durable: false });
+    await channel.assertQueue(queue, { durable: true });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
     console.log("[Publisher] Sent:", message);
 }

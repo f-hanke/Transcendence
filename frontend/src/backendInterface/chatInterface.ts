@@ -10,6 +10,7 @@ import {
   buildApiRouteRelative,
   buildWsRoute,
   getCurDateString,
+  getCurrentSite,
   navigateToSite,
 } from "../utils/utils";
 import { AuthInterface } from "./authInterface";
@@ -80,7 +81,7 @@ class ChatInterface {
       console.error("Error:", error);
     }
   }
-    static createMatchTournament(data:  MatchMakingTypes.BasicGame) {
+  static createMatchTournament(data: MatchMakingTypes.BasicGame) {
     data.needsServerInitiation = true;
     window.store.matchmakingStore.createGame(data);
     navigateToSite("matchmaking");
@@ -356,6 +357,13 @@ class ChatInterface {
       authorId,
       dataJson.data.message
     );
+    const isPlayerLeft = dataJson.data.type === "playerLeft";
+    const isMatchResult = dataJson.data.type === "matchResult";
+    if (isPlayerLeft || isMatchResult) {
+      if (getCurrentSite() === "currentTournament")
+        navigateToSite("currentTournament");
+    }
+
     if (!window.store.chatUserStore.getIsBlocked(authorId)) {
       window.store.notificationStore.updateAddNotification({
         id: generateUniqueId(),

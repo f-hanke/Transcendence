@@ -35,21 +35,12 @@ const clientIdToSocket = new Map<string, WebSocket[]>();
 export const messagesArray = {
 	en: {
 		start: "Start a conversation",
-		matchResult: "${winner} won the ${type} match against ${loser} with a score of ${winnerScore} to ${loserScore}.",
-		tournamentStart: "The tournament has started. If you are the Host, go to tournaments to schedule the match or wait for the Host to send you an invitation.",
-		playerLeft: "${Player} has left the Tournament, all matches with him will be resolved automaticly"
 	},
 	fr: {
 		start: "Commencez une conversation",
-		matchResult: "${winner} a remporté le match ${type} contre ${loser} avec un score de ${winnerScore} à ${loserScore}.\n",
-		tournamentStart: "Le tournoi a commencé. Si vous êtes l’hôte, allez dans « Tournois » pour programmer le match ou attendez que l’hôte vous envoie une invitation.",
-		playerLeft: "${Player} a quitté le tournoi, tous les matchs avec lui seront automatiquement résolus"
 	},
 	de: {
 		start: "Beginnen Sie ein Gespräch",
-		matchResult: "${winner} hat das ${type}-Spiel gegen ${loser} mit ${winnerScore} zu ${loserScore} gewonnen.\n",
-		tournamentStart: "Das Turnier hat begonnen. Wenn du der Gastgeber bist, gehe zu „Turniere“, um das Spiel zu planen, oder warte auf die Einladung des Gastgebers.",
-		playerLeft: "${Player} hat das Turnier verlassen, alle Spiele mit ihm werden automatisch entschieden"
 	}
 } as const;
 

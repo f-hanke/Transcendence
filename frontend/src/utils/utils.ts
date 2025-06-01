@@ -34,6 +34,10 @@ function navigateToSite(newRoute: string) {
   window.dispatchEvent(new Event("popstate"));
 }
 
+function getCurrentSite() {
+  return window.location.pathname.replace(/^\/+/, '');
+}
+
 function getMicroservicePrefix(service: RouteBuilder.Service) {
   switch (service) {
     case "gameService":
@@ -303,5 +307,6 @@ export {
   getImgSrcFromBuffer,
   fileToBufferLike,
   sleep,
-  userReadableDate
+  userReadableDate,
+  getCurrentSite
 };

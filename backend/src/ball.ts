@@ -24,17 +24,17 @@ export class Ball {
 
     move(screenWidth: number, screenHeight: number) {
 
-         this.prevX = this.x;
+        this.prevX = this.x;
         this.prevY = this.y;
 
         this.x += this.speedX;
         this.y += this.speedY;
 
-        const accelerationFactor = 1.0005;
+        const accelerationFactor = 1.0003;
         this.speedX *= accelerationFactor;
         this.speedY *= accelerationFactor;
 
-        const maxSpeed = 15;
+        const maxSpeed = 10;
         this.speedX = Math.max(-maxSpeed, Math.min(this.speedX, maxSpeed));
         this.speedY = Math.max(-maxSpeed, Math.min(this.speedY, maxSpeed));
     }

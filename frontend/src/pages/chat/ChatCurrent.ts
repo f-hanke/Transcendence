@@ -100,10 +100,39 @@ class ChatCurrent extends HTMLElement {
     const isTournamentStart = msg?.type === "startTournament";
     const isPlayerLeft = msg?.type === "playerLeft";
     const isMatchResult = msg?.type === "matchResult";
+    let tmpMessage;
     if (isGameInvite) msg.message = lang.notifications.invite;
     else if (isTournamentStart) msg.message = lang.notifications.tournamentStart;
-    else if (isPlayerLeft) msg.message = lang.notifications.playerLeft;
-    else if (isMatchResult) msg.message = lang.notifications.matchResult;
+    else if (isPlayerLeft) {
+      tmpMessage = msg.message;
+      const {
+        playerLeft,
+      } = JSON.parse(msg.message); // ✅ because it's still a string
+
+      const template = lang.notifications.playerLeft;
+      msg.message = template.replace("${Player}", playerLeft)
+
+    }else if (isMatchResult){
+      tmpMessage = msg.message;
+     // console.log("Incoming Message: ", msg.message);
+      const {
+        winnerName,
+        loserName,
+        winnerScore,
+        loserScore,
+        matchType
+      } = JSON.parse(msg.message); // ✅ because it's still a string
+
+      const template = lang.notifications.matchResult;
+
+      msg.message = template
+        .replace("${winner}", winnerName)
+        .replace("${loser}", loserName)
+        .replace("${winnerScore}", winnerScore.toString())
+        .replace("${loserScore}", loserScore.toString())
+        .replace("${type}", matchType);
+     // console.log("Outgoind Message: ", msg.message);
+    }
     const elem = createHtmlElementFromString(
       `
       <div class="flex flex-col ${styleMsgOwner} w-3/4 max-w-5xl mb-2">
@@ -123,6 +152,10 @@ class ChatCurrent extends HTMLElement {
       `#${id}_joinInviteBtn`
     ) as HTMLButtonElement;
 
+    if (isMatchResult || isPlayerLeft){
+      msg.message = tmpMessage!;
+     // console.log("reconstructed Message: ", msg.message);
+    }
     if (isGameInvite) {
       joinBtn.addEventListener("click", (event) => {
         event.stopPropagation();

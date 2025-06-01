@@ -8,7 +8,7 @@ MONITORING SERVICES:
 - Prometheus:    http://localhost:9090
 - Grafana:       http://localhost:3000 (admin/admin)
 - Logstash:      http://localhost:9600
-- RabbitMQ:      http://localhost:15672 (guest/guest)
+- RabbitMQ:      http://localhost:15672 (admin/admin)
 
 APPLICATION SERVICES:
 -some of these wont work as they have no been made to only work on localhost!

@@ -6,7 +6,7 @@ import { matchmakingTypeGuards } from 'transcendence';
 import { MatchMakingTypes } from 'transcendence';
 import { tournamentPlayerLeftNotification, tournamentResultNotification, tournamentStartNotification } from './tournamentNotifications.js';
 
-const queue = 'auth-ChatService';
+const queue = 'chat-service-queue';
 const tournamentQueue = 'matchmaking-service-queue';
 
 function	updateUserDatabase(msg: RabbitMQTypes.UserChange){
@@ -28,7 +28,7 @@ export async function startConsumer() {
 	}
 
 	const channel = await connection.createChannel();
-	await channel.assertQueue(queue, { durable: false });
+	await channel.assertQueue(queue, { durable: true });
 
 	console.log('[Consumer] Waiting for messages...');
 	channel.consume(queue, (msg) => {
@@ -49,8 +49,8 @@ export async function startConsumer() {
 		}
 	});
 
-	await channel.assertQueue(tournamentQueue, { durable: false });
-	console.log('[Consumer] Waiting tournament notifications...');
+	await channel.assertQueue(tournamentQueue, { durable: true });
+	console.log('[Consumer] Waiting for tournament messages...');
 
 	channel.consume(tournamentQueue, (msg) => {
 		if (msg !== null) {

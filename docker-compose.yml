@@ -117,6 +117,30 @@ services:
       retries: 3
       start_period: 10s
 
+  rabbitmq-service:
+    container_name: rabbitmq-service
+    image: rabbitmq:3-management
+    ports:
+      - "127.0.0.1:5672:5672"   # RabbitMQ main port
+      - "127.0.0.1:15672:15672" # Management UI
+      - "127.0.0.1:15692:15692" # Prometheus metrics
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    volumes:
+      - ./rabbitmq/config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./rabbitmq/config/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - rabbitmq-network
+      - monitoring-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
   api-gateway:
     container_name: api-gateway
     build:
@@ -194,8 +218,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    external_links:
-      - rabbitmq-service
+    depends_on:
+      rabbitmq-service:
+        condition: service_healthy
     expose:
       - "10004"
 
@@ -270,6 +295,7 @@ services:
       start_period: 10s
     depends_on:
       - users-auth
+      - rabbitmq-service
     expose:
       - "10001"
 
@@ -277,7 +303,7 @@ networks:
   monitoring-network:
     driver: bridge
   rabbitmq-network:
-    external: true
+    driver: bridge
   app-network:
     driver: bridge
 
@@ -285,3 +311,4 @@ volumes:
   elasticsearch-data:
   prometheus-data:
   grafana-data:
+  rabbitmq-data:

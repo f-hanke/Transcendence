@@ -4,11 +4,22 @@ const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
-    winston.format.printf(({ timestamp, level, message }) =>
-      `[${timestamp}] ${level.toUpperCase()}: ${message}`
-    )
+    winston.format.json()
   ),
-  transports: [new winston.transports.Console()],
+  defaultMeta: { service: 'webserver', type: 'webserver' },
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(({ timestamp, level, message, service }) =>
+          `[${timestamp}] ${level.toUpperCase()} [${service}]: ${message}`
+        )
+      )
+    })
+  ],
 });
+
+// Test log on startup
+logger.info('Webserver logger initialized');
 
 export default logger;

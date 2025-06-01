@@ -120,7 +120,16 @@ class MatchmakingStateStore {
         !playerLeftThisTournament
       ) {
         groups.tournamentsToJoin.push(tournCopy);
-      } else {
+      } 
+      // new
+      else if (
+        !hasStarted &&
+        !playerIsPartOfTournament &&
+        !playerLeftThisTournament
+      ) {
+        groups.tournamentsToJoin.push(tournCopy);
+      } 
+      else {
         throw new Error("Tournament not assigned to any matchmaking-group!");
       }
     });
@@ -149,6 +158,7 @@ class MatchmakingStateStore {
 
   updateFromAllMatches(allMatches: MatchMakingTypes.ServerUpdateGames["data"]) {
     console.log("UPDATE FROM ALL MATCHES");
+    console.log(allMatches);
     const newState: MatchmakingState = {
       otherMatches: [],
       tournaments: deepCopyObj(allMatches.tournaments),
