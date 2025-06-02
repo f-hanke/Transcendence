@@ -1,8 +1,8 @@
 "use strict";
 
 import { Game } from "./Game.js";
-import { Player } from './player.js';
-import { gameSettings } from 'transcendence';
+import { Player } from "./player.js";
+import { gameSettings } from "transcendence";
 
 // Web server & utilities
 import Fastify from "fastify";
@@ -14,8 +14,8 @@ import fastifyWebsocket from "@fastify/websocket";
 
 // Logging & monitoring
 import chalk from "chalk";
-import logger from './lib/logger.js';
-import { setupMetrics } from './lib/metrics.js';
+import logger from "./lib/logger.js";
+import { setupMetrics } from "./lib/metrics.js";
 
 import {
   gameServiceTypeGuards,
@@ -25,61 +25,57 @@ import {
 } from "transcendence";
 
 // Elasticsearch integration
-import esClient, { checkElasticsearch } from './lib/elasticsearch.js';
-
+import esClient, { checkElasticsearch } from "./lib/elasticsearch.js";
+import { websocketIsReadyForSending } from "./utils.js";
 
 type ReadyClient = {
   hostIdReady: boolean;
-  oponentIdReady: boolean,
-  sockets: Map<string, WebSocket>
+  oponentIdReady: boolean;
+  sockets: Map<string, WebSocket>;
 };
 
 const fastify = Fastify({ logger: true });
 
 const games = new Map<string, Game>(); // matchId → Game instance
-const clients = new Map();  // clientId → WebSocket
+const clients = new Map(); // clientId → WebSocket
 const clientsGames = new Map<string, string>(); //clientId -> matchId
 const readyClients = new Map<string, ReadyClient>(); // matchId → ReadyClient
-
 
 setupMetrics(fastify);
 logger.info("Metrics and logger initialized.");
 //keep commented out unless docker is running requires elsasticsearch to be running
 await checkElasticsearch();
 
-
 //health check endpoint for Docker
-fastify.get('/health', async () => {
-  return { status: 'ok' };
+fastify.get("/health", async () => {
+  return { status: "ok" };
 });
 
 // Temporary OPTIONS route for verifying JWT auth during development
-fastify.options('/api/auth/verify-jwt', (request, reply) => {
+fastify.options("/api/auth/verify-jwt", (request, reply) => {
   reply
-    .header('Access-Control-Allow-Origin', '*')
-    .header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    .header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    .header("Access-Control-Allow-Origin", "*")
+    .header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
     .send();
 });
 
 fastify.register(fastifyWebsocket);
 
-
 export function sendMessage(
-  socket: WebSocket,
+  socket: WebSocket | null,
   msg: GameServiceTypes.AllGameServiceMessageTypes
 ): void {
-  socket.send(JSON.stringify(msg));
+  // added by Steffen check that websocket is ready before writing to it
+  if (websocketIsReadyForSending(socket)) socket.send(JSON.stringify(msg));
 }
 
 // Game REST API Endpoints
 /* ---------------------------------------------------------------------------------------------- */
 fastify.get("/api/routes", async (request, reply) => {
-  const routes = fastify
-    .printRoutes();
+  const routes = fastify.printRoutes();
   reply.type("text/plain").send(routes);
 });
-
 
 fastify.post("/api/game/init", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
@@ -93,11 +89,17 @@ fastify.post("/api/game/init", async (request, reply) => {
   if (!validGameTypes.includes(typeOfGame)) {
     console.error(chalk.red(`Invalid game type: "${typeOfGame}"`));
     return reply.status(400).send({
-      error: `Invalid typeOfGame "${typeOfGame}". Must be one of: ${validGameTypes.join(", ")}`,
+      error: `Invalid typeOfGame "${typeOfGame}". Must be one of: ${validGameTypes.join(
+        ", "
+      )}`,
     });
   }
   console.log(chalk.yellow.bold(` typeOfGame: ${typeOfGame}`));
-  console.log(chalk.yellow(` matchId: ${matchId}, hostId: ${hostId}, opponentId: ${oponentId}`));
+  console.log(
+    chalk.yellow(
+      ` matchId: ${matchId}, hostId: ${hostId}, opponentId: ${oponentId}`
+    )
+  );
 
   const game = new Game(typeOfGame, matchId, hostId, oponentId);
   games.set(matchId, game);
@@ -106,13 +108,11 @@ fastify.post("/api/game/init", async (request, reply) => {
   clientsGames.set(oponentId, matchId);
 
   reply.send({ message: "Game started!", matchId });
-
 });
-
 
 fastify.post("/api/game/start", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
-     console.log(chalk.cyan.bold("=== Incoming Game start Request ==="));
+  console.log(chalk.cyan.bold("=== Incoming Game start Request ==="));
   console.log(chalk.cyan.bold(message));
 
   const { typeOfGame, hostId, oponentId, matchId } =
@@ -124,7 +124,6 @@ fastify.post("/api/game/start", async (request, reply) => {
   clientsGames.set(hostId, matchId);
   clientsGames.set(oponentId, matchId);
   reply.send({ message: "Game started!", matchId });
-
 });
 
 // Returns current game state for given matchId
@@ -132,7 +131,7 @@ fastify.post("/api/game/start", async (request, reply) => {
 fastify.get("/api/game/state/:matchId", async (request, reply) => {
   const { matchId } = request.params as { matchId: string };
 
-   console.log(chalk.cyan.bold("=== Incoming state match Request ==="));
+  console.log(chalk.cyan.bold("=== Incoming state match Request ==="));
   const game = games.get(matchId);
 
   if (!game) {
@@ -156,12 +155,10 @@ fastify.get("/api/game/state/:matchId", async (request, reply) => {
   });
 });
 
-
-
 // Lists all currently active games
 fastify.get("/api/game/active", async (request, reply) => {
   const activeGames = [];
-   console.log(chalk.cyan.bold("=== Incoming active games Request ==="));
+  console.log(chalk.cyan.bold("=== Incoming active games Request ==="));
 
   for (const [matchId, game] of games.entries()) {
     if (!game.isGameOver) {
@@ -170,27 +167,26 @@ fastify.get("/api/game/active", async (request, reply) => {
         type: game.typeOfGame,
         players: {
           host: game.player1?.id ?? "unknown",
-          opponent: game.player2?.id ?? "unknown"
+          opponent: game.player2?.id ?? "unknown",
         },
-        status: "active"
+        status: "active",
       });
     }
   }
 
   const response = {
     count: activeGames.length,
-    activeGames
+    activeGames,
   };
 
   reply
-    .header('Content-Type', 'application/json; charset=utf-8')
+    .header("Content-Type", "application/json; charset=utf-8")
     .send(JSON.stringify(response, null, 2));
 });
 
-
 fastify.post("/api/game/leave", async (request, reply) => {
   const message = JSON.stringify(request.body, null, 2);
-   console.log(chalk.cyan.bold("=== Incoming leave game Request ==="));
+  console.log(chalk.cyan.bold("=== Incoming leave game Request ==="));
   console.log(chalk.cyan(message));
   const { matchId, clientId } = request.body as GameServiceTypes.APIClientLeave;
   const game = games.get(matchId);
@@ -205,26 +201,30 @@ fastify.post("/api/game/leave", async (request, reply) => {
     });
   }
 
-  game.stopGame("playerLeftGame");
+  game.stopGame("playerLeftGame", clientId);
   games.delete(matchId);
 
   reply.send({ message: `Player ${clientId} left game ${matchId}` });
 });
 
-
 fastify.post("/api/game/paddle", async (request, reply) => {
   const { matchId, player, newY } = request.body as GameServiceTypes.APIPaddle;
 
-   console.log(chalk.cyan.bold("=== Incoming move paddle Request ==="));
+  console.log(chalk.cyan.bold("=== Incoming move paddle Request ==="));
 
   const game = games.get(matchId);
   if (!game) return reply.status(404).send({ error: "Game not found" });
 
-    if (game.typeOfGame !== "localPvP" && game.typeOfGame !== "localPvAi") {
-    return reply.status(403).send({ error: "Paddle control is only allowed in localPvP or localPvAi games." });
+  if (game.typeOfGame !== "localPvP" && game.typeOfGame !== "localPvAi") {
+    return reply.status(403).send({
+      error: "Paddle control is only allowed in localPvP or localPvAi games.",
+    });
   }
 
-    const clampedY = Math.max(gameSettings.paddleMinY, Math.min(newY, gameSettings.paddleMaxY));
+  const clampedY = Math.max(
+    gameSettings.paddleMinY,
+    Math.min(newY, gameSettings.paddleMaxY)
+  );
 
   let data: GameServiceTypes.DataClientUpdatePaddlePosition;
 
@@ -264,21 +264,22 @@ fastify.register(async function (fastify) {
       const urlParams = new URLSearchParams(req.url.split("?")[1]);
       //console.log(req?.query);
       const clientId = urlParams.get("clientId") || "anonymous";
-      console.log(chalk.green(`A client with ID: ${clientId} connected via WebSocket`));
+      console.log(
+        chalk.green(`A client with ID: ${clientId} connected via WebSocket`)
+      );
       clients.set(clientId, socket);
 
       socket.on("message", (message) => {
         const data = message.toString("utf-8");
         const dataJson = JSON.parse(data);
 
-      //console.log("Received message:", dataJson);
+        //console.log("Received message:", dataJson);
 
         const current_game = games.get(dataJson.data.matchId);
 
         if (!current_game) {
-          console.log("Error or game not created")
-        }
-        else if (current_game.typeOfGame == "remote") {
+          console.log("Error or game not created");
+        } else if (current_game.typeOfGame == "remote") {
           const hostId = current_game.player1.id;
           const oponentId = current_game.player2.id;
 
@@ -294,7 +295,7 @@ fastify.register(async function (fastify) {
             const newReadyClient: ReadyClient = {
               hostIdReady: false,
               oponentIdReady: false,
-              sockets: new Map<string, WebSocket>()
+              sockets: new Map<string, WebSocket>(),
             };
             readyClients.set(matchId, newReadyClient);
             current_game.remoteWebsockets = newReadyClient.sockets;
@@ -302,11 +303,11 @@ fastify.register(async function (fastify) {
 
           const match = readyClients.get(matchId) as ReadyClient;
 
-          console.log(`Current match status: hostIdReady: ${match.hostIdReady}, oponentIdReady: ${match.oponentIdReady}`);
-
+          console.log(
+            `Current match status: hostIdReady: ${match.hostIdReady}, oponentIdReady: ${match.oponentIdReady}`
+          );
 
           if (gameServiceTypeGuards.isClientIsReady(dataJson)) {
-
             console.log(chalk.green(`${clientId} is ready`));
             match.sockets.set(dataJson.data.clientId, socket);
 
@@ -326,14 +327,18 @@ fastify.register(async function (fastify) {
             }
 
             if (match.hostIdReady && match.oponentIdReady) {
-              console.log(chalk.yellow(`Both players ready for match ${matchId}. Starting game...`));
+              console.log(
+                chalk.yellow(
+                  `Both players ready for match ${matchId}. Starting game...`
+                )
+              );
 
               for (const [id, socket] of match.sockets.entries()) {
                 sendMessage(socket, {
                   type: "serverGameStarted",
                   data: {
                     matchId: dataJson.data.matchId,
-                  }
+                  },
                 });
               }
               games.get(dataJson.data.matchId)!.websocket = socket;
@@ -348,8 +353,10 @@ fastify.register(async function (fastify) {
               .get(dataJson.data.matchId)
               ?.updatePaddlePositionRemote(dataJson.data);
           }
-        }
-        else if (current_game.typeOfGame == "localPvP" || current_game.typeOfGame == "localPvAi" ) {
+        } else if (
+          current_game.typeOfGame == "localPvP" ||
+          current_game.typeOfGame == "localPvAi"
+        ) {
           if (gameServiceTypeGuards.isClientIsReady(dataJson)) {
             console.log(chalk.green(` ${clientId} is ready`));
             setTimeout(
@@ -361,7 +368,7 @@ fastify.register(async function (fastify) {
                   },
                 }),
               1000
-            )
+            );
 
             games.get(dataJson.data.matchId)!.websocket = socket;
             games.get(dataJson.data.matchId)?.startGame();
@@ -372,18 +379,16 @@ fastify.register(async function (fastify) {
               .get(dataJson.data.matchId)
               ?.updatePaddlePosition(dataJson.data);
           }
-
         }
 
         if (gameServiceTypeGuards.isClientLeftGame(dataJson)) {
           const game = games.get(dataJson.data.matchId);
-          game?.stopGame("playerLeftGame");
+          game?.stopGame("playerLeftGame", dataJson.data.playerId);
         }
       });
 
       /*------------------------------------------------------------*/
       socket.on("close", () => {
-
         console.log(chalk.red(`A client with ID: ${clientId} disconnected`));
 
         const matchId = clientsGames.get(clientId);
@@ -391,73 +396,69 @@ fastify.register(async function (fastify) {
         clients.delete(clientId);
         clientsGames.delete(clientId);
 
-        if (matchId)
-        {
+        if (matchId) {
           const game = games.get(matchId);
           if (!game || game.typeOfGame !== "remote")
-            game?.stopGame("playerDisconnected");
-          else
-          {
-                const player1Id = game.player1.id;
-                //const player2Id = game.player2.id;
+            game?.stopGame("playerDisconnected", clientId);
+          else {
+            const player1Id = game.player1.id;
+            //const player2Id = game.player2.id;
 
-                let winner: Player = {} as Player, loser: Player = {} as Player;
+            let socketWinner: null | WebSocket = null;
 
-                winner.score = gameSettings.maxScore;
-                loser.score = 0;
-
-                if (clientId === player1Id) {
-                  winner = game.player2;
-                  loser = game.player1;
-                } else {
-                  winner = game.player1;
-                  loser = game.player2;
-                }
-
-
-                const socketWinner = (winner.id === player1Id)
-                ? game.websocketplayer1 : game.websocketplayer2;
-
-                if (socketWinner) {
-                  sendMessage(socketWinner, {
-                    type: "serverGameIsOver",
-                    data: {
-                      matchId: matchId,
-                      player1: {
-                        id: game.player1.id,
-                        score: game.player1.score,
-                      },
-                      player2: {
-                        id: game.player2.id,
-                        score: game.player2.score,
-                      },
-                      reason: "playerDisconnected",
-                    },
-                  });
-                }
-
-              game?.updateScore(game.player1.score, game.player2.score)
-              game?.stopGame("playerDisconnected");
-              games.delete(matchId);
-
+            // player 1 left
+            if (clientId === player1Id) {
+              socketWinner = game.websocketplayer2;
+              game.player2.score = gameSettings.maxScore;
+              game.player1.score = 0;
+              // player 2 left
+            } else {
+              socketWinner = game.websocketplayer1;
+              game.player1.score = gameSettings.maxScore;
+              game.player2.score = 0;
             }
+            sendMessage(socketWinner, {
+              type: "serverGameIsOver",
+              data: {
+                matchId: matchId,
+                player1: {
+                  id: game.player1.id,
+                  score: game.player1.score,
+                },
+                player2: {
+                  id: game.player2.id,
+                  score: game.player2.score,
+                },
+                reason: "playerDisconnected",
+              },
+            });
+
+            game?.updateScore(game.player1.score, game.player2.score);
+            game?.stopGame("playerDisconnected", clientId);
+            games.delete(matchId);
           }
+        }
       });
     }
   );
 });
-
 
 fastify.get("/favicon.ico", async (request, reply) => {
   reply.status(200);
   reply.send({ message: "Game started!" });
 });
 
-
 const start = async () => {
   try {
-    await fastify.listen({ port: transNetworkSettings.gamePlay.port, host: transNetworkSettings.gamePlay.ip });
-    console.log(chalk.cyan.bold(`Server running on http://localhost:${transNetworkSettings.gamePlay.port}`));
+    await fastify.listen({
+      port: transNetworkSettings.gamePlay.port,
+      host: transNetworkSettings.gamePlay.ip,
+    });
+    console.log(
+      chalk.cyan.bold(
+        `Server running on http://localhost:${transNetworkSettings.gamePlay.port}`
+      )
+    );
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
