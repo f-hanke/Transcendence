@@ -168,6 +168,7 @@ class GameServiceInterface {
 
   static handleServerGameIsOver(dataJson: GameServiceTypes.ServerGameIsOver) {
     colog("GAME IS OVER RECEIVED!");
+    colog(dataJson);
     this.disconnect();
     console.log(JSON.stringify(window.store.gameStore.get()));
     window.store.notificationStore.updateAddNotification({
