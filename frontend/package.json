@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "clear && vite --host",
-    "build": "tsc && vite build --emptyOutDir && cp ./favicon.ico ../webserver/distFrontend/",
+    "build": "tsc && vite build --emptyOutDir",
     "build-skip-ts-check": "vite build --emptyOutDir",
     "mock-build": "./mock-build.sh",
     "preview": "vite preview"

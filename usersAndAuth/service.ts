@@ -56,6 +56,7 @@ async function publishMessage(message: RabbitMQTypes.UserChange) {
   let connection;
   try {
     connection = await amqp.connect("amqp://admin:admin@rabbitmq-service:5672");
+    console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
   } catch (err) {
     console.warn("Failed to connect to rabbitmq-service, trying localhost...");
     connection = await amqp.connect("amqp://localhost");
