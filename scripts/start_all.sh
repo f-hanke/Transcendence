@@ -9,7 +9,7 @@ TAG="#devprocess"
 trap "echo 'Caught SIGINT, killing all...'; kill 0; exit" SIGINT SIGTERM
 
 function run_in_terminal {
-  gnome-terminal --title=$2 -- bash -c "$1 && TRANSCENDENCE_DEV=$1 exec bash"
+  gnome-terminal --title=$2 -- bash -c "$1 && TRANSCENDENCE_DEV=$1 exec bash; echo '--- Process exited ---'; exec bash"
 }
 
 # Start RabbitMQ using docker-compose (integrated setup)

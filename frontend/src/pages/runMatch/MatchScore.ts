@@ -136,6 +136,9 @@ class MatchScore extends HTMLElement {
     if (["localPvP", "localPvAi"].includes(gameState.typeOfGame)) {
       this.rightPlayerNameDisplay.innerHTML =
         window.store.oneVOneLocalStore.get().player2Name;
+    } else {
+      this.rightPlayerNameDisplay.innerHTML =
+        window.store.playerNamesStore.getName(gameState.paddleRight.playerId);
     }
   }
 
