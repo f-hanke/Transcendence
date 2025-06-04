@@ -49,16 +49,16 @@ const queue = "auth-service-queue"; // for publishing
 
 async function publishMessage(message: RabbitMQTypes.UserChange) {
   if (!rabbitMQTypeGuards.isUserChangeBody(message))
-    console.error("Trying to publish unknown type");
+    logger.error("Trying to publish unknown type");
   // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
   // const connection = await amqp.connect(`amqp://localhost`);
 
   let connection;
   try {
     connection = await amqp.connect("amqp://admin:admin@rabbitmq-service:5672");
-    console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
+    logger.info("Connected to amqp://admin:admin@rabbitmq-service:5672");
   } catch (err) {
-    console.warn("Failed to connect to rabbitmq-service, trying localhost...");
+    logger.warn("Failed to connect to rabbitmq-service, trying localhost...");
     connection = await amqp.connect("amqp://localhost");
   }
 
@@ -67,10 +67,10 @@ async function publishMessage(message: RabbitMQTypes.UserChange) {
   await channel.assertQueue(queue, { durable: true });
 
   channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
-  console.log("[Publisher] Sent:", message);
+  logger.info("[Publisher] Sent:", message);
 }
 
-startConsumer().catch(console.error);
+startConsumer().catch(logger.error);
 
 const server = fastify({
   logger: {
@@ -85,9 +85,9 @@ const server = fastify({
 });
 
 setupMetrics(server);
-logger.info("Metrics and logger initialized.");
 //keep commented out unless docker is running requires elsasticsearch to be running
 await checkElasticsearch();
+logger.info("Metrics and logger initialized.");
 
 server.register(fastifyJwt, {
   secret: "supersecret",
@@ -152,7 +152,7 @@ server.post<{
       smallImage: smallImgBuffer,
       language: newUser.language,
     };
-    publishMessage(publication).catch(console.error);
+    publishMessage(publication).catch(logger.error);
 
     // HACK: hardcoded publication
     //   const publication: RabbitMQTypes.UserChange = {
@@ -160,12 +160,12 @@ server.post<{
     //     displayName: "Florian",
     //     smallImage: smallImgBuffer,
     // }
-    // publishMessage(publication).catch(console.error);
+    // publishMessage(publication).catch(logger.error);
 
     // return reply.code(201).send({ displayName: newUser.display_name, userId: newUser.id } as RegSuccessResponseBody);
   } catch (e) {
     if (e instanceof Error) {
-      console.error(e.message);
+      logger.error(e.message);
       if (e.message.includes("UNIQUE constraint failed: users.display_name"))
         return reply
           .code(400)
@@ -175,7 +175,7 @@ server.post<{
       return reply
         .code(500)
         .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
-    } else console.error(e);
+    } else logger.error(e);
   }
 });
 
@@ -198,7 +198,7 @@ server.post<{
         .code(400)
         .send({ reason: AuthErrors.UnknownEmail } satisfies ErrorResponseBody);
 
-    console.log(user);
+    logger.info(user);
     const isPasswordValid = await passwordUtils.comparePassword(
       request.body.password,
       user.pw_hash
@@ -224,7 +224,7 @@ server.post<{
         jwtToken: token,
       } satisfies AuthSuccessResponseBody);
   } catch (db_error) {
-    console.error(db_error);
+    logger.error(db_error);
     return reply
       .code(500)
       .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
@@ -253,7 +253,7 @@ server.get<{
       )
       .send({ userId: decoded.userId } satisfies VerifySuccessResponseBody);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     reply
       .code(401)
       .send({ reason: AuthErrors.Unauthorized } satisfies ErrorResponseBody);
@@ -288,7 +288,7 @@ server.get<{
         jwtToken: newToken,
       } satisfies AuthSuccessResponseBody);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     reply
       .code(401)
       .send({ reason: AuthErrors.Unauthorized } satisfies ErrorResponseBody);
@@ -320,7 +320,7 @@ server.get<{
     await User.updateOnlineStatus(user.id, 0);
     return reply.code(200).send({} satisfies LogoutSuccessResponseBody);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return reply
       .code(500)
       .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
@@ -351,7 +351,7 @@ server.get<{
         .send({ reason: AuthErrors.UnknownUserId } satisfies ErrorResponseBody);
     return reply.code(200).send(user);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     reply
       .code(500)
       .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
@@ -385,7 +385,7 @@ server.post<{
     }
     return reply.code(200).send(usersMap);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     reply
       .code(500)
       .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
@@ -407,7 +407,7 @@ server.get<{
     }
     return reply.code(200).send(usersMap);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     reply
       .code(500)
       .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
@@ -446,7 +446,7 @@ server.post<{
       .code(400)
       .send({ reason: AuthErrors.UnknownUserId } satisfies ErrorResponseBody);
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     return reply.code(500).send({ reason: AuthErrors.BackendError });
   }
 });
@@ -486,11 +486,11 @@ server.post<{
       .send({ reason: AuthErrors.UnknownUserId } satisfies ErrorResponseBody);
   } catch (e) {
     if (e instanceof Error) {
-      console.error(e.message);
+      logger.error(e.message);
       if (e.message.includes("UNIQUE constraint failed: users.email"))
         return reply.code(400).send({ reason: AuthErrors.DuplicateEmail });
       return reply.code(500).send({ reason: AuthErrors.BackendError });
-    } else console.error(e);
+    } else logger.error(e);
   }
 });
 
@@ -529,11 +529,11 @@ server.post<{
       smallImage: null,
       language: null
     };
-    publishMessage(publication).catch(console.error);
+    publishMessage(publication).catch(logger.error);
     return reply.code(201).send(updatedUser);
   } catch (e) {
     if (e instanceof Error) {
-      console.error(e.message);
+      logger.error(e.message);
       if (e.message.includes("UNIQUE constraint failed: users.display_name"))
         return reply
           .code(400)
@@ -541,7 +541,7 @@ server.post<{
       return reply
         .code(500)
         .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
-    } else console.error(e);
+    } else logger.error(e);
   }
 });
 
@@ -586,12 +586,12 @@ server.post<{
       smallImage: smallImgBuffer,
       language: null,
     };
-    publishMessage(publication).catch(console.error);
+    publishMessage(publication).catch(logger.error);
 
     return reply.code(201).send(updatedUser);
   } catch (e) {
     if (e instanceof Error) {
-      console.error(e.message);
+      logger.error(e.message);
       if (e.message.includes("UNIQUE constraint failed: users.display_name"))
         return reply
           .code(400)
@@ -599,7 +599,7 @@ server.post<{
       return reply
         .code(500)
         .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
-    } else console.error(e);
+    } else logger.error(e);
   }
 });
 
@@ -637,11 +637,11 @@ server.post<{
       smallImage: null,
       language: updatedUser.language,
     };
-    publishMessage(publication).catch(console.error);
+    publishMessage(publication).catch(logger.error);
     return reply.code(201).send(updatedUser);
   } catch (e) {
     if (e instanceof Error) {
-      console.error(e.message);
+      logger.error(e.message);
       if (e.message.includes("UNIQUE constraint failed: users.display_name"))
         return reply
           .code(400)
@@ -649,7 +649,7 @@ server.post<{
       return reply
         .code(500)
         .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
-    } else console.error(e);
+    } else logger.error(e);
   }
 });
 
@@ -675,9 +675,9 @@ server.get<{
       .send({ reason: AuthErrors.UnknownUserId } satisfies ErrorResponseBody);
   } catch (e) {
     if (e instanceof Error) {
-      console.error(e.message);
+      logger.error(e.message);
       return reply.code(500).send({ reason: AuthErrors.BackendError });
-    } else console.error(e);
+    } else logger.error(e);
   }
 });
 
@@ -703,7 +703,7 @@ server.get<{
     )) as MatchResult[];
     return reply.code(200).send(matches);
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     return reply.code(500).send({ reason: AuthErrors.BackendError });
   }
 });
@@ -729,7 +729,7 @@ server.get<{
     )) as TournamentResult[];
     return reply.code(200).send(tournaments);
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     return reply.code(500).send({ reason: AuthErrors.BackendError });
   }
 });
@@ -745,9 +745,9 @@ server.listen(
   },
   (err, address) => {
     if (err) {
-      console.error(err);
+      logger.error(err);
       process.exit(1);
     }
-    console.log(`Server listening at ${address}`);
+    logger.info(`Server listening at ${address}`);
   }
 );

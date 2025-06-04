@@ -21,6 +21,8 @@ import { dbConverters } from "./utils/rawDBTypeConverters.js";
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
 import { match } from "assert";
 import { stringify } from "querystring";
+import esClient, { checkElasticsearch } from './lib/elasticsearch.js';
+import logger from './lib/logger.js';
 import { setupMetrics } from "./lib/metrics.js";
 
 const fastify = Fastify();
@@ -28,6 +30,9 @@ fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
 
 setupMetrics(fastify);
+//keep commented out unless docker is running requires elsasticsearch to be running
+await checkElasticsearch();
+logger.info("Metrics and logger initialized.");
 
 // Add health check endpoint for Docker
 fastify.get('/health', async () => {
@@ -40,7 +45,7 @@ type MatchMakingFastifyRequest = FastifyRequest<{
 
 let games: MatchMakingTypes.BasicGame[] = [];
 let tournaments: MatchMakingTypes.Tournament[] = await dbConverters.getAllTournamentsRuntimeTyped();  // load up any unfinished tournaments
-console.log("Loaded up following tournaments: ", tournaments);
+logger.info("Loaded up following tournaments: ", tournaments);
 
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket>();
@@ -50,13 +55,13 @@ const queue = 'matchmaking-service-queue';
 
 async function publishMessage(message: GameResultTypes.MatchResult | GameResultTypes.TournamentResult | MatchMakingTypes.TournamentNotification | MatchMakingTypes.ServerStartTournament | MatchMakingTypes.PlayerLeftSinceTournamentStarted) {
   if (!gameResultTypeGuards.isMatchResult(message) && !gameResultTypeGuards.isTournamentResult(message) && !matchmakingTypeGuards.isTournamentNotification(message) && !matchmakingTypeGuards.isServerStartTournament(message) && !matchmakingTypeGuards.isPlayerLeftSinceTournamentStarted(message))
-    console.error("Trying to publish unknown type:", message);
+    logger.error("Trying to publish unknown type:", message);
   let connection;
   try {
 		connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
-    console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
+    logger.info("Connected to amqp://admin:admin@rabbitmq-service:5672");
 	} catch (err) {
-		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
+		logger.warn('Failed to connect to rabbitmq-service, trying localhost...');
 		connection = await amqp.connect('amqp://localhost');
 	}
   const channel = await connection.createChannel();
@@ -64,18 +69,18 @@ async function publishMessage(message: GameResultTypes.MatchResult | GameResultT
   await channel.assertQueue(queue, { durable: true });
 
   channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
-  console.log('[Publisher] Sent:', message);
+  logger.info('[Publisher] Sent:', message);
 }
 
 async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResult)
 {
   tournaments = await dbConverters.getAllTournamentsRuntimeTyped();  // update runtime tournaments so they include the scores recently stored in DB
   let tournamentToHandle: MatchMakingTypes.Tournament | null = null;
-  // console.log("handleMatchResultProcessed, fetched tournaments:", tournaments);
+  // logger.info("handleMatchResultProcessed, fetched tournaments:", tournaments);
   let isDuplicateMatchResult = false;
 
   for (let tournament of tournaments) {
-    console.log("Checking tournament: ", tournament.tournamentId);
+    logger.info("Checking tournament: ", tournament.tournamentId);
     if (tournament.matchSemifinale1?.matchId === matchResult.matchId || tournament.matchSemifinale2?.matchId === matchResult.matchId)
     {
       tournamentToHandle = tournament;
@@ -94,16 +99,16 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       }
 
       // SCHEDULE FINAL MATCHES (if semifinals are done and final matches unscheduled)
-      console.log("tournamentToHandle.matchResultSemifinale1: ", tournamentToHandle.matchResultSemifinale1);
-      console.log("tournamentToHandle.matchResultSemifinale2: ", tournamentToHandle.matchResultSemifinale2);
-      console.log("tournamentToHandle.matchFinale: ", tournamentToHandle.matchFinale);
-      console.log("tournamentToHandle.matchBronze: ", tournamentToHandle.matchBronze);
+      logger.info("tournamentToHandle.matchResultSemifinale1: ", tournamentToHandle.matchResultSemifinale1);
+      logger.info("tournamentToHandle.matchResultSemifinale2: ", tournamentToHandle.matchResultSemifinale2);
+      logger.info("tournamentToHandle.matchFinale: ", tournamentToHandle.matchFinale);
+      logger.info("tournamentToHandle.matchBronze: ", tournamentToHandle.matchBronze);
       if (tournamentToHandle.matchResultSemifinale1 && tournamentToHandle.matchResultSemifinale2 && !tournamentToHandle.matchFinale && !tournamentToHandle.matchBronze)
       {
         try {
           // if 2+ players who clicked to leave
           if (tournamentToHandle.playersWhoClickedToLeave.length > 1) {
-            console.log("~ There are 2+ players who clicked to leave");
+            logger.info("~ There are 2+ players who clicked to leave");
             let newMatchId = await Tournament.scheduleMatch(
               tournamentToHandle.tournamentId as string,
               "matchBronze",
@@ -119,7 +124,7 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
               invitedPlayerId: tournamentToHandle.playersWhoClickedToLeave[0]
             };
             tournamentToHandle.matchBronze = newMatch;
-            console.log("Just scheduled bogus matchBronze with two players who ClickedToLeave, generating match result now");
+            logger.info("Just scheduled bogus matchBronze with two players who ClickedToLeave, generating match result now");
             const matchBronzeResult: GameResultTypes.MatchResult = {
               matchId: newMatchId,
               player1Id: tournamentToHandle.playersWhoClickedToLeave[1],
@@ -136,16 +141,16 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
             } as MatchMakingTypes.TournamentNotification;
             tournamentToHandle.matchResultBronze = matchBronzeResult;
             publishMessage(tournamentNotification); // read by chat-service
-            console.log("Ongoing Tournament updated in DB");
+            logger.info("Ongoing Tournament updated in DB");
 
             const finalistsWhoClickedToLeave = tournamentToHandle.playersWhoClickedToLeave.slice(2);
-            console.log("Finalists who clicked to leave: ", finalistsWhoClickedToLeave);
+            logger.info("Finalists who clicked to leave: ", finalistsWhoClickedToLeave);
             let finalistsWhoDidntClickToLeave = [tournamentToHandle!.matchResultSemifinale1?.winnerId, tournamentToHandle!.matchResultSemifinale2?.winnerId].filter((id) => !tournamentToHandle!.playersWhoClickedToLeave.includes(id));
-            console.log("Finalists who didn't click to leave: ", finalistsWhoDidntClickToLeave);
+            logger.info("Finalists who didn't click to leave: ", finalistsWhoDidntClickToLeave);
             if (finalistsWhoDidntClickToLeave.length === 1) {
               finalistsWhoDidntClickToLeave = [tournamentToHandle!.player1Id as string, tournamentToHandle!.player2Id as string, tournamentToHandle!.player3Id as string, tournamentToHandle!.player4Id as string].filter((id) => !tournamentToHandle!.playersWhoClickedToLeave.includes(id));
             }
-            console.log("Finalists who didn't click to leave after filtering: ", finalistsWhoDidntClickToLeave);
+            logger.info("Finalists who didn't click to leave after filtering: ", finalistsWhoDidntClickToLeave);
             let clickedToLeavePopable = JSON.parse(JSON.stringify(finalistsWhoClickedToLeave));
             let didntClickToLeavePopable = JSON.parse(JSON.stringify(finalistsWhoDidntClickToLeave));
             let finalist1Id: string = didntClickToLeavePopable.length > 0 ? didntClickToLeavePopable.pop() as string : clickedToLeavePopable.pop() as string;
@@ -166,7 +171,7 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
             };
             tournamentToHandle.matchFinale = newMatch;
             if (finalistsWhoClickedToLeave.length > 0) {
-              console.log("Just scheduled bogus matchFinale with at least 1 player who ClickedToLeave, generating match result now");
+              logger.info("Just scheduled bogus matchFinale with at least 1 player who ClickedToLeave, generating match result now");
               const matchFinaleResult: GameResultTypes.MatchResult = {
                 matchId: newMatchId,
                 player1Id: finalist1Id,
@@ -187,12 +192,12 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
               tournamentToHandle.matchResultFinale = matchFinaleResult;
               publishMessage(tournamentNotification); // read by chat-service
               await Tournament.updateOngoingTournamentDatabase(matchFinaleResult.player1Score, matchFinaleResult.player2Score, matchFinaleResult.createdAt, matchFinaleResult.matchId);
-              console.log("Ongoing Tournament updated in DB");
+              logger.info("Ongoing Tournament updated in DB");
             }
             else {
-              console.log("finalistsWhoClickedToLeave.length: ", finalistsWhoClickedToLeave.length);
-              console.log("finalistsWhoClickedToLeave: ", finalistsWhoClickedToLeave);
-              console.log("matchBronze was autogenerated, but there are still two finalists who didn't ClickToLeave, so matchFinale was scheduled normally");
+              logger.info("finalistsWhoClickedToLeave.length: ", finalistsWhoClickedToLeave.length);
+              logger.info("finalistsWhoClickedToLeave: ", finalistsWhoClickedToLeave);
+              logger.info("matchBronze was autogenerated, but there are still two finalists who didn't ClickToLeave, so matchFinale was scheduled normally");
             }
           }
 
@@ -221,7 +226,7 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
             };
             tournament.matchFinale = newMatch;
             if (tournament.playersWhoClickedToLeave?.includes(tournament.matchFinale.hostId) || tournament.playersWhoClickedToLeave?.includes(finaleOpponentId as string)) {
-              console.log("Had scheduled matchFinale but one of the players had clicked to leave, generating match result now");
+              logger.info("Had scheduled matchFinale but one of the players had clicked to leave, generating match result now");
               const onePlayerProvenToHaveClickedLeaveId = tournament.playersWhoClickedToLeave.includes(tournament.matchFinale.hostId) ? tournament.matchFinale.hostId : finaleOpponentId as string;  // there could be more than one, but we determine one proven
               const matchFinaleResult: GameResultTypes.MatchResult = {
                 matchId: newMatchId,
@@ -239,7 +244,7 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
               tournament.matchResultFinale = matchFinaleResult;
               publishMessage(tournamentNotification); // read by chat-service
               await Tournament.updateOngoingTournamentDatabase(matchFinaleResult.player1Score, matchFinaleResult.player2Score, matchFinaleResult.createdAt, matchFinaleResult.matchId);
-              console.log("Ongoing Tournament updated in DB");
+              logger.info("Ongoing Tournament updated in DB");
             }
 
             newMatchId = await Tournament.scheduleMatch(
@@ -258,7 +263,7 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
             };
             tournament.matchBronze = newMatch;
             if (tournament.playersWhoClickedToLeave?.includes(tournament.matchBronze.hostId) || tournament.playersWhoClickedToLeave?.includes(bronzeOpponentId as string)) {
-              console.log("Had scheduled matchBronze but one of the players had clicked to leave, generating match result now");
+              logger.info("Had scheduled matchBronze but one of the players had clicked to leave, generating match result now");
               const onePlayerProvenToHaveClickedLeaveId = tournament.playersWhoClickedToLeave.includes(tournament.matchBronze.hostId) ? tournament.matchBronze.hostId : bronzeOpponentId as string;  // there could be more than one, but we determine one proven
               const matchBronzeResult: GameResultTypes.MatchResult = {
                 matchId: newMatchId,
@@ -276,14 +281,14 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
               tournament.matchResultBronze = matchBronzeResult;
               publishMessage(tournamentNotification); // read by chat-service
               await Tournament.updateOngoingTournamentDatabase(matchBronzeResult.player1Score, matchBronzeResult.player2Score, matchBronzeResult.createdAt, matchBronzeResult.matchId);
-              console.log("Ongoing Tournament updated in DB");
+              logger.info("Ongoing Tournament updated in DB");
             }
           }
 
-          // console.log("Scheduled final matches: ", tournament);
+          // logger.info("Scheduled final matches: ", tournament);
 
         } catch (err) {
-          console.error("Error scheduling final matches:", err);
+          logger.error("Error scheduling final matches:", err);
         }
       }
       break;
@@ -302,10 +307,10 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
   if (tournamentToHandle) {
     try {
       await Tournament.updateOngoingTournamentDatabase(matchResult.player1Score, matchResult.player2Score, matchResult.createdAt, matchResult.matchId);
-      console.log("Ongoing Tournament updated in DB");
+      logger.info("Ongoing Tournament updated in DB");
     }
     catch (err) {
-      console.error("DB error updating/inserting ongoing Tournament db: ", err);
+      logger.error("DB error updating/inserting ongoing Tournament db: ", err);
     }
 
     const tournamentWithRanking: MatchMakingTypes.TournamentWithRanking = utils.deriveTournamentWithRanking(tournamentToHandle);
@@ -325,9 +330,9 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       publishMessage(tournamentToStore); // read by usersAndAuth
       // DONE: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it? For now just do it
       await removeTournament(tournamentToHandle);
-      console.log("Tournament finished and stored in DB, removed from runtime and DB");
+      logger.info("Tournament finished and stored in DB, removed from runtime and DB");
       tournaments = tournaments.filter((t) => t.tournamentId !== tournamentToHandle.tournamentId); // remove from runtime
-      console.log("Removed tournament from runtime tournaments list: ", tournamentToHandle.tournamentId);
+      logger.info("Removed tournament from runtime tournaments list: ", tournamentToHandle.tournamentId);
     }
     // for every update to a tournament, whether finished or not, send the updated tournament to chat-service
     let matchType = "";
@@ -345,16 +350,16 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       } as MatchMakingTypes.TournamentNotification;
       if (!isDuplicateMatchResult)
         publishMessage(tournamentNotification); // read by chat-service
-      console.log("Tournament state published to chat-service: ", tournamentToHandle);
+      logger.info("Tournament state published to chat-service: ", tournamentToHandle);
   }
   else {
-    console.log("Tournament not found for matchId", matchResult.matchId, ", processing as a simple match");
+    logger.info("Tournament not found for matchId", matchResult.matchId, ", processing as a simple match");
     publishMessage(matchResult);  // read by usersAndAuth
-    console.log("Simple Match result processed for matchId: ", matchResult.matchId);
+    logger.info("Simple Match result processed for matchId: ", matchResult.matchId);
   }
 }
 
-await startConsumer(handleMatchResultProcessed).catch(console.error);
+await startConsumer(handleMatchResultProcessed).catch(logger.error);
 
 
 fastify.register(async function (fastify) {
@@ -371,17 +376,17 @@ fastify.register(async function (fastify) {
     try {
       const tournamentIdDBObj: MatchMakingTypes.TournamentId | null = await Tournament.getPlayerTournamentId(playerId) as MatchMakingTypes.TournamentId || null;
       if (!tournamentIdDBObj || !tournamentIdDBObj.tournamentId) {
-        console.log("Player is not part of any tournament, returning null");
+        logger.info("Player is not part of any tournament, returning null");
         return reply.status(200).send(null);
       }
       const playerTournamentId: string = tournamentIdDBObj.tournamentId.toString();
       const tournament = tournaments.find((tournament) => tournament.tournamentId === playerTournamentId) as MatchMakingTypes.Tournament || null;
-      console.log("Player is part of tournament <", tournament.tournamentId, ">, returning TournamentWithRanking");
+      logger.info("Player is part of tournament <", tournament.tournamentId, ">, returning TournamentWithRanking");
       const tournamentWithRanking = utils.deriveTournamentWithRanking(tournament);
       return reply.status(200).send(tournamentWithRanking);
 
     } catch (err) {
-      console.error("Error fetching tournament: ", err);
+      logger.error("Error fetching tournament: ", err);
       return reply.status(500).send({ error: "Internal server error" });
     }
   });
@@ -417,12 +422,12 @@ fastify.register(async function (fastify) {
       } else if (matchmakingTypeGuards.isClientDeleteTournament(dataJson)) {
         handleClientDeleteTournament(dataJson);
       } else {
-        console.error("Matchmaking server received unknown Message from client!");
-        console.error("Message: ", dataJson);
+        logger.error("Matchmaking server received unknown Message from client!");
+        logger.error("Message: ", dataJson);
       }
     });
     socket.on("close", () => {
-      console.log(
+      logger.info(
         "WebSocket closed. Client ID: ",
         socketToClientId.get(socket)
       );
@@ -431,7 +436,7 @@ fastify.register(async function (fastify) {
     });
 
     socket.on("error", (err) => {
-      console.error("WebSocket error:", err);
+      logger.error("WebSocket error:", err);
     });
   });
 });
@@ -440,14 +445,14 @@ function registerClient(req: MatchMakingFastifyRequest, socket: WebSocket) {
   const clientId = getClientIdFromQueryParam(req as MatchMakingFastifyRequest);
   socketToClientId.set(socket, clientId as string);
   clientIdToSocket.set(clientId as string, socket);
-  console.log(" ~ Client connected: ", clientId);
+  logger.info(" ~ Client connected: ", clientId);
 }
 
 function unregisterClient(socket: WebSocket) {
   const clientId = socketToClientId.get(socket) as string;
   socketToClientId.delete(socket);
   clientIdToSocket.delete(clientId);
-  console.log(" ~ Client disconnected: ", clientId);
+  logger.info(" ~ Client disconnected: ", clientId);
 }
 
 function closeGamesOpenedByClient(socket: WebSocket) {
@@ -466,33 +471,33 @@ function getClientIdFromQueryParam(req: MatchMakingFastifyRequest) {
   if (req?.query?.clientId) return req.query.clientId;
   const msg =
     "Client didn't provide their id in query string when connecting to websocket!";
-  console.log(msg);
+  logger.info(msg);
 }
 
 function handleClientLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
   // to do for Milos
   // here, only remove game, if its not a tournament game
-  console.log(" ~ leaveGame", dataJson.data.matchId);
+  logger.info(" ~ leaveGame", dataJson.data.matchId);
   removeGameFromServerGameList(dataJson.data);
   sendMessageToAllClients({ type: "leaveGame", data: dataJson.data });
 }
 
 function handleClientCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
-  console.log(" ~ createGame", dataJson.data.matchId);
+  logger.info(" ~ createGame", dataJson.data.matchId);
   games.push(dataJson.data);
-  console.log("Games: ", games);
+  logger.info("Games: ", games);
   sendMessageToAllClients({ type: "createGame", data: dataJson.data });
 }
 
 function handleClientJoinGame(dataJson: MatchMakingTypes.ClientJoinGame) {
-  console.log(" ~ joinGame", dataJson.data.matchId);
+  logger.info(" ~ joinGame", dataJson.data.matchId);
   const correspondingGame = games.find((game) => game.matchId === dataJson.data.matchId) as MatchMakingTypes.BasicGame;
   if (!correspondingGame) {
-    console.log("Client tried to join game, that didn't exist!");
+    logger.info("Client tried to join game, that didn't exist!");
   } else if (!isDefined(correspondingGame.oponentId)) {
     correspondingGame.oponentId = dataJson.data.oponentId;
   } else {
-    console.log("Client tried to join game, thats already full!");
+    logger.info("Client tried to join game, thats already full!");
   }
 
   const participants = [
@@ -510,7 +515,7 @@ function handleClientJoinGame(dataJson: MatchMakingTypes.ClientJoinGame) {
 }
 
 function handleClientDeleteGame(dataJson: MatchMakingTypes.ClientDeleteGame) {
-  console.log(" ~ deleteGame", dataJson.data.matchId);
+  logger.info(" ~ deleteGame", dataJson.data.matchId);
   removeGameFromServerGameList(dataJson.data);
   sendMessageToAllClients({ type: "deleteGame", data: dataJson.data });
 }
@@ -519,7 +524,7 @@ function handleClientDeleteGame(dataJson: MatchMakingTypes.ClientDeleteGame) {
 async function handleClientCreateTournament(dataJson: MatchMakingTypes.ClientCreateTournament) {
   try {
     const newTournamentId = await Tournament.create(dataJson.data.playerId) as string;
-    console.log(" ~ createTournament", newTournamentId);
+    logger.info(" ~ createTournament", newTournamentId);
     const newTournament: MatchMakingTypes.Tournament = {
       tournamentId: newTournamentId,
       player1Id: dataJson.data.playerId, player2Id: null, player3Id: null, player4Id: null,
@@ -530,7 +535,7 @@ async function handleClientCreateTournament(dataJson: MatchMakingTypes.ClientCre
     tournaments.push(newTournament);
     sendMessageToAllClients({ type: "updateOneTournament", data: newTournament });
   } catch (err) {
-    console.error("Error creating tournament:", err);
+    logger.error("Error creating tournament:", err);
   }
 }
 
@@ -541,16 +546,16 @@ async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinT
       throw new Error("Client tried to join a tournament that didn't exist!");
     const playerPosition: MatchMakingTypes.PlayerKey = await Tournament.addPlayer(dataJson.data.tournamentId, dataJson.data.playerId) as MatchMakingTypes.PlayerKey;
     correspondingTournament[playerPosition] = dataJson.data.playerId as string;
-    console.log(" ~ joinTournament", dataJson.data.tournamentId);
+    logger.info(" ~ joinTournament", dataJson.data.tournamentId);
     sendMessageToAllClients({ type: "updateOneTournament", data: correspondingTournament });
   } catch (err) {
-    console.error("Error adding player to tournament:", err);
+    logger.error("Error adding player to tournament:", err);
   }
 
   // startTournament logic INDEED when lobby full
   if (correspondingTournament.player1Id && correspondingTournament.player2Id && correspondingTournament.player3Id && correspondingTournament.player4Id) {
     correspondingTournament.playedAt = new Date().toISOString();
-    console.log(" ~ startTournament", correspondingTournament.tournamentId);
+    logger.info(" ~ startTournament", correspondingTournament.tournamentId);
     const participants = [correspondingTournament.player1Id as string, correspondingTournament.player2Id as string, correspondingTournament.player3Id as string, correspondingTournament.player4Id as string,];
 
     try {
@@ -594,7 +599,7 @@ async function handleClientJoinTournament(dataJson: MatchMakingTypes.ClientJoinT
       correspondingTournament.started = true;  // semifinales are scheduled === tournament has started
 
     } catch (err) {
-      console.error("Error scheduling match:", err);
+      logger.error("Error scheduling match:", err);
     }
 
     const serverTournamentStartObj: MatchMakingTypes.ServerStartTournament = {
@@ -677,13 +682,13 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
           }
         }
         else {
-          console.error("Player tried to leave a tournament, but they were in semifinales which had been played, repeat-processing the same matchResultSemifinale1/2 for simplicity");
+          logger.error("Player tried to leave a tournament, but they were in semifinales which had been played, repeat-processing the same matchResultSemifinale1/2 for simplicity");
           if (tournament.matchResultSemifinale1?.player1Id === dataJson.data.playerId || tournament.matchResultSemifinale1?.player2Id === dataJson.data.playerId)
             matchResult = tournament.matchResultSemifinale1;
           else if (tournament.matchResultSemifinale2?.player1Id === dataJson.data.playerId || tournament.matchResultSemifinale2?.player2Id === dataJson.data.playerId)
             matchResult = tournament.matchResultSemifinale2;
           else
-            console.error("Player tried to leave a tournament, but they were not in any of the semifinales, this should not happen!");
+            logger.error("Player tried to leave a tournament, but they were not in any of the semifinales, this should not happen!");
         }
       }
       else
@@ -700,7 +705,7 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
             player2Score: tournament.matchFinale!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           };
-          console.log("Player leaving was scheduled to play for finale but left and there's no result, now generating match result with the player leaving as loser");
+          logger.info("Player leaving was scheduled to play for finale but left and there's no result, now generating match result with the player leaving as loser");
         }
         else if (tournament.matchBronze?.hostId === dataJson.data.playerId || tournament.matchBronze?.invitedPlayerId === dataJson.data.playerId && !tournament.matchResultBronze) {
           // player leaving was in bronze match but there's no result for it, generate a match result with the player leaving as loser
@@ -713,7 +718,7 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
             player2Score: tournament.matchBronze!.invitedPlayerId === dataJson.data.playerId ? 0 : gameSettings.maxScore,
             createdAt: new Date().toISOString()
           }
-          console.log("Player leaving was scheduled to play for bronze but left and there's no result, now generating match result with the player leaving as loser");
+          logger.info("Player leaving was scheduled to play for bronze but left and there's no result, now generating match result with the player leaving as loser");
         }
         else {
           // player has played all the matches and is leaving, anything we must do? I'm informing Steffen below anyway
@@ -735,7 +740,7 @@ async function handleClientLeaveTournament(dataJson: MatchMakingTypes.ClientLeav
       // DONE: and what if all of them leave after tournament has started?
     }
   } catch (err) {
-    console.error("Error removing player from tournament:", err);
+    logger.error("Error removing player from tournament:", err);
   }
 }
 
@@ -744,7 +749,7 @@ async function handleClientDeleteTournament(dataJson: MatchMakingTypes.ClientDel
   try {
     removeTournament(dataJson.data);
   } catch (err) {
-    console.error("Error deleting tournament:", err);
+    logger.error("Error deleting tournament:", err);
   }
 }
 
@@ -804,9 +809,9 @@ async function removeTournament(tournament: MatchMakingTypes.Tournament)
     // then delete tournament from DB and from server tournament list
     await Tournament.delete(tournament.tournamentId as string);
     removeTournamentFromServerTournamentList(tournament);
-    console.log(" ~ deleteTournament", tournament.tournamentId);
+    logger.info(" ~ deleteTournament", tournament.tournamentId);
   } catch (err) {
-    console.error("Error deleting tournament:", err);
+    logger.error("Error deleting tournament:", err);
   }
 }
 
@@ -821,11 +826,11 @@ fastify.setNotFoundHandler((req, res) => {
 
 fastify.listen({ port: transNetworkSettings.gameMatchmaking.port, host: transNetworkSettings.gameMatchmaking.ip }, (err) => {
   if (err) {
-    console.log("Server Error!");
+    logger.info("Server Error!");
     fastify.log.error(err);
     process.exit(1);
   }
-  console.log(`Server listening on http://${transNetworkSettings.gameMatchmaking.ip}:${transNetworkSettings.gameMatchmaking.port}/`);
+  logger.info(`Server listening on http://${transNetworkSettings.gameMatchmaking.ip}:${transNetworkSettings.gameMatchmaking.port}/`);
 });
 
 process.on('SIGINT', () => {

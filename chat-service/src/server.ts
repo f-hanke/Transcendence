@@ -24,10 +24,12 @@ fastify.register(cors, { origin: "*" });
 fastify.get('/health', async () => {
 	return { status: 'ok' };
 });
+
 setupMetrics(fastify);
-logger.info("Metrics and logger initialized.");
 //keep commented out unless docker is running requires elsasticsearch to be running
-// await checkElasticsearch();
+await checkElasticsearch();
+logger.info("Metrics and logger initialized.");
+
 export const db = new Database('./db/chat_service_db.db');
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket[]>();
@@ -44,19 +46,19 @@ export const messagesArray = {
 	}
 } as const;
 
-await startConsumer().catch(console.error);
+await startConsumer().catch(logger.error);
 
 type MatchMakingFastifyRequest = FastifyRequest<{
 	Querystring: SharedTypes.ClientQueryParamMatchMaking;
 }>;
 
 fastify.get('/chat-history/', async (req: MatchMakingFastifyRequest, reply) => {
-	console.log("Chat history request received");
+	logger.info("Chat history request received");
 
 	const { clientId, recipientId } = req.query;
 	if (!clientId || !recipientId) {
 		const msg = "Missing authorId or recipientId in query string!";
-		console.log(msg);
+		logger.info(msg);
 		return reply.status(400).send({ error: msg });
 	}
 
@@ -77,7 +79,7 @@ fastify.post('/update-friend-request', async (req, reply) => {
 		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
 	const { type, authorId, recipientId } = req.body;
 
-	console.log(`Updating friendrequest tpye: ${type}`);
+	logger.info(`Updating friendrequest tpye: ${type}`);
 	if (!authorId || !recipientId)
 		return reply.status(400).send({ error: 'Missing senderId or recipientId' });
 
@@ -102,8 +104,8 @@ fastify.post('/update-friend-request', async (req, reply) => {
 });
 
 fastify.post('/update-blocking-status', async (req, reply) => {
-	console.log("trying to block user");
-	console.log(req.body);
+	logger.info("trying to block user");
+	logger.info(req.body);
 	if (!chatServiceTypeGuards.isClientChangeBlockStatus(req.body))
 		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
 	const { clientId, recipientId, blockedStatus } = req.body;
@@ -118,23 +120,23 @@ fastify.post('/update-blocking-status', async (req, reply) => {
 		}
 
 		// Notify users via WebSocket
-		console.log("blocking was successfull");
+		logger.info("blocking was successfull");
 		return [200, null] as const;
 	}
 	catch (err) {
-		console.error("Error blocking user:", err);
+		logger.error("Error blocking user:", err);
 		return [500, { reason: 'Failed to block user' }] as const;
 	}
 });
 
 fastify.post('/send-game-invite', async (req, reply) => {
-	console.log("invite to game");
-	console.log(req.body);
+	logger.info("invite to game");
+	logger.info(req.body);
 	if (!chatServiceTypeGuards.isInviteToPlayRequestBody(req.body))
 		return reply.status(400).send({ reason: 'Body not correct' } satisfies ChatServiceTypes.ErrorResponseBody);
 	const { authorId, recipientId, date } = req.body;
 
-	console.log(req.body);
+	logger.info(req.body);
 	const msg = "User invited you to play a game with them\nClick here to join";
 	try {
 		handleClientSentMessage({
@@ -147,11 +149,11 @@ fastify.post('/send-game-invite', async (req, reply) => {
 				type:"sendGameInvite",
 			},
 		});
-		console.log("Game invite was successfull");
+		logger.info("Game invite was successfull");
 		return [200, null] as const;
 	}
 	catch (err) {
-		console.error("Error inviting to game:", err);
+		logger.error("Error inviting to game:", err);
 		return [500, { reason: 'Failed to send game invite' }] as const;
 	}
 });
@@ -161,13 +163,13 @@ fastify.register(async function (fastify) {
 		registerClient(req, socket);
 
 		const testArray = getUsers(socket);
-		console.log(testArray);
+		logger.info(testArray);
 		socket.send(JSON.stringify(testArray));
 
 		socket.on('message', (message) => {
 			const data = message.toString("utf-8");
 			const dataJson = JSON.parse(data);
-			console.log(dataJson);
+			logger.info(dataJson);
 			if (chatServiceTypeGuards.isSentMessage(dataJson)) {
 				handleClientSentMessage(dataJson);
 			}
@@ -180,7 +182,7 @@ fastify.register(async function (fastify) {
 			updateUserOnlineStatus(clientId, false);
 		});
 		socket.on("error", (err) => {
-			console.error("WebSocket error:", err);
+			logger.error("WebSocket error:", err);
 		});
 	});
 });
@@ -189,7 +191,7 @@ function registerClient(req: FastifyRequest, socket: WebSocket) {
 	const clientId = (req.query as { clientId?: string }).clientId;
 	//todo: check if client exists in db
 	if (!clientId || clientId == null) {
-		console.log("No clientId provided in query");
+		logger.info("No clientId provided in query");
 		socket.close(1008, "Missing clientId");
 		return;
 	}
@@ -203,7 +205,7 @@ function addSocketToClient(clientId: string, socket: WebSocket){
 		clientIdToSocket.set(clientId, []);
 	}
 	clientIdToSocket.get(clientId)?.push(socket);
-	console.log(`[Connected] Socket added to client ${clientId}`);
+	logger.info(`[Connected] Socket added to client ${clientId}`);
 }
 
 function removeSocketFromClient(clientId: string, socket: WebSocket){
@@ -216,10 +218,10 @@ function removeSocketFromClient(clientId: string, socket: WebSocket){
 
 	if (sockets.length === 0) {
 		clientIdToSocket.delete(clientId);
-		console.log(`[Disconnected] client ${clientId}`);
+		logger.info(`[Disconnected] client ${clientId}`);
 	}
 	else
-		console.log(`Socket removed client ${clientId}`)
+		logger.info(`Socket removed client ${clientId}`)
 }
 
 export function sendToClient(clientId: string, message: ChatServiceTypes.AllChatMessageTypes){
@@ -245,19 +247,19 @@ function updateUserOnlineStatus(userId: string, isOnline: boolean): void {
 		const result = stmt.run(isOnline ? 1 : 0, userId);
 
 		if (result.changes === 0) {
-			console.warn(`No user found with id ${userId}`);
+			logger.warn(`No user found with id ${userId}`);
 		} else {
-			console.log(`Updated user ${userId} online status to ${isOnline}`);
+			logger.info(`Updated user ${userId} online status to ${isOnline}`);
 			sendToAllClientsExcept(userId, { type: "serverClientChangedOnlineStatus", data: { recipientId: userId, onlineStatus: isOnline } })
 		}
 	} catch (err) {
-		console.error(`Failed to update user status:`, err);
+		logger.error(`Failed to update user status:`, err);
 		throw err;
 	}
 }
 
 function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
-	console.log(dataJson);
+	logger.info(dataJson);
 	const { authorId, recipientId, message, date, type } = dataJson.data;
 
 	try {
@@ -266,12 +268,12 @@ function handleClientSentMessage(dataJson: ChatServiceTypes.SentMessage) {
 			typeData = type;
 		db.prepare(databaseQuerys.insertMessage).run(authorId, recipientId, message, date, typeData);
 
-		console.log("Message inserted successfully");
+		logger.info("Message inserted successfully");
 		updateUnreadMessages(recipientId, authorId, true);
 		sendToClient(authorId, { type: "sentMessage", data: dataJson.data });
 		sendToClient(recipientId, { type: "sentMessage", data: dataJson.data });
 	} catch (err) {
-		console.error("DB error inserting message:", err);
+		logger.error("DB error inserting message:", err);
 	}
 }
 
@@ -295,7 +297,7 @@ function getFriendRequestStatus(clientId: string, otherUserId: string){
 
 		return [null, friend]  as const;
 	} catch (err) {
-		console.error("Error checking friend request status:", err);
+		logger.error("Error checking friend request status:", err);
 		return [null, false]  as const;
 	}
 }
@@ -308,7 +310,7 @@ function getBlockedStatus(clientId: string, recipientId: string){
 			return false;
 		return true;
 	} catch (err) {
-		console.error("Error checking blocked status:", err);
+		logger.error("Error checking blocked status:", err);
 		return false;
 	}
 }
@@ -321,7 +323,7 @@ export function getLanguage(clientId: string): string {
 
 		return result.language;
 	} catch (err) {
-		console.error("Error retrieving language from db:", err);
+		logger.error("Error retrieving language from db:", err);
 		return "en";
 	}
 }
@@ -337,7 +339,7 @@ function getLastMessage(clientId: string, recipientId: string)
 			return msg;
 		return result.message;
 	} catch (err) {
-		console.error("Error checking retriving last msg:", err);
+		logger.error("Error checking retriving last msg:", err);
 		return msg;
 	}
 }
@@ -345,7 +347,7 @@ function getLastMessage(clientId: string, recipientId: string)
 function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatServiceTypes.ChatUser[] } } | undefined {
 	const clientId = socketToClientId.get(socket);
 	if (!clientId) {
-		console.log("No clientId found for socket");
+		logger.info("No clientId found for socket");
 		return undefined;
 	}
 	const users: ChatServiceTypes.ChatUser[] = [];
@@ -381,7 +383,7 @@ function getUsers(socket: WebSocket): { type: string; data: { chatUsers: ChatSer
 			},
 		};
 	} catch (err) {
-		console.error("DB error fetching users:", err);
+		logger.error("DB error fetching users:", err);
 		return undefined;
 	}
 }
@@ -393,7 +395,7 @@ function	getUnreadMessage(recipientId: string, authorId: string){
 			return false;
 		return result.unread;
 	} catch (err) {
-		console.error("Error checking retriving last msg:", err);
+		logger.error("Error checking retriving last msg:", err);
 		return false;
 	}
 }
@@ -402,7 +404,7 @@ export function updateUnreadMessages(recipientId: string, authorId: string, unre
 	try {
 		db.prepare(databaseQuerys.updateUnreadMessage).run(recipientId, authorId, unreadMessages ? 1 : 0, unreadMessages ? 1 : 0);
 	} catch (err) {
-		console.error("DB error updating unread messages:", err);
+		logger.error("DB error updating unread messages:", err);
 	}
 }
 
@@ -411,20 +413,20 @@ function getChatHistory(authorId: string, recipientId: string): ChatServiceTypes
 		const stmt = db.prepare(databaseQuerys.getChatHistory);
 		const rows = stmt.all(authorId, recipientId, recipientId, authorId) as ChatServiceTypes.Message[];
 
-		console.log(`Chat history successfully fetched authorId: ${authorId} recipientId: ${recipientId}`);
+		logger.info(`Chat history successfully fetched authorId: ${authorId} recipientId: ${recipientId}`);
 		updateUnreadMessages(authorId, recipientId, false);
 		return rows;
 	} catch (err) {
-		console.error("DB error fetching chat history:", err);
+		logger.error("DB error fetching chat history:", err);
 		throw err;
 	}
 }
 
 fastify.listen({ port: transNetworkSettings.chatService.port, host: transNetworkSettings.chatService.ip }, (err) => {
 	if (err) {
-		console.log("Server Error!");
+		logger.info("Server Error!");
 		fastify.log.error(err);
 		process.exit(1);
 	}
-	console.log(`ChatService - Server listening on http://localhost:${transNetworkSettings.chatService.port}/`);
+	logger.info(`ChatService - Server listening on http://localhost:${transNetworkSettings.chatService.port}/`);
 });
