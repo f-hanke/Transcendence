@@ -43,7 +43,12 @@ export function enableJwtCheck(fastify: FastifyInstance) {
       url === "/chat" ||
       url === "/userSettingsOther" ||
       url === "/currentTournament" ||
-      url === "/userSettingsOwn";
+      url === "/userSettingsOwn" ||
+      url === "/AUTHENTICATION/health" ||
+      url === "/MATCHMAKING/health" ||
+      url === "/GAMESERVICE/health" ||
+      url === "/CHATSERVICE/health" ||
+      url === "/health";  // API gateway health check
 
     if (!skipAuth) {
       await authMiddleware(req, reply);
