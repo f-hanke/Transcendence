@@ -135,21 +135,14 @@ export class Game {
     reason: GameServiceTypes.PossibleGameEnds,
     playerWhoLeft: null | string = null
   ) {
- console.log("\n\n9999999\n\n")
-
     if (this.isGameOver) {
       console.log("Game is already stopped!");
       return;
     }
 
- console.log("\n\n11111111\n\n")
-
-
     this.isGameOver = true;
 
     if (this.gameLoopId) {
- console.log("\n\n22222222222\n\n")
-
       clearTimeout(this.gameLoopId);
       this.gameLoopId = null;
     }

@@ -109,7 +109,8 @@ type LanguageState = {
     password: string;
     matchHistoryCaption: string;
     score: string;
-    oponent: string;
+    oponentRemote: string;
+    oponentLocal: string;
     win: string;
     loss: string;
     tournamentHistoryCaption: string;
