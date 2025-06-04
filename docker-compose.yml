@@ -47,10 +47,11 @@ services:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
     ports:
-      - "127.0.0.1:5044:5044"
-      - "127.0.0.1:5000:5000/tcp"
-      - "127.0.0.1:5000:5000/udp"
-      - "127.0.0.1:9600:9600"
+      - "127.0.0.1:5044:5044"     # Beats input
+      - "127.0.0.1:5000:5000"     # HTTP input (for Winston)
+      - "127.0.0.1:5001:5001"     # TCP input  
+      - "127.0.0.1:5002:5002/udp" # UDP input
+      - "127.0.0.1:9600:9600"     # Logstash monitoring API
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     depends_on:
@@ -153,6 +154,7 @@ services:
       - JWT_SECRET=supersecret
       - WEBSERVER_HOST=webserver
       - AUTH_SERVICE_HOST=users-auth
+      - SERVICE_NAME=api-gateway
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -184,6 +186,7 @@ services:
       - "10005"
     environment:
       - NODE_ENV=production
+      - SERVICE_NAME=webserver
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -194,6 +197,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     expose:
       - "10005"
 
@@ -208,6 +214,7 @@ services:
       - NODE_ENV=production
       - JWT_SECRET=supersecret
       - RABBITMQ_HOST=rabbitmq-service
+      - SERVICE_NAME=users-auth
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -221,6 +228,8 @@ services:
     depends_on:
       rabbitmq-service:
         condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     expose:
       - "10004"
 
@@ -233,6 +242,7 @@ services:
       - "10002"
     environment:
       - NODE_ENV=production
+      - SERVICE_NAME=remote-matchmaking
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -246,6 +256,10 @@ services:
     depends_on:
       users-auth:
         condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     expose:
       - "10002"
 
@@ -258,6 +272,7 @@ services:
       - "10003"
     environment:
       - NODE_ENV=production
+      - SERVICE_NAME=game-service
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -283,6 +298,7 @@ services:
       - "10001"
     environment:
       - NODE_ENV=production
+      - SERVICE_NAME=chat-service
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -294,8 +310,12 @@ services:
       retries: 3
       start_period: 10s
     depends_on:
-      - users-auth
-      - rabbitmq-service
+      users-auth:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     expose:
       - "10001"
 
