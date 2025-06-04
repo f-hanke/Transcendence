@@ -54,6 +54,7 @@ async function publishMessage(message: GameResultTypes.MatchResult | GameResultT
   let connection;
   try {
 		connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
+    console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
 	} catch (err) {
 		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
 		connection = await amqp.connect('amqp://localhost');
@@ -70,7 +71,9 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
 {
   tournaments = await dbConverters.getAllTournamentsRuntimeTyped();  // update runtime tournaments so they include the scores recently stored in DB
   let tournamentToHandle: MatchMakingTypes.Tournament | null = null;
-  console.log("handleMatchResultProcessed, fetched tournaments:", tournaments);
+  // console.log("handleMatchResultProcessed, fetched tournaments:", tournaments);
+  let isDuplicateMatchResult = false;
+
   for (let tournament of tournaments) {
     console.log("Checking tournament: ", tournament.tournamentId);
     if (tournament.matchSemifinale1?.matchId === matchResult.matchId || tournament.matchSemifinale2?.matchId === matchResult.matchId)
@@ -78,9 +81,17 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
       tournamentToHandle = tournament;
 
       if (tournamentToHandle.matchSemifinale1?.matchId === matchResult.matchId)
+      {
+        if (tournamentToHandle.matchResultSemifinale1 !== null)
+          isDuplicateMatchResult = true;
         tournamentToHandle.matchResultSemifinale1 = matchResult;
+      }
       else if (tournamentToHandle.matchSemifinale2?.matchId === matchResult.matchId)
+      {
+        if (tournamentToHandle.matchResultSemifinale2 !== null)
+          isDuplicateMatchResult = true;
         tournamentToHandle.matchResultSemifinale2 = matchResult;
+      }
 
       // SCHEDULE FINAL MATCHES (if semifinals are done and final matches unscheduled)
       console.log("tournamentToHandle.matchResultSemifinale1: ", tournamentToHandle.matchResultSemifinale1);
@@ -332,7 +343,8 @@ async function handleMatchResultProcessed(matchResult: GameResultTypes.MatchResu
         updateForMatch: matchType,
         tournamentData: tournamentToHandle
       } as MatchMakingTypes.TournamentNotification;
-      publishMessage(tournamentNotification); // read by chat-service
+      if (!isDuplicateMatchResult)
+        publishMessage(tournamentNotification); // read by chat-service
       console.log("Tournament state published to chat-service: ", tournamentToHandle);
   }
   else {

@@ -15,7 +15,14 @@ function updateOngoingTournamentDatabase(msg: GameResultTypes.MatchResult){
 }
 
 export async function startConsumer(onMessage: (matchResult: GameResultTypes.MatchResult) => void) {
-	const connection = await amqp.connect('amqp://localhost');
+	let connection;
+	try {
+			connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
+			console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
+		} catch (err) {
+			console.warn('Failed to connect to rabbitmq-service, trying localhost...');
+			connection = await amqp.connect('amqp://localhost');
+		}
 	const channel = await connection.createChannel();
 
 	await channel.assertQueue(queue, { durable: true });

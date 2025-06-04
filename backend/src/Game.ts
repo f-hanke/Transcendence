@@ -18,9 +18,17 @@ const queue = "game-service-queue";
 async function publishMatchResult(message: GameResultTypes.MatchResult) {
   if (!gameResultTypeGuards.isMatchResult(message))
     console.error("Trying to publish unknown type");
-  const connection = await amqp.connect(
-    `amqp://${process.env.RABBITMQ_HOST || "localhost"}`
-  );
+  // const connection = await amqp.connect(
+  //   `amqp://${process.env.RABBITMQ_HOST || "localhost"}`
+  // );
+  let connection;
+  try {
+		connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
+    console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
+	} catch (err) {
+		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
+		connection = await amqp.connect('amqp://localhost');
+	}
   const channel = await connection.createChannel();
 
   await channel.assertQueue(queue, { durable: true });
@@ -127,21 +135,14 @@ export class Game {
     reason: GameServiceTypes.PossibleGameEnds,
     playerWhoLeft: null | string = null
   ) {
- console.log("\n\n9999999\n\n")
-
     if (this.isGameOver) {
       console.log("Game is already stopped!");
       return;
     }
 
- console.log("\n\n11111111\n\n")
-
-
     this.isGameOver = true;
 
     if (this.gameLoopId) {
- console.log("\n\n22222222222\n\n")
-
       clearTimeout(this.gameLoopId);
       this.gameLoopId = null;
     }

@@ -80,7 +80,7 @@ fastify.register(fastifyHttpProxy, {
 // Remote/Matchmaking service proxy
 fastify.register(fastifyHttpProxy, {
   upstream: 'http://remote-matchmaking:10002',
-  prefix: '/MM',
+  prefix: '/MATCHMAKING',
   rewritePrefix: '', // removes /MM before forwarding
 });
 
