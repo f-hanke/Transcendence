@@ -85,17 +85,18 @@ rebuild-frontend:
 # Stop all services
 stop:
 	@echo "Stopping all services..."
-	docker compose down -v
-	@echo "All services have been stopped and removed."
+	docker compose down
+	@echo "All services have been stopped."
 
 # Check status of all services (improved version with colors)
 status:
 	@./scripts/health_check.sh
 
 # Clean up less aggressively (containers, volumes, and networks)
-clean: stop
+clean:
 	@echo "Cleaning up Docker resources..."
 	# Remove stopped containers and volumes
+	docker compose down -v
 	docker container prune -f
 	docker volume prune -f
 	@echo "Less aggressive Docker cleanup complete!"
