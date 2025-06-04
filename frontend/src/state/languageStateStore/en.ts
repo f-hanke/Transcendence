@@ -127,7 +127,8 @@ const en: LanguageState = {
     save: "Save",
     password: "Password",
     matchHistoryCaption: "Match History",
-    oponent: "Oponent",
+    oponentRemote: "Remote game against",
+    oponentLocal: "Local game against",
     loss: "Loss",
     win: "Win",
     tournamentHistoryCaption: "Tournament History",
@@ -140,7 +141,7 @@ const en: LanguageState = {
     second: "2nd",
     third: "3rd",
     fourth: "4th",
-    statsCaption: "Stats",
+    statsCaption: "Match Stats against registered Users",
     wins: "Wins",
     losses: "Losses",
     winPercentage: "Win Percentage",
@@ -181,11 +182,14 @@ const en: LanguageState = {
       friendRequestAccepted: "Friend request accepted.",
       friendRequestDeclined: "Friend request declined.",
       invite: "User invited you to play a game with them\nClick here to join",
-      tournamentStart: "The tournament has started. If you are the Host, go to tournaments to schedule the match or wait for the Host to send you an invitation.",
-      matchResult: "${winner} won the ${type} match against ${loser} with a score of ${winnerScore} to ${loserScore}.",
-      playerLeft: "${Player} has left the Tournament, all matches with ${Player2} will be resolved automatically",
-    }
-  }
+      tournamentStart:
+        "The tournament has started. If you are the Host, go to tournaments to schedule the match or wait for the Host to send you an invitation.",
+      matchResult:
+        "${winner} won the ${type} match against ${loser} with a score of ${winnerScore} to ${loserScore}.",
+      playerLeft:
+        "${Player} has left the Tournament, all matches with ${Player2} will be resolved automatically",
+    },
+  },
 } as const;
 
 function matchIsOverMsg(data: {

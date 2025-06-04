@@ -2,6 +2,7 @@ import { GameResultTypes, isDefined } from "transcendence";
 import { EditableFields, UserState } from "../state/userStateTypes";
 import {
   createHtmlElementFromString,
+  deepCopyObj,
   fileToBufferLike,
   getImgSrcFromBuffer,
   sanitizeAndCleanInput,
@@ -72,7 +73,7 @@ class UserSettings extends HTMLElement {
     // (this.querySelector("#userFriends") as HTMLDivElement).innerHTML =
     //   this.renderFriends();
     (this.querySelector("#userMatchHistory") as HTMLDivElement).innerHTML =
-      this.renderMatchHistory();
+      this.renderMatchHistoryRemote();
     (this.querySelector("#userTournamentHistory") as HTMLDivElement).innerHTML =
       this.renderTournamentHistory();
     (this.querySelector("#userStats") as HTMLDivElement).innerHTML =
@@ -416,14 +417,28 @@ class UserSettings extends HTMLElement {
     return htmlElem;
   }
 
+  //   type MatchResult = {
+  //     matchId: string;
+  //     player1Id: string;
+  //     player2Id: string;
+  //     player1Score: number;
+  //     player2Score: number;
+  //     winnerId: string;
+  //     createdAt: string;
+  // };
+
   renderUserStats() {
     const matchHistory = window.store.userStore.get().details.matchHistory;
     const currentUserId = window.store.userStore.get().details.id;
 
-    const wins = matchHistory.filter(
+    const remoteMatches = matchHistory.filter(
+      (m) => !m.player2Id.startsWith("Human_") && !m.player2Id.startsWith("AI_")
+    );
+
+    const wins = remoteMatches.filter(
       (m) => m.winnerId === currentUserId
     ).length;
-    const losses = matchHistory.length - wins;
+    const losses = remoteMatches.length - wins;
     const total = wins + losses;
     const winPercent = total > 0 ? Math.round((wins / total) * 100) : 0;
     const lossPercent = total > 0 ? 100 - winPercent : 0;
@@ -455,8 +470,12 @@ class UserSettings extends HTMLElement {
   `;
   }
 
-  renderMatchHistory() {
-    const matchHistory = window.store.userStore.get().details.matchHistory;
+  renderMatchHistoryRemote() {
+    const matchHistory = deepCopyObj(window.store.userStore.get().details.matchHistory);
+       matchHistory.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
     const currentUserId = window.store.userStore.get().details.id;
     return `
     <div class="mt-6">
@@ -466,6 +485,9 @@ class UserSettings extends HTMLElement {
       <div class="space-y-2">
         ${matchHistory
           .map((match) => {
+            const isLocalMatch =
+              match.player2Id.startsWith("AI_") ||
+              match.player2Id.startsWith("Human_");
             const isWinner = match.winnerId === currentUserId;
             const opponentId =
               match.player1Id === currentUserId
@@ -479,17 +501,24 @@ class UserSettings extends HTMLElement {
               match.player1Id === currentUserId
                 ? match.player2Score
                 : match.player1Score;
-
+            const oponentName = isLocalMatch
+              ? opponentId
+              : window.store.playerNamesStore.getName(opponentId);
+            const text = isLocalMatch
+              ? window.store.languageStore.state.userSettings.oponentLocal
+              : window.store.languageStore.state.userSettings.oponentRemote;
             return `
               <div class="p-3 bg-gray-700 rounded shadow text-sm">
                 <div class="flex justify-between mb-1">
-                  <span class="font-semibold">${
-                    window.store.languageStore.state.userSettings.oponent
-                  } ${opponentId}</span>
+                  <span>
+                  ${text} 
+                  <span class="font-semibold">${oponentName}</span></span>
                   <span class="${
                     isWinner ? "text-green-400" : "text-red-400"
                   }">${
-              isWinner
+              isLocalMatch
+                ? ""
+                : isWinner
                 ? window.store.languageStore.state.userSettings.win
                 : window.store.languageStore.state.userSettings.loss
             }</span>
@@ -512,8 +541,15 @@ class UserSettings extends HTMLElement {
   }
 
   renderTournamentHistory() {
-    const tournamentHistory =
+    const tournamentHistoryNoSpecialSorting =
       window.store.userStore.get().details.tournamentHistory;
+    const tournamentHistory = JSON.parse(
+      JSON.stringify(tournamentHistoryNoSpecialSorting)
+    ) as GameResultTypes.TournamentResult[];
+    tournamentHistory.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
     return `
     <div class="mt-6">
        <h2 class="block">${
