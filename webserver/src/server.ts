@@ -13,11 +13,11 @@ const fastify = Fastify({ logger: true });
 
 const distFrontendPath = path.join(__dirname, '../distFrontend');
 
-console.log(distFrontendPath);
+logger.info(distFrontendPath);
 setupMetrics(fastify);
-logger.info("Metrics and logger initialized.");
 //keep commented out unless docker is running requires elsasticsearch to be running
-// await checkElasticsearch();
+await checkElasticsearch();
+logger.info("Metrics and logger initialized.");
 
 // Health check endpoint for Docker
 fastify.get('/health', async (request, reply) => {
@@ -43,5 +43,5 @@ fastify.listen({
   host: transNetworkSettings.webserver.ip // Allow connections from any IP address, needed for Docker
 }, (err, address) => {
   if (err) throw err;
-  console.log(`🌐 Frontend server listening at ${address}`);
+  logger.info(`🌐 Frontend server listening at ${address}`);
 });
