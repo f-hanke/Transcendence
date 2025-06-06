@@ -135,7 +135,9 @@ class MatchmakingStateStore {
   createGame(match: MatchMakingTypes.BasicGame) {
     if (match.hostId == window.store.userStore.get().details.id) {
       this.state.ownMatch = deepCopyObj(match);
-    } else this.state.otherMatches.push(deepCopyObj(match));
+    } else {
+      this.addGameEnsureUnique(match);
+    }
     this.updateListenersOnChange();
   }
 
@@ -228,13 +230,21 @@ class MatchmakingStateStore {
       console.log(`HOST LEFT ${hostLeft}`);
       console.log(`INVITED LEFT ${invitedPlayerLeft}`);
       MatchMakingInterface.sendMessageToServer({
-          type: "deleteGame",
-          data: window.store.matchmakingStore.get()
-            .ownMatch as MatchMakingTypes.BasicGame,
-        });
+        type: "deleteGame",
+        data: window.store.matchmakingStore.get()
+          .ownMatch as MatchMakingTypes.BasicGame,
+      });
       this.state.ownMatch = null;
       return true;
     }
+  }
+
+  addGameEnsureUnique(newMatch: MatchMakingTypes.BasicGame) {
+    const newState = this.state.otherMatches.filter((match) => {
+      return match.matchId !== newMatch.matchId;
+    });
+    newState.push(deepCopyObj(newMatch));
+    this.state.otherMatches = newState;
   }
 
   update(newState: MatchmakingState) {

@@ -120,7 +120,9 @@ class MatchMakingInterface {
         });
         window.store.matchmakingStore.deleteGame(ownMatch);
       } catch (err) {
-        console.log("Unable to notify matchmaking service about closing connection!");
+        console.log(
+          "Unable to notify matchmaking service about closing connection!"
+        );
       }
     }
     if (isDefined(this.websocket)) {
@@ -216,6 +218,8 @@ class MatchMakingInterface {
     message: MatchMakingTypes.AllMatchMakingMessageTypes
   ) {
     console.log(this.websocket);
+    console.log("1111: Frontend send message to server!");
+    console.log(message);
     if (
       isDefined(this.websocket) &&
       this.websocket.readyState === WebSocket.OPEN
