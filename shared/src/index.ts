@@ -29,6 +29,8 @@ export type {
   TransNetworkSettings,
 };
 
+
+
 import {
   isTypedObject,
   isDefined,
@@ -38,6 +40,7 @@ import {
   tournamentIsEmpty,
   tournamentIsFull,
   isOwnTournament,
+  monitoringEnabled,
 } from "./sharedFunctions.js";
 import { matchmakingTypeGuards } from "./matchmakingTypes.js";
 import { gameServiceTypeGuards } from "./gameServiceTypes.js";
@@ -65,4 +68,5 @@ export {
   tournamentIsEmpty,
   tournamentIsFull,
   isOwnTournament,
+  monitoringEnabled
 };

@@ -17,12 +17,12 @@ const winstonLogger = winston.createLogger({
       )
     }),
     // Send logs to Logstash
-    new winston.transports.Http({
-      host: 'logstash',
-      port: 5000,
-      path: '/',
-      format: winston.format.json()
-    })
+    // new winston.transports.Http({
+    //   host: 'logstash',
+    //   port: 5000,
+    //   path: '/',
+    //   format: winston.format.json()
+    // })
   ],
 });
 

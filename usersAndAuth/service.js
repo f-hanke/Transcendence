@@ -10,10 +10,10 @@ import { config } from "./config/config.js";
 import { User } from "./orm/user.js";
 import { GameResultModel } from "./orm/gameResultModel.js";
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
-import { setupMetrics } from './lib/metrics.js';
-import logger from './lib/logger.js';
-import { checkElasticsearch } from './lib/elasticsearch.js';
-import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSettings, } from "transcendence";
+import { setupMetrics } from "./lib/metrics.js";
+import logger from "./lib/logger.js";
+import { checkElasticsearch } from "./lib/elasticsearch.js";
+import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSettings, monitoringEnabled, } from "transcendence";
 const queue = "auth-service-queue"; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
@@ -46,10 +46,12 @@ const server = fastify({
         },
     },
 });
-setupMetrics(server);
-//keep commented out unless docker is running requires elsasticsearch to be running
-await checkElasticsearch();
-logger.info("Metrics and logger initialized.");
+if (monitoringEnabled) {
+    setupMetrics(server);
+    //keep commented out unless docker is running requires elsasticsearch to be running
+    await checkElasticsearch();
+    logger.info("Metrics and logger initialized.");
+}
 server.register(fastifyJwt, {
     secret: "supersecret",
 });
@@ -75,9 +77,7 @@ server.post("/api/auth/register", async (request, reply) => {
             .code(400)
             .send({ reason: AuthErrors.BadBodyFormat });
     if (!validators.isValidEmail(request.body.email))
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.InvalidEmailFormat,
         });
     const passwordError = validators.identifyPasswordError(request.body.password);
@@ -140,17 +140,13 @@ server.post("/api/auth/login", async (request, reply) => {
         logger.info(user);
         const isPasswordValid = await passwordUtils.comparePassword(request.body.password, user.pw_hash);
         if (!isPasswordValid)
-            return reply
-                .code(400)
-                .send({
+            return reply.code(400).send({
                 reason: AuthErrors.InvalidPassword,
             });
         const token = server.jwt.sign({ userId: user.id }, { expiresIn: "60m" });
         await User.updateOnlineStatus(user.id, 1);
         await User.incrementLoginCount(user.id);
-        return reply
-            .code(201)
-            .send({
+        return reply.code(201).send({
             clientId: user.id,
             jwtToken: token,
         });
@@ -166,9 +162,7 @@ server.post("/api/auth/login", async (request, reply) => {
 server.get("/api/auth/verify-jwt", async (request, reply) => {
     try {
         if (!request.headers.authorization)
-            return reply
-                .code(401)
-                .send({
+            return reply.code(401).send({
                 reason: AuthErrors.LackingAuthorizationHeader,
             });
         const token = request.headers.authorization.split(" ")[1];
@@ -187,18 +181,14 @@ server.get("/api/auth/verify-jwt", async (request, reply) => {
 });
 server.get("/api/auth/refresh", async (request, reply) => {
     if (!request.headers.authorization)
-        return reply
-            .code(401)
-            .send({
+        return reply.code(401).send({
             reason: AuthErrors.LackingAuthorizationHeader,
         });
     try {
         const oldToken = request.headers.authorization.split(" ")[1];
         const decoded = (await server.jwt.verify(oldToken));
         const newToken = server.jwt.sign({ userId: decoded.userId }, { expiresIn: "30s" });
-        return reply
-            .code(200)
-            .send({
+        return reply.code(200).send({
             clientId: decoded.userId,
             jwtToken: newToken,
         });
@@ -213,9 +203,7 @@ server.get("/api/auth/refresh", async (request, reply) => {
 server.get("/api/auth/logout/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -240,9 +228,7 @@ server.get("/api/users/:inputUserId", async (request, reply) => {
     // location found when no inputUserId, but findById() correctly returns null for empty string input
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -305,9 +291,7 @@ server.get("/api/users/alluseridsmappedtodisplaynames", async (request, reply) =
 server.post("/api/users/updatepassword/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -330,9 +314,7 @@ server.post("/api/users/updatepassword/:inputUserId", async (request, reply) => 
 server.post("/api/users/updateemail/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     if (!authServiceTypeGuards.isUpdateEmailBody(request.body))
@@ -341,9 +323,7 @@ server.post("/api/users/updateemail/:inputUserId", async (request, reply) => {
             .send({ reason: AuthErrors.BadBodyFormat });
     try {
         if (!validators.isValidEmail(request.body.email))
-            return reply
-                .code(400)
-                .send({
+            return reply.code(400).send({
                 reason: AuthErrors.InvalidEmailFormat,
             });
         if (await User.setEmail(inputUserId, request.body.email))
@@ -366,9 +346,7 @@ server.post("/api/users/updateemail/:inputUserId", async (request, reply) => {
 server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     if (!authServiceTypeGuards.isUpdateDisplayNameBody(request.body))
@@ -385,7 +363,7 @@ server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) 
             id: updatedUser.id,
             displayName: updatedUser.display_name,
             smallImage: null,
-            language: null
+            language: null,
         };
         publishMessage(publication).catch(logger.error);
         return reply.code(201).send(updatedUser);
@@ -408,9 +386,7 @@ server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) 
 server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     if (!authServiceTypeGuards.isUpdateImageBody(request.body))
@@ -456,9 +432,7 @@ server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
 server.post("/api/users/updatelanguage/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     if (!authServiceTypeGuards.isUpdateLanguageBody(request.body))
@@ -498,9 +472,7 @@ server.post("/api/users/updatelanguage/:inputUserId", async (request, reply) => 
 server.get("/api/users/delete/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -523,9 +495,7 @@ server.get("/api/users/delete/:inputUserId", async (request, reply) => {
 server.get("/api/users/:inputUserId/matches", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -540,9 +510,7 @@ server.get("/api/users/:inputUserId/matches", async (request, reply) => {
 server.get("/api/users/:inputUserId/tournaments", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
