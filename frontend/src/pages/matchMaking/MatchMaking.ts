@@ -1,8 +1,4 @@
-import {
-  generateUniqueId,
-  isDefined,
-  MatchMakingTypes,
-} from "transcendence";
+import { generateUniqueId, isDefined, MatchMakingTypes } from "transcendence";
 import { MatchMakingInterface } from "../../backendInterface/matchmakingInterface";
 import { createHtmlElementFromString, navigateToSite } from "../../utils/utils";
 import { MatchItem, OptnsMatchItem } from "./MatchItem";
@@ -175,7 +171,8 @@ class MatchMaking extends HTMLElement {
     );
     container.appendChild(elem);
 
-    elem.addEventListener("click", () =>
+    elem.addEventListener("click", () => {
+      console.log("1111: Clicked create Game btn!");
       MatchMakingInterface.sendMessageToServer({
         type: "createGame",
         data: {
@@ -186,8 +183,8 @@ class MatchMaking extends HTMLElement {
           tournamentId: null,
           type: "public",
         },
-      })
-    );
+      });
+    });
   }
 
   createAppendDeleteGameBtn(container: HTMLDivElement) {

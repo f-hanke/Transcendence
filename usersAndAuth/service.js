@@ -10,30 +10,31 @@ import { config } from "./config/config.js";
 import { User } from "./orm/user.js";
 import { GameResultModel } from "./orm/gameResultModel.js";
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
-import { setupMetrics } from './lib/metrics.js';
-import logger from './lib/logger.js';
-import { checkElasticsearch } from './lib/elasticsearch.js';
-import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSettings, } from "transcendence";
+import { setupMetrics } from "./lib/metrics.js";
+import logger from "./lib/logger.js";
+import { checkElasticsearch } from "./lib/elasticsearch.js";
+import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSettings, monitoringEnabled, } from "transcendence";
 const queue = "auth-service-queue"; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
-        console.error("Trying to publish unknown type");
+        logger.error("Trying to publish unknown type");
     // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
     // const connection = await amqp.connect(`amqp://localhost`);
     let connection;
     try {
         connection = await amqp.connect("amqp://admin:admin@rabbitmq-service:5672");
+        logger.info("Connected to amqp://admin:admin@rabbitmq-service:5672");
     }
     catch (err) {
-        console.warn("Failed to connect to rabbitmq-service, trying localhost...");
+        logger.warn("Failed to connect to rabbitmq-service, trying localhost...");
         connection = await amqp.connect("amqp://localhost");
     }
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: true });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
-    console.log("[Publisher] Sent:", message);
+    logger.info("[Publisher] Sent:", message);
 }
-startConsumer().catch(console.error);
+startConsumer().catch(logger.error);
 const server = fastify({
     logger: {
         transport: {
@@ -45,10 +46,12 @@ const server = fastify({
         },
     },
 });
-setupMetrics(server);
-logger.info("Metrics and logger initialized.");
-//keep commented out unless docker is running requires elsasticsearch to be running
-await checkElasticsearch();
+if (monitoringEnabled) {
+    setupMetrics(server);
+    //keep commented out unless docker is running requires elsasticsearch to be running
+    await checkElasticsearch();
+    logger.info("Metrics and logger initialized.");
+}
 server.register(fastifyJwt, {
     secret: "supersecret",
 });
@@ -74,9 +77,7 @@ server.post("/api/auth/register", async (request, reply) => {
             .code(400)
             .send({ reason: AuthErrors.BadBodyFormat });
     if (!validators.isValidEmail(request.body.email))
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.InvalidEmailFormat,
         });
     const passwordError = validators.identifyPasswordError(request.body.password);
@@ -98,19 +99,19 @@ server.post("/api/auth/register", async (request, reply) => {
             smallImage: smallImgBuffer,
             language: newUser.language,
         };
-        publishMessage(publication).catch(console.error);
+        publishMessage(publication).catch(logger.error);
         // HACK: hardcoded publication
         //   const publication: RabbitMQTypes.UserChange = {
         //     id: "13",
         //     displayName: "Florian",
         //     smallImage: smallImgBuffer,
         // }
-        // publishMessage(publication).catch(console.error);
+        // publishMessage(publication).catch(logger.error);
         // return reply.code(201).send({ displayName: newUser.display_name, userId: newUser.id } as RegSuccessResponseBody);
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             if (e.message.includes("UNIQUE constraint failed: users.display_name"))
                 return reply
                     .code(400)
@@ -122,7 +123,7 @@ server.post("/api/auth/register", async (request, reply) => {
                 .send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 server.post("/api/auth/login", async (request, reply) => {
@@ -136,26 +137,22 @@ server.post("/api/auth/login", async (request, reply) => {
             return reply
                 .code(400)
                 .send({ reason: AuthErrors.UnknownEmail });
-        console.log(user);
+        logger.info(user);
         const isPasswordValid = await passwordUtils.comparePassword(request.body.password, user.pw_hash);
         if (!isPasswordValid)
-            return reply
-                .code(400)
-                .send({
+            return reply.code(400).send({
                 reason: AuthErrors.InvalidPassword,
             });
         const token = server.jwt.sign({ userId: user.id }, { expiresIn: "60m" });
         await User.updateOnlineStatus(user.id, 1);
         await User.incrementLoginCount(user.id);
-        return reply
-            .code(201)
-            .send({
+        return reply.code(201).send({
             clientId: user.id,
             jwtToken: token,
         });
     }
     catch (db_error) {
-        console.error(db_error);
+        logger.error(db_error);
         return reply
             .code(500)
             .send({ reason: AuthErrors.BackendError });
@@ -165,9 +162,7 @@ server.post("/api/auth/login", async (request, reply) => {
 server.get("/api/auth/verify-jwt", async (request, reply) => {
     try {
         if (!request.headers.authorization)
-            return reply
-                .code(401)
-                .send({
+            return reply.code(401).send({
                 reason: AuthErrors.LackingAuthorizationHeader,
             });
         const token = request.headers.authorization.split(" ")[1];
@@ -178,7 +173,7 @@ server.get("/api/auth/verify-jwt", async (request, reply) => {
             .send({ userId: decoded.userId });
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         reply
             .code(401)
             .send({ reason: AuthErrors.Unauthorized });
@@ -186,24 +181,20 @@ server.get("/api/auth/verify-jwt", async (request, reply) => {
 });
 server.get("/api/auth/refresh", async (request, reply) => {
     if (!request.headers.authorization)
-        return reply
-            .code(401)
-            .send({
+        return reply.code(401).send({
             reason: AuthErrors.LackingAuthorizationHeader,
         });
     try {
         const oldToken = request.headers.authorization.split(" ")[1];
         const decoded = (await server.jwt.verify(oldToken));
         const newToken = server.jwt.sign({ userId: decoded.userId }, { expiresIn: "30s" });
-        return reply
-            .code(200)
-            .send({
+        return reply.code(200).send({
             clientId: decoded.userId,
             jwtToken: newToken,
         });
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         reply
             .code(401)
             .send({ reason: AuthErrors.Unauthorized });
@@ -212,9 +203,7 @@ server.get("/api/auth/refresh", async (request, reply) => {
 server.get("/api/auth/logout/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -229,7 +218,7 @@ server.get("/api/auth/logout/:inputUserId", async (request, reply) => {
         return reply.code(200).send({});
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         return reply
             .code(500)
             .send({ reason: AuthErrors.BackendError });
@@ -239,9 +228,7 @@ server.get("/api/users/:inputUserId", async (request, reply) => {
     // location found when no inputUserId, but findById() correctly returns null for empty string input
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -253,7 +240,7 @@ server.get("/api/users/:inputUserId", async (request, reply) => {
         return reply.code(200).send(user);
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         reply
             .code(500)
             .send({ reason: AuthErrors.BackendError });
@@ -279,7 +266,7 @@ server.post("/api/users/getusernames", async (request, reply) => {
         return reply.code(200).send(usersMap);
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         reply
             .code(500)
             .send({ reason: AuthErrors.BackendError });
@@ -295,7 +282,7 @@ server.get("/api/users/alluseridsmappedtodisplaynames", async (request, reply) =
         return reply.code(200).send(usersMap);
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         reply
             .code(500)
             .send({ reason: AuthErrors.BackendError });
@@ -304,9 +291,7 @@ server.get("/api/users/alluseridsmappedtodisplaynames", async (request, reply) =
 server.post("/api/users/updatepassword/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -322,16 +307,14 @@ server.post("/api/users/updatepassword/:inputUserId", async (request, reply) => 
             .send({ reason: AuthErrors.UnknownUserId });
     }
     catch (e) {
-        console.error(e);
+        logger.error(e);
         return reply.code(500).send({ reason: AuthErrors.BackendError });
     }
 });
 server.post("/api/users/updateemail/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     if (!authServiceTypeGuards.isUpdateEmailBody(request.body))
@@ -340,9 +323,7 @@ server.post("/api/users/updateemail/:inputUserId", async (request, reply) => {
             .send({ reason: AuthErrors.BadBodyFormat });
     try {
         if (!validators.isValidEmail(request.body.email))
-            return reply
-                .code(400)
-                .send({
+            return reply.code(400).send({
                 reason: AuthErrors.InvalidEmailFormat,
             });
         if (await User.setEmail(inputUserId, request.body.email))
@@ -353,21 +334,19 @@ server.post("/api/users/updateemail/:inputUserId", async (request, reply) => {
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             if (e.message.includes("UNIQUE constraint failed: users.email"))
                 return reply.code(400).send({ reason: AuthErrors.DuplicateEmail });
             return reply.code(500).send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     if (!authServiceTypeGuards.isUpdateDisplayNameBody(request.body))
@@ -384,14 +363,14 @@ server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) 
             id: updatedUser.id,
             displayName: updatedUser.display_name,
             smallImage: null,
-            language: null
+            language: null,
         };
-        publishMessage(publication).catch(console.error);
+        publishMessage(publication).catch(logger.error);
         return reply.code(201).send(updatedUser);
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             if (e.message.includes("UNIQUE constraint failed: users.display_name"))
                 return reply
                     .code(400)
@@ -401,15 +380,13 @@ server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) 
                 .send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     if (!authServiceTypeGuards.isUpdateImageBody(request.body))
@@ -434,12 +411,12 @@ server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
             smallImage: smallImgBuffer,
             language: null,
         };
-        publishMessage(publication).catch(console.error);
+        publishMessage(publication).catch(logger.error);
         return reply.code(201).send(updatedUser);
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             if (e.message.includes("UNIQUE constraint failed: users.display_name"))
                 return reply
                     .code(400)
@@ -449,15 +426,13 @@ server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
                 .send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 server.post("/api/users/updatelanguage/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     if (!authServiceTypeGuards.isUpdateLanguageBody(request.body))
@@ -476,12 +451,12 @@ server.post("/api/users/updatelanguage/:inputUserId", async (request, reply) => 
             smallImage: null,
             language: updatedUser.language,
         };
-        publishMessage(publication).catch(console.error);
+        publishMessage(publication).catch(logger.error);
         return reply.code(201).send(updatedUser);
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             if (e.message.includes("UNIQUE constraint failed: users.display_name"))
                 return reply
                     .code(400)
@@ -491,15 +466,13 @@ server.post("/api/users/updatelanguage/:inputUserId", async (request, reply) => 
                 .send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 server.get("/api/users/delete/:inputUserId", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -511,20 +484,18 @@ server.get("/api/users/delete/:inputUserId", async (request, reply) => {
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             return reply.code(500).send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 // The two below can be modified to return objects as Steffen wants or needs them
 server.get("/api/users/:inputUserId/matches", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -532,16 +503,14 @@ server.get("/api/users/:inputUserId/matches", async (request, reply) => {
         return reply.code(200).send(matches);
     }
     catch (e) {
-        console.error(e);
+        logger.error(e);
         return reply.code(500).send({ reason: AuthErrors.BackendError });
     }
 });
 server.get("/api/users/:inputUserId/tournaments", async (request, reply) => {
     const { inputUserId } = request.params;
     if (!inputUserId)
-        return reply
-            .code(400)
-            .send({
+        return reply.code(400).send({
             reason: AuthErrors.LackingIdParamInUri,
         });
     try {
@@ -549,7 +518,7 @@ server.get("/api/users/:inputUserId/tournaments", async (request, reply) => {
         return reply.code(200).send(tournaments);
     }
     catch (e) {
-        console.error(e);
+        logger.error(e);
         return reply.code(500).send({ reason: AuthErrors.BackendError });
     }
 });
@@ -561,8 +530,8 @@ server.listen({
     host: transNetworkSettings.authService.ip,
 }, (err, address) => {
     if (err) {
-        console.error(err);
+        logger.error(err);
         process.exit(1);
     }
-    console.log(`Server listening at ${address}`);
+    logger.info(`Server listening at ${address}`);
 });

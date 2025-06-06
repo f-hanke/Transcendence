@@ -13,9 +13,9 @@ import { User } from "./orm/user.js";
 import { GameResultModel } from "./orm/gameResultModel.js";
 
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
-import { setupMetrics } from './lib/metrics.js';
-import logger from './lib/logger.js';
-import { checkElasticsearch } from './lib/elasticsearch.js';
+import { setupMetrics } from "./lib/metrics.js";
+import logger from "./lib/logger.js";
+import { checkElasticsearch } from "./lib/elasticsearch.js";
 
 import {
   AuthServiceTypes,
@@ -25,6 +25,7 @@ import {
   authServiceTypeGuards,
   rabbitMQTypeGuards,
   transNetworkSettings,
+  monitoringEnabled,
 } from "transcendence";
 
 type JwtType = AuthServiceTypes.JwtType;
@@ -84,11 +85,12 @@ const server = fastify({
   },
 });
 
-setupMetrics(server);
-//keep commented out unless docker is running requires elsasticsearch to be running
-await checkElasticsearch();
-logger.info("Metrics and logger initialized.");
-
+if (monitoringEnabled) {
+  setupMetrics(server);
+  //keep commented out unless docker is running requires elsasticsearch to be running
+  await checkElasticsearch();
+  logger.info("Metrics and logger initialized.");
+}
 server.register(fastifyJwt, {
   secret: "supersecret",
 });
@@ -127,11 +129,9 @@ server.post<{
       .code(400)
       .send({ reason: AuthErrors.BadBodyFormat } satisfies ErrorResponseBody);
   if (!validators.isValidEmail(request.body.email))
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.InvalidEmailFormat,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.InvalidEmailFormat,
+    } satisfies ErrorResponseBody);
   const passwordError = validators.identifyPasswordError(request.body.password);
   if (passwordError !== null)
     return reply
@@ -204,11 +204,9 @@ server.post<{
       user.pw_hash
     );
     if (!isPasswordValid)
-      return reply
-        .code(400)
-        .send({
-          reason: AuthErrors.InvalidPassword,
-        } satisfies ErrorResponseBody);
+      return reply.code(400).send({
+        reason: AuthErrors.InvalidPassword,
+      } satisfies ErrorResponseBody);
 
     const token = server.jwt.sign(
       { userId: user.id } satisfies AuthServiceTypes.JwtType,
@@ -217,12 +215,10 @@ server.post<{
 
     await User.updateOnlineStatus(user.id, 1);
     await User.incrementLoginCount(user.id);
-    return reply
-      .code(201)
-      .send({
-        clientId: user.id,
-        jwtToken: token,
-      } satisfies AuthSuccessResponseBody);
+    return reply.code(201).send({
+      clientId: user.id,
+      jwtToken: token,
+    } satisfies AuthSuccessResponseBody);
   } catch (db_error) {
     logger.error(db_error);
     return reply
@@ -237,11 +233,9 @@ server.get<{
 }>("/api/auth/verify-jwt", async (request, reply) => {
   try {
     if (!request.headers.authorization)
-      return reply
-        .code(401)
-        .send({
-          reason: AuthErrors.LackingAuthorizationHeader,
-        } satisfies ErrorResponseBody);
+      return reply.code(401).send({
+        reason: AuthErrors.LackingAuthorizationHeader,
+      } satisfies ErrorResponseBody);
     const token = request.headers.authorization.split(" ")[1];
     const decoded = (await server.jwt.verify(token)) as JwtType;
 
@@ -268,11 +262,9 @@ server.get<{
   };
 }>("/api/auth/refresh", async (request, reply) => {
   if (!request.headers.authorization)
-    return reply
-      .code(401)
-      .send({
-        reason: AuthErrors.LackingAuthorizationHeader,
-      } satisfies ErrorResponseBody);
+    return reply.code(401).send({
+      reason: AuthErrors.LackingAuthorizationHeader,
+    } satisfies ErrorResponseBody);
   try {
     const oldToken = request.headers.authorization.split(" ")[1];
     const decoded = (await server.jwt.verify(oldToken)) as JwtType;
@@ -281,12 +273,10 @@ server.get<{
       { userId: decoded.userId } satisfies JwtType,
       { expiresIn: "30s" }
     );
-    return reply
-      .code(200)
-      .send({
-        clientId: decoded.userId,
-        jwtToken: newToken,
-      } satisfies AuthSuccessResponseBody);
+    return reply.code(200).send({
+      clientId: decoded.userId,
+      jwtToken: newToken,
+    } satisfies AuthSuccessResponseBody);
   } catch (error) {
     logger.error(error);
     reply
@@ -300,11 +290,9 @@ server.get<{
 }>("/api/auth/logout/:inputUserId", async (request, reply) => {
   const { inputUserId } = request.params as { inputUserId: string };
   if (!inputUserId)
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.LackingIdParamInUri,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.LackingIdParamInUri,
+    } satisfies ErrorResponseBody);
 
   try {
     const user = (await User.findById(inputUserId)) as UserType;
@@ -337,11 +325,9 @@ server.get<{
   // location found when no inputUserId, but findById() correctly returns null for empty string input
   const { inputUserId } = request.params as { inputUserId: string };
   if (!inputUserId)
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.LackingIdParamInUri,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.LackingIdParamInUri,
+    } satisfies ErrorResponseBody);
 
   try {
     const user = (await User.findById(inputUserId)) as UserType | null;
@@ -412,8 +398,7 @@ server.get<{
       .code(500)
       .send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
   }
-}
-);
+});
 
 server.post<{
   Body: UpdatePasswordBody;
@@ -425,11 +410,9 @@ server.post<{
 }>("/api/users/updatepassword/:inputUserId", async (request, reply) => {
   const { inputUserId } = request.params as { inputUserId: string };
   if (!inputUserId)
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.LackingIdParamInUri,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.LackingIdParamInUri,
+    } satisfies ErrorResponseBody);
 
   try {
     const passwordError = validators.identifyPasswordError(
@@ -461,11 +444,9 @@ server.post<{
 }>("/api/users/updateemail/:inputUserId", async (request, reply) => {
   const { inputUserId } = request.params as { inputUserId: string };
   if (!inputUserId)
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.LackingIdParamInUri,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.LackingIdParamInUri,
+    } satisfies ErrorResponseBody);
   if (!authServiceTypeGuards.isUpdateEmailBody(request.body))
     return reply
       .code(400)
@@ -473,11 +454,9 @@ server.post<{
 
   try {
     if (!validators.isValidEmail(request.body.email))
-      return reply
-        .code(400)
-        .send({
-          reason: AuthErrors.InvalidEmailFormat,
-        } satisfies ErrorResponseBody);
+      return reply.code(400).send({
+        reason: AuthErrors.InvalidEmailFormat,
+      } satisfies ErrorResponseBody);
 
     if (await User.setEmail(inputUserId, request.body.email))
       return reply.code(201).send();
@@ -504,11 +483,9 @@ server.post<{
 }>("/api/users/updatedisplayname/:inputUserId", async (request, reply) => {
   const { inputUserId } = request.params as { inputUserId: string };
   if (!inputUserId)
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.LackingIdParamInUri,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.LackingIdParamInUri,
+    } satisfies ErrorResponseBody);
   if (!authServiceTypeGuards.isUpdateDisplayNameBody(request.body))
     return reply
       .code(400)
@@ -527,7 +504,7 @@ server.post<{
       id: updatedUser.id,
       displayName: updatedUser.display_name,
       smallImage: null,
-      language: null
+      language: null,
     };
     publishMessage(publication).catch(logger.error);
     return reply.code(201).send(updatedUser);
@@ -555,11 +532,9 @@ server.post<{
 }>("/api/users/updateimage/:inputUserId", async (request, reply) => {
   const { inputUserId } = request.params as { inputUserId: string };
   if (!inputUserId)
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.LackingIdParamInUri,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.LackingIdParamInUri,
+    } satisfies ErrorResponseBody);
   if (!authServiceTypeGuards.isUpdateImageBody(request.body))
     return reply
       .code(400)
@@ -613,11 +588,9 @@ server.post<{
 }>("/api/users/updatelanguage/:inputUserId", async (request, reply) => {
   const { inputUserId } = request.params as { inputUserId: string };
   if (!inputUserId)
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.LackingIdParamInUri,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.LackingIdParamInUri,
+    } satisfies ErrorResponseBody);
   if (!authServiceTypeGuards.isUpdateLanguageBody(request.body))
     return reply
       .code(400)
@@ -662,11 +635,9 @@ server.get<{
 }>("/api/users/delete/:inputUserId", async (request, reply) => {
   const { inputUserId } = request.params as { inputUserId: string };
   if (!inputUserId)
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.LackingIdParamInUri,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.LackingIdParamInUri,
+    } satisfies ErrorResponseBody);
 
   try {
     if (await User.delete(inputUserId)) return reply.code(204).send();
@@ -691,11 +662,9 @@ server.get<{
 }>("/api/users/:inputUserId/matches", async (request, reply) => {
   const { inputUserId } = request.params as { inputUserId: string };
   if (!inputUserId)
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.LackingIdParamInUri,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.LackingIdParamInUri,
+    } satisfies ErrorResponseBody);
 
   try {
     const matches = (await GameResultModel.fetchUserMatches(
@@ -717,11 +686,9 @@ server.get<{
 }>("/api/users/:inputUserId/tournaments", async (request, reply) => {
   const { inputUserId } = request.params as { inputUserId: string };
   if (!inputUserId)
-    return reply
-      .code(400)
-      .send({
-        reason: AuthErrors.LackingIdParamInUri,
-      } satisfies ErrorResponseBody);
+    return reply.code(400).send({
+      reason: AuthErrors.LackingIdParamInUri,
+    } satisfies ErrorResponseBody);
 
   try {
     const tournaments = (await GameResultModel.fetchUserTournaments(
