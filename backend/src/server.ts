@@ -386,8 +386,53 @@ fastify.register(async function (fastify) {
 
         if (gameServiceTypeGuards.isClientLeftGame(dataJson)) {
           const game = games.get(dataJson.data.matchId);
+
           game?.stopGame("playerLeftGame", dataJson.data.playerId);
+
         }
+
+      if (gameServiceTypeGuards.isClientLeftGameBeforeStart(dataJson)) {
+        const game = games.get(dataJson.data.matchId);
+
+        if (game?.typeOfGame === "remote") {
+          const matchId = dataJson.data.matchId;
+          const match = readyClients.get(matchId);
+
+          if (match) {
+            const player1Id = game.player1.id;
+            let socketRemainClient: WebSocket | null = null;
+
+            if (clientId === player1Id) {
+              socketRemainClient = game.websocketplayer2;
+            } else {
+              socketRemainClient = game.websocketplayer1;
+            }
+
+            match.hostIdReady = false;
+            match.oponentIdReady = false;
+
+            if (socketRemainClient) {
+              sendMessage(socketRemainClient, {
+                type: "clientLeftGameBeforeStart",
+                data: {
+                  matchId,
+                  playerId: dataJson.data.playerId,
+                },
+              });
+            }
+
+            game.cancelGame();
+            readyClients.delete(matchId);
+            games.delete(matchId);
+
+            logger.info(
+              chalk.red(
+                `Player ${dataJson.data.playerId} left match ${matchId} before start. Match deleted.`
+              )
+            );
+          }
+        }
+      }
       });
 
       /*------------------------------------------------------------*/
