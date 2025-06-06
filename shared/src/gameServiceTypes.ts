@@ -93,7 +93,8 @@ declare namespace GameServiceTypes {
     | "serverUpdateGameState"
     | "serverUpdateGameStateRestAPI"
     | "serverGameIsOver"
-    | "serverError";
+    | "serverError"
+    | "clientLeftGameBeforeStart";
 
   interface GameServiceMessageBlueprint<T extends GameServiceMessageTypes> {
     type: T;
@@ -110,6 +111,11 @@ declare namespace GameServiceTypes {
 
   interface ClientLeftGame
     extends GameServiceMessageBlueprint<"clientLeftGame"> {
+    data: DataClientLeftGame;
+  }
+
+    interface ClientLeftGameBeforeStart
+    extends GameServiceMessageBlueprint<"clientLeftGameBeforeStart"> {
     data: DataClientLeftGame;
   }
 
@@ -146,7 +152,8 @@ declare namespace GameServiceTypes {
     | serverUpdateGameStateRestAPI
     | ServerGameIsOver
     | ServerError
-    | ServerGameStarted;
+    | ServerGameStarted
+    | ClientLeftGameBeforeStart;
 }
 
 function isClientUpdatePaddlePosition(
@@ -175,6 +182,17 @@ function isClientLeftGame(
 ): message is GameServiceTypes.ClientLeftGame {
   return (
     message?.type === "clientLeftGame" &&
+    message?.data &&
+    typeof message.data.matchId === "string" &&
+    typeof message.data.playerId === "string"
+  );
+}
+
+function isClientLeftGameBeforeStart(
+  message: any
+): message is GameServiceTypes.ClientLeftGameBeforeStart {
+  return (
+    message?.type === "clientLeftGameBeforeStart" &&
     message?.data &&
     typeof message.data.matchId === "string" &&
     typeof message.data.playerId === "string"
@@ -280,7 +298,8 @@ const gameServiceTypeGuards = {
   isServerError,
   isClientIsReady,
   isServerGameStarted,
-  isServerUpdateGameStateRestAPI
+  isServerUpdateGameStateRestAPI,
+  isClientLeftGameBeforeStart
 } as const;
 
 export { GameServiceTypes, gameServiceTypeGuards };
