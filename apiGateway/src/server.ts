@@ -58,10 +58,10 @@ fastify.get('/health', async () => {
 });
 
 fastify.addHook('onRequest', async (request, reply) => {
-  console.log("\n");
-  console.log(chalk.green('GATEWAY RECEIVED REQUEST!'));
-  console.log(chalk.blue(`[${new Date().toISOString()}] ${request.method} ${request.url} from ${request.ip}`));
-  console.log("\n");
+  logger.info("\n");
+  logger.info(chalk.green('GATEWAY RECEIVED REQUEST!'));
+  logger.info(chalk.blue(`[${new Date().toISOString()}] ${request.method} ${request.url} from ${request.ip}`));
+  logger.info("\n");
 });
 
 // 🔁 Microservice Proxies (with prefix stripping)
@@ -126,9 +126,9 @@ fastify.server.on('upgrade', (req, socket, head) => {
   const url = req.url || '';
   let target = '';
 
-  console.log("\n");
-  console.log(chalk.yellow('INSIDE UPGRADE ROUTE!'));
-  console.log("\n");
+  logger.info("\n");
+  logger.info(chalk.yellow('INSIDE UPGRADE ROUTE!'));
+  logger.info("\n");
 
   if (url.startsWith('/CHATSERVICE')) target = `ws://chat-service:10001`;
   else if (url.startsWith('/GAMESERVICE')) target = `ws://game-service:10003`;
@@ -159,7 +159,7 @@ fastify.get<{
     const decoded = await fastify.jwt.verify(token) as AuthServiceTypes.JwtType;
     reply.code(200).send({ userId: decoded.userId });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies AuthServiceTypes.ErrorResponseBody);
   }
 });
@@ -189,6 +189,6 @@ fastify.listen({
   host: transNetworkSettings.apiGateway.ip
   }, (err, address) => {
   if (err) throw err;
-  console.log(`✅ Gateway listening securely at ${address}`);
+  logger.info(`✅ Gateway listening securely at ${address}`);
 });
 

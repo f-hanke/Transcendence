@@ -68,6 +68,7 @@ check_service "Kibana" "http://localhost:5601" "GET" "" true
 check_service "Prometheus" "http://localhost:9090" "GET" "" true
 check_service "Grafana" "http://localhost:3000" "GET" "" true
 check_service "RabbitMQ" "http://localhost:15672" "GET" "" true
+check_service "logstash" "http://localhost:5000" "GET" "" true
 
 # Check application services (our custom services)
 check_service "API Gateway" "https://localhost:8443/health" "HTTPS"
