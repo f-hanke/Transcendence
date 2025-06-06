@@ -92,7 +92,7 @@ class GameServiceInterface {
     } else return Promise.resolve();
   }
 
-  static disconnect() {
+  static disconnect(clientNotReady: boolean = false) {
     if (isDefined(window.store.gameStore.get().state === "running")) {
       try {
         this.sendMessageToServer({
@@ -102,11 +102,29 @@ class GameServiceInterface {
             playerId: window.store.userStore.get().details.id,
           },
         });
-        window.store.gameStore.updateGameStateState("none");
       } catch (err) {
         console.log("Unable to notify game service about closing connection!");
       }
+    } else if (
+      isDefined(window.store.gameStore.get().state !== "none") &&
+      clientNotReady
+    ) {
+      try {
+        this.sendMessageToServer({
+          type: "clientLeftGameBeforeStart",
+          data: {
+            matchId: window.store.gameStore.get().matchId,
+            playerId: window.store.userStore.get().details.id,
+          },
+        });
+      } catch (err) {
+        console.log(
+          "Unable to notify game service about client not being ready!"
+        );
+      }
+    } else {
     }
+    window.store.gameStore.updateGameStateState("none");
     if (isDefined(this.websocket)) {
       this.websocket.close();
       this.websocket = null;
@@ -128,6 +146,8 @@ class GameServiceInterface {
       this.handleServerError(dataJson);
     } else if (gameServiceTypeGuards.isClientLeftGame(dataJson)) {
       this.handleClientLeftGame(dataJson);
+    } else if (gameServiceTypeGuards.isClientLeftGameBeforeStart(dataJson)) {
+      this.handleClientLeftGameBeforeStart();
     } else {
       colog(dataJson);
       throw new Error(
@@ -212,9 +232,20 @@ class GameServiceInterface {
     window.store.gameStore.updateGameStateState("running");
   }
 
+ static handleClientLeftGameBeforeStart() {
+    window.store.notificationStore.updateAddNotification({
+      id: generateUniqueId(),
+      message: `Other Player left the game before it started!`,
+    });
+    window.store.gameStore.updateGameStateState("none");
+  }
+
   static handleServerError(dataJson: GameServiceTypes.ServerError) {
-    colog(dataJson);
-    colog("SERVER ERROR!");
+    window.store.notificationStore.updateAddNotification({
+      id: generateUniqueId(),
+      message: `Server Error!`,
+    });
+    window.store.gameStore.updateGameStateState("none");
   }
 
   static handleClientLeftGame(dataJson: GameServiceTypes.ClientLeftGame) {

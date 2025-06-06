@@ -701,6 +701,7 @@ function handleClientCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
   logger.info(" ~ createGame", dataJson.data.matchId);
   games.push(dataJson.data);
   logger.info("Games: ", games);
+  logger.info("Send Client create game to all clients!");
   sendMessageToAllClients({ type: "createGame", data: dataJson.data });
 }
 
