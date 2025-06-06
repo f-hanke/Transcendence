@@ -93,7 +93,7 @@ class GameServiceInterface {
   }
 
   static disconnect(clientNotReady: boolean = false) {
-    if (isDefined(window.store.gameStore.get().state === "running")) {
+    if (window.store.gameStore.get().state === "running") {
       try {
         this.sendMessageToServer({
           type: "clientLeftGame",
@@ -105,9 +105,7 @@ class GameServiceInterface {
       } catch (err) {
         console.log("Unable to notify game service about closing connection!");
       }
-    } else if (
-      isDefined(window.store.gameStore.get().state !== "none") &&
-      clientNotReady
+    } else if (window.store.gameStore.get().state !== "none" && clientNotReady
     ) {
       try {
         this.sendMessageToServer({
@@ -117,6 +115,7 @@ class GameServiceInterface {
             playerId: window.store.userStore.get().details.id,
           },
         });
+        console.log("SEND MESSAGE TO SERVER: clientLeftGameBeforeStart");
       } catch (err) {
         console.log(
           "Unable to notify game service about client not being ready!"
@@ -133,6 +132,8 @@ class GameServiceInterface {
 
   static handleMessage(event: MessageEvent) {
     const dataJson = JSON.parse(event.data);
+    console.log("RECEIVED MSG FROM GAME SERVICE");
+    console.log(dataJson);
     if (
       gameServiceTypeGuards.isServerUpdateGameState(dataJson) ||
       gameServiceTypeGuards.isServerUpdateGameStateRestAPI(dataJson)
@@ -232,11 +233,12 @@ class GameServiceInterface {
     window.store.gameStore.updateGameStateState("running");
   }
 
- static handleClientLeftGameBeforeStart() {
+  static handleClientLeftGameBeforeStart() {
     window.store.notificationStore.updateAddNotification({
       id: generateUniqueId(),
       message: `Other Player left the game before it started!`,
     });
+    console.log("RECEIVED MESSAGE TO SERVER: clientLeftGameBeforeStart");
     window.store.gameStore.updateGameStateState("none");
   }
 
