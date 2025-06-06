@@ -143,7 +143,7 @@ class GameServiceInterface {
     } else if (gameServiceTypeGuards.isServerGameStarted(dataJson)) {
       this.handleServerGameStarted(dataJson);
     } else if (gameServiceTypeGuards.isServerError(dataJson)) {
-      this.handleServerError(dataJson);
+      this.handleServerError();
     } else if (gameServiceTypeGuards.isClientLeftGame(dataJson)) {
       this.handleClientLeftGame(dataJson);
     } else if (gameServiceTypeGuards.isClientLeftGameBeforeStart(dataJson)) {
