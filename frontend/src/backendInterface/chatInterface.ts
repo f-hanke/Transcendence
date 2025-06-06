@@ -301,9 +301,23 @@ class ChatInterface {
   static handleServerUpdateFriendRequest(
     dataJson: ChatServiceTypes.UpdateFriendRequest
   ) {
+    const lang = window.store.languageStore.state.chat;
+    let msg;
+    if (dataJson.type === "accept")
+      msg = lang.notifications.friendRequestAccepted + ' : ' + window.store.playerNamesStore.getName(dataJson.recipientId);
+    else if (dataJson.type === "declined")
+      msg = lang.notifications.friendRequestDeclined + ' : ' + window.store.playerNamesStore.getName(dataJson.recipientId);
+    else if (dataJson.type === "send")
+      msg = lang.notifications.friendRequestSend + ' : ' + window.store.playerNamesStore.getName(dataJson.recipientId);
+    else if (dataJson.type === "withdrawn")
+      msg = lang.notifications.friendRequestWithdrawn + ' : ' + window.store.playerNamesStore.getName(dataJson.recipientId);
+    else //type === unfriend
+     msg = lang.notifications.friendRequestUnfriend + ' : ' + window.store.playerNamesStore.getName(dataJson.recipientId);
+
+
     window.store.notificationStore.updateAddNotification({
       id: generateUniqueId(),
-      message: `UPDATE FRIEND STATUS ${dataJson.recipientId} ${dataJson.type} `,
+      message: msg!,
     });
     colog("RECEIVED UPDATE FRIEND REQUEST FROM SERVER!");
     window.store.chatUserStore.updateChangeUserFriendStatus(
@@ -375,7 +389,7 @@ class ChatInterface {
         tmpMessage = renderTournamentNotification(tmpMessage, "sendGameInviteNotification");
       window.store.notificationStore.updateAddNotification({
         id: generateUniqueId(),
-        message: `${dataJson.data.authorId} : ${tmpMessage}`,
+        message: `${window.store.playerNamesStore.getName(authorId)} : ${tmpMessage}`,
       });
     }
     window.store.chatMessageStore.addMessage(authorId, dataJson.data);

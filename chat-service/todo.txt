@@ -2,19 +2,14 @@ docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 r
 
 
 TODO:
+	Change messages if friendrequest received
+
 	notifications need to be rendered in diffrent languages
 	noctification for Tournament
 
 ---->> milos: tournament notification if player left ---> testing, should work
 ----->> tournament rendering in different languages in the frontend
 --> each tournament msg has a type --> for playerLeft, steffen can update tournament page
-
--Steffan frontend
-	--> Tournament noctification at top
-	---> client shouldnt be able to write to them
-	---> remove send game invite and block
-
-- Tournament noctification with BOT
 
 Connecting to Database while using Docker:
 		- docker exec -it chat-service sh

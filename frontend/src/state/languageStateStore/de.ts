@@ -178,8 +178,11 @@ const de: LanguageState = {
     notifications: {
       userBlocked: "Benutzer erfolgreich blockiert.",
       userUnblocked: "Benutzer erfolgreich entblockt.",
-      friendRequestAccepted: "Freundschaftsanfrage angenommen.",
-      friendRequestDeclined: "Freundschaftsanfrage abgelehnt.",
+      friendRequestAccepted: "Freundschaftsanfrage angenommen",
+      friendRequestDeclined: "Freundschaftsanfrage abgelehnt",
+      friendRequestWithdrawn: "Freundschaftsanfrage zurückgezogen",
+      friendRequestSend: "Freundschaftsanfrage gesendet",
+      friendRequestUnfriend: "Hat dich entfreundet",
       invite: "Der Benutzer hat Sie zu einem Spiel eingeladen\nKlicken Sie hier, um beizutreten",
       inviteNotification: "Der Benutzer hat Sie zu einem Spiel eingeladen",
       tournamentStart: "Das Turnier hat begonnen. Wenn du der Gastgeber bist, gehe zu „Turniere“, um das Spiel zu planen, oder warte auf die Einladung des Gastgebers.",
