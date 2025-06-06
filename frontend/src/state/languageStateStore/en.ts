@@ -182,6 +182,7 @@ const en: LanguageState = {
       friendRequestAccepted: "Friend request accepted.",
       friendRequestDeclined: "Friend request declined.",
       invite: "User invited you to play a game with them\nClick here to join",
+      inviteNotification: "User invited you to play a game with them",
       tournamentStart:
         "The tournament has started. If you are the Host, go to tournaments to schedule the match or wait for the Host to send you an invitation.",
       matchResult:

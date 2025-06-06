@@ -181,6 +181,7 @@ type LanguageState = {
       friendRequestAccepted: string;
       friendRequestDeclined: string;
       invite: string;
+      inviteNotification: string;
       tournamentStart: string;
       matchResult: string;
       playerLeft: string;
