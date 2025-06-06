@@ -17,23 +17,24 @@ import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSett
 const queue = "auth-service-queue"; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
-        console.error("Trying to publish unknown type");
+        logger.error("Trying to publish unknown type");
     // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
     // const connection = await amqp.connect(`amqp://localhost`);
     let connection;
     try {
         connection = await amqp.connect("amqp://admin:admin@rabbitmq-service:5672");
+        logger.info("Connected to amqp://admin:admin@rabbitmq-service:5672");
     }
     catch (err) {
-        console.warn("Failed to connect to rabbitmq-service, trying localhost...");
+        logger.warn("Failed to connect to rabbitmq-service, trying localhost...");
         connection = await amqp.connect("amqp://localhost");
     }
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: true });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
-    console.log("[Publisher] Sent:", message);
+    logger.info("[Publisher] Sent:", message);
 }
-startConsumer().catch(console.error);
+startConsumer().catch(logger.error);
 const server = fastify({
     logger: {
         transport: {
@@ -46,9 +47,9 @@ const server = fastify({
     },
 });
 setupMetrics(server);
-logger.info("Metrics and logger initialized.");
 //keep commented out unless docker is running requires elsasticsearch to be running
 await checkElasticsearch();
+logger.info("Metrics and logger initialized.");
 server.register(fastifyJwt, {
     secret: "supersecret",
 });
@@ -98,19 +99,19 @@ server.post("/api/auth/register", async (request, reply) => {
             smallImage: smallImgBuffer,
             language: newUser.language,
         };
-        publishMessage(publication).catch(console.error);
+        publishMessage(publication).catch(logger.error);
         // HACK: hardcoded publication
         //   const publication: RabbitMQTypes.UserChange = {
         //     id: "13",
         //     displayName: "Florian",
         //     smallImage: smallImgBuffer,
         // }
-        // publishMessage(publication).catch(console.error);
+        // publishMessage(publication).catch(logger.error);
         // return reply.code(201).send({ displayName: newUser.display_name, userId: newUser.id } as RegSuccessResponseBody);
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             if (e.message.includes("UNIQUE constraint failed: users.display_name"))
                 return reply
                     .code(400)
@@ -122,7 +123,7 @@ server.post("/api/auth/register", async (request, reply) => {
                 .send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 server.post("/api/auth/login", async (request, reply) => {
@@ -136,7 +137,7 @@ server.post("/api/auth/login", async (request, reply) => {
             return reply
                 .code(400)
                 .send({ reason: AuthErrors.UnknownEmail });
-        console.log(user);
+        logger.info(user);
         const isPasswordValid = await passwordUtils.comparePassword(request.body.password, user.pw_hash);
         if (!isPasswordValid)
             return reply
@@ -155,7 +156,7 @@ server.post("/api/auth/login", async (request, reply) => {
         });
     }
     catch (db_error) {
-        console.error(db_error);
+        logger.error(db_error);
         return reply
             .code(500)
             .send({ reason: AuthErrors.BackendError });
@@ -178,7 +179,7 @@ server.get("/api/auth/verify-jwt", async (request, reply) => {
             .send({ userId: decoded.userId });
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         reply
             .code(401)
             .send({ reason: AuthErrors.Unauthorized });
@@ -203,7 +204,7 @@ server.get("/api/auth/refresh", async (request, reply) => {
         });
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         reply
             .code(401)
             .send({ reason: AuthErrors.Unauthorized });
@@ -229,7 +230,7 @@ server.get("/api/auth/logout/:inputUserId", async (request, reply) => {
         return reply.code(200).send({});
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         return reply
             .code(500)
             .send({ reason: AuthErrors.BackendError });
@@ -253,7 +254,7 @@ server.get("/api/users/:inputUserId", async (request, reply) => {
         return reply.code(200).send(user);
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         reply
             .code(500)
             .send({ reason: AuthErrors.BackendError });
@@ -279,7 +280,7 @@ server.post("/api/users/getusernames", async (request, reply) => {
         return reply.code(200).send(usersMap);
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         reply
             .code(500)
             .send({ reason: AuthErrors.BackendError });
@@ -295,7 +296,7 @@ server.get("/api/users/alluseridsmappedtodisplaynames", async (request, reply) =
         return reply.code(200).send(usersMap);
     }
     catch (error) {
-        console.error(error);
+        logger.error(error);
         reply
             .code(500)
             .send({ reason: AuthErrors.BackendError });
@@ -322,7 +323,7 @@ server.post("/api/users/updatepassword/:inputUserId", async (request, reply) => 
             .send({ reason: AuthErrors.UnknownUserId });
     }
     catch (e) {
-        console.error(e);
+        logger.error(e);
         return reply.code(500).send({ reason: AuthErrors.BackendError });
     }
 });
@@ -353,13 +354,13 @@ server.post("/api/users/updateemail/:inputUserId", async (request, reply) => {
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             if (e.message.includes("UNIQUE constraint failed: users.email"))
                 return reply.code(400).send({ reason: AuthErrors.DuplicateEmail });
             return reply.code(500).send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) => {
@@ -386,12 +387,12 @@ server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) 
             smallImage: null,
             language: null
         };
-        publishMessage(publication).catch(console.error);
+        publishMessage(publication).catch(logger.error);
         return reply.code(201).send(updatedUser);
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             if (e.message.includes("UNIQUE constraint failed: users.display_name"))
                 return reply
                     .code(400)
@@ -401,7 +402,7 @@ server.post("/api/users/updatedisplayname/:inputUserId", async (request, reply) 
                 .send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
@@ -434,12 +435,12 @@ server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
             smallImage: smallImgBuffer,
             language: null,
         };
-        publishMessage(publication).catch(console.error);
+        publishMessage(publication).catch(logger.error);
         return reply.code(201).send(updatedUser);
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             if (e.message.includes("UNIQUE constraint failed: users.display_name"))
                 return reply
                     .code(400)
@@ -449,7 +450,7 @@ server.post("/api/users/updateimage/:inputUserId", async (request, reply) => {
                 .send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 server.post("/api/users/updatelanguage/:inputUserId", async (request, reply) => {
@@ -476,12 +477,12 @@ server.post("/api/users/updatelanguage/:inputUserId", async (request, reply) => 
             smallImage: null,
             language: updatedUser.language,
         };
-        publishMessage(publication).catch(console.error);
+        publishMessage(publication).catch(logger.error);
         return reply.code(201).send(updatedUser);
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             if (e.message.includes("UNIQUE constraint failed: users.display_name"))
                 return reply
                     .code(400)
@@ -491,7 +492,7 @@ server.post("/api/users/updatelanguage/:inputUserId", async (request, reply) => 
                 .send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 server.get("/api/users/delete/:inputUserId", async (request, reply) => {
@@ -511,11 +512,11 @@ server.get("/api/users/delete/:inputUserId", async (request, reply) => {
     }
     catch (e) {
         if (e instanceof Error) {
-            console.error(e.message);
+            logger.error(e.message);
             return reply.code(500).send({ reason: AuthErrors.BackendError });
         }
         else
-            console.error(e);
+            logger.error(e);
     }
 });
 // The two below can be modified to return objects as Steffen wants or needs them
@@ -532,7 +533,7 @@ server.get("/api/users/:inputUserId/matches", async (request, reply) => {
         return reply.code(200).send(matches);
     }
     catch (e) {
-        console.error(e);
+        logger.error(e);
         return reply.code(500).send({ reason: AuthErrors.BackendError });
     }
 });
@@ -549,7 +550,7 @@ server.get("/api/users/:inputUserId/tournaments", async (request, reply) => {
         return reply.code(200).send(tournaments);
     }
     catch (e) {
-        console.error(e);
+        logger.error(e);
         return reply.code(500).send({ reason: AuthErrors.BackendError });
     }
 });
@@ -561,8 +562,8 @@ server.listen({
     host: transNetworkSettings.authService.ip,
 }, (err, address) => {
     if (err) {
-        console.error(err);
+        logger.error(err);
         process.exit(1);
     }
-    console.log(`Server listening at ${address}`);
+    logger.info(`Server listening at ${address}`);
 });
