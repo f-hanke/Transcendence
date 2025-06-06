@@ -152,7 +152,8 @@ declare namespace GameServiceTypes {
     | serverUpdateGameStateRestAPI
     | ServerGameIsOver
     | ServerError
-    | ServerGameStarted;
+    | ServerGameStarted
+    | ClientLeftGameBeforeStart;
 }
 
 function isClientUpdatePaddlePosition(
