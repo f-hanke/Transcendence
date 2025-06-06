@@ -132,7 +132,7 @@ export class Game {
   }
 
   cancelGame(){
-
+    console.log("Enterring cancel game");
     if (this.isGameOver) {
       console.log("Game is already stopped!");
       return;
