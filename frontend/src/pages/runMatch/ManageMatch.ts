@@ -123,8 +123,7 @@ class ManageMatch extends HTMLElement {
   }
 
   leaveGame() {
-    GameServiceInterface.disconnect();
-    window.store.gameStore.updateGameStateState("none");
+    GameServiceInterface.disconnect(true);
   }
 }
 

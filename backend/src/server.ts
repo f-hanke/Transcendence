@@ -386,8 +386,62 @@ fastify.register(async function (fastify) {
 
         if (gameServiceTypeGuards.isClientLeftGame(dataJson)) {
           const game = games.get(dataJson.data.matchId);
+
           game?.stopGame("playerLeftGame", dataJson.data.playerId);
+
         }
+
+      if (gameServiceTypeGuards.isClientLeftGameBeforeStart(dataJson)) {
+            logger.info( chalk.cyan.bold(
+        "isClientLeftGameBeforeStart received"));
+        const game = games.get(dataJson.data.matchId);
+
+        if (game?.typeOfGame === "remote") {
+          const matchId = dataJson.data.matchId;
+          const match = readyClients.get(matchId);
+          logger.info( chalk.cyan.bold("Game is def remote"));
+          if (match) {
+            logger.info( chalk.cyan.bold("Match exists"));
+            const player1Id = game.player1.id;
+            const player2Id = game.player2.id;
+            let socketRemainClient: WebSocket | null = null;
+
+
+            if (clientId === player1Id) {
+              socketRemainClient = clients.get(player2Id);
+              logger.info( chalk.cyan.bold("Player1 left"));
+            } else {
+              socketRemainClient = clients.get(player1Id);
+
+            }
+
+            match.hostIdReady = false;
+            match.oponentIdReady = false;
+
+            logger.info( chalk.cyan.bold("before sending to the remaining client"));
+            if (socketRemainClient) {
+              logger.info( chalk.cyan.bold("Sending to frontend"));
+              sendMessage(socketRemainClient, {
+                type: "clientLeftGameBeforeStart",
+                data: {
+                  matchId,
+                  playerId: dataJson.data.playerId,
+                },
+              });
+            }
+
+            game.cancelGame();
+            readyClients.delete(matchId);
+            games.delete(matchId);
+
+            logger.info(
+              chalk.red(
+                `Player ${dataJson.data.playerId} left match ${matchId} before start. Match deleted.`
+              )
+            );
+          }
+        }
+      }
       });
 
       /*------------------------------------------------------------*/

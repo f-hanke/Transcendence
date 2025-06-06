@@ -131,6 +131,20 @@ export class Game {
     this.gameLoop();
   }
 
+  cancelGame(){
+    console.log("Enterring cancel game");
+    if (this.isGameOver) {
+      console.log("Game is already stopped!");
+      return;
+    }
+
+    this.isGameOver = true;
+    if (this.gameLoopId) {
+      clearTimeout(this.gameLoopId);
+      this.gameLoopId = null;
+    }
+  }
+
   stopGame(
     reason: GameServiceTypes.PossibleGameEnds,
     playerWhoLeft: null | string = null
@@ -153,12 +167,6 @@ export class Game {
 
     console.log("Game stopped!");
 
-    // commented by Steffen not needed? is never defined
-    // if (this.onGameOverCallback) {
-    //   this.onGameOverCallback(reason);
-    // }
-
-    // added by Steffen to adjust score when player leaves or disconnects
     if (
       ["playerDisconnected", "playerLeftGame"].includes(reason) &&
       this.typeOfGame == "remote"
