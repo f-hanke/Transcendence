@@ -240,7 +240,7 @@ class GameServiceInterface {
     window.store.gameStore.updateGameStateState("none");
   }
 
-  static handleServerError(dataJson: GameServiceTypes.ServerError) {
+  static handleServerError() {
     window.store.notificationStore.updateAddNotification({
       id: generateUniqueId(),
       message: `Server Error!`,
