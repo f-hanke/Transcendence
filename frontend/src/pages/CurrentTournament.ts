@@ -8,6 +8,7 @@ import { createHtmlElementFromString } from "../utils/utils";
 import { ChatInterface } from "../backendInterface/chatInterface";
 import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
 import { TournamentState } from "../state/tournamentStateTypes";
+import { transStore } from "../state/store";
 
 class CurrentTournament extends HTMLElement {
   unsubscribe: null | (() => void);
@@ -21,10 +22,10 @@ class CurrentTournament extends HTMLElement {
   connectedCallback() {
     // remove any old event listeners from running macthes
     this.render();
-    this.unsubscribe = window.store.currentTournamentStore.subscribe(
+    this.unsubscribe = transStore.currentTournamentStore.subscribe(
       this.render.bind(this)
     );
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
     MatchMakingInterface.getCurrentTournament();
@@ -36,8 +37,8 @@ class CurrentTournament extends HTMLElement {
   }
 
   render() {
-    const lang = window.store.languageStore.state.currentTournament;
-    const tournamentState = window.store.currentTournamentStore.get();
+    const lang = transStore.languageStore.state.currentTournament;
+    const tournamentState = transStore.currentTournamentStore.get();
     if (isDefined(tournamentState)) {
       const semi1Finished = isDefined(tournamentState.matchResultSemifinale1);
       const semi2Finished = isDefined(tournamentState.matchResultSemifinale2);
@@ -69,7 +70,7 @@ class CurrentTournament extends HTMLElement {
               return `
              <tr class="border-t border-gray-600 hover:bg-gray-700">
                <td class="px-4 py-2">${elem.rank}</td>
-               <td class="px-4 py-2">${window.store.playerNamesStore.getName(
+               <td class="px-4 py-2">${transStore.playerNamesStore.getName(
                  elem.playerId
                )}</td>
              </tr>
@@ -138,10 +139,10 @@ class CurrentTournament extends HTMLElement {
       );
     }
     else{
-      this.innerHTML = `<h2>${window.store.languageStore.state.currentTournament.notPartOfAnyTournament}</h2>`
-      // window.store.notificationStore.updateAddNotification({
+      this.innerHTML = `<h2>${transStore.languageStore.state.currentTournament.notPartOfAnyTournament}</h2>`
+      // transStore.notificationStore.updateAddNotification({
       //   id: generateUniqueId(),
-      //   message: window.store.languageStore.state.currentTournament.notPartOfAnyTournament
+      //   message: transStore.languageStore.state.currentTournament.notPartOfAnyTournament
       // });
     }
   }
@@ -150,7 +151,7 @@ class CurrentTournament extends HTMLElement {
     heading: string,
     match: MatchMakingTypes.BasicGame | GameResultTypes.MatchResult | null
   ) {
-    const lang = window.store.languageStore.state.currentTournament;
+    const lang = transStore.languageStore.state.currentTournament;
     if (!isDefined(match))
       return createHtmlElementFromString(`
       <div class="my-2 bg-gray-700 p-4 border-gray-500 border-2">
@@ -168,11 +169,11 @@ class CurrentTournament extends HTMLElement {
   }
 
   renderMatchToBePlayed(heading: string, match: MatchMakingTypes.BasicGame) {
-    const lang = window.store.languageStore.state.currentTournament;
-    const amHost = window.store.userStore.get().details.id === match.hostId;
+    const lang = transStore.languageStore.state.currentTournament;
+    const amHost = transStore.userStore.get().details.id === match.hostId;
     const amPartOfGame =
       amHost ||
-      window.store.userStore.get().details.id === match.invitedPlayerId;
+      transStore.userStore.get().details.id === match.invitedPlayerId;
 
     const htmlElem = createHtmlElementFromString(`
     <div class="my-2 bg-gray-700 p-4 border-white border-2">
@@ -180,10 +181,10 @@ class CurrentTournament extends HTMLElement {
         <div class="flex justify-between mb-1">
         <span>${
           lang.player1 || "Player 1"
-        }: ${window.store.playerNamesStore.getName(match.hostId)}</span>
+        }: ${transStore.playerNamesStore.getName(match.hostId)}</span>
         <span>${
           lang.player2 || "Player 2"
-        }: ${window.store.playerNamesStore.getName(
+        }: ${transStore.playerNamesStore.getName(
       match.invitedPlayerId as string
     )}</span>
           <span>
@@ -216,21 +217,21 @@ class CurrentTournament extends HTMLElement {
   }
 
   renderMatchFinished(heading: string, match: GameResultTypes.MatchResult) {
-    const lang = window.store.languageStore.state.currentTournament;
+    const lang = transStore.languageStore.state.currentTournament;
     const htmlElem = createHtmlElementFromString(`
     <div class="my-2 bg-gray-700 p-4 border-2 border-black">
         <h3>${heading}</h3>
         <div class="flex justify-between mb-1">
         <span>${
           lang.player1 || "Player 1"
-        }: ${window.store.playerNamesStore.getName(match.player1Id)}</span>
+        }: ${transStore.playerNamesStore.getName(match.player1Id)}</span>
         <span>${
           lang.player2 || "Player 2"
-        }: ${window.store.playerNamesStore.getName(match.player2Id)}</span>
+        }: ${transStore.playerNamesStore.getName(match.player2Id)}</span>
         <span>${lang.result || "Result"}: ${match.player1Score} : ${
       match.player2Score
     }</span>
-        <span>${lang.winner || "Winner"}: ${window.store.playerNamesStore.getName(match.winnerId)}</span>
+        <span>${lang.winner || "Winner"}: ${transStore.playerNamesStore.getName(match.winnerId)}</span>
         </div>
     </div>
     `);
@@ -351,7 +352,7 @@ class CurrentTournament extends HTMLElement {
   // inviteToPlayBtn.addEventListener("click", (event) => {
   //   event.stopPropagation();
   //   ChatInterface.inviteToPlay({
-  //     authorId: window.store.userStore.get().details.id,
+  //     authorId: transStore.userStore.get().details.id,
   //     recipientId: this.recipientId,
   //     date: getCurDateString(),
   //   });

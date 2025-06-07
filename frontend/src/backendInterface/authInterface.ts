@@ -7,6 +7,7 @@ import { buildApiRouteRelative, navigateToSite } from "../utils/utils";
 import { ChatInterface } from "./chatInterface";
 import { GameServiceInterface } from "./gameServiceInterface";
 import { MatchMakingInterface } from "./matchmakingInterface";
+import { transStore } from "../state/store";
 
 type AuthInterfaceAnswer = Promise<{
   ok: boolean;
@@ -85,7 +86,7 @@ class AuthInterface {
     // });
     const address = buildApiRouteRelative({
       service: "authService",
-      route: `/api/auth/logout/${window.store.userStore.get().details.id}`,
+      route: `/api/auth/logout/${transStore.userStore.get().details.id}`,
     });
     await ChatInterface.disconnect();
     await GameServiceInterface.disconnect();
@@ -172,26 +173,26 @@ class AuthInterface {
   ) {
     window.colog("verify succesful!");
     if (updateUserId) {
-      window.store.userStore.updateUserId(body.userId.toString());
+      transStore.userStore.updateUserId(body.userId.toString());
     }
   }
 
   static refreshSucessful(body: AuthServiceTypes.AuthSuccessResponseBody) {
     window.colog("refresh succesful!");
-    window.store.userStore.updateUserId(body.clientId.toString());
+    transStore.userStore.updateUserId(body.clientId.toString());
     sessionStorage.setItem(this.nameJwtInSessionStorage, body.jwtToken);
   }
 
   static loginSucessful(body: AuthServiceTypes.AuthSuccessResponseBody) {
     window.colog("login succesful!");
-    window.store.userStore.updateUserId(body.clientId.toString());
+    transStore.userStore.updateUserId(body.clientId.toString());
     sessionStorage.setItem(this.nameJwtInSessionStorage, body.jwtToken);
     navigateToSite("/");
   }
 
   static logoutSucessful() {
     sessionStorage.removeItem(this.nameJwtInSessionStorage);
-    window.store.reset();
+    transStore.reset();
     navigateToSite("/loginPage");
   }
 

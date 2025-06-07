@@ -13,6 +13,7 @@ import {
 import { StoreCallback } from "./types";
 import { isOwnTournament } from "transcendence";
 import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
+import { transStore } from "../state/store";
 
 class MatchmakingStateStore {
   listeners: Set<StoreCallback>;
@@ -51,7 +52,7 @@ class MatchmakingStateStore {
     };
     this.state.otherMatches.forEach((matchObj) => {
       const curUserIsInvited =
-        matchObj.invitedPlayerId === window.store.userStore.get().details.id;
+        matchObj.invitedPlayerId === transStore.userStore.get().details.id;
       const matchCopy = deepCopyObj(matchObj);
       if (matchObj.type === "public") groups.public.push(matchCopy);
       else if (
@@ -78,11 +79,11 @@ class MatchmakingStateStore {
       const hasStarted = tournamentObj.started;
       const playerLeftThisTournament =
         tournamentObj.playersWhoClickedToLeave.includes(
-          window.store.userStore.get().details.id
+          transStore.userStore.get().details.id
         );
       const playerIsPartOfTournament = isOwnTournament(
         tournamentObj,
-        window.store.userStore.get().details.id
+        transStore.userStore.get().details.id
       );
       const tournCopy = deepCopyObj(tournamentObj);
 
@@ -133,7 +134,7 @@ class MatchmakingStateStore {
   }
 
   createGame(match: MatchMakingTypes.BasicGame) {
-    if (match.hostId == window.store.userStore.get().details.id) {
+    if (match.hostId == transStore.userStore.get().details.id) {
       this.state.ownMatch = deepCopyObj(match);
     } else {
       this.addGameEnsureUnique(match);
@@ -162,7 +163,7 @@ class MatchmakingStateStore {
       tournaments: deepCopyObj(allMatches.tournaments),
       ownMatch: this.state.ownMatch ? deepCopyObj(this.state.ownMatch) : null,
     };
-    const clientId = window.store.userStore.get().details.id;
+    const clientId = transStore.userStore.get().details.id;
     allMatches.basicGames.forEach((match) => {
       if (match.hostId === clientId) newState.ownMatch = match;
       else newState.otherMatches.push(match);
@@ -231,7 +232,7 @@ class MatchmakingStateStore {
       console.log(`INVITED LEFT ${invitedPlayerLeft}`);
       MatchMakingInterface.sendMessageToServer({
         type: "deleteGame",
-        data: window.store.matchmakingStore.get()
+        data: transStore.matchmakingStore.get()
           .ownMatch as MatchMakingTypes.BasicGame,
       });
       this.state.ownMatch = null;

@@ -2,6 +2,7 @@ import { GameState, Paddle } from "../../state/gameStateTypes";
 import { gameSettings } from "transcendence";
 import { PongTable } from "./PongTable";
 import { GameServiceInterface } from "../../backendInterface/gameServiceInterface";
+import { transStore } from "../../state/store";
 
 type PaddleLeftOrRight = Extract<keyof GameState, "paddleLeft" | "paddleRight">;
 
@@ -9,12 +10,12 @@ class PlayerMovementsUpdater {
   gameState: GameState;
   pongTableComponent: PongTable;
   constructor(pongTableComponent: PongTable) {
-    this.gameState = window.store.gameStore.get();
+    this.gameState = transStore.gameStore.get();
     this.pongTableComponent = pongTableComponent;
   }
 
   updatePlayerMovementsRemote(paddleLeftOrRight: PaddleLeftOrRight) {
-    const gameStateCurrent = window.store.gameStore.get();
+    const gameStateCurrent = transStore.gameStore.get();
     const gameStateNew = structuredClone(gameStateCurrent);
 
     const leftPaddleHasMoved = this.updatePaddleMovementsOnePaddle(
@@ -36,7 +37,7 @@ class PlayerMovementsUpdater {
   }
 
   updatePlayerMovementsLocalPvAi() {
-    const gameStateCurrent = window.store.gameStore.get();
+    const gameStateCurrent = transStore.gameStore.get();
     const gameStateNew = structuredClone(gameStateCurrent);
 
     const leftPaddleHasMoved = this.updatePaddleMovementsOnePaddle(
@@ -57,7 +58,7 @@ class PlayerMovementsUpdater {
   }
 
   updatePlayerMovementsLocalPvP() {
-    const gameStateCurrent = window.store.gameStore.get();
+    const gameStateCurrent = transStore.gameStore.get();
     const gameStateNew = structuredClone(gameStateCurrent);
 
     const leftPaddleHasMoved = this.updatePaddleMovementsOnePaddle(
@@ -88,7 +89,7 @@ class PlayerMovementsUpdater {
   }
 
   updateGameStateClient(newGameState: GameState) {
-    window.store.gameStore.update(newGameState);
+    transStore.gameStore.update(newGameState);
   }
 
   updateGameStateServerLocalPvP(newGameState: GameState) {
@@ -127,7 +128,7 @@ class PlayerMovementsUpdater {
 
   updateGameStateServerRemote(newGameState: GameState) {
     const myPaddle =
-      window.store.userStore.get().details.id === newGameState.paddleLeft.playerId
+      transStore.userStore.get().details.id === newGameState.paddleLeft.playerId
         ? newGameState.paddleLeft
         : newGameState.paddleRight;
     GameServiceInterface.sendMessageToServer({

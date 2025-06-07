@@ -12,6 +12,7 @@ import {
   navigateToSite,
 } from "../utils/utils";
 import { AuthInterface, AuthInterfaceAnswer } from "./authInterface";
+import { transStore } from "../state/store";
 
 class MatchMakingInterface {
   constructor() {
@@ -25,13 +26,13 @@ class MatchMakingInterface {
     //   websocketOrApi: "api",
     //   service: "matchmakingService",
     //   route: `/matchmaking/playertournament/${
-    //     window.store.userStore.get().details.id
+    //     transStore.userStore.get().details.id
     //   }`,
     // });
     const address = buildApiRouteRelative({
       service: "matchmakingService",
       route: `/matchmaking/playertournament/${
-        window.store.userStore.get().details.id
+        transStore.userStore.get().details.id
       }`,
     });
     try {
@@ -46,7 +47,7 @@ class MatchMakingInterface {
         const res = await response.json();
         colog("MILOS ANSWER");
         colog(res);
-        window.store.currentTournamentStore.updateCurrent(res);
+        transStore.currentTournamentStore.updateCurrent(res);
         return {
           ok: true,
         };
@@ -80,7 +81,7 @@ class MatchMakingInterface {
         };
 
         this.websocket.onopen = () => {
-          const ownMatch = window.store.matchmakingStore.get().ownMatch;
+          const ownMatch = transStore.matchmakingStore.get().ownMatch;
           if (isDefined(ownMatch) && ownMatch.needsServerInitiation) {
             this.sendMessageToServer({
               type: "createGame",
@@ -111,14 +112,14 @@ class MatchMakingInterface {
   }
 
   static disconnect() {
-    const ownMatch = window.store.matchmakingStore.get().ownMatch;
+    const ownMatch = transStore.matchmakingStore.get().ownMatch;
     if (isDefined(ownMatch)) {
       try {
         this.sendMessageToServer({
           type: "deleteGame",
           data: ownMatch as MatchMakingTypes.BasicGame,
         });
-        window.store.matchmakingStore.deleteGame(ownMatch);
+        transStore.matchmakingStore.deleteGame(ownMatch);
       } catch (err) {
         console.log(
           "Unable to notify matchmaking service about closing connection!"
@@ -163,33 +164,33 @@ class MatchMakingInterface {
     dataJson: MatchMakingTypes.ServerStartTournament
   ) {
     console.log("Server Start Tournament!");
-    if (isOwnTournament(dataJson.data, window.store.userStore.get().details.id))
+    if (isOwnTournament(dataJson.data, transStore.userStore.get().details.id))
       navigateToSite("currentTournament");
-    else window.store.matchmakingStore.updateOneTournament(dataJson.data);
+    else transStore.matchmakingStore.updateOneTournament(dataJson.data);
   }
 
   static handleServerUpdateOneTournament(
     dataJson: MatchMakingTypes.ServerUpdateOneTournament
   ) {
     colog("serverupdateOnetournament");
-    window.store.matchmakingStore.updateOneTournament(dataJson.data);
+    transStore.matchmakingStore.updateOneTournament(dataJson.data);
   }
 
   static handleServerUpdatedGames(
     dataJson: MatchMakingTypes.ServerUpdateGames
   ) {
-    window.store.matchmakingStore.updateFromAllMatches(dataJson.data);
+    transStore.matchmakingStore.updateFromAllMatches(dataJson.data);
   }
 
   static handleServerDeleteGame(dataJson: MatchMakingTypes.ClientDeleteGame) {
-    window.store.matchmakingStore.deleteGame(dataJson.data);
+    transStore.matchmakingStore.deleteGame(dataJson.data);
   }
 
   static handleServerStartGame(dataJson: MatchMakingTypes.ServerStartGame) {
-    window.store.gameStore.updateGameStateState("matchmakingSuccessful");
+    transStore.gameStore.updateGameStateState("matchmakingSuccessful");
     const isSelfHosted =
-      dataJson.data.hostId === window.store.userStore.get().details.id;
-    window.store.gameStore.updateMatchMakingSuccessful({
+      dataJson.data.hostId === transStore.userStore.get().details.id;
+    transStore.gameStore.updateMatchMakingSuccessful({
       hostId: dataJson.data.hostId,
       oponentId: dataJson.data.oponentId,
       selfHosted: isSelfHosted,
@@ -197,21 +198,21 @@ class MatchMakingInterface {
       playerLeftPaddleId: dataJson.data.hostId,
       playerRightPaddleId: dataJson.data.oponentId,
     });
-    window.store.gameStore.updateGameStateTypeOfGame("remote", false);
+    transStore.gameStore.updateGameStateTypeOfGame("remote", false);
   }
 
   static handleServerUpdateOneGame(
     dataJson: MatchMakingTypes.ServerUpdateOneGame
   ) {
-    window.store.matchmakingStore.updateOneGame(dataJson.data);
+    transStore.matchmakingStore.updateOneGame(dataJson.data);
   }
 
   static handleServerCreateGame(dataJson: MatchMakingTypes.ClientCreateGame) {
-    window.store.matchmakingStore.createGame(dataJson.data);
+    transStore.matchmakingStore.createGame(dataJson.data);
   }
 
   static handleServerLeaveGame(dataJson: MatchMakingTypes.ClientLeaveGame) {
-    window.store.matchmakingStore.deleteGame(dataJson.data);
+    transStore.matchmakingStore.deleteGame(dataJson.data);
   }
 
   static sendMessageToServer(

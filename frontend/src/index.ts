@@ -3,7 +3,6 @@
 import { colog, jlog } from "transcendence";
 import "./router/AppRouter.js"; // Assuming the AppRouter is inside `src/` folder
 import { AppRouter } from "./router/AppRouter.ts";
-import { Store } from "./state/store.js";
 import { brepo } from "./utils/utils.ts";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -25,8 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  window.store = new Store();
-
   const appRouter = document.createElement("app-router") as AppRouter;
 
   document.body.appendChild(appRouter);
@@ -46,3 +43,4 @@ document.addEventListener("DOMContentLoaded", () => {
   appRouter.addRoute("/userSettingsOwn", "user-settings-own");
   appRouter.handleRouteChange();
 });
+

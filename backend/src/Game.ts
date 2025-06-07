@@ -229,7 +229,9 @@ export class Game {
   updatePaddlePosition(data: GameServiceTypes.DataClientUpdatePaddlePosition) {
     this.player1.y = data.player1.paddleY - gameSettings.bumperHeight;
     this.player1.paddleSpeed = data.player1.paddleSpeed;
-    if (this.typeOfGame === "localPvP") {
+
+    if (this.typeOfGame === "localPvP" && data.player2 &&
+      typeof data.player2.paddleY === "number") {
       this.player2.y = data.player2!.paddleY - gameSettings.bumperHeight;
       this.player2.paddleSpeed = data.player2!.paddleSpeed;
     }

@@ -2,6 +2,7 @@ import { GameServiceInterface } from "../../backendInterface/gameServiceInterfac
 import { createHtmlElementFromString, navigateToSite } from "../../utils/utils";
 import { CentralModalListeners } from "../CentralModalListeners";
 import { MatchScore } from "./MatchScore";
+import { transStore } from "../../state/store";
 
 class ManageMatch extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -16,10 +17,10 @@ class ManageMatch extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeGameState = window.store.gameStore.subscribe(
+    this.unsubscribeGameState = transStore.gameStore.subscribe(
       this.render.bind(this)
     );
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
     this.render();
@@ -30,41 +31,41 @@ class ManageMatch extends HTMLElement {
 
     if (this.unsubscribeLanguage) this.unsubscribeLanguage();
     if (this.unsubscribeGameState) this.unsubscribeGameState();
-    if (window.store.gameStore.get().state === "running") this.leaveGame();
-    if (!(["matchmakingSuccessful", "waitingForClientReady"].includes(window.store.gameStore.get().state)))
+    if (transStore.gameStore.get().state === "running") this.leaveGame();
+    if (!(["matchmakingSuccessful", "waitingForClientReady"].includes(transStore.gameStore.get().state)))
     {
       // colog("reset");
-      // colog(window.store.gameStore.get().state);
-      window.store.gameStore.reset();
+      // colog(transStore.gameStore.get().state);
+      transStore.gameStore.reset();
     }
   }
 
   async render() {
     // colog("in manage match");
-    // colog(window.store.gameStore.get().state);
-    if (window.store.gameStore.get().state === "none") navigateToSite("/");
-    if (window.store.gameStore.get().state === "matchmakingSuccessful") {
-      window.store.gameStore.updateGameStateState(
+    // colog(transStore.gameStore.get().state);
+    if (transStore.gameStore.get().state === "none") navigateToSite("/");
+    if (transStore.gameStore.get().state === "matchmakingSuccessful") {
+      transStore.gameStore.updateGameStateState(
         "waitingForClientReady",
         false
       );
-      if (window.store.gameStore.get().selfHosted) {
+      if (transStore.gameStore.get().selfHosted) {
         await GameServiceInterface.createMatchOnServer({
-          typeOfGame: window.store.gameStore.get().typeOfGame,
-          matchId: window.store.gameStore.get().matchId,
-          hostId: window.store.gameStore.get().hostId,
-          oponentId: window.store.gameStore.get().oponentId,
+          typeOfGame: transStore.gameStore.get().typeOfGame,
+          matchId: transStore.gameStore.get().matchId,
+          hostId: transStore.gameStore.get().hostId,
+          oponentId: transStore.gameStore.get().oponentId,
         });
       }
     }
-    if (window.store.gameStore.get().state === "waitingForClientReady") {
+    if (transStore.gameStore.get().state === "waitingForClientReady") {
       await GameServiceInterface.connect();
       this.renderWaitingClientStartModal();
     }
-    if (window.store.gameStore.get().state === "waitingForServerStart") {
+    if (transStore.gameStore.get().state === "waitingForServerStart") {
       setTimeout(() => this.renderWaitingServerStartModal(), 0);
     }
-    if (window.store.gameStore.get().state === "running") {
+    if (transStore.gameStore.get().state === "running") {
       if (this.unsubscribeGameState) this.unsubscribeGameState();
       this.renderRunningGame();
     }
@@ -72,17 +73,17 @@ class ManageMatch extends HTMLElement {
 
   renderWaitingServerStartModal() {
     console.log("RENDERING WAITING FOR SERVER START MODAL");
-    const t = window.store.languageStore.state.manageMatch;
+    const t = transStore.languageStore.state.manageMatch;
 
-    window.store.modalStore.updateAddKeyDownCallback(
+    transStore.modalStore.updateAddKeyDownCallback(
       "KeyN",
       this.leaveGame.bind(this)
     );
-    window.store.modalStore.updateSetContent([
+    transStore.modalStore.updateSetContent([
       t.waitingServerStart,
       t.cancelKeyInstruction,
     ]);
-    window.store.modalStore.updateSetOpen();
+    transStore.modalStore.updateSetOpen();
     // this.innerHTML = "";
     const modal = createHtmlElementFromString(`
       <central-modal-listeners></central-modal-listeners>`) as CentralModalListeners;
@@ -90,26 +91,26 @@ class ManageMatch extends HTMLElement {
   }
 
   async renderWaitingClientStartModal() {
-    const t = window.store.languageStore.state.manageMatch;
-    window.store.modalStore.updateAddKeyDownCallback("KeyY", () => {
-      window.store.gameStore.updateGameStateState("waitingForServerStart");
+    const t = transStore.languageStore.state.manageMatch;
+    transStore.modalStore.updateAddKeyDownCallback("KeyY", () => {
+      transStore.gameStore.updateGameStateState("waitingForServerStart");
       GameServiceInterface.sendMessageToServer({
         type: "clientIsReady",
         data: {
-          clientId: window.store.userStore.get().details.id,
-          matchId: window.store.gameStore.get().matchId,
+          clientId: transStore.userStore.get().details.id,
+          matchId: transStore.gameStore.get().matchId,
         },
       });
     });
-    window.store.modalStore.updateAddKeyDownCallback(
+    transStore.modalStore.updateAddKeyDownCallback(
       "KeyN",
       this.leaveGame.bind(this)
     );
-    window.store.modalStore.updateSetContent([
+    transStore.modalStore.updateSetContent([
       t.readyKeyInstruction,
       t.cancelKeyInstruction,
     ]);
-    window.store.modalStore.updateSetOpen();
+    transStore.modalStore.updateSetOpen();
     const modal = createHtmlElementFromString(`
       <central-modal-listeners></central-modal-listeners>`) as CentralModalListeners;
     // this.innerHTML = "";

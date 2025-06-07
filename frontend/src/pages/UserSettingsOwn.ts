@@ -1,3 +1,5 @@
+import { transStore } from "../state/store";
+
 class UserSettingsOwn extends HTMLElement {
 
   constructor() {
@@ -5,7 +7,7 @@ class UserSettingsOwn extends HTMLElement {
   }
 
   connectedCallback() {
-    window.store.userStore.updateSetOtherUserId(null, false);
+    transStore.userStore.updateSetOtherUserId(null, false);
     this.render();
     
   }

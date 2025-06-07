@@ -1,6 +1,7 @@
 import { isDefined, MatchMakingTypes } from "transcendence";
 import { MatchMakingInterface } from "../../backendInterface/matchmakingInterface";
 import { deepCopyObj } from "../../utils/utils";
+import { transStore } from "../../state/store";
 
 type OptnsTournamentItem = {
   renderJoin: boolean;
@@ -36,7 +37,7 @@ class TournamentItem extends HTMLElement {
   connectedCallback() {}
 
   render() {
-  const lang = window.store.languageStore.state.tournamentItem;
+  const lang = transStore.languageStore.state.tournamentItem;
 
   this.innerHTML = `
     <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg text-white">
@@ -87,7 +88,7 @@ class TournamentItem extends HTMLElement {
     MatchMakingInterface.sendMessageToServer({
       type: "joinTournament",
       data: {
-        playerId: window.store.userStore.get().details.id,
+        playerId: transStore.userStore.get().details.id,
         tournamentId: this.data.tournamentId as string,
       },
     });
@@ -98,7 +99,7 @@ class TournamentItem extends HTMLElement {
     MatchMakingInterface.sendMessageToServer({
       type: "leaveTournament",
       data: {
-        playerId: window.store.userStore.get().details.id,
+        playerId: transStore.userStore.get().details.id,
         tournamentId: this.data.tournamentId as string,
       },
     });
@@ -108,7 +109,7 @@ class TournamentItem extends HTMLElement {
     if (!isDefined(playerIdOrName)) {
       return ">free<";
     }
-    return window.store.playerNamesStore.getName(playerIdOrName as string);
+    return transStore.playerNamesStore.getName(playerIdOrName as string);
   }
 }
 
