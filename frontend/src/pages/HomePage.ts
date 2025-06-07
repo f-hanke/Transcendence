@@ -13,8 +13,7 @@ class HomePage extends HTMLElement {
       this.render.bind(this)
     );
     this.innerHTML = `
-      <div class="text-red-700">Milo is the greatest</div>
-      <div>M i l o</div>
+
     `
   }
 

@@ -150,7 +150,7 @@ const de: LanguageState = {
     tabs: {
       users: "Benutzer",
       blocked: "Blockierte",
-      friendRequests: "Freundschaftsanfragen",
+      friendRequests: "Freundschafts-anfragen",
     },
     sections: {
       notifierBots: "Benachrichtigungen",
