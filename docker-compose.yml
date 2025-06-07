@@ -108,6 +108,8 @@ services:
     volumes:
       - elasticsearch-certs:/usr/share/kibana/config/certs
       - kibana-data:/usr/share/kibana/data
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - ./kibana/dashboards:/usr/share/kibana/dashboards:ro
     ports:
       - "127.0.0.1:5601:5601"
     environment:
@@ -129,6 +131,21 @@ services:
       start_period: 30s
     depends_on:
       elasticsearch:
+        condition: service_healthy
+
+  kibana-setup:
+    container_name: kibana-setup
+    image: curlimages/curl:latest
+    volumes:
+      - ./kibana/setup/import-dashboards.sh:/import-dashboards.sh:ro
+      - ./kibana/dashboards:/dashboards:ro
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+    command: ["/bin/sh", "/import-dashboards.sh"]
+    networks:
+      - monitoring-network
+    depends_on:
+      kibana:
         condition: service_healthy
 
   logstash:
@@ -168,10 +185,16 @@ services:
     image: prom/prometheus:latest
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/init-prometheus.sh:/init-prometheus.sh:ro
       - prometheus-data:/prometheus
+      - elasticsearch-certs:/etc/prometheus/certs:ro
     ports:
       - "127.0.0.1:9090:9090"
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+    entrypoint: ["/bin/sh", "/init-prometheus.sh"]
     command:
+      - '/bin/prometheus'
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
@@ -186,6 +209,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   grafana:
     container_name: grafana
@@ -316,11 +342,15 @@ services:
       dockerfile: usersAndAuth/Dockerfile
     ports:
       - "10004"
+    volumes:
+      - users-auth-db-data:/app/usersAndAuth/db
+      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
       - JWT_SECRET=supersecret
       - RABBITMQ_HOST=rabbitmq-service
       - SERVICE_NAME=users-auth
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -336,8 +366,6 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
-    volumes:
-      - users-auth-db-data:/app/usersAndAuth/db
     expose:
       - "10004"
 
@@ -348,9 +376,13 @@ services:
       dockerfile: remote/Dockerfile
     ports:
       - "10002"
+    volumes:
+      - remote-db-data:/app/db_file
+      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=remote-matchmaking
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -368,8 +400,6 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
-    volumes:
-      - remote-db-data:/app/db_file
     expose:
       - "10002"
 
@@ -380,9 +410,12 @@ services:
       dockerfile: backend/Dockerfile
     ports:
       - "10003"
+    volumes:
+      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=game-service
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -396,6 +429,8 @@ services:
     depends_on:
       remote:
         condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     expose:
       - "10003"
 
@@ -406,9 +441,13 @@ services:
       dockerfile: chat-service/Dockerfile
     ports:
       - "10001"
+    volumes:
+      - chat-service-db-data:/app/db
+      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=chat-service
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -426,8 +465,6 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
-    volumes:
-      - chat-service-db-data:/app/db
     expose:
       - "10001"
 
