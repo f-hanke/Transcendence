@@ -48,7 +48,8 @@ export function enableJwtCheck(fastify: FastifyInstance) {
       url === "/MATCHMAKING/health" ||
       url === "/GAMESERVICE/health" ||
       url === "/CHATSERVICE/health" ||
-      url === "/health";  // API gateway health check
+      url === "/health" ||  // API gateway health check
+      url === "/metrics";   // Prometheus metrics endpoint
 
     if (!skipAuth) {
       await authMiddleware(req, reply);
