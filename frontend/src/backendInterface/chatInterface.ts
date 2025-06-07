@@ -302,18 +302,18 @@ class ChatInterface {
   static handleServerUpdateFriendRequest(
     dataJson: ChatServiceTypes.UpdateFriendRequest
   ) {
-    const lang = window.store.languageStore.state.chat;
+    const lang = transStore.languageStore.state.chat;
     let msg;
     if (dataJson.type === "accept")
-      msg = lang.notifications.friendRequestAccepted + ' : ' + window.store.playerNamesStore.getName(dataJson.recipientId);
+      msg = lang.notifications.friendRequestAccepted + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
     else if (dataJson.type === "declined")
-      msg = lang.notifications.friendRequestDeclined + ' : ' + window.store.playerNamesStore.getName(dataJson.recipientId);
+      msg = lang.notifications.friendRequestDeclined + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
     else if (dataJson.type === "send")
-      msg = lang.notifications.friendRequestSend + ' : ' + window.store.playerNamesStore.getName(dataJson.recipientId);
+      msg = lang.notifications.friendRequestSend + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
     else if (dataJson.type === "withdrawn")
-      msg = lang.notifications.friendRequestWithdrawn + ' : ' + window.store.playerNamesStore.getName(dataJson.recipientId);
+      msg = lang.notifications.friendRequestWithdrawn + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
     else //type === unfriend
-     msg = lang.notifications.friendRequestUnfriend + ' : ' + window.store.playerNamesStore.getName(dataJson.recipientId);
+     msg = lang.notifications.friendRequestUnfriend + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
 
 
     transStore.notificationStore.updateAddNotification({
@@ -390,7 +390,7 @@ class ChatInterface {
         tmpMessage = renderTournamentNotification(tmpMessage, "sendGameInviteNotification");
       transStore.notificationStore.updateAddNotification({
         id: generateUniqueId(),
-        message: `${window.store.playerNamesStore.getName(authorId)} : ${tmpMessage}`,
+        message: `${transStore.playerNamesStore.getName(authorId)} : ${tmpMessage}`,
       });
     }
     transStore.chatMessageStore.addMessage(authorId, dataJson.data);
