@@ -8,6 +8,7 @@ setup:
 	mkdir -p grafana/provisioning/datasources
 	mkdir -p grafana/provisioning/dashboards
 	@echo "Building shared dependencies..."
+	npm install --prefix ./shared
 	npm run build --prefix ./shared
 
 # Start all services
