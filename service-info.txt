@@ -6,9 +6,9 @@ MONITORING SERVICES:
 - Elasticsearch: https://localhost:9200 (🔒 SECURED - user: elastic, pass: check .env file)
 - Kibana:        http://localhost:5601 (🔒 LOGIN REQUIRED - user: elastic, pass: check .env file)
 - Prometheus:    http://localhost:9090
-- Grafana:       http://localhost:3000 (admin/admin)
+- Grafana:       http://localhost:3000 (admin/check .env file for GRAFANA_ADMIN_PASSWORD)
 - Logstash:      http://localhost:9600
-- RabbitMQ:      http://localhost:15672 (admin/admin)
+- RabbitMQ:      http://localhost:15672 (check .env file for RABBITMQ_DEFAULT_USER/PASS)
 
 APPLICATION SERVICES:
 - API Gateway:          https://localhost:8443

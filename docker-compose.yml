@@ -210,7 +210,7 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/var/lib/grafana/dashboards
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/microservices-dashboard.json
     depends_on:
@@ -236,8 +236,8 @@ services:
       - "127.0.0.1:15672:15672" # Management UI
       - "127.0.0.1:15692:15692" # Prometheus metrics
     environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
     volumes:
       - ./rabbitmq/config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./rabbitmq/config/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
@@ -264,7 +264,7 @@ services:
       - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
-      - JWT_SECRET=a03a3a0fa94982e1ebed6f5146fa322e
+      - JWT_SECRET=${JWT_SECRET:-}
       - WEBSERVER_HOST=webserver
       - AUTH_SERVICE_HOST=users-auth
       - SERVICE_NAME=api-gateway
@@ -334,7 +334,7 @@ services:
       - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
-      - JWT_SECRET=supersecret
+      - JWT_SECRET=${JWT_SECRET:-}
       - RABBITMQ_HOST=rabbitmq-service
       - SERVICE_NAME=users-auth
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
