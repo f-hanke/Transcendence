@@ -230,6 +230,8 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
+    volumes:
+      - users-auth-db-data:/app/usersAndAuth/db
     expose:
       - "10004"
 
@@ -260,6 +262,8 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
+    volumes:
+      - remote-db-data:/app/remote/db_file
     expose:
       - "10002"
 
@@ -316,6 +320,8 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
+    volumes:
+      - chat-service-db-data:/app/chat-service/db
     expose:
       - "10001"
 
@@ -332,3 +338,6 @@ volumes:
   prometheus-data:
   grafana-data:
   rabbitmq-data:
+  chat-service-db-data:
+  remote-db-data:
+  users-auth-db-data:

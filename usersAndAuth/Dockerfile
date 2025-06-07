@@ -21,6 +21,9 @@ COPY usersAndAuth/orm ./orm
 COPY usersAndAuth/config ./config
 COPY usersAndAuth/rabbitMQ ./rabbitMQ
 COPY usersAndAuth/db ./db
+RUN rm ./db/user_service.db
+# COPY usersAndAuth/db/db.ts ./db/db.ts
+# COPY usersAndAuth/db/init/init.js ./db/init/init.js
 COPY usersAndAuth/lib ./lib
 COPY usersAndAuth/public ./public
 
@@ -33,10 +36,11 @@ RUN npm install --no-save ../shared
 
 # Build the service
 RUN npm run build
+RUN npm run db
 
 # Install health check tools
 RUN apk add --no-cache curl
 
 EXPOSE 10004
 
-CMD ["node", "service.js"] 
+CMD ["node", "service.js"]
