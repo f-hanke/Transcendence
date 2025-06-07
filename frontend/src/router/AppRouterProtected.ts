@@ -17,7 +17,7 @@ class AppRouterProtected extends HTMLElement {
     // ChatInterface.connect();
     this.innerHTML = `
       <div class="flex flex-row select-none min-h-screen h-full bg-gray-800">
-        <div id="navbar" class="w-1/4">
+        <div id="navbar" class="w-60">
           <nav-bar></nav-bar>
         </div>
         <div id="app" class="w-3/4 min-h-screen h-full"></div>

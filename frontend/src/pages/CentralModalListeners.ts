@@ -35,7 +35,7 @@ class CentralModalListeners extends HTMLElement {
         <div id="modalContent" class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
           ${transStore.modalStore.get().content.map((line) => {
             return `<p>${line}</p>`;
-          })}
+          }).join("")}
         </div>
       </div>
     `;

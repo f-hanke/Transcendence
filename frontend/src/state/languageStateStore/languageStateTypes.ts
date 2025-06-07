@@ -188,6 +188,7 @@ type LanguageState = {
       tournamentStart: string;
       matchResult: string;
       playerLeft: string;
+      tournamentBot: string;
     };
   };
 };

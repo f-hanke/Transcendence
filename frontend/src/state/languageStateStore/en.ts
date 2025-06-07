@@ -192,6 +192,7 @@ const en: LanguageState = {
         "${winner} won the ${type} match against ${loser} with a score of ${winnerScore} to ${loserScore}.",
       playerLeft:
         "${Player} has left the Tournament, all matches with ${Player2} will be resolved automatically",
+      tournamentBot: "Tournament notifications",
     },
   },
 } as const;

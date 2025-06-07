@@ -150,7 +150,7 @@ const de: LanguageState = {
     tabs: {
       users: "Benutzer",
       blocked: "Blockierte",
-      friendRequests: "Freundschaftsanfragen",
+      friendRequests: "Freundschafts-anfragen",
     },
     sections: {
       notifierBots: "Benachrichtigungen",
@@ -188,6 +188,7 @@ const de: LanguageState = {
       tournamentStart: "Das Turnier hat begonnen. Wenn du der Gastgeber bist, gehe zu „Turniere“, um das Spiel zu planen, oder warte auf die Einladung des Gastgebers.",
       matchResult: "${winner} hat das ${type}-Spiel gegen ${loser} mit ${winnerScore} zu ${loserScore} gewonnen.\n",
       playerLeft: "${Player} hat das Turnier verlassen, alle Spiele mit ${Player2} werden automatisch entschieden",
+      tournamentBot: "Turnier Nachrichten",
     }
   }
 } as const;

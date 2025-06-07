@@ -75,7 +75,7 @@ class CurrentTournament extends HTMLElement {
                )}</td>
              </tr>
            `;
-            })}
+            }).join("")}
          </tbody>
        </table>
      </div>
