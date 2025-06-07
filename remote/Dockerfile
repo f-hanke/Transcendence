@@ -17,6 +17,7 @@ COPY remote/tsconfig.json ./
 COPY remote/src ./src
 COPY remote/client ./client
 COPY remote/db_file ./db_file
+RUN rm ./db_file/matchmaking_service.db
 
 # Copy the shared package build
 COPY --from=shared-builder /app/shared/dist/ ../shared/dist/
@@ -25,6 +26,8 @@ COPY --from=shared-builder /app/shared/package.json ../shared/
 # Link the shared package
 RUN npm install --no-save ../shared
 RUN npm run build
+#
+RUN npm run db
 
 FROM node:20-alpine
 

@@ -17,6 +17,7 @@ COPY chat-service/tsconfig.json ./
 COPY chat-service/src ./src
 #COPY chat-service/publisher.ts ./
 COPY chat-service/db ./db
+RUN rm ./db/chat_service_db.db
 
 # Copy the shared package build
 COPY --from=shared-builder /app/shared/dist/ ../shared/dist/
@@ -25,6 +26,7 @@ COPY --from=shared-builder /app/shared/package.json ../shared/
 # Link the shared package
 RUN npm install --no-save ../shared
 RUN npm run build
+RUN npm run db
 
 FROM node:20-alpine
 

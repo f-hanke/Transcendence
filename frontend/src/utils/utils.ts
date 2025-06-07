@@ -293,6 +293,8 @@ function renderTournamentNotification(msg: string, type: string){
   const lang = transStore.languageStore.state.chat;
   if (type === "sendGameInvite")
     msg = lang.notifications.invite;
+  else if (type === "sendGameInviteNotification")
+    msg = lang.notifications.inviteNotification;
   else if (type === "startTournament")
     msg = lang.notifications.tournamentStart;
   else if (type === "playerLeft") {

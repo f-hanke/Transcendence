@@ -180,7 +180,11 @@ type LanguageState = {
       userUnblocked: string;
       friendRequestAccepted: string;
       friendRequestDeclined: string;
+      friendRequestWithdrawn: string;
+      friendRequestSend: string;
+      friendRequestUnfriend: string;
       invite: string;
+      inviteNotification: string;
       tournamentStart: string;
       matchResult: string;
       playerLeft: string;
