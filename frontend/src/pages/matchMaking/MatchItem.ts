@@ -55,16 +55,16 @@ render() {
   this.innerHTML = `
     <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg text-white">
       <div>
-        <div class="font-medium">${lang.matchId}: ${this.matchId}</div>
-        <div class="font-medium">${this.hostName} ${lang.gameOf}</div>
+        <!-- <div class="font-medium">${lang.matchId}: ${this.matchId}</div> -->
+        <div class="font-medium">${lang.gameOf} ${this.hostName}</div>
         <div class="text-gray-300 text-sm">🟢 ${this.hostName} vs 🔴 ${
           this.oponentName ? this.oponentName : lang.waitingForOpponent
         }</div>
-        <div class="font-medium">${lang.typeOfGame}: ${this.type}</div>
+        <!-- <div class="font-medium">${lang.typeOfGame}: ${this.type}</div>
         <div class="font-medium">InvitedPlayerId: ${
           this.invitedPlayerId
         }</div>
-        <div class="font-medium">TournamentId: ${this.tournamentId}</div>
+        <div class="font-medium">TournamentId: ${this.tournamentId}</div> -->
       </div>
       ${
         this.renderJoin

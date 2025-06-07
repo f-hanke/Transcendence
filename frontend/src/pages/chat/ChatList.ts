@@ -45,7 +45,7 @@ render() {
   const classBtnNotSelected = `${classBtn} border-gray-700 text-gray-700`;
 
   this.innerHTML = `
-    <div class="w-72 h-full bg-gray-800 text-white py-2 overflow-y-auto">
+    <div class="w-80 h-full bg-gray-800 text-white py-2 overflow-y-auto">
       <!-- Tabs -->
       <div class="flex justify-start mx-2">
         <button id="chatUserTabBtn" class="${

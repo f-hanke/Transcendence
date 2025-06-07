@@ -120,8 +120,15 @@ clean-all: clean clean-npm clean-volumes
 	@echo "Everything cleaned!"
 
 # Aliases for common operations
-start: up
-stop: down
+start: 
+	@echo "Starting all services..."
+	docker compose up -d
+	@echo "Services started. Check status with 'make status'"
+
+stop: 
+	@echo "Stopping all services..."
+	docker compose down
+
 reset: clean rebuild
 
 help:
@@ -157,5 +164,6 @@ help:
 	@echo "📚 Aliases:"
 	@echo "  start/stop   - Aliases for up/down"
 	@echo "  reset        - Clean and rebuild"
+
 
 .PHONY: all setup up down restart start stop reset rebuild status logs clean clean-npm clean-volumes clean-all help start-api-gateway start-webserver start-users-auth start-remote start-game-service start-chat-service start-frontend build-frontend build-frontend-skip-ts-check rebuild-webserver

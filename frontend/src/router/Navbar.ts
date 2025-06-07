@@ -35,7 +35,7 @@ class Navbar extends HTMLElement {
           <a href="/profile" class="text-lg font-semibold hover:underline">${
             transStore.userStore.get().details.displayName
           }</a>
-          <div class="font-bold"><br><br>ID: '${transStore.userStore.get().details.id}'</div>
+          <!-- <div class="font-bold"><br><br>ID: '${transStore.userStore.get().details.id}'</div> -->
         </div>
       </div>
       <nav class="flex-1 p-4 overflow-y-auto">

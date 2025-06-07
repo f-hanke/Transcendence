@@ -150,8 +150,8 @@ const fr: LanguageState = {
 
   chat: {
     tabs: {
-      users: "Utilisateur·rice ",
-      blocked: "Bloqué·es",
+      users: "Utilisateur",
+      blocked: "Bloqué",
       friendRequests: "Demandes d'amis",
     },
     sections: {
