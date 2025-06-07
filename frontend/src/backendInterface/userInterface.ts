@@ -7,6 +7,7 @@ import {
 import { buildApiRouteRelative } from "../utils/utils";
 import { AuthInterface, AuthInterfaceAnswer } from "./authInterface";
 import { SupportedLanguages } from "../state/languageStateStore/languageStateTypes";
+import { transStore } from "../state/store";
 
 class UserInterface {
   constructor() {
@@ -35,11 +36,11 @@ class UserInterface {
         };
         res.displayName = res.display_name;
         if (updateId)
-          window.store.userStore.updateUserId(res.id.toString(), false);
-        window.store.userStore.updateUserSettings(res, false);
-        window.store.userStore.updateUserImage(res.image);
-        window.store.userStore.updateSetFetchNeeded(false);
-        window.store.languageStore.set(res.language as SupportedLanguages);
+          transStore.userStore.updateUserId(res.id.toString(), false);
+        transStore.userStore.updateUserSettings(res, false);
+        transStore.userStore.updateUserImage(res.image);
+        transStore.userStore.updateSetFetchNeeded(false);
+        transStore.languageStore.set(res.language as SupportedLanguages);
         return {
           ok: true,
         };
@@ -66,7 +67,7 @@ class UserInterface {
       if (response.ok) {
         const res = await response.json();
         console.log(res);
-        window.store.playerNamesStore.update(res);
+        transStore.playerNamesStore.update(res);
         return {
           ok: true,
         };
@@ -82,7 +83,7 @@ class UserInterface {
     const address = buildApiRouteRelative({
       service: "authService",
       route: `/api/users/updatedisplayname/${
-        window.store.userStore.get().details.id
+        transStore.userStore.get().details.id
       }`,
     });
     try {
@@ -110,7 +111,7 @@ class UserInterface {
     const address = buildApiRouteRelative({
       service: "authService",
       route: `/api/users/updateemail/${
-        window.store.userStore.get().details.id
+        transStore.userStore.get().details.id
       }`,
     });
     try {
@@ -138,7 +139,7 @@ class UserInterface {
     const address = buildApiRouteRelative({
       service: "authService",
       route: `/api/users/updatepassword/${
-        window.store.userStore.get().details.id
+        transStore.userStore.get().details.id
       }`,
     });
     try {
@@ -166,7 +167,7 @@ class UserInterface {
     const address = buildApiRouteRelative({
       service: "authService",
       route: `/api/users/updatelanguage/${
-        window.store.userStore.get().details.id
+        transStore.userStore.get().details.id
       }`,
     });
     try {
@@ -194,7 +195,7 @@ class UserInterface {
     const address = buildApiRouteRelative({
       service: "authService",
       route: `/api/users/updateimage/${
-        window.store.userStore.get().details.id
+        transStore.userStore.get().details.id
       }`,
     });
     try {
@@ -234,7 +235,7 @@ class UserInterface {
         const res = await response.json();
         // const res: GameResultTypes.MatchResult[] = 
           getMatchResultsMockup();
-        window.store.userStore.updateMatchHistory(res, rerender);
+        transStore.userStore.updateMatchHistory(res, rerender);
         console.log(res);
         return {
           ok: true,
@@ -268,7 +269,7 @@ class UserInterface {
         const res = await response.json();
         // const res: GameResultTypes.TournamentResult[] =
           getTournamentResultsMockup();
-        window.store.userStore.updateTournamentHistory(res, rerender);
+        transStore.userStore.updateTournamentHistory(res, rerender);
         console.log(res);
         return {
           ok: true,

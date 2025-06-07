@@ -7,6 +7,7 @@ import {
 } from "transcendence";
 import { buildApiRouteRelative, buildWsRoute } from "../utils/utils";
 import { AuthInterface } from "./authInterface";
+import { transStore } from "../state/store";
 
 class GameServiceInterface {
   constructor() {
@@ -75,7 +76,7 @@ class GameServiceInterface {
         };
 
         this.websocket.onopen = () => {
-          window.store.gameStore.updateGameStateState("waitingForClientReady");
+          transStore.gameStore.updateGameStateState("waitingForClientReady");
           console.log("WebSocket connected successfully!");
           resolve();
         };
@@ -93,26 +94,26 @@ class GameServiceInterface {
   }
 
   static disconnect(clientNotReady: boolean = false) {
-    if (window.store.gameStore.get().state === "running") {
+    if (transStore.gameStore.get().state === "running") {
       try {
         this.sendMessageToServer({
           type: "clientLeftGame",
           data: {
-            matchId: window.store.gameStore.get().matchId,
-            playerId: window.store.userStore.get().details.id,
+            matchId: transStore.gameStore.get().matchId,
+            playerId: transStore.userStore.get().details.id,
           },
         });
       } catch (err) {
         console.log("Unable to notify game service about closing connection!");
       }
-    } else if (window.store.gameStore.get().state !== "none" && clientNotReady
+    } else if (transStore.gameStore.get().state !== "none" && clientNotReady
     ) {
       try {
         this.sendMessageToServer({
           type: "clientLeftGameBeforeStart",
           data: {
-            matchId: window.store.gameStore.get().matchId,
-            playerId: window.store.userStore.get().details.id,
+            matchId: transStore.gameStore.get().matchId,
+            playerId: transStore.userStore.get().details.id,
           },
         });
         console.log("SEND MESSAGE TO SERVER: clientLeftGameBeforeStart");
@@ -123,7 +124,7 @@ class GameServiceInterface {
       }
     } else {
     }
-    window.store.gameStore.updateGameStateState("none");
+    transStore.gameStore.updateGameStateState("none");
     if (isDefined(this.websocket)) {
       this.websocket.close();
       this.websocket = null;
@@ -163,8 +164,8 @@ class GameServiceInterface {
       | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
     if (dataJson.type === "serverUpdateGameState")
-      window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
-    else window.store.gameStore.updateBallPositionNBothPaddles(dataJson.data);
+      transStore.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+    else transStore.gameStore.updateBallPositionNBothPaddles(dataJson.data);
   }
 
   static handleServerUpdateGameStateLocalPvAi(
@@ -173,8 +174,8 @@ class GameServiceInterface {
       | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
     if (dataJson.type === "serverUpdateGameState")
-      window.store.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
-    else window.store.gameStore.updateBallPositionNBothPaddles(dataJson.data);
+      transStore.gameStore.updateBallPositionNOponentPaddle(dataJson.data);
+    else transStore.gameStore.updateBallPositionNBothPaddles(dataJson.data);
   }
 
   static handleServerUpdateGameStateLocalPvp(
@@ -183,42 +184,42 @@ class GameServiceInterface {
       | GameServiceTypes.serverUpdateGameStateRestAPI
   ) {
     if (dataJson.type === "serverUpdateGameState")
-      window.store.gameStore.updateBallPosition(dataJson.data);
-    else window.store.gameStore.updateBallPositionNBothPaddles(dataJson.data);
+      transStore.gameStore.updateBallPosition(dataJson.data);
+    else transStore.gameStore.updateBallPositionNBothPaddles(dataJson.data);
   }
 
   static handleServerGameIsOver(dataJson: GameServiceTypes.ServerGameIsOver) {
     colog("GAME IS OVER RECEIVED!");
     colog(dataJson);
     this.disconnect();
-    console.log(JSON.stringify(window.store.gameStore.get()));
-    window.store.notificationStore.updateAddNotification({
+    console.log(JSON.stringify(transStore.gameStore.get()));
+    transStore.notificationStore.updateAddNotification({
       id: generateUniqueId(),
       message: GameServiceInterface.generateGameOverMsg(dataJson),
     });
   }
 
   static generateGameOverMsg(dataJson: GameServiceTypes.ServerGameIsOver) {
-    const gameThatJustEnded = window.store.gameStore.get();
+    const gameThatJustEnded = transStore.gameStore.get();
     const score1 = dataJson.data.player1.score;
     const score2 = dataJson.data.player2.score;
-    const playerName1 = window.store.playerNamesStore.getName(
+    const playerName1 = transStore.playerNamesStore.getName(
       dataJson.data.player1.id
     );
     let playerName2 = "";
     if (["localPvAi", "localPvP"].includes(gameThatJustEnded.typeOfGame)) {
       playerName2 = dataJson.data.player2.id;
     } else {
-      playerName2 = window.store.playerNamesStore.getName(
+      playerName2 = transStore.playerNamesStore.getName(
         dataJson.data.player2.id
       );
     }
     const winner = score1 > score2 ? playerName1 : playerName2;
     const reason =
-      window.store.languageStore.state.manageMatch.gameEndsMap[
+      transStore.languageStore.state.manageMatch.gameEndsMap[
         dataJson.data.reason as GameServiceTypes.PossibleGameEnds
       ];
-    return window.store.languageStore.state.manageMatch.matchIsOver({
+    return transStore.languageStore.state.manageMatch.matchIsOver({
       name1: playerName1,
       name2: playerName2,
       score1: score1,
@@ -230,24 +231,24 @@ class GameServiceInterface {
 
   static handleServerGameStarted(dataJson: GameServiceTypes.ServerGameStarted) {
     colog(dataJson);
-    window.store.gameStore.updateGameStateState("running");
+    transStore.gameStore.updateGameStateState("running");
   }
 
   static handleClientLeftGameBeforeStart() {
-    window.store.notificationStore.updateAddNotification({
+    transStore.notificationStore.updateAddNotification({
       id: generateUniqueId(),
       message: `Other Player left the game before it started!`,
     });
     console.log("RECEIVED MESSAGE TO SERVER: clientLeftGameBeforeStart");
-    window.store.gameStore.updateGameStateState("none");
+    transStore.gameStore.updateGameStateState("none");
   }
 
   static handleServerError() {
-    window.store.notificationStore.updateAddNotification({
+    transStore.notificationStore.updateAddNotification({
       id: generateUniqueId(),
       message: `Server Error!`,
     });
-    window.store.gameStore.updateGameStateState("none");
+    transStore.gameStore.updateGameStateState("none");
   }
 
   static handleClientLeftGame(dataJson: GameServiceTypes.ClientLeftGame) {
@@ -271,7 +272,7 @@ class GameServiceInterface {
   }
 
   static pickCorrectServerUpdateHandlingFunction() {
-    const gameType = window.store.gameStore.get().typeOfGame;
+    const gameType = transStore.gameStore.get().typeOfGame;
     switch (gameType) {
       case "localPvP":
         this.correctUpdateHandlingFunction =

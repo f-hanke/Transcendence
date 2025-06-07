@@ -15,6 +15,7 @@ import {
   renderTournamentNotification,
 } from "../utils/utils";
 import { AuthInterface } from "./authInterface";
+import { transStore } from "../state/store";
 
 class ChatInterface {
   constructor() {
@@ -84,12 +85,12 @@ class ChatInterface {
   }
   static createMatchTournament(data: MatchMakingTypes.BasicGame) {
     data.needsServerInitiation = true;
-    window.store.matchmakingStore.createGame(data);
+    transStore.matchmakingStore.createGame(data);
     navigateToSite("matchmaking");
   }
 
   static createMatch(data: ChatServiceTypes.InviteToPlayRequestBody) {
-    window.store.matchmakingStore.createGame({
+    transStore.matchmakingStore.createGame({
       hostId: data.authorId,
       invitedPlayerId: data.recipientId,
       oponentId: null,
@@ -123,11 +124,11 @@ class ChatInterface {
         body: JSON.stringify(data),
       });
       if (response.ok) {
-        window.store.chatUserStore.updateChangeUserBlockedStatus(
+        transStore.chatUserStore.updateChangeUserBlockedStatus(
           data.recipientId,
           data.blockedStatus
         );
-        window.store.chatMessageStore.reset();
+        transStore.chatMessageStore.reset();
       }
       if (!response.ok) {
         throw new Error(`Couldn't send friend request via API!`);
@@ -157,7 +158,7 @@ class ChatInterface {
         body: JSON.stringify(data),
       });
       if (response.ok) {
-        window.store.chatUserStore.updateChangeUserFriendStatus(
+        transStore.chatUserStore.updateChangeUserFriendStatus(
           data.recipientId,
           data.type === "send" ? "newAuthorUpdateFromFrontend" : data.type
         );
@@ -178,7 +179,7 @@ class ChatInterface {
     //   route: "/chat-history/",
     //   queryData: {
     //     recipientId: recipientId,
-    //     clientId: window.store.userStore.get().id,
+    //     clientId: transStore.userStore.get().id,
     //   },
     // });
     const address = buildApiRouteRelative({
@@ -186,7 +187,7 @@ class ChatInterface {
       route: "/chat-history/",
       queryData: {
         recipientId: recipientId,
-        clientId: window.store.userStore.get().details.id,
+        clientId: transStore.userStore.get().details.id,
       },
     });
     colog(address);
@@ -202,14 +203,14 @@ class ChatInterface {
       const responseJson = await response.json();
       colog(responseJson);
       if (chatServiceTypeGuards.isServerSendChatHistory(responseJson)) {
-        window.store.chatMessageStore.update({
+        transStore.chatMessageStore.update({
           recipientId: recipientId,
           messages: responseJson.data,
         });
       } else {
         throw new Error(`Server Send Chat History Wrong Data Type received!`);
       }
-      window.store;
+      transStore;
       if (!response.ok) {
         colog("fetchin 2");
         throw new Error(`Couldn't create match on Server via API!`);
@@ -301,12 +302,12 @@ class ChatInterface {
   static handleServerUpdateFriendRequest(
     dataJson: ChatServiceTypes.UpdateFriendRequest
   ) {
-    window.store.notificationStore.updateAddNotification({
+    transStore.notificationStore.updateAddNotification({
       id: generateUniqueId(),
       message: `UPDATE FRIEND STATUS ${dataJson.recipientId} ${dataJson.type} `,
     });
     colog("RECEIVED UPDATE FRIEND REQUEST FROM SERVER!");
-    window.store.chatUserStore.updateChangeUserFriendStatus(
+    transStore.chatUserStore.updateChangeUserFriendStatus(
       dataJson.recipientId,
       dataJson.type
     );
@@ -316,7 +317,7 @@ class ChatInterface {
     dataJson: ChatServiceTypes.ServerClientChangedOnlineStatus
   ) {
     colog("RECEIVED CHANGE ONLINE STATUS MESSAGE!");
-    window.store.chatUserStore.updateChangeUserOnlineStatus(
+    transStore.chatUserStore.updateChangeUserOnlineStatus(
       dataJson.data.recipientId,
       dataJson.data.onlineStatus
     );
@@ -328,13 +329,13 @@ class ChatInterface {
     colog("IPDATING USER LIST");
     colog("12345");
     colog(dataJson.data.chatUsers);
-    window.store.chatUserStore.updateUserListFromArray(dataJson.data.chatUsers);
+    transStore.chatUserStore.updateUserListFromArray(dataJson.data.chatUsers);
     // this.requestChatHistory(dataJson.data.chatUsers[0].recipientId);
   }
 
   static handleServerSentMessage(dataJson: ChatServiceTypes.SentMessage) {
     const isOwnMessage =
-      window.store.userStore.get().details.id === dataJson.data.authorId;
+      transStore.userStore.get().details.id === dataJson.data.authorId;
     if (isOwnMessage) this.handleServerSentOwnMessage(dataJson);
     else this.handleServerSentOthersMessage(dataJson);
   }
@@ -342,11 +343,11 @@ class ChatInterface {
   static handleServerSentOwnMessage(dataJson: ChatServiceTypes.SentMessage) {
     colog("SENT OWN MESSAGE");
     colog(dataJson);
-    window.store.chatUserStore.updateChangeUserLastMessage(
+    transStore.chatUserStore.updateChangeUserLastMessage(
       dataJson.data.recipientId,
       dataJson.data.message
     );
-    window.store.chatMessageStore.addMessage(
+    transStore.chatMessageStore.addMessage(
       dataJson.data.recipientId,
       dataJson.data
     );
@@ -354,7 +355,7 @@ class ChatInterface {
 
   static handleServerSentOthersMessage(dataJson: ChatServiceTypes.SentMessage) {
     const authorId = dataJson.data.authorId;
-    window.store.chatUserStore.updateChangeUserLastMessageAndUnreadMessageStatus(
+    transStore.chatUserStore.updateChangeUserLastMessageAndUnreadMessageStatus(
       authorId,
       dataJson.data.message
     );
@@ -367,16 +368,16 @@ class ChatInterface {
         navigateToSite("currentTournament");
     }
 
-    if (!window.store.chatUserStore.getIsBlocked(authorId)) {
+    if (!transStore.chatUserStore.getIsBlocked(authorId)) {
       let tmpMessage = dataJson.data.message;
       if (isGameInvite || isMatchResult || isTournamentStart || isPlayerLeft)
         tmpMessage = renderTournamentNotification(tmpMessage, dataJson.data.type!);
-      window.store.notificationStore.updateAddNotification({
+      transStore.notificationStore.updateAddNotification({
         id: generateUniqueId(),
         message: `${dataJson.data.authorId} : ${tmpMessage}`,
       });
     }
-    window.store.chatMessageStore.addMessage(authorId, dataJson.data);
+    transStore.chatMessageStore.addMessage(authorId, dataJson.data);
   }
 
   static sendMessageToServer(message: ChatServiceTypes.AllChatMessageTypes) {

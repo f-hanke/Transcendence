@@ -1,5 +1,6 @@
 import { createHtmlElementFromString, navigateToSite } from "../../utils/utils";
 import { MatchScore } from "./MatchScore";
+import { transStore } from "../../state/store";
 
 class RunMatch extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -13,10 +14,10 @@ class RunMatch extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeGameState = window.store.gameStore.subscribe(
+    this.unsubscribeGameState = transStore.gameStore.subscribe(
       this.update.bind(this)
     );
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(() =>
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(() =>
       this.render()
     );
     this.render();
@@ -28,12 +29,12 @@ class RunMatch extends HTMLElement {
   }
 
   update() {
-    if (window.store.gameStore.get().state === "none") navigateToSite("/");
+    if (transStore.gameStore.get().state === "none") navigateToSite("/");
     if (this.matchScoreComponent) this.matchScoreComponent.update();
   }
 
   async render() {
-    const gameState = window.store.gameStore.get().state;
+    const gameState = transStore.gameStore.get().state;
     if (gameState === "none") {
       navigateToSite("/");
     }

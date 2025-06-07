@@ -1,6 +1,7 @@
 import { MatchMakingTypes } from "transcendence";
 import { MatchMakingInterface } from "../../backendInterface/matchmakingInterface";
 import { isDefined } from "transcendence";
+import { transStore } from "../../state/store";
 
 type OptnsMatchItem = {
   renderJoin: boolean;
@@ -49,7 +50,7 @@ class MatchItem extends HTMLElement {
   connectedCallback() {}
 
 render() {
-  const lang = window.store.languageStore.state.matchItem;
+  const lang = transStore.languageStore.state.matchItem;
 
   this.innerHTML = `
     <li class="flex justify-between items-center bg-gray-600 p-2 rounded-lg text-white">
@@ -94,9 +95,9 @@ render() {
     optns: OptnsMatchItem,
   ) {
     this.hostId = data.hostId;
-    this.hostName = window.store.playerNamesStore.getName(data.hostId);
+    this.hostName = transStore.playerNamesStore.getName(data.hostId);
     this.oponentId = data.oponentId;
-    this.oponentName = isDefined(data.oponentId) ? window.store.playerNamesStore.getName(data.oponentId): null;
+    this.oponentName = isDefined(data.oponentId) ? transStore.playerNamesStore.getName(data.oponentId): null;
     this.matchId = data.matchId;
     this.renderJoin = optns.renderJoin;
     this.matchIsRunning = optns.matchIsRunning;
@@ -115,7 +116,7 @@ render() {
         // to do here: set invited playeris, tournament id and type of game
         matchId: this.matchId as string,
         hostId: this.hostId as string,
-        oponentId: window.store.userStore.get().details.id,
+        oponentId: transStore.userStore.get().details.id,
         invitedPlayerId: null,
         tournamentId: null,
         type: "public",

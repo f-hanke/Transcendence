@@ -3,6 +3,8 @@ import { deepCopyObj } from "../utils/utils";
 import { ChatMessageState } from "./chatStateTypes";
 import { StoreCallback } from "./types";
 import { ChatInterface } from "../backendInterface/chatInterface";
+import { transStore } from "../state/store";
+
 
 class ChatMessageStateStore {
   listeners: Set<StoreCallback>;
@@ -39,7 +41,7 @@ class ChatMessageStateStore {
   }
 
   reset() {
-    const firstUnblocked = window.store.chatUserStore.getFirstUnblocked();
+    const firstUnblocked = transStore.chatUserStore.getFirstUnblocked();
     if (firstUnblocked) {
       ChatInterface.requestChatHistory(firstUnblocked);
     } else {

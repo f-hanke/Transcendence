@@ -1,4 +1,5 @@
 import { createHtmlElementFromString } from "../utils/utils";
+import { transStore } from "../state/store";
 
 class NotificationModal extends HTMLElement {
   message: string;
@@ -14,10 +15,10 @@ class NotificationModal extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribe = window.store.notificationStore.subscribe(() =>
+    this.unsubscribe = transStore.notificationStore.subscribe(() =>
       this.render()
     );
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
   }
@@ -32,7 +33,7 @@ class NotificationModal extends HTMLElement {
 
   render() {
     // console.log("Notification rendered!");
-    const notificationState = window.store.notificationStore.get();
+    const notificationState = transStore.notificationStore.get();
     if (notificationState.length == 0) return;
     let notificationNode: HTMLElement;
     this.innerHTML = "";
@@ -46,11 +47,11 @@ class NotificationModal extends HTMLElement {
     if (this.timeoutId) clearTimeout(this.timeoutId);
 
     this.timeoutId = window.setTimeout(() => {
-      window.store.notificationStore.update([]);
+      transStore.notificationStore.update([]);
       this.innerHTML = "";
       // notificationNode.remove();
       // let newState = notificationState.filter(([id2, msg]) => id2 !== id);
-      // window.store.updateNotificationState(newState);
+      // transStore.updateNotificationState(newState);
     }, 5000);
     this.appendChild(div);
   }

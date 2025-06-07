@@ -1,16 +1,17 @@
 import { GameState } from "../../state/gameStateTypes";
 import { gameSettings } from "transcendence";
+import { transStore } from "../../state/store";
 
 class DrawPongTable {
   ctx: CanvasRenderingContext2D;
   gameState: GameState;
   constructor(ctx: CanvasRenderingContext2D) {
     this.ctx = ctx;
-    this.gameState = window.store.gameStore.get();
+    this.gameState = transStore.gameStore.get();
   }
 
   draw() {
-    this.gameState = window.store.gameStore.get();
+    this.gameState = transStore.gameStore.get();
     this.clearCanvas();
     this.drawBackground();
     this.drawCenterLine();

@@ -1,3 +1,5 @@
+import { transStore } from "./state/store";
+
 class WebComponentTemplate extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
 
@@ -7,7 +9,7 @@ class WebComponentTemplate extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
   }

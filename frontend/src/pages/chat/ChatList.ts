@@ -1,6 +1,7 @@
 import { ChatServiceTypes } from "transcendence";
 import { createHtmlElementFromString } from "../../utils/utils";
 import { ChatUserComponent, UserComponentType } from "./ChatUserComponent";
+import { transStore } from "../../state/store";
 
 type Tabs = "userList" | "blocked" | "friendRequests";
 
@@ -18,13 +19,13 @@ class ChatList extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
-    this.unsubscribeChatUserState = window.store.chatUserStore.subscribe(
+    this.unsubscribeChatUserState = transStore.chatUserStore.subscribe(
       this.render.bind(this)
     );
-    this.unsubscribeChatMessageState = window.store.chatMessageStore.subscribe(
+    this.unsubscribeChatMessageState = transStore.chatMessageStore.subscribe(
       this.render.bind(this)
     );
     this.render();
@@ -37,7 +38,7 @@ class ChatList extends HTMLElement {
   }
 
 render() {
-  const lang = window.store.languageStore.state.chat;
+  const lang = transStore.languageStore.state.chat;
 
   const classBtn = "flex-1 rounded border-2 outline-none p-1 hover:bg-gray-600";
   const classBtnSelected = `${classBtn} border-white`;
@@ -149,7 +150,7 @@ render() {
   }
 
   renderBlockedList() {
-    const userGroups = window.store.chatUserStore.getUserGroups();
+    const userGroups = transStore.chatUserStore.getUserGroups();
     const chatBlockedUsersList = this.querySelector(
       "#chatBlockedUsersList"
     ) as HTMLDivElement;
@@ -160,7 +161,7 @@ render() {
   }
 
   renderFriendRequestList() {
-    const userGroups = window.store.chatUserStore.getUserGroups();
+    const userGroups = transStore.chatUserStore.getUserGroups();
     const chatFriendRequestListAnswer = this.querySelector(
       "#chatFriendRequestListAnswer"
     ) as HTMLDivElement;
@@ -190,7 +191,7 @@ render() {
       "#chatOfflineUsersList"
     ) as HTMLDivElement;
 
-    const userGroups = window.store.chatUserStore.getUserGroups();
+    const userGroups = transStore.chatUserStore.getUserGroups();
 
     for (const user of userGroups.notifierBots) {
       this.createAndAppend(chatNotifierBotList, user, "user", true);
