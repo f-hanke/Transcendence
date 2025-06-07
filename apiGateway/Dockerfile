@@ -1,13 +1,4 @@
-FROM node:20-alpine AS shared-builder
-
-WORKDIR /app/shared
-COPY shared/package*.json ./
-RUN npm install
-COPY shared/tsconfig.json ./
-COPY shared/src ./src
-RUN npm run build
-
-FROM node:20-alpine AS api-gateway
+FROM node:20-alpine
 
 WORKDIR /app/apiGateway
 COPY apiGateway/package*.json ./
@@ -16,9 +7,9 @@ COPY apiGateway/tsconfig.json ./
 COPY apiGateway/src ./src
 COPY apiGateway/certs ./certs
 
-# Copy the built shared library
-COPY --from=shared-builder /app/shared/dist /app/shared/dist
-COPY --from=shared-builder /app/shared/package.json /app/shared/package.json
+# Copy the pre-built shared library (built by build_all.sh)
+COPY shared/dist /app/shared/dist
+COPY shared/package.json /app/shared/package.json
 
 # Update the shared library path
 RUN npm install --no-save ../shared

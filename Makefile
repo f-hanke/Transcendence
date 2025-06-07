@@ -1,21 +1,29 @@
 # Default Make command
 all: setup up
 
-# Elasticsearch security setup
-setup-elastic-security:
-	@echo "Setting up Elasticsearch security..."
-	@chmod +x scripts/setup-elastic-security.sh
-	@./scripts/setup-elastic-security.sh
+# Elasticsearch security setup 
+create_env:
+	@echo "Setting up .ENV..."
+	@chmod +x scripts/create-env.sh
+	@./scripts/create-env.sh
+
+# Build shared dependencies & frontend
+build-deps:
+	@echo "Building shared dependencies..."
+	@echo "Building shared package..."
+	npm install --prefix ./shared
+	npm run build --prefix ./shared
+	@echo "Building frontend..."
+	npm install --prefix ./frontend
+	npm run build --prefix ./frontend
+	@echo "Dependencies built successfully!"
 
 # Setup directories, network, and security
-setup: setup-elastic-security
+setup: create_env build-deps
 	@echo "Creating required directories..."
 	mkdir -p grafana/dashboards
 	mkdir -p grafana/provisioning/datasources
 	mkdir -p grafana/provisioning/dashboards
-	@echo "Building shared dependencies..."
-	npm install --prefix ./shared
-	npm run build --prefix ./shared
 
 # Ensure Kibana system password is properly set
 ensure-kibana-password:
@@ -50,7 +58,7 @@ rebuild-webserver:
 	docker compose build --no-cache webserver
 	docker compose up -d webserver
 
-rebuild: down
+rebuild: down build-deps
 	@echo "Rebuilding all services..."
 	docker compose build --no-cache
 	docker compose up -d
@@ -117,8 +125,11 @@ help:
 	@echo "  status       - Check status of all services"
 	@echo "  logs         - Follow logs from all services"
 	@echo ""
+	@echo "Build Operations:"
+	@echo "  build-deps   - Build shared dependencies only (required for Docker)"
+	@echo ""
 	@echo "Security Setup:"
-	@echo "  setup-elastic-security - Configure Elasticsearch security (run first!)"
+	@echo "  create_env - Configure Elasticsearch security (run first!)"
 	@echo "  ensure-kibana-password - Ensure kibana_system password is set"
 	@echo ""
 	@echo "Service Management:"
@@ -138,8 +149,8 @@ help:
 	@echo "  reset        - Clean and rebuild"
 	@echo ""
 	@echo "Security Notes:"
-	@echo "  • Run 'make setup-elastic-security' before first startup"
+	@echo "  • Run 'make create_env' before first startup"
 	@echo "  • Kibana login: username 'elastic', password from .env file"
 	@echo "  • Elasticsearch API requires authentication with certificates"
 
-.PHONY: all setup up down restart start stop reset rebuild status logs clean clean-npm clean-volumes clean-all help rebuild-webserver
+.PHONY: all setup up down restart start stop reset rebuild status logs clean clean-npm clean-volumes clean-all help rebuild-webserver build-deps

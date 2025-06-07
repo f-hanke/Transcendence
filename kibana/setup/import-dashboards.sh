@@ -7,7 +7,7 @@ echo "Waiting for Kibana to be ready..."
 # Wait for Kibana to be available
 until curl -s -f -u "elastic:${ELASTIC_PASSWORD}" "http://kibana:5601/api/status" >/dev/null 2>&1; do
     echo "Waiting for Kibana..."
-    sleep 10
+    sleep 1
 done
 
 echo "Kibana is ready! Setting up microservices dashboards..."
