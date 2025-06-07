@@ -303,7 +303,7 @@ class ChatInterface {
     dataJson: ChatServiceTypes.UpdateFriendRequest
   ) {
     const lang = transStore.languageStore.state.chat;
-    let msg;
+    let msg = "default error";
     if (dataJson.type === "accept")
       msg = lang.notifications.friendRequestAccepted + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
     else if (dataJson.type === "declined")
@@ -318,7 +318,7 @@ class ChatInterface {
 
     transStore.notificationStore.updateAddNotification({
       id: generateUniqueId(),
-      message: msg!,
+      message: msg,
     });
     colog("RECEIVED UPDATE FRIEND REQUEST FROM SERVER!");
     transStore.chatUserStore.updateChangeUserFriendStatus(
