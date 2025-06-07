@@ -4,6 +4,8 @@ import {
   transNetworkSettings,
 } from "transcendence";
 import { RouteBuilder } from "./utilsTypes";
+import { transStore } from "../state/store";
+
 
 function deepCopyObj<T extends object>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
@@ -58,7 +60,7 @@ function getQueryParam(
   if (!isDefined(queryData) && addClientIdAsQueryParam !== true) return "";
   let queryParam = "";
   if (addClientIdAsQueryParam === true) {
-    const clientId = window.store.userStore.get().details.id;
+    const clientId = transStore.userStore.get().details.id;
     if (isDefined(queryData)) queryData.clientId = clientId;
     else queryData = { clientId: clientId };
   }
@@ -134,7 +136,7 @@ function buildBackendRoute(optn: {
       break;
   }
   if (optn.addClientIdAsQueryParam === true) {
-    const clientId = window.store.userStore.get().details.id;
+    const clientId = transStore.userStore.get().details.id;
     if (isDefined(optn.queryData)) optn.queryData.clientId = clientId;
     else optn.queryData = { clientId: clientId };
   }
@@ -288,7 +290,7 @@ function userReadableDate(dateInput: string | Date) {
 }
 
 function renderTournamentNotification(msg: string, type: string){
-  const lang = window.store.languageStore.state.chat;
+  const lang = transStore.languageStore.state.chat;
   if (type === "sendGameInvite")
     msg = lang.notifications.invite;
   else if (type === "startTournament")

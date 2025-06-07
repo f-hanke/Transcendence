@@ -1,3 +1,4 @@
+import { transStore } from "../../state/store";
 
 class ToggleAiButton extends HTMLElement {
   private button: HTMLButtonElement;
@@ -17,10 +18,10 @@ class ToggleAiButton extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
-    this.unsubscribeGameState = window.store.gameStore.subscribe(
+    this.unsubscribeGameState = transStore.gameStore.subscribe(
       this.render.bind(this)
     );
   }
@@ -35,9 +36,9 @@ class ToggleAiButton extends HTMLElement {
   }
 
   getCurrentBtnText() {
-    if (window.store.gameStore.get().typeOfGame === "localPvAi")
-      return window.store.languageStore.state.oneVOneLocal.aIOrHumanBtnAi;
-    return window.store.languageStore.state.oneVOneLocal.aIOrHumanBtnHuman;
+    if (transStore.gameStore.get().typeOfGame === "localPvAi")
+      return transStore.languageStore.state.oneVOneLocal.aIOrHumanBtnAi;
+    return transStore.languageStore.state.oneVOneLocal.aIOrHumanBtnHuman;
   }
 
   toggleOpponent() {

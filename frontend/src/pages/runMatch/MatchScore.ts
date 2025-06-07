@@ -1,4 +1,5 @@
 import { padNumberToString, roundIntToString } from "../../utils/utils";
+import { transStore } from "../../state/store";
 
 class MatchScore extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -97,7 +98,7 @@ class MatchScore extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(() =>
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(() =>
       this.render()
     );
   }
@@ -107,7 +108,7 @@ class MatchScore extends HTMLElement {
   }
 
   update() {
-    const gameState = window.store.gameStore.get();
+    const gameState = transStore.gameStore.get();
 
     this.leftPaddleY.innerHTML = `${String(gameState.paddleLeft.paddleY)}`;
     this.leftPaddleSpeed.innerHTML = `${padNumberToString(
@@ -131,14 +132,14 @@ class MatchScore extends HTMLElement {
     this.scoreRight.innerHTML = `${gameState.paddleRight.score}`;
 
     this.leftPlayerNameDisplay.innerHTML =
-      window.store.playerNamesStore.getName(gameState.paddleLeft.playerId);
+      transStore.playerNamesStore.getName(gameState.paddleLeft.playerId);
 
     if (["localPvP", "localPvAi"].includes(gameState.typeOfGame)) {
       this.rightPlayerNameDisplay.innerHTML =
-        window.store.oneVOneLocalStore.get().player2Name;
+        transStore.oneVOneLocalStore.get().player2Name;
     } else {
       this.rightPlayerNameDisplay.innerHTML =
-        window.store.playerNamesStore.getName(gameState.paddleRight.playerId);
+        transStore.playerNamesStore.getName(gameState.paddleRight.playerId);
     }
   }
 

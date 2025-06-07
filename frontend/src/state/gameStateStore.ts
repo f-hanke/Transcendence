@@ -12,6 +12,7 @@ import {
   UpdateOnSuccessfullMatchmaking,
 } from "./gameStateTypes";
 import { StoreCallback } from "./types";
+import { transStore } from "../state/store";
 
 class GameStateStore {
   listeners: Set<StoreCallback>;
@@ -130,7 +131,7 @@ class GameStateStore {
     this.state.ball.x = newState.ball.x;
     this.state.ball.y = newState.ball.y + gameSettings.bumperHeight;
     const newOponentPaddle =
-      window.store.userStore.get().details.id === newState.player1.id
+      transStore.userStore.get().details.id === newState.player1.id
         ? newState.player2
         : newState.player1;
     this.getPaddleByPlayerId(newOponentPaddle.id).paddleY =
@@ -150,11 +151,11 @@ class GameStateStore {
     this.state.ball.x = newState.ball.x;
     this.state.ball.y = newState.ball.y + gameSettings.bumperHeight;
     const newOponentPaddle =
-      window.store.userStore.get().details.id === newState.player1.id
+      transStore.userStore.get().details.id === newState.player1.id
         ? newState.player1
         : newState.player2;
     const newOwnPaddle =
-      window.store.userStore.get().details.id === newState.player1.id
+      transStore.userStore.get().details.id === newState.player1.id
         ? newState.player2
         : newState.player1;
 

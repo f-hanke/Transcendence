@@ -1,5 +1,5 @@
 import { generateUniqueId } from "transcendence";
-
+import { transStore } from "../state/store";
 
 class TestPage extends HTMLElement {
   constructor() {
@@ -20,8 +20,8 @@ class TestPage extends HTMLElement {
     `;
 
         document.querySelector("#querynotifyBtn")?.addEventListener("click", () => {
-      window.store.notificationStore.update([
-        ...window.store.notificationStore.get(),
+      transStore.notificationStore.update([
+        ...transStore.notificationStore.get(),
         {
           id: generateUniqueId(),
           message: `This is a notification!`,

@@ -1,6 +1,7 @@
 import { AuthServiceTypes } from "transcendence";
 import { UserInterface } from "../backendInterface/userInterface";
 import { SupportedLanguages } from "../state/languageStateStore/languageStateTypes";
+import { transStore } from "../state/store";
 
 class ChangeLanguageButton extends HTMLElement {
     private changeLanguageBtn: HTMLButtonElement;
@@ -72,7 +73,7 @@ class ChangeLanguageButton extends HTMLElement {
               language: language as AuthServiceTypes.Language,
             });
             if (res)
-              window.store.languageStore.set(language as SupportedLanguages);
+              transStore.languageStore.set(language as SupportedLanguages);
             else{
               console.log("failed to update language in db, not changing languageStore");
             }

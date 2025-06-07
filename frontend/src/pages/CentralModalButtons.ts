@@ -29,7 +29,7 @@ class CentralModalButtons extends HTMLElement {
   }
 
   connectedCallback() {
-    // this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    // this.unsubscribeLanguage = transStore.languageStore.subscribe(
     //   this.render.bind(this)
     // );
     

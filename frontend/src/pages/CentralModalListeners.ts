@@ -1,6 +1,7 @@
 import { isDefined } from "transcendence";
 import { AllKeyboardKeyCodes } from "../utils/keycodesTypes";
 import { KeyDownCallback } from "../state/modalStateTypes";
+import { transStore } from "../state/store";
 
 class CentralModalListeners extends HTMLElement {
   unsubscribe: null | (() => void);
@@ -14,7 +15,7 @@ class CentralModalListeners extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribe = window.store.modalStore.subscribe(
+    this.unsubscribe = transStore.modalStore.subscribe(
       this.render.bind(this)
     );
     this.render();
@@ -27,12 +28,12 @@ class CentralModalListeners extends HTMLElement {
   }
 
   render() {
-    const state = window.store.modalStore.get();
+    const state = transStore.modalStore.get();
     this.innerHTML = `
       <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center
       ${state.open ? "" : "hidden"}">
         <div id="modalContent" class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
-          ${window.store.modalStore.get().content.map((line) => {
+          ${transStore.modalStore.get().content.map((line) => {
             return `<p>${line}</p>`;
           })}
         </div>
@@ -42,11 +43,11 @@ class CentralModalListeners extends HTMLElement {
 
   handleKeyDown(event: KeyboardEvent) {
     const validKeyCode = event.code as AllKeyboardKeyCodes;
-    if (isDefined(window.store.modalStore.get().keyDownCallback[validKeyCode])) {
-      (window.store.modalStore.get().keyDownCallback[validKeyCode] as KeyDownCallback)() ; 
-      window.store.modalStore.reset();
+    if (isDefined(transStore.modalStore.get().keyDownCallback[validKeyCode])) {
+      (transStore.modalStore.get().keyDownCallback[validKeyCode] as KeyDownCallback)() ; 
+      transStore.modalStore.reset();
       console.log("Closing modal Here!");
-      window.store.modalStore.updateSetClosed();
+      transStore.modalStore.updateSetClosed();
     }
   }
 }
