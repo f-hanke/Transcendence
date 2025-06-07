@@ -1,5 +1,5 @@
-# Default Make command :-) MAKE MAKEFILES GREAT AGAIN LOL
-all: setup start
+# Default Make command
+all: setup up
 
 # Setup directories and network
 setup:
@@ -11,98 +11,90 @@ setup:
 	npm install --prefix ./shared
 	npm run build --prefix ./shared
 
-# Start all services
-start: setup
-	@echo "Starting all services with docker compose (including RabbitMQ)..."
+# Basic Docker Compose operations
+up: setup
+	@echo "Starting all services..."
 	docker compose up -d --build
 	@echo "Services are starting up. Check status with 'make status'"
 	@cat service-info.txt
 
+down:
+	@echo "Stopping all services (keeping volumes)..."
+	docker compose down
+	@echo "All services stopped. Data volumes preserved."
 
+restart: down up
+
+# Individual service management
 start-api-gateway:
 	@echo "Building and starting the api gateway..."
 	docker compose up -d --build api-gateway
-	@echo "Api gateway starting. Check status with 'make status'"
 
 start-webserver:
 	@echo "Building and starting the webserver..."
 	docker compose up -d --build webserver
-	@echo "Webserver starting. Check status with 'make status'"
 
 start-users-auth:
 	@echo "Building and starting the users auth service..."
 	docker compose up -d --build users-auth
-	@echo "Users auth service starting. Check status with 'make status'"
 
-# Build and start just the remote service (for testing)
 start-remote:
 	@echo "Building and starting the remote service..."
 	docker compose up -d --build remote
-	@echo "Remote service starting. Check status with 'make status'"
 
-# Build and start just the game service (for testing)
 start-game-service:
 	@echo "Building and starting the game service..."
 	docker compose up -d --build game-service
-	@echo "Game service starting. Check status with 'make status'"
 
-# Build and start just the chat service (for testing)
 start-chat-service:
 	@echo "Building and starting the chat service..."
 	docker compose up -d --build chat-service
-	@echo "Chat service starting. Check status with 'make status'"
 
-# Build and start just the frontend service (for testing)
+# Frontend development
 start-frontend:
 	@echo "Starting frontend development server..."
 	cd frontend && npm install && npm run dev
 
-# Build the frontend (for production)
 build-frontend:
 	@echo "Building frontend for production..."
 	cd shared && npm install && npm run build
 	cd frontend && npm install && npm run build
 
-# Build the frontend with TypeScript checking skipped
 build-frontend-skip-ts-check:
 	@echo "Building frontend for production (skipping TypeScript checks)..."
 	cd shared && npm install && npm run build
 	cd frontend && npm install && npm run build-skip-ts-check
 
-# Rebuild just the webserver (which includes frontend build)
+# Service rebuilding
 rebuild-webserver:
-	@echo "Building and starting the webserver (includes frontend build)..."
+	@echo "Rebuilding webserver..."
 	docker compose stop webserver
 	docker compose rm -f webserver
 	docker compose build --no-cache webserver
 	docker compose up -d webserver
-	@echo "Webserver rebuilt. Check status with 'make status'"
 
-# Rebuild just the frontend service (for development)
-rebuild-frontend:
-	@echo "This is now just an alias for start-frontend for local development"
-	make start-frontend
+rebuild: down
+	@echo "Rebuilding all services..."
+	docker compose build --no-cache
+	docker compose up -d
+	@echo "Services rebuilt and started. Check status with 'make status'"
 
-# Stop all services
-stop:
-	@echo "Stopping all services..."
-	docker compose down
-	@echo "All services have been stopped."
-
-# Check status of all services (improved version with colors)
+# Status and monitoring
 status:
 	@./scripts/health_check.sh
 
-# Clean up less aggressively (containers, volumes, and networks)
-clean:
-	@echo "Cleaning up Docker resources..."
-	# Remove stopped containers and volumes
-	docker compose down -v
-	docker container prune -f
-	docker volume prune -f
-	@echo "Less aggressive Docker cleanup complete!"
+logs:
+	docker compose logs -f
 
-# Clean npm build files
+# Cleanup commands (non-destructive by default)
+clean:
+	@echo "Cleaning up containers and images (preserving volumes)..."
+	docker compose down
+	docker container prune -f
+	docker image prune -f
+	docker network prune -f
+	@echo "Cleanup complete. Data volumes preserved."
+
 clean-npm:
 	@echo "Cleaning npm build files..."
 	find . -name "node_modules" -type d -prune -exec rm -rf '{}' +
@@ -111,44 +103,59 @@ clean-npm:
 	find . -name "*.tsbuildinfo" -type f -delete
 	@echo "NPM build files cleaned!"
 
-# Clean everything (more aggressive cleanup)
-fclean: stop clean-npm
-	@echo "Forcing full cleanup of Docker resources..."
-	# Remove stopped containers, unused images, networks, and volumes
-	docker container prune -f
-	# docker image prune -a -f
-	docker network prune -f
+# Destructive cleanup commands (separate section)
+clean-volumes:
+	@echo "⚠️  WARNING: This will delete ALL data volumes!"
+	@echo "Press Ctrl+C to cancel, or Enter to continue..."
+	@read
+	docker compose down -v
 	docker volume prune -f
-	# Optionally, remove the .docker directory if you want to completely reset Docker's data
-	# rm -rf ~/.docker
-	@echo "Full Docker cleanup complete!"
+	@echo "All volumes removed!"
 
-reDev:	clean-npm all
+clean-all: clean clean-npm clean-volumes
+	@echo "⚠️  WARNING: This will delete everything including data!"
+	@echo "Press Ctrl+C to cancel, or Enter to continue..."
+	@read
+	docker system prune -a -f --volumes
+	@echo "Everything cleaned!"
 
-rebuild:fclean all
-
-re:	stop
-	@echo "Rebuilding services.."
-	docker compose build --no-cache
-	docker compose up -d
-	@echo "Services have been rebuilt and started, check status with 'make status'"
+# Aliases for common operations
+start: up
+stop: down
+reset: clean rebuild
 
 help:
-	@echo "Available Commands:"
-	@echo "  all        - Setup and start all services"
-	@echo "  setup      - Setup directories and build shared dependencies"
-	@echo "  start      - Start all services with docker-compose (including RabbitMQ)"
-	@echo "  start-remote - Build and start the remote service (for testing)"
-	@echo "  start-game-service - Build and start the game service (for testing)"
-	@echo "  start-chat-service - Build and start the chat service (for testing)"
-	@echo "  start-frontend - Build and start the frontend service (for testing)"
-	@echo "  rebuild-frontend - Rebuild and start the frontend service (for development)"
-	@echo "  stop       - Stop all services"
-	@echo "  status     - Check status of all services (with colorful output)"
-	@echo "  clean      - Clean up stopped containers and volumes"
-	@echo "  clean-npm  - Clean up npm build files (node_modules, dist, etc.)"
-	@echo "  fclean     - Clean up all Docker resources and npm build files"
-	@echo "  re         - Run fclean and then start everything fresh"
+	@echo "🐋 Docker Operations:"
+	@echo "  up           - Start all services (docker compose up)"
+	@echo "  down         - Stop all services (preserving data)"
+	@echo "  restart      - Stop and start all services"
+	@echo "  rebuild      - Rebuild and restart all services"
+	@echo "  status       - Check status of all services"
+	@echo "  logs         - Follow logs from all services"
+	@echo ""
+	@echo "🔧 Individual Services:"
+	@echo "  start-api-gateway    - Start API gateway"
+	@echo "  start-webserver      - Start webserver"
+	@echo "  start-users-auth     - Start auth service"
+	@echo "  start-remote         - Start remote service"
+	@echo "  start-game-service   - Start game service"
+	@echo "  start-chat-service   - Start chat service"
+	@echo "  rebuild-webserver    - Rebuild webserver"
+	@echo ""
+	@echo "🎨 Frontend:"
+	@echo "  start-frontend       - Start frontend dev server"
+	@echo "  build-frontend       - Build frontend for production"
+	@echo ""
+	@echo "🧹 Cleanup (Safe):"
+	@echo "  clean        - Clean containers/images (preserve data)"
+	@echo "  clean-npm    - Clean npm build files"
+	@echo ""
+	@echo "💥 Cleanup (Destructive):"
+	@echo "  clean-volumes - ⚠️  DELETE all data volumes"
+	@echo "  clean-all     - ⚠️  DELETE everything"
+	@echo ""
+	@echo "📚 Aliases:"
+	@echo "  start/stop   - Aliases for up/down"
+	@echo "  reset        - Clean and rebuild"
 
-
-.PHONY: start stop status clean clean-npm fclean re help setup
+.PHONY: all setup up down restart start stop reset rebuild status logs clean clean-npm clean-volumes clean-all help start-api-gateway start-webserver start-users-auth start-remote start-game-service start-chat-service start-frontend build-frontend build-frontend-skip-ts-check rebuild-webserver
