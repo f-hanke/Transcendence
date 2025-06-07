@@ -22,8 +22,6 @@ COPY usersAndAuth/config ./config
 COPY usersAndAuth/rabbitMQ ./rabbitMQ
 COPY usersAndAuth/db ./db
 RUN rm ./db/user_service.db
-# COPY usersAndAuth/db/db.ts ./db/db.ts
-# COPY usersAndAuth/db/init/init.js ./db/init/init.js
 COPY usersAndAuth/lib ./lib
 COPY usersAndAuth/public ./public
 

@@ -263,7 +263,7 @@ services:
       elasticsearch:
         condition: service_healthy
     volumes:
-      - remote-db-data:/app/remote/db_file
+      - remote-db-data:/app/db_file
     expose:
       - "10002"
 
@@ -321,7 +321,7 @@ services:
       elasticsearch:
         condition: service_healthy
     volumes:
-      - chat-service-db-data:/app/chat-service/db
+      - chat-service-db-data:/app/db
     expose:
       - "10001"
 
