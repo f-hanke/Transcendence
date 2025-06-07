@@ -146,47 +146,52 @@ async function handleMatchResultProcessed(
           if (tournamentToHandle.playersWhoClickedToLeave.length > 1)
           {
             logger.info("~ There are 2+ players who clicked to leave");
-            let newMatchId = await Tournament.scheduleMatch(
-              tournamentToHandle.tournamentId as string,
-              "matchBronze",
-              tournamentToHandle.playersWhoClickedToLeave[1],
-              tournamentToHandle.playersWhoClickedToLeave[0]
-            );
-            let newMatch: MatchMakingTypes.BasicGame = {
-              matchId: newMatchId,
-              hostId: tournamentToHandle.playersWhoClickedToLeave[1],
-              oponentId: tournamentToHandle.playersWhoClickedToLeave[0],
-              tournamentId: tournamentToHandle.tournamentId as string,
-              type: "tournament",
-              invitedPlayerId: tournamentToHandle.playersWhoClickedToLeave[0],
-            };
-            tournamentToHandle.matchBronze = newMatch;
-            logger.info(
-              "Just scheduled bogus matchBronze with two players who ClickedToLeave, generating match result now"
-            );
-            const matchBronzeResult: GameResultTypes.MatchResult = {
-              matchId: newMatchId,
-              player1Id: tournamentToHandle.playersWhoClickedToLeave[1],
-              player2Id: tournamentToHandle.playersWhoClickedToLeave[0],
-              winnerId: tournamentToHandle.playersWhoClickedToLeave[1],
-              player1Score: 0,
-              player2Score: 0,
-              createdAt: new Date().toISOString(),
-            };
-            await Tournament.updateOngoingTournamentDatabase(
-              matchBronzeResult.player1Score,
-              matchBronzeResult.player2Score,
-              matchBronzeResult.createdAt,
-              matchBronzeResult.matchId
-            );
-            const tournamentNotification: MatchMakingTypes.TournamentNotification =
-              {
-                updateForMatch: "bronze",
-                tournamentData: tournamentToHandle,
-              } as MatchMakingTypes.TournamentNotification;
-            tournamentToHandle.matchResultBronze = matchBronzeResult;
-            publishMessage(tournamentNotification); // read by chat-service
-            logger.info("Ongoing Tournament updated in DB");
+            let newMatchId;
+            let newMatch: MatchMakingTypes.BasicGame;
+            if (tournamentToHandle.matchBronze === null)
+            {
+              newMatchId = await Tournament.scheduleMatch(
+                tournamentToHandle.tournamentId as string,
+                "matchBronze",
+                tournamentToHandle.playersWhoClickedToLeave[1],
+                tournamentToHandle.playersWhoClickedToLeave[0]
+              );
+              newMatch = {
+                matchId: newMatchId,
+                hostId: tournamentToHandle.playersWhoClickedToLeave[1],
+                oponentId: tournamentToHandle.playersWhoClickedToLeave[0],
+                tournamentId: tournamentToHandle.tournamentId as string,
+                type: "tournament",
+                invitedPlayerId: tournamentToHandle.playersWhoClickedToLeave[0],
+              };
+              tournamentToHandle.matchBronze = newMatch;
+              logger.info(
+                "Just scheduled bogus matchBronze with two players who ClickedToLeave, generating match result now"
+              );
+              const matchBronzeResult: GameResultTypes.MatchResult = {
+                matchId: newMatchId,
+                player1Id: tournamentToHandle.playersWhoClickedToLeave[1],
+                player2Id: tournamentToHandle.playersWhoClickedToLeave[0],
+                winnerId: tournamentToHandle.playersWhoClickedToLeave[1],
+                player1Score: 0,
+                player2Score: 0,
+                createdAt: new Date().toISOString(),
+              };
+              await Tournament.updateOngoingTournamentDatabase(
+                matchBronzeResult.player1Score,
+                matchBronzeResult.player2Score,
+                matchBronzeResult.createdAt,
+                matchBronzeResult.matchId
+              );
+              const tournamentNotification: MatchMakingTypes.TournamentNotification =
+                {
+                  updateForMatch: "bronze",
+                  tournamentData: tournamentToHandle,
+                } as MatchMakingTypes.TournamentNotification;
+              tournamentToHandle.matchResultBronze = matchBronzeResult;
+              publishMessage(tournamentNotification); // read by chat-service
+              logger.info("Ongoing Tournament updated in DB");
+            }
 
             const finalistsWhoClickedToLeave =
               tournamentToHandle.playersWhoClickedToLeave.slice(2);
@@ -205,15 +210,7 @@ async function handleMatchResultProcessed(
               finalistsWhoDidntClickToLeave
             );
             if (finalistsWhoDidntClickToLeave.length === 1) {
-              finalistsWhoDidntClickToLeave = [
-                tournamentToHandle!.player1Id as string,
-                tournamentToHandle!.player2Id as string,
-                tournamentToHandle!.player3Id as string,
-                tournamentToHandle!.player4Id as string,
-              ].filter(
-                (id) =>
-                  !tournamentToHandle!.playersWhoClickedToLeave.includes(id)
-              );
+              finalistsWhoDidntClickToLeave = [ tournamentToHandle!.player1Id as string, tournamentToHandle!.player2Id as string, tournamentToHandle!.player3Id as string, tournamentToHandle!.player4Id as string, ].filter( (id) => !tournamentToHandle!.playersWhoClickedToLeave.includes(id) );
             }
             logger.info(
               "Finalists who didn't click to leave after filtering: ",
@@ -225,20 +222,9 @@ async function handleMatchResultProcessed(
             let didntClickToLeavePopable = JSON.parse(
               JSON.stringify(finalistsWhoDidntClickToLeave)
             );
-            let finalist1Id: string =
-              didntClickToLeavePopable.length > 0
-                ? (didntClickToLeavePopable.pop() as string)
-                : (clickedToLeavePopable.pop() as string);
-            let finalist2Id: string =
-              didntClickToLeavePopable.length > 0
-                ? (didntClickToLeavePopable.pop() as string)
-                : (clickedToLeavePopable.pop() as string);
-            newMatchId = await Tournament.scheduleMatch(
-              tournamentToHandle.tournamentId as string,
-              "matchFinale",
-              finalist1Id,
-              finalist2Id
-            );
+            let finalist1Id: string = didntClickToLeavePopable.length > 0 ? (didntClickToLeavePopable.pop() as string) : (clickedToLeavePopable.pop() as string);
+            let finalist2Id: string = didntClickToLeavePopable.length > 0 ? (didntClickToLeavePopable.pop() as string) : (clickedToLeavePopable.pop() as string);
+            newMatchId = await Tournament.scheduleMatch( tournamentToHandle.tournamentId as string, "matchFinale", finalist1Id, finalist2Id );
             newMatch = {
               matchId: newMatchId,
               hostId: finalist1Id,
@@ -264,12 +250,7 @@ async function handleMatchResultProcessed(
               if (finalistsWhoClickedToLeave.length !== 2) {
                 matchFinaleResult.player1Score = gameSettings.maxScore;
               }
-              await Tournament.updateOngoingTournamentDatabase(
-                matchFinaleResult.player1Score,
-                matchFinaleResult.player2Score,
-                matchFinaleResult.createdAt,
-                matchFinaleResult.matchId
-              );
+              await Tournament.updateOngoingTournamentDatabase( matchFinaleResult.player1Score, matchFinaleResult.player2Score, matchFinaleResult.createdAt, matchFinaleResult.matchId );
               const tournamentNotification: MatchMakingTypes.TournamentNotification =
                 {
                   updateForMatch: "finale",
@@ -277,12 +258,7 @@ async function handleMatchResultProcessed(
                 } as MatchMakingTypes.TournamentNotification;
               tournamentToHandle.matchResultFinale = matchFinaleResult;
               publishMessage(tournamentNotification); // read by chat-service
-              await Tournament.updateOngoingTournamentDatabase(
-                matchFinaleResult.player1Score,
-                matchFinaleResult.player2Score,
-                matchFinaleResult.createdAt,
-                matchFinaleResult.matchId
-              );
+              await Tournament.updateOngoingTournamentDatabase( matchFinaleResult.player1Score, matchFinaleResult.player2Score, matchFinaleResult.createdAt, matchFinaleResult.matchId );
               logger.info("Ongoing Tournament updated in DB");
             } else {
               logger.info(
@@ -369,7 +345,7 @@ async function handleMatchResultProcessed(
               invitedPlayerId: bronzeOpponentId as string,
             };
             tournament.matchBronze = newMatch;
-            if ( tournament.playersWhoClickedToLeave?.includes( tournament.matchBronze.hostId ) || tournament.playersWhoClickedToLeave?.includes( bronzeOpponentId as string ) )
+            if (( tournament.playersWhoClickedToLeave?.includes( tournament.matchBronze.hostId ) || tournament.playersWhoClickedToLeave?.includes( bronzeOpponentId as string )) && tournament.matchResultBronze === null)
             {
               logger.info( "Had scheduled matchBronze but one of the players had clicked to leave, generating match result now" );
               const onePlayerProvenToHaveClickedLeaveId = tournament.playersWhoClickedToLeave.includes( tournament.matchBronze.hostId ) ? tournament.matchBronze.hostId : (bronzeOpponentId as string); // there could be more than one, but we determine one proven
@@ -411,7 +387,8 @@ async function handleMatchResultProcessed(
       break;
     } else if (tournament.matchBronze?.matchId === matchResult.matchId) {
       tournamentToHandle = tournament;
-      tournamentToHandle.matchResultBronze = matchResult;
+      if (tournamentToHandle.matchResultBronze === null)
+        tournamentToHandle.matchResultBronze = matchResult;
       break;
     }
   }
@@ -981,7 +958,7 @@ async function handleClientLeaveTournament(
         } else if (
           tournament.matchBronze?.hostId === dataJson.data.playerId ||
           (tournament.matchBronze?.invitedPlayerId === dataJson.data.playerId &&
-            !tournament.matchResultBronze)
+            tournament.matchResultBronze === null)
         ) {
           // player leaving was in bronze match but there's no result for it, generate a match result with the player leaving as loser
           matchResult = {
