@@ -152,7 +152,7 @@ services:
       - "8443:8443"  # Only expose HTTPS
     environment:
       - NODE_ENV=production
-      - JWT_SECRET=supersecret
+      - JWT_SECRET=a03a3a0fa94982e1ebed6f5146fa322e
       - WEBSERVER_HOST=webserver
       - AUTH_SERVICE_HOST=users-auth
       - SERVICE_NAME=api-gateway
