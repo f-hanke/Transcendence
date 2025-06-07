@@ -345,7 +345,7 @@ async function handleMatchResultProcessed(
               invitedPlayerId: bronzeOpponentId as string,
             };
             tournament.matchBronze = newMatch;
-            if ( tournament.playersWhoClickedToLeave?.includes( tournament.matchBronze.hostId ) || tournament.playersWhoClickedToLeave?.includes( bronzeOpponentId as string ) )
+            if (( tournament.playersWhoClickedToLeave?.includes( tournament.matchBronze.hostId ) || tournament.playersWhoClickedToLeave?.includes( bronzeOpponentId as string )) && tournament.matchResultBronze === null)
             {
               logger.info( "Had scheduled matchBronze but one of the players had clicked to leave, generating match result now" );
               const onePlayerProvenToHaveClickedLeaveId = tournament.playersWhoClickedToLeave.includes( tournament.matchBronze.hostId ) ? tournament.matchBronze.hostId : (bronzeOpponentId as string); // there could be more than one, but we determine one proven
@@ -387,7 +387,8 @@ async function handleMatchResultProcessed(
       break;
     } else if (tournament.matchBronze?.matchId === matchResult.matchId) {
       tournamentToHandle = tournament;
-      tournamentToHandle.matchResultBronze = matchResult;
+      if (tournamentToHandle.matchResultBronze === null)
+        tournamentToHandle.matchResultBronze = matchResult;
       break;
     }
   }
@@ -957,7 +958,7 @@ async function handleClientLeaveTournament(
         } else if (
           tournament.matchBronze?.hostId === dataJson.data.playerId ||
           (tournament.matchBronze?.invitedPlayerId === dataJson.data.playerId &&
-            !tournament.matchResultBronze)
+            tournament.matchResultBronze === null)
         ) {
           // player leaving was in bronze match but there's no result for it, generate a match result with the player leaving as loser
           matchResult = {
