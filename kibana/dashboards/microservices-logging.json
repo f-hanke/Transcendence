@@ -1,0 +1,74 @@
+{
+  "version": "8.12.1",
+  "objects": [
+    {
+      "id": "microservices-logs-*",
+      "type": "index-pattern",
+      "attributes": {
+        "title": "microservices-logs-*",
+        "timeFieldName": "@timestamp",
+        "fields": "[{\"name\":\"@timestamp\",\"type\":\"date\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"level\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"message\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":false},{\"name\":\"service\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"host\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"environment\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true}]"
+      }
+    },
+    {
+      "id": "microservices-overview",
+      "type": "dashboard",
+      "attributes": {
+        "title": "Microservices Overview",
+        "description": "Overview of all microservices logs and metrics",
+        "panelsJSON": "[{\"gridData\":{\"x\":0,\"y\":0,\"w\":24,\"h\":15},\"type\":\"search\",\"id\":\"logs-search\"}]",
+        "optionsJSON": "{\"useMargins\":true,\"syncColors\":false,\"hidePanelTitles\":false}",
+        "version": 1,
+        "timeRestore": false,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"match_all\":{}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "logs-search",
+      "type": "search",
+      "attributes": {
+        "title": "All Microservices Logs",
+        "description": "Search across all microservice logs",
+        "hits": 0,
+        "columns": ["@timestamp", "service", "level", "message"],
+        "sort": [["@timestamp", "desc"]],
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"microservices-logs-*\",\"query\":{\"match_all\":{}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "error-logs-dashboard",
+      "type": "dashboard", 
+      "attributes": {
+        "title": "Error Logs Dashboard",
+        "description": "Dashboard showing only error logs from all services",
+        "panelsJSON": "[{\"gridData\":{\"x\":0,\"y\":0,\"w\":48,\"h\":15},\"type\":\"search\",\"id\":\"error-logs-search\"}]",
+        "optionsJSON": "{\"useMargins\":true,\"syncColors\":false,\"hidePanelTitles\":false}",
+        "version": 1,
+        "timeRestore": false,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"match\":{\"level\":\"error\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "error-logs-search",
+      "type": "search",
+      "attributes": {
+        "title": "Error Logs Only",
+        "description": "Shows only error level logs",
+        "hits": 0,
+        "columns": ["@timestamp", "service", "message", "host"],
+        "sort": [["@timestamp", "desc"]],
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"microservices-logs-*\",\"query\":{\"match\":{\"level\":\"error\"}},\"filter\":[]}"
+        }
+      }
+    }
+  ]
+} 

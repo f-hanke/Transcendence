@@ -3,8 +3,8 @@ MICROSERVICES STACK - SERVICE INFORMATION
 ======================================================
 
 MONITORING SERVICES:
-- Elasticsearch: http://localhost:9200
-- Kibana:        http://localhost:5601
+- Elasticsearch: https://localhost:9200 (🔒 SECURED - user: elastic, pass: check .env file)
+- Kibana:        http://localhost:5601 (🔒 LOGIN REQUIRED - user: elastic, pass: check .env file)
 - Prometheus:    http://localhost:9090
 - Grafana:       http://localhost:3000 (admin/admin)
 - Logstash:      http://localhost:9600
@@ -14,12 +14,19 @@ APPLICATION SERVICES:
 -some of these wont work as they have no been made to only work on localhost!
 - API Gateway:          https://localhost:8443
 - Auth Service:         http://localhost:10004
-- Matchmaking Service(remote):  http://localhost:10001
-- Game Service(backend):         http://localhost:10002
-- Chat Service:         http://localhost:10003
+- Matchmaking Service(remote):  http://localhost:10002
+- Game Service(backend):         http://localhost:10003
+- Chat Service:         http://localhost:10001
 - Webserver:            http://localhost:10005
 - FrontEnd Service: (to play the game)
 https://localhost:8443
+
+======================================================
+🔐 SECURITY NOTES:
+- Elasticsearch is now SECURED with TLS and authentication
+- To get passwords: check your .env file for ELASTIC_PASSWORD
+- API access: curl --cacert config/certs/ca/ca.crt -u elastic:PASSWORD https://localhost:9200
+- First time setup automatically generates secure passwords
 ======================================================
 For more details, check the documentation or run:
 $ make status

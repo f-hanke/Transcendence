@@ -1,0 +1,14 @@
+server.name: kibana
+server.host: "0.0.0.0"
+
+# Security settings
+xpack.security.encryptionKey: "kibana-encryption-key-for-session-security"
+xpack.encryptedSavedObjects.encryptionKey: "kibana-saved-objects-encryption-key"
+xpack.reporting.encryptionKey: "kibana-reporting-encryption-key"
+
+# Basic logging
+logging.appenders.file.type: file
+logging.appenders.file.fileName: /usr/share/kibana/data/kibana.log
+logging.appenders.file.layout.type: json
+
+logging.root.appenders: ["default", "file"] 

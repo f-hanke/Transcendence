@@ -14,6 +14,39 @@ docker ps
 echo "============================================"
 echo "SERVICE HEALTH CHECKS:"
 
+# Function to check Elasticsearch with security
+check_elasticsearch() {
+  local timeout=5
+  
+  # Check if .env file exists and has ELASTIC_PASSWORD
+  if [ -f .env ] && grep -q "ELASTIC_PASSWORD=" .env; then
+    ELASTIC_PASSWORD=$(grep "^ELASTIC_PASSWORD=" .env | cut -d'=' -f2)
+    
+    # Try to connect to secured Elasticsearch
+    if response=$(curl -sk --max-time $timeout --cacert ./config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" https://localhost:9200 2>/dev/null); then
+      if echo "$response" | grep -q "cluster_name"; then
+        echo -e "${GREEN}Elasticsearch: ✅ (https://localhost:9200) - Secured with authentication${NC}"
+        return 0
+      else
+        echo -e "${YELLOW}Elasticsearch: ⚠️ (https://localhost:9200) - Connected but unexpected response${NC}"
+        return 2
+      fi
+    else
+      # Fallback: check if we get the expected "missing authentication credentials" error
+      if http_code=$(curl -sk --max-time $timeout -o /dev/null -w "%{http_code}" https://localhost:9200 2>/dev/null) && [[ $http_code == 401 ]]; then
+        echo -e "${GREEN}Elasticsearch: ✅ (https://localhost:9200) - Security enabled (401 auth required)${NC}"
+        return 0
+      else
+        echo -e "${RED}Elasticsearch: ❌ (https://localhost:9200) - Failed to connect (HTTP: $http_code)${NC}"
+        return 1
+      fi
+    fi
+  else
+    echo -e "${RED}Elasticsearch: ❌ - No .env file or ELASTIC_PASSWORD not found${NC}"
+    return 1
+  fi
+}
+
 # Function to check service health for custom microservices
 check_service() {
   local service_name=$1
@@ -63,12 +96,12 @@ check_service() {
 }
 
 # Check infrastructure services (third-party)
-check_service "Elasticsearch" "http://localhost:9200" "GET" "" true
+check_elasticsearch
 check_service "Kibana" "http://localhost:5601" "GET" "" true
 check_service "Prometheus" "http://localhost:9090" "GET" "" true
 check_service "Grafana" "http://localhost:3000" "GET" "" true
 check_service "RabbitMQ" "http://localhost:15672" "GET" "" true
-check_service "logstash" "http://localhost:5000" "GET" "" true
+check_service "logstash" "http://localhost:9600" "GET" "" true
 
 # Check application services (our custom services)
 check_service "API Gateway" "https://localhost:8443/health" "HTTPS"
@@ -94,6 +127,17 @@ check_service "Chat Service via API Gateway" "https://localhost:8443/CHATSERVICE
 # check_service "Webserver via API Gateway" "https://localhost:8443/WEBSERVER/health" "HTTPS"
 
 echo "============================================" 
+
+echo "============================================" 
+echo "🔐 SECURITY STATUS:"
+if [ -f .env ] && grep -q "ELASTIC_PASSWORD=" .env; then
+  echo -e "${GREEN}✅ Elasticsearch security is configured${NC}"
+  echo "   - Elasticsearch: https://localhost:9200 (login required)"
+  echo "   - Kibana: http://localhost:5601 (login: elastic/check .env file)"
+else
+  echo -e "${RED}❌ Elasticsearch security not configured${NC}"
+  echo "   Run: make setup-elastic-security"
+fi
 
 echo "============================================" 
 echo "Check out the frontend at:"

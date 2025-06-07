@@ -1,15 +1,24 @@
 # Default Make command
 all: setup up
 
-# Setup directories and network
+# Setup directories, network, and security
 setup:
 	@echo "Creating required directories..."
 	mkdir -p grafana/dashboards
 	mkdir -p grafana/provisioning/datasources
 	mkdir -p grafana/provisioning/dashboards
+	@echo "Setting up Elasticsearch security..."
+	@chmod +x scripts/setup-elastic-security.sh
+	@./scripts/setup-elastic-security.sh
 	@echo "Building shared dependencies..."
 	npm install --prefix ./shared
 	npm run build --prefix ./shared
+
+# Elasticsearch security setup
+setup-elastic-security:
+	@echo "Setting up Elasticsearch security..."
+	@chmod +x scripts/setup-elastic-security.sh
+	@./scripts/setup-elastic-security.sh
 
 # Basic Docker Compose operations
 up: setup
@@ -140,6 +149,9 @@ help:
 	@echo "  status       - Check status of all services"
 	@echo "  logs         - Follow logs from all services"
 	@echo ""
+	@echo "🔒 Security Setup:"
+	@echo "  setup-elastic-security - Configure Elasticsearch security (run first!)"
+	@echo ""
 	@echo "🔧 Individual Services:"
 	@echo "  start-api-gateway    - Start API gateway"
 	@echo "  start-webserver      - Start webserver"
@@ -164,6 +176,12 @@ help:
 	@echo "📚 Aliases:"
 	@echo "  start/stop   - Aliases for up/down"
 	@echo "  reset        - Clean and rebuild"
+	@echo ""
+	@echo "🔐 Security Notes:"
+	@echo "  • Run 'make setup-elastic-security' before first startup"
+	@echo "  • Kibana login: username 'elastic', password from .env file"
+	@echo "  • Elasticsearch API requires authentication with certificates"
+	@echo "  • See kibana-setup.md for detailed security configuration"
 
 
 .PHONY: all setup up down restart start stop reset rebuild status logs clean clean-npm clean-volumes clean-all help start-api-gateway start-webserver start-users-auth start-remote start-game-service start-chat-service start-frontend build-frontend build-frontend-skip-ts-check rebuild-webserver
