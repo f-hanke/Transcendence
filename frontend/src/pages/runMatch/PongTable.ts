@@ -2,6 +2,7 @@ import { createHtmlElementFromString } from "../../utils/utils";
 import { gameSettings } from "transcendence";
 import { DrawPongTable } from "./drawPongTable";
 import { PlayerMovementsUpdater } from "./updatePlayerMovements";
+import { transStore } from "../../state/store";
 
 class PongTable extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -27,10 +28,10 @@ class PongTable extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeGameState = window.store.gameStore.subscribe(() =>
+    this.unsubscribeGameState = transStore.gameStore.subscribe(() =>
       this.render()
     );
-    this.unsubscribeLanguage = window.store.gameStore.subscribe(() =>
+    this.unsubscribeLanguage = transStore.gameStore.subscribe(() =>
       this.render()
     );
     this.designCanvas();
@@ -53,7 +54,7 @@ class PongTable extends HTMLElement {
   }
 
   startAnimationFrame() {
-    const typeOfGame = window.store.gameStore.get().typeOfGame;
+    const typeOfGame = transStore.gameStore.get().typeOfGame;
     switch (typeOfGame) {
       case "localPvP":
         requestAnimationFrame(() => {
@@ -83,8 +84,8 @@ class PongTable extends HTMLElement {
 
   playerHasLeftPaddle() {
     return (
-      window.store.gameStore.get().paddleLeft.playerId ===
-      window.store.userStore.get().details.id
+      transStore.gameStore.get().paddleLeft.playerId ===
+      transStore.userStore.get().details.id
     );
   }
 

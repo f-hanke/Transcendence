@@ -1,3 +1,4 @@
+import { transStore } from "../../state/store";
 
 class ChatLayout extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -8,7 +9,7 @@ class ChatLayout extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
     // ChatInterface.connect();

@@ -2,6 +2,7 @@ import { colog, testUserConfig } from "transcendence";
 import { AuthInterface } from "../../backendInterface/authInterface";
 import { RegisterState } from "../../state/registerStateTypes";
 import { createHtmlElementFromString, navigateToSite, sanitizeAndCleanInput } from "../../utils/utils";
+import { transStore } from "../../state/store";
 
 class RegisterPage extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -14,7 +15,7 @@ class RegisterPage extends HTMLElement {
 
   connectedCallback() {
     this.render();
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
     document
@@ -30,7 +31,7 @@ class RegisterPage extends HTMLElement {
   }
 
   render() {
-    const lang = window.store.languageStore.state.register;
+    const lang = transStore.languageStore.state.register;
     // if user is logged in, redirect to landing page
     this.innerHTML = `
       <div class="flex flex-col justify-center items-center h-screen bg-gray-800 select-none">
@@ -39,12 +40,12 @@ class RegisterPage extends HTMLElement {
 
           <label class="block mb-2 text-gray-700">${lang.email}</label>
           <input id="registerEmail" type="email" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required value=${
-            window.store.registerStore.get().email
+            transStore.registerStore.get().email
           }>
 
           <label class="block mb-2 text-gray-700">${lang.displayName}</label>
           <input id="registerDisplayName" type="text" class="w-full p-2 rounded mb-4 bg-gray-700 focus:outline-none" required value=${
-            window.store.registerStore.get().displayName
+            transStore.registerStore.get().displayName
           }>
 
           <label class="block mb-2 text-gray-700">${lang.password}</label>
@@ -96,7 +97,7 @@ class RegisterPage extends HTMLElement {
     inputElem.addEventListener("input", () => {
       if (debounceTimeout) clearTimeout(debounceTimeout);
       debounceTimeout = window.setTimeout(() => {
-        window.store.registerStore.updateOneField(
+        transStore.registerStore.updateOneField(
           stateKey,
           sanitizeAndCleanInput(inputElem.value.trim())
         );
@@ -111,7 +112,7 @@ class RegisterPage extends HTMLElement {
 
   async handleSubmit(event: Event) {
     event.preventDefault();
-    const lang = window.store.languageStore.state.register;
+    const lang = transStore.languageStore.state.register;
     const registerPassword = document.querySelector(
       "#registerPassword"
     ) as HTMLInputElement;
@@ -125,8 +126,8 @@ class RegisterPage extends HTMLElement {
     }
 
     const details = {
-      email: window.store.registerStore.get().email,
-      displayName: window.store.registerStore.get().displayName,
+      email: transStore.registerStore.get().email,
+      displayName: transStore.registerStore.get().displayName,
       password: registerPassword.value,
     };
     const res = await AuthInterface.registerClient(details);

@@ -10,6 +10,7 @@ import {
 } from "../utils/utils";
 import { generateUniqueId } from "transcendence";
 import { UserInterface } from "../backendInterface/userInterface";
+import { transStore } from "../state/store";
 
 class UserSettings extends HTMLElement {
   unsubscribe: null | (() => void);
@@ -20,21 +21,21 @@ class UserSettings extends HTMLElement {
     this.unsubscribe = null;
     this.unsubscribeLanguage = null;
     this.updatedState = {
-      displayName: window.store.userStore.get().details.displayName,
-      email: window.store.userStore.get().details.email,
-      image: window.store.userStore.get().details.image,
+      displayName: transStore.userStore.get().details.displayName,
+      email: transStore.userStore.get().details.email,
+      image: transStore.userStore.get().details.image,
     };
   }
 
   connectedCallback() {
     this.render();
-    this.unsubscribe = window.store.userStore.subscribe(this.render.bind(this));
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribe = transStore.userStore.subscribe(this.render.bind(this));
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
     const userId =
-      window.store.userStore.get().details.otherUserId ??
-      window.store.userStore.get().details.id;
+      transStore.userStore.get().details.otherUserId ??
+      transStore.userStore.get().details.id;
     UserInterface.getAllUserDetails(userId, true);
     UserInterface.getMatches(userId, false);
     UserInterface.getTournaments(userId);
@@ -47,10 +48,10 @@ class UserSettings extends HTMLElement {
 
   render() {
     const ownSettingsPage =
-      window.store.userStore.get().details.otherUserId === null;
+      transStore.userStore.get().details.otherUserId === null;
     this.innerHTML = `
       <div class="p-4 w-full h-full mx-auto bg-gray-800 text-white rounded-lg shadow-md">
-        <h2 class="text-lg font-semibold mb-4">${window.store.languageStore.state.userSettings.userSettings}</h2>
+        <h2 class="text-lg font-semibold mb-4">${transStore.languageStore.state.userSettings.userSettings}</h2>
         <div id="inputEditContainer"></div>
         <div class="bg-gray-800" id="userStats"></div>
         <div class="bg-gray-800" id="userMatchHistory"></div>
@@ -58,7 +59,7 @@ class UserSettings extends HTMLElement {
       </div>
     `;
 
-    const guidelines = window.store.languageStore.state.register;
+    const guidelines = transStore.languageStore.state.register;
     const pwGuidlines = createHtmlElementFromString(`
     <ul class="text-sm text-gray-400 list-disc pl-5 mb-4 space-y-1">
       <li>${guidelines.passwordRuleMinLength}</li>
@@ -88,7 +89,7 @@ class UserSettings extends HTMLElement {
     inputEditContainer.appendChild(
       this.renderOneInput(
         "displayName",
-        window.store.languageStore.state.userSettings.displayName,
+        transStore.languageStore.state.userSettings.displayName,
         this.saveDisplayName,
         ownSettingsPage
       )
@@ -96,7 +97,7 @@ class UserSettings extends HTMLElement {
     inputEditContainer.appendChild(
       this.renderOneInput(
         "email",
-        window.store.languageStore.state.userSettings.email,
+        transStore.languageStore.state.userSettings.email,
         this.saveEmail,
         ownSettingsPage
       )
@@ -106,7 +107,7 @@ class UserSettings extends HTMLElement {
       inputEditContainer.appendChild(
         this.renderOneInput(
           "password",
-          window.store.languageStore.state.userSettings.password,
+          transStore.languageStore.state.userSettings.password,
           this.savePassword,
           ownSettingsPage
         )
@@ -121,21 +122,21 @@ class UserSettings extends HTMLElement {
       ? "cursor-pointer hover:opacity-80 transition duration-300"
       : "";
     const imageToRender =
-      window.store.userStore.get().editState.image ??
-      window.store.userStore.get().details.image;
+      transStore.userStore.get().editState.image ??
+      transStore.userStore.get().details.image;
     const htmlElem = createHtmlElementFromString(`
     <div>
       <div class="flex gap-2">
       <label class="block text-sm">${
-        window.store.languageStore.state.register.profilePicture
+        transStore.languageStore.state.register.profilePicture
       }</label>
         <button id="saveBtnEditImage" title=${
-          window.store.languageStore.state.register.save
+          transStore.languageStore.state.register.save
         }>
           💾
         </button>
         <button id="resetBtnEditImage" title=${
-          window.store.languageStore.state.register.reset
+          transStore.languageStore.state.register.reset
         }>
           🔄
         </button>
@@ -144,7 +145,7 @@ class UserSettings extends HTMLElement {
             <img id="profileImage" src="${getImgSrcFromBuffer(imageToRender)}"
               class=" w-full max-w-xl border border-gray-600  ${classWhenOwnSettings}"
               title="${
-                window.store.languageStore.state.register
+                transStore.languageStore.state.register
                   .clickToChangeProfilePicture
               }"/>
           <input type="file" id="imageUpload" class="hidden"
@@ -161,7 +162,7 @@ class UserSettings extends HTMLElement {
     ) as HTMLButtonElement;
 
     if (ownSettingsPage) {
-      if (!isDefined(window.store.userStore.get().editState.image)) {
+      if (!isDefined(transStore.userStore.get().editState.image)) {
         saveBtn.classList.add("hidden");
         resetBtn.classList.add("hidden");
       }
@@ -169,32 +170,32 @@ class UserSettings extends HTMLElement {
       resetBtn.addEventListener("click", () => {
         const newState = {} as Partial<UserState["editState"]>;
         newState.image = null;
-        window.store.userStore.updateSetEditState(newState);
+        transStore.userStore.updateSetEditState(newState);
       });
 
       saveBtn.addEventListener("click", async () => {
-        const newImage = window.store.userStore.get().editState.image;
+        const newImage = transStore.userStore.get().editState.image;
         if (isDefined(newImage)) {
           const res = await UserInterface.updateUserImage({
             image: newImage,
           });
           if (res.ok) {
-            window.store.notificationStore.updateAddNotification({
+            transStore.notificationStore.updateAddNotification({
               id: generateUniqueId(),
               message:
-                window.store.languageStore.state.register.imageUpdateSuccess,
+                transStore.languageStore.state.register.imageUpdateSuccess,
             });
-            window.store.userStore.updateUserImage(newImage);
+            transStore.userStore.updateUserImage(newImage);
           } else {
-            window.store.notificationStore.updateAddNotification({
+            transStore.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message: `${window.store.languageStore.state.register.imageUpdateFail} ${res.errorMessage}`, //LEO
+              message: `${transStore.languageStore.state.register.imageUpdateFail} ${res.errorMessage}`, //LEO
             });
           }
         }
         const newState = {} as Partial<UserState["editState"]>;
         newState["image"] = null;
-        window.store.userStore.updateSetEditState(newState);
+        transStore.userStore.updateSetEditState(newState);
       });
 
       const profileImageContainer = htmlElem.querySelector(
@@ -225,23 +226,23 @@ class UserSettings extends HTMLElement {
           if (!input || !input.files || input.files.length === 0) return;
           const file = input.files[0];
           if (file.size > maxFileSize) {
-            window.store.notificationStore.updateAddNotification({
+            transStore.notificationStore.updateAddNotification({
               id: generateUniqueId(),
-              message: window.store.languageStore.state.register.fileTooBig,
+              message: transStore.languageStore.state.register.fileTooBig,
             });
             return;
           }
           const extension = file.name.split(".").pop()?.toLowerCase();
           if (!extension || !["jpg", "jpeg", "png"].includes(extension)) {
-            window.store.notificationStore.updateAddNotification({
+            transStore.notificationStore.updateAddNotification({
               id: generateUniqueId(),
               message:
-                window.store.languageStore.state.register.invalidFileFormat,
+                transStore.languageStore.state.register.invalidFileFormat,
             });
             return;
           }
           const fileAsBufferLike = await fileToBufferLike(file);
-          window.store.userStore.updateSetEditState({
+          transStore.userStore.updateSetEditState({
             image: fileAsBufferLike,
           });
         });
@@ -254,78 +255,78 @@ class UserSettings extends HTMLElement {
   }
 
   async saveEmail() {
-    if (isDefined(window.store.userStore.get().editState.email)) {
+    if (isDefined(transStore.userStore.get().editState.email)) {
       const res = await UserInterface.updateUserEmail({
-        email: window.store.userStore.get().editState.email as string,
+        email: transStore.userStore.get().editState.email as string,
       });
       if (res.ok) {
-        window.store.notificationStore.updateAddNotification({
+        transStore.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: window.store.languageStore.state.register.emailUpdateSuccess,
+          message: transStore.languageStore.state.register.emailUpdateSuccess,
         });
-        window.store.userStore.updateUserSettings({
-          email: window.store.userStore.get().editState.email as string,
+        transStore.userStore.updateUserSettings({
+          email: transStore.userStore.get().editState.email as string,
         });
         const newState = {} as Partial<UserState["editState"]>;
         newState["displayName"] = undefined;
-        window.store.userStore.updateSetEditState(newState);
+        transStore.userStore.updateSetEditState(newState);
       } else {
-        window.store.notificationStore.updateAddNotification({
+        transStore.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `${window.store.languageStore.state.register.emailUpdateFail} ${res.errorMessage}`,
+          message: `${transStore.languageStore.state.register.emailUpdateFail} ${res.errorMessage}`,
         });
       }
     }
   }
 
   async savePassword() {
-    if (isDefined(window.store.userStore.get().editState.password)) {
+    if (isDefined(transStore.userStore.get().editState.password)) {
       const res = await UserInterface.updateUserPassword({
-        password: window.store.userStore.get().editState.password as string,
+        password: transStore.userStore.get().editState.password as string,
       });
       if (res.ok) {
-        window.store.notificationStore.updateAddNotification({
+        transStore.notificationStore.updateAddNotification({
           id: generateUniqueId(),
           message:
-            window.store.languageStore.state.register.passwordUpdateSuccess,
+            transStore.languageStore.state.register.passwordUpdateSuccess,
         });
         const newState = {} as Partial<UserState["editState"]>;
         newState["displayName"] = undefined;
-        window.store.userStore.updateSetEditState(newState);
+        transStore.userStore.updateSetEditState(newState);
       } else {
-        window.store.notificationStore.updateAddNotification({
+        transStore.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `${window.store.languageStore.state.register.passwordUpdateFail} ${res.errorMessage}`,
+          message: `${transStore.languageStore.state.register.passwordUpdateFail} ${res.errorMessage}`,
         });
       }
     }
   }
 
   async saveDisplayName() {
-    if (isDefined(window.store.userStore.get().editState.displayName)) {
+    if (isDefined(transStore.userStore.get().editState.displayName)) {
       const res = await UserInterface.updateDisplayName({
-        displayName: window.store.userStore.get().editState
+        displayName: transStore.userStore.get().editState
           .displayName as string,
       });
       if (res.ok) {
-        window.store.notificationStore.updateAddNotification({
+        transStore.notificationStore.updateAddNotification({
           id: generateUniqueId(),
           message:
-            window.store.languageStore.state.register.displayNameUpdateSuccess,
+            transStore.languageStore.state.register.displayNameUpdateSuccess,
         });
-        const displayName = window.store.userStore.get().editState
+        const displayName = transStore.userStore.get().editState
           .displayName as string;
-        window.store.playerNamesStore.updateOwnEntry(displayName);
-        window.store.userStore.updateUserSettings({
+        transStore.playerNamesStore.updateOwnEntry(displayName);
+        transStore.userStore.updateUserSettings({
           displayName: displayName,
         });
         const newState = {} as Partial<UserState["editState"]>;
         newState["displayName"] = undefined;
-        window.store.userStore.updateSetEditState(newState);
+        transStore.userStore.updateSetEditState(newState);
       } else {
-        window.store.notificationStore.updateAddNotification({
+        transStore.notificationStore.updateAddNotification({
           id: generateUniqueId(),
-          message: `${window.store.languageStore.state.register.displayNameUpdateFail} ${res.errorMessage}`,
+          message: `${transStore.languageStore.state.register.displayNameUpdateFail} ${res.errorMessage}`,
         });
       }
     }
@@ -342,19 +343,19 @@ class UserSettings extends HTMLElement {
       <div class="flex gap-2">
       <label class="block text-sm">${label}</label>
         <button id="saveBtnEdit${which}" title=${
-      window.store.languageStore.state.register.save
+      transStore.languageStore.state.register.save
     }>
           💾
         </button>
         <button id="resetBtnEdit${which}" title=${
-      window.store.languageStore.state.register.save
+      transStore.languageStore.state.register.save
     }>
           🔄
         </button>
       </div>
         <input type="text" id="input${which}" value="${
-      window.store.userStore.get().editState[which] ??
-      window.store.userStore.get().details[which]
+      transStore.userStore.get().editState[which] ??
+      transStore.userStore.get().details[which]
     }" class="w-full p-2 mb-3 rounded bg-gray-700 text-white border border-gray-600 ${
       ownSettingsPage ? "" : "pointer-events-none select-none cursor-default"
     }"
@@ -372,7 +373,7 @@ class UserSettings extends HTMLElement {
     ) as HTMLButtonElement;
 
     if (ownSettingsPage) {
-      if (!isDefined(window.store.userStore.get().editState[which])) {
+      if (!isDefined(transStore.userStore.get().editState[which])) {
         saveBtn.classList.add("hidden");
         resetBtn.classList.add("hidden");
       }
@@ -380,7 +381,7 @@ class UserSettings extends HTMLElement {
       resetBtn.addEventListener("click", () => {
         const newState = {} as Partial<UserState["editState"]>;
         newState[which] = undefined;
-        window.store.userStore.updateSetEditState(newState);
+        transStore.userStore.updateSetEditState(newState);
       });
 
       saveBtn.addEventListener("click", async () => {
@@ -397,7 +398,7 @@ class UserSettings extends HTMLElement {
         debounceTimeout = window.setTimeout(() => {
           const newState = {} as EditableFields;
           newState[which] = sanitizeAndCleanInput(inputElem.value.trim());
-          window.store.userStore.updateSetEditState(newState);
+          transStore.userStore.updateSetEditState(newState);
           window.setTimeout(() => {
             (
               document.querySelector(`#input${which}`) as HTMLInputElement
@@ -428,8 +429,8 @@ class UserSettings extends HTMLElement {
   // };
 
   renderUserStats() {
-    const matchHistory = window.store.userStore.get().details.matchHistory;
-    const currentUserId = window.store.userStore.get().details.id;
+    const matchHistory = transStore.userStore.get().details.matchHistory;
+    const currentUserId = transStore.userStore.get().details.id;
 
     const remoteMatches = matchHistory.filter(
       (m) => !m.player2Id.startsWith("Human_") && !m.player2Id.startsWith("AI_")
@@ -445,23 +446,23 @@ class UserSettings extends HTMLElement {
 
     return `
     <div class="mt-6">
-      <h2 class="block">${window.store.languageStore.state.userSettings.statsCaption}</h2>
+      <h2 class="block">${transStore.languageStore.state.userSettings.statsCaption}</h2>
       <div class="space-y-2 text-sm">
         <div class="p-3 bg-gray-700 rounded shadow">
           <div class="flex justify-between mb-1">
-            <span class="text-green-400 font-semibold">${window.store.languageStore.state.userSettings.wins}</span>
+            <span class="text-green-400 font-semibold">${transStore.languageStore.state.userSettings.wins}</span>
             <span>${wins}</span>
           </div>
           <div class="flex justify-between text-gray-300 text-xs mb-2">
-            <span>${window.store.languageStore.state.userSettings.winPercentage}</span>
+            <span>${transStore.languageStore.state.userSettings.winPercentage}</span>
             <span>${winPercent}%</span>
           </div>
           <div class="flex justify-between mb-1">
-            <span class="text-red-400 font-semibold">${window.store.languageStore.state.userSettings.losses}</span>
+            <span class="text-red-400 font-semibold">${transStore.languageStore.state.userSettings.losses}</span>
             <span>${losses}</span>
           </div>
           <div class="flex justify-between text-gray-300 text-xs">
-            <span>${window.store.languageStore.state.userSettings.lossPercentage}</span>
+            <span>${transStore.languageStore.state.userSettings.lossPercentage}</span>
             <span>${lossPercent}%</span>
           </div>
         </div>
@@ -471,16 +472,18 @@ class UserSettings extends HTMLElement {
   }
 
   renderMatchHistoryRemote() {
-    const matchHistory = deepCopyObj(window.store.userStore.get().details.matchHistory);
-       matchHistory.sort(
+    const matchHistory = deepCopyObj(
+      transStore.userStore.get().details.matchHistory
+    );
+    matchHistory.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-    const currentUserId = window.store.userStore.get().details.id;
+    const currentUserId = transStore.userStore.get().details.id;
     return `
     <div class="mt-6">
       <h2 class="block">${
-        window.store.languageStore.state.userSettings.matchHistoryCaption
+        transStore.languageStore.state.userSettings.matchHistoryCaption
       }</h2>
       <div class="space-y-2">
         ${matchHistory
@@ -503,10 +506,10 @@ class UserSettings extends HTMLElement {
                 : match.player1Score;
             const oponentName = isLocalMatch
               ? opponentId
-              : window.store.playerNamesStore.getName(opponentId);
+              : transStore.playerNamesStore.getName(opponentId);
             const text = isLocalMatch
-              ? window.store.languageStore.state.userSettings.oponentLocal
-              : window.store.languageStore.state.userSettings.oponentRemote;
+              ? transStore.languageStore.state.userSettings.oponentLocal
+              : transStore.languageStore.state.userSettings.oponentRemote;
             return `
               <div class="p-3 bg-gray-700 rounded shadow text-sm">
                 <div class="flex justify-between mb-1">
@@ -519,8 +522,8 @@ class UserSettings extends HTMLElement {
               isLocalMatch
                 ? ""
                 : isWinner
-                ? window.store.languageStore.state.userSettings.win
-                : window.store.languageStore.state.userSettings.loss
+                ? transStore.languageStore.state.userSettings.win
+                : transStore.languageStore.state.userSettings.loss
             }</span>
                 </div>
                 <div class="grid grid-cols-3 gap-4 text-gray-300 text-xs">
@@ -528,7 +531,7 @@ class UserSettings extends HTMLElement {
                     match.createdAt
                   )}</div>
                   <div class="truncate">${
-                    window.store.languageStore.state.userSettings.score
+                    transStore.languageStore.state.userSettings.score
                   } ${userScore} - ${opponentScore}</div>
                 </div>
               </div>
@@ -542,7 +545,7 @@ class UserSettings extends HTMLElement {
 
   renderTournamentHistory() {
     const tournamentHistoryNoSpecialSorting =
-      window.store.userStore.get().details.tournamentHistory;
+      transStore.userStore.get().details.tournamentHistory;
     const tournamentHistory = JSON.parse(
       JSON.stringify(tournamentHistoryNoSpecialSorting)
     ) as GameResultTypes.TournamentResult[];
@@ -553,7 +556,7 @@ class UserSettings extends HTMLElement {
     return `
     <div class="mt-6">
        <h2 class="block">${
-         window.store.languageStore.state.userSettings.tournamentHistoryCaption
+         transStore.languageStore.state.userSettings.tournamentHistoryCaption
        }</h2>
       <div class="space-y-4">
         ${tournamentHistory
@@ -564,45 +567,45 @@ class UserSettings extends HTMLElement {
                  tournament.createdAt
                )}</h3>
                <h3 class="block text-sm">${
-                 window.store.languageStore.state.userSettings.ranking
+                 transStore.languageStore.state.userSettings.ranking
                }</h3>
                 <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-left">
                    <div class="justify-self-start">🥇 ${
-                     window.store.languageStore.state.userSettings.first
-                   }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(
+                     transStore.languageStore.state.userSettings.first
+                   }</div><div class="justify-self-start">${transStore.playerNamesStore.getName(
               tournament.rank1PlayerId
             )}</div>
   <div class="justify-self-start">🥈 ${
-    window.store.languageStore.state.userSettings.second
-  }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(
+    transStore.languageStore.state.userSettings.second
+  }</div><div class="justify-self-start">${transStore.playerNamesStore.getName(
               tournament.rank2PlayerId
             )}</div>
   <div class="justify-self-start">🥉 ${
-    window.store.languageStore.state.userSettings.third
-  }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(
+    transStore.languageStore.state.userSettings.third
+  }</div><div class="justify-self-start">${transStore.playerNamesStore.getName(
               tournament.rank3PlayerId
             )}</div>
   <div class="justify-self-start">💩 ${
-    window.store.languageStore.state.userSettings.fourth
-  }</div><div class="justify-self-start">${window.store.playerNamesStore.getName(
+    transStore.languageStore.state.userSettings.fourth
+  }</div><div class="justify-self-start">${transStore.playerNamesStore.getName(
               tournament.rank4PlayerId
             )}</div>
                 </div>
                 <div class="grid grid-cols-1 gap-2 mt-4">
                  ${this.formatMatchTournament(
-                   `${window.store.languageStore.state.userSettings.semifinale} 1`,
+                   `${transStore.languageStore.state.userSettings.semifinale} 1`,
                    tournament.matchSemifinale1
                  )}
                  ${this.formatMatchTournament(
-                   `${window.store.languageStore.state.userSettings.semifinale} 2`,
+                   `${transStore.languageStore.state.userSettings.semifinale} 2`,
                    tournament.matchSemifinale2
                  )}
                  ${this.formatMatchTournament(
-                   window.store.languageStore.state.userSettings.bronzeMatch,
+                   transStore.languageStore.state.userSettings.bronzeMatch,
                    tournament.matchBronze
                  )}
                  ${this.formatMatchTournament(
-                   window.store.languageStore.state.userSettings.finale,
+                   transStore.languageStore.state.userSettings.finale,
                    tournament.matchFinale
                  )}
                 </div>
@@ -620,16 +623,16 @@ class UserSettings extends HTMLElement {
                 <div class="p-2 bg-gray-600 rounded text-sm shadow">
                   <div class="flex justify-between mb-1 font-semibold">${title}</div>
                   <div class="grid grid-cols-5 text-xs text-gray-300">
-                    <div>${window.store.playerNamesStore.getName(
+                    <div>${transStore.playerNamesStore.getName(
                       match.player1Id
                     )} : ${match.player1Score}</div>
                     <div>-</div>
                     <div>${
                       match.player2Score
-                    } : ${window.store.playerNamesStore.getName(
+                    } : ${transStore.playerNamesStore.getName(
       match.player2Id
     )}</div>
-                    <div class="text-green-400">${window.store.playerNamesStore.getName(
+                    <div class="text-green-400">${transStore.playerNamesStore.getName(
                       match.winnerId
                     )}</div>
                   </div>

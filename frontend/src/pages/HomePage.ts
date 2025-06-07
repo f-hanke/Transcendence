@@ -1,3 +1,5 @@
+import { transStore } from "../state/store";
+
 class HomePage extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
 
@@ -7,12 +9,12 @@ class HomePage extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
     this.innerHTML = `
-      <div class="text-red-700">THIS IS THE HOME PAGE!</div>
-      <div>THIS IS THE LANDING PAGE!</div>
+      <div class="text-red-700">Milo is the greatest</div>
+      <div>M i l o</div>
     `
   }
 

@@ -3,6 +3,7 @@ import { StoreCallback } from "./types";
 import { PlayerNamesState } from "./playerNamesStateTypes";
 import { AuthServiceTypes } from "transcendence";
 import { deepCopyObj } from "../utils/utils";
+import { transStore } from "../state/store";
 
 class PlayerNamesStateStore {
   listeners: Set<StoreCallback>;
@@ -34,7 +35,7 @@ class PlayerNamesStateStore {
   }
 
   updateOwnEntry(newOwnDisplayName: string) {
-    this.state[window.store.userStore.get().details.id] = newOwnDisplayName;
+    this.state[transStore.userStore.get().details.id] = newOwnDisplayName;
     this.updateListenersOnChange();
   }
 

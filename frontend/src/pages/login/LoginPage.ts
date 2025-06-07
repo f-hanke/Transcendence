@@ -1,6 +1,7 @@
 import { testUserConfig } from "transcendence";
 import { navigateToSite, sanitizeAndCleanInput } from "../../utils/utils";
 import { AuthInterface } from "../../backendInterface/authInterface";
+import { transStore } from "../../state/store";
 
 class LoginPage extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -10,7 +11,7 @@ class LoginPage extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
     this.render();
@@ -21,7 +22,7 @@ class LoginPage extends HTMLElement {
   }
 
   render() {
-    const lang = window.store.languageStore.state.register;
+    const lang = transStore.languageStore.state.register;
     // if user is logged in, redirect to landing page
     this.innerHTML = `
         <div class="bg-gray-800 h-screen flex flex-col justify-center items-center select-none">

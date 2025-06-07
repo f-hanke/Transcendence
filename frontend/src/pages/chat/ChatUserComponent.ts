@@ -5,6 +5,7 @@ import {
   getImgSrcFromBuffer,
   navigateToSite,
 } from "../../utils/utils";
+import { transStore } from "../../state/store";
 
 type UserComponentType =
   | "user"
@@ -48,7 +49,7 @@ class ChatUserComponent extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
     this.render();
@@ -59,7 +60,7 @@ class ChatUserComponent extends HTMLElement {
   }
 
   render() {
-    const lang = window.store.languageStore.state.chat;
+    const lang = transStore.languageStore.state.chat;
     const unfriend = `
     <div class="relative w-5 h-5 text-xs flex items-center justify-center">
      <span class="inset-0 flex items-center justify-center">
@@ -71,7 +72,7 @@ class ChatUserComponent extends HTMLElement {
     const friend = this.friend ? unfriend : "🧑‍🤝‍🧑";
     const onlineClass = this.online ? "shadow-green-500" : "shadow-gray-400";
     this.focussed =
-      window.store.chatMessageStore.get().recipientId === this.recipientId;
+      transStore.chatMessageStore.get().recipientId === this.recipientId;
     const focussedStyle =
       this.focussed && this.type === "user"
         ? "shadow-[inset_0_0_0_4px] shadow-blue-500"
@@ -127,7 +128,7 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLButtonElement;
     image.addEventListener("click", (event) => {
       event.stopPropagation();
-      window.store.userStore.updateSetOtherUserId(this.userId, false);
+      transStore.userStore.updateSetOtherUserId(this.userId, false);
       navigateToSite("userSettingsOther");
     });
 
@@ -152,7 +153,7 @@ class ChatUserComponent extends HTMLElement {
     withdrawBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       ChatInterface.sendFriendRequest({
-        authorId: window.store.userStore.get().details.id,
+        authorId: transStore.userStore.get().details.id,
         recipientId: this.recipientId,
         type: "withdrawn",
       });
@@ -171,7 +172,7 @@ class ChatUserComponent extends HTMLElement {
     acceptBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       ChatInterface.sendFriendRequest({
-        authorId: window.store.userStore.get().details.id,
+        authorId: transStore.userStore.get().details.id,
         recipientId: this.recipientId,
         type: "accept",
       });
@@ -183,7 +184,7 @@ class ChatUserComponent extends HTMLElement {
     declineBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       ChatInterface.sendFriendRequest({
-        authorId: window.store.userStore.get().details.id,
+        authorId: transStore.userStore.get().details.id,
         recipientId: this.recipientId,
         type: "declined",
       });
@@ -203,7 +204,7 @@ class ChatUserComponent extends HTMLElement {
       event.stopPropagation();
       ChatInterface.sendUpdateBlockStatus({
         blockedStatus: false,
-        clientId: window.store.userStore.get().details.id,
+        clientId: transStore.userStore.get().details.id,
         recipientId: this.recipientId,
       });
     });
@@ -216,7 +217,7 @@ class ChatUserComponent extends HTMLElement {
     ) as HTMLDivElement;
     wrapperChatOneUser.addEventListener("click", () => {
       ChatInterface.requestChatHistory(this.recipientId);
-      window.store.chatUserStore.updateChangeUserUnreadMessageStatus(
+      transStore.chatUserStore.updateChangeUserUnreadMessageStatus(
         this.recipientId,
         false
       );
@@ -244,7 +245,7 @@ class ChatUserComponent extends HTMLElement {
     inviteToPlayBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       ChatInterface.inviteToPlay({
-        authorId: window.store.userStore.get().details.id,
+        authorId: transStore.userStore.get().details.id,
         recipientId: this.recipientId,
         date: getCurDateString(),
       });
@@ -257,7 +258,7 @@ class ChatUserComponent extends HTMLElement {
       event.stopPropagation();
       ChatInterface.sendUpdateBlockStatus({
         blockedStatus: true,
-        clientId: window.store.userStore.get().details.id,
+        clientId: transStore.userStore.get().details.id,
         recipientId: this.recipientId,
       });
     });
@@ -268,7 +269,7 @@ class ChatUserComponent extends HTMLElement {
     friendBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       ChatInterface.sendFriendRequest({
-        authorId: window.store.userStore.get().details.id,
+        authorId: transStore.userStore.get().details.id,
         recipientId: this.recipientId,
         type: this.friend ? "unfriended" : "send",
       });

@@ -7,6 +7,7 @@ import {
   sanitizeAndCleanInput,
 } from "../../utils/utils";
 import { ChatInterface } from "../../backendInterface/chatInterface";
+import { transStore } from "../../state/store";
 
 class ChatCurrent extends HTMLElement {
   unsubscribeLanguage: null | (() => void);
@@ -18,10 +19,10 @@ class ChatCurrent extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribeLanguage = window.store.languageStore.subscribe(
+    this.unsubscribeLanguage = transStore.languageStore.subscribe(
       this.render.bind(this)
     );
-    this.unsubscribeChatMessageState = window.store.chatMessageStore.subscribe(
+    this.unsubscribeChatMessageState = transStore.chatMessageStore.subscribe(
       this.render.bind(this)
     );
     this.render();
@@ -33,12 +34,12 @@ class ChatCurrent extends HTMLElement {
   }
 
   render() {
-    const lang = window.store.languageStore.state.chat;
+    const lang = transStore.languageStore.state.chat;
 
     const recipientIdIsDefined =
-      window.store.chatMessageStore.get().recipientId.length > 0;
+      transStore.chatMessageStore.get().recipientId.length > 0;
 
-    const isBot = window.store.chatMessageStore.get().recipientId == "0";
+    const isBot = transStore.chatMessageStore.get().recipientId == "0";
 
     const hideWhenBot = isBot ? "hidden" : "";
 
@@ -65,7 +66,7 @@ class ChatCurrent extends HTMLElement {
       `#messagesContainer`
     ) as HTMLDivElement;
 
-    const curMsgState = window.store.chatMessageStore.get();
+    const curMsgState = transStore.chatMessageStore.get();
 
     curMsgState.messages.forEach((msg) => {
       this.createAndAppend(msgContainer, msg);
@@ -81,8 +82,8 @@ class ChatCurrent extends HTMLElement {
       ChatInterface.sendMessageToServer({
         type: "sentMessage",
         data: {
-          authorId: window.store.userStore.get().details.id,
-          recipientId: window.store.chatMessageStore.get().recipientId,
+          authorId: transStore.userStore.get().details.id,
+          recipientId: transStore.chatMessageStore.get().recipientId,
           date: getCurDateString(),
           message: sanitizeAndCleanInput(input.value),
         },
@@ -91,9 +92,9 @@ class ChatCurrent extends HTMLElement {
   }
 
   createAndAppend(container: HTMLDivElement, msg: ChatServiceTypes.Message) {
-    const lang = window.store.languageStore.state.chat;
+    const lang = transStore.languageStore.state.chat;
     const styleMsgOwner =
-      window.store.userStore.get().details.id === msg.authorId
+      transStore.userStore.get().details.id === msg.authorId
         ? "self-end border-green-300"
         : "self-start border-blue-300";
     const id = generateUniqueId();

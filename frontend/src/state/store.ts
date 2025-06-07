@@ -39,8 +39,7 @@ class Store {
     this.modalStore = new ModalStateStore();
   }
 
-  reset()
-  {
+  reset() {
     this.userStore.init();
     this.gameStore.init();
     this.notificationStore.init();
@@ -53,7 +52,8 @@ class Store {
     this.playerNamesStore.init();
     this.modalStore.reset();
   }
-
 }
 
-export { Store };
+const transStore = new Store();
+
+export { Store, transStore };

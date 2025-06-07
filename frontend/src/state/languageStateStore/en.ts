@@ -179,9 +179,13 @@ const en: LanguageState = {
     notifications: {
       userBlocked: "User blocked successfully.",
       userUnblocked: "User unblocked successfully.",
-      friendRequestAccepted: "Friend request accepted.",
-      friendRequestDeclined: "Friend request declined.",
+      friendRequestAccepted: "Friend request accepted",
+      friendRequestDeclined: "Friend request declined",
+      friendRequestWithdrawn: "Friend request withdrawn",
+      friendRequestSend: "Friend request sent",
+      friendRequestUnfriend: "Has unfriended you",
       invite: "User invited you to play a game with them\nClick here to join",
+      inviteNotification: "User invited you to play a game with them",
       tournamentStart:
         "The tournament has started. If you are the Host, go to tournaments to schedule the match or wait for the Host to send you an invitation.",
       matchResult:
