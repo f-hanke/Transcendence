@@ -1,20 +1,23 @@
+import { monitoringEnabled } from 'transcendence';
 import winston from 'winston';
+const transports = [
+    new winston.transports.Console({
+        format: winston.format.combine(winston.format.timestamp(), winston.format.printf(({ timestamp, level, message }) => `[${timestamp}] ${level.toUpperCase()}: ${message}`))
+    })
+];
+if (monitoringEnabled) {
+    transports.push(new winston.transports.Http({
+        host: 'logstash',
+        port: 5000,
+        path: '/',
+        format: winston.format.json()
+    }));
+}
 const winstonLogger = winston.createLogger({
     level: 'info',
     format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
-    defaultMeta: { service: 'users-auth', type: 'auth-service' },
-    transports: [
-        new winston.transports.Console({
-            format: winston.format.combine(winston.format.timestamp(), winston.format.printf(({ timestamp, level, message }) => `[${timestamp}] ${level.toUpperCase()}: ${message}`))
-        }),
-        // Send logs to Logstash
-        // new winston.transports.Http({
-        //   host: 'logstash',
-        //   port: 5000,
-        //   path: '/',
-        //   format: winston.format.json()
-        // })
-    ],
+    defaultMeta: { service: 'api-gateway', type: 'api-gateway' },
+    transports: transports,
 });
 // Simple wrapper that just handles multiple arguments
 const logger = {
