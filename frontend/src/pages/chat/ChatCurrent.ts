@@ -62,6 +62,7 @@ class ChatCurrent extends HTMLElement {
       </div>
     </div>
   `;
+
     const msgContainer = document.querySelector(
       `#messagesContainer`
     ) as HTMLDivElement;
@@ -79,15 +80,23 @@ class ChatCurrent extends HTMLElement {
       "#chatSendButton"
     ) as HTMLButtonElement;
     chatSendButton.addEventListener("click", () => {
-      ChatInterface.sendMessageToServer({
-        type: "sentMessage",
-        data: {
-          authorId: transStore.userStore.get().details.id,
-          recipientId: transStore.chatMessageStore.get().recipientId,
-          date: getCurDateString(),
-          message: sanitizeAndCleanInput(input.value),
-        },
-      });
+      this.sendMessage(input.value);
+      // ChatInterface.sendMessageToServer({
+      //   type: "sentMessage",
+      //   data: {
+      //     authorId: transStore.userStore.get().details.id,
+      //     recipientId: transStore.chatMessageStore.get().recipientId,
+      //     date: getCurDateString(),
+      //     message: sanitizeAndCleanInput(input.value),
+      //   },
+      // }
+      // );
+    });
+
+    input.addEventListener("keydown", (event: KeyboardEvent) => {
+      if (event.key === "Enter") {
+        this.sendMessage(input.value);
+      }
     });
   }
 
@@ -134,6 +143,18 @@ class ChatCurrent extends HTMLElement {
     } else {
       joinBtn.classList.add("hidden");
     }
+  }
+
+  sendMessage(msg: string) {
+    ChatInterface.sendMessageToServer({
+      type: "sentMessage",
+      data: {
+        authorId: transStore.userStore.get().details.id,
+        recipientId: transStore.chatMessageStore.get().recipientId,
+        date: getCurDateString(),
+        message: sanitizeAndCleanInput(msg),
+      },
+    });
   }
 }
 
