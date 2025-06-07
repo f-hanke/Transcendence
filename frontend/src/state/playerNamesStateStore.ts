@@ -42,7 +42,7 @@ class PlayerNamesStateStore {
   getName(playerId: string) {
     console.log("AUTHORID: ", playerId);
     if (playerId == "0")
-      return "Tournament Notification"
+      return transStore.languageStore.state.chat.notifications.tournamentBot;
     if (!isDefined(this.state[playerId])) {
       const msg = `DisplayName is not defined for the requested id!`;
       console.log(msg);

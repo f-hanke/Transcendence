@@ -143,8 +143,8 @@ render() {
     container.appendChild(elem);
     if(isBot)
     {
-      // user.displayName = "I AM BOT";
-      user.lastMessage = "GONNADESTROYYOU!"
+      user.displayName = transStore.languageStore.state.chat.notifications.tournamentBot;
+      //user.lastMessage = "GONNADESTROYYOU!"
     }
     elem.setData(user, type, isBot);
   }
