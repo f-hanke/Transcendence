@@ -83,6 +83,46 @@ if ! check_env_var "RABBITMQ_DEFAULT_PASS"; then
     echo "✓ Generated RABBITMQ_DEFAULT_PASS"
 fi
 
+# LOGSTASH_HTTP_USER (new)
+if ! check_env_var "LOGSTASH_HTTP_USER"; then
+    echo "LOGSTASH_HTTP_USER=logstash" >> .env
+    echo "✓ Set LOGSTASH_HTTP_USER"
+fi
+
+# LOGSTASH_HTTP_PASSWORD (new)
+if ! check_env_var "LOGSTASH_HTTP_PASSWORD"; then
+    LOGSTASH_HTTP_PASSWORD=$(generate_password)
+    echo "LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD}" >> .env
+    echo "✓ Generated LOGSTASH_HTTP_PASSWORD"
+fi
+
+# PROMETHEUS_PASSWORD (new)
+if ! check_env_var "PROMETHEUS_PASSWORD"; then
+    PROMETHEUS_PASSWORD=$(generate_password)
+    echo "PROMETHEUS_PASSWORD=${PROMETHEUS_PASSWORD}" >> .env
+    echo "✓ Generated PROMETHEUS_PASSWORD"
+else
+    PROMETHEUS_PASSWORD=$(grep "^PROMETHEUS_PASSWORD=" .env | cut -d'=' -f2)
+fi
+
+# Generate hash for Prometheus password (regardless of whether it's new or existing)
+if ! check_env_var "PROMETHEUS_PASSWORD_HASH" && [ -n "$PROMETHEUS_PASSWORD" ]; then
+    # Generate bcrypt hash for the password
+    if command -v python3 >/dev/null 2>&1; then
+        # Try to install bcrypt if not available
+        python3 -c "import bcrypt" 2>/dev/null || pip3 install bcrypt 2>/dev/null || echo "⚠️ bcrypt not available, hash generation skipped"
+        if python3 -c "import bcrypt" 2>/dev/null; then
+            PROMETHEUS_HASH=$(python3 -c "import bcrypt; print(bcrypt.hashpw('${PROMETHEUS_PASSWORD}'.encode('utf-8'), bcrypt.gensalt(rounds=12)).decode('utf-8'))")
+            # Escape dollar signs for Docker Compose
+            PROMETHEUS_HASH_ESCAPED=$(echo "$PROMETHEUS_HASH" | sed 's/\$/\$\$/g')
+            echo "PROMETHEUS_PASSWORD_HASH=${PROMETHEUS_HASH_ESCAPED}" >> .env
+            echo "✓ Generated PROMETHEUS_PASSWORD_HASH (escaped for Docker Compose)"
+        fi
+    else
+        echo "⚠️ Python3 not available, will generate hash in container"
+    fi
+fi
+
 echo ""
 echo "🔐 Environment setup complete!"
 echo "All passwords and secrets have been generated and stored in .env"
@@ -92,3 +132,6 @@ echo "  Elasticsearch: grep ELASTIC_PASSWORD .env"
 echo "  Kibana: grep KIBANA_PASSWORD .env"  
 echo "  Grafana: grep GRAFANA_ADMIN_PASSWORD .env"
 echo "  RabbitMQ: grep RABBITMQ_DEFAULT .env"
+echo "  Logstash: grep LOGSTASH_HTTP .env"
+echo "  Prometheus: grep PROMETHEUS_PASSWORD .env"
+echo "  Prometheus Hash: grep PROMETHEUS_PASSWORD_HASH .env"

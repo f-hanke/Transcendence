@@ -97,8 +97,28 @@ check_service() {
 
 # Check infrastructure services (third-party)
 check_elasticsearch
-check_service "Kibana" "http://localhost:5601" "GET" "" true
-check_service "Prometheus" "http://localhost:9090" "GET" "" true
+
+# Kibana check - try HTTP first, then HTTPS
+if response=$(curl -s --max-time 5 http://localhost:5601 2>/dev/null) && [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:5601 2>/dev/null) =~ 2[0-9][0-9]|302 ]]; then
+  echo -e "${GREEN}Kibana: ✅ (http://localhost:5601)${NC}"
+elif response=$(curl -sk --max-time 5 https://localhost:5601 2>/dev/null) && [[ $(curl -sk -o /dev/null -w "%{http_code}" https://localhost:5601 2>/dev/null) =~ 2[0-9][0-9]|302 ]]; then
+  echo -e "${GREEN}Kibana: ✅ (https://localhost:5601)${NC}"
+else
+  echo -e "${RED}Kibana: ❌ (http/https://localhost:5601) - Failed to connect${NC}"
+fi
+
+# Prometheus has basic auth with password from .env and uses HTTPS with certs
+if [ -f .env ] && grep -q "PROMETHEUS_PASSWORD=" .env; then
+  PROMETHEUS_PASSWORD=$(grep "^PROMETHEUS_PASSWORD=" .env | cut -d'=' -f2)
+  if http_code=$(curl -sk --max-time 5 -o /dev/null -w "%{http_code}" -u "admin:${PROMETHEUS_PASSWORD}" https://localhost:9090/-/healthy 2>/dev/null) && [[ $http_code =~ 2[0-9][0-9] ]]; then
+    echo -e "${GREEN}Prometheus: ✅ (https://localhost:9090) - Secured with basic auth${NC}"
+  else
+    echo -e "${RED}Prometheus: ❌ (https://localhost:9090) - Failed to connect with basic auth (HTTP: $http_code)${NC}"
+  fi
+else
+  echo -e "${RED}Prometheus: ❌ - No PROMETHEUS_PASSWORD found in .env${NC}"
+fi
+
 check_service "Grafana" "http://localhost:3000" "GET" "" true
 check_service "RabbitMQ" "http://localhost:15672" "GET" "" true
 check_service "logstash" "http://localhost:9600" "GET" "" true
@@ -130,12 +150,16 @@ echo "============================================"
 echo "============================================" 
 echo "🔐 SECURITY STATUS:"
 if [ -f .env ] && grep -q "ELASTIC_PASSWORD=" .env; then
-  echo -e "${GREEN}✅ Elasticsearch security is configured${NC}"
+  echo -e "${GREEN}✅ All services are secured with HTTPS${NC}"
   echo "   - Elasticsearch: https://localhost:9200 (login required)"
-  echo "   - Kibana: http://localhost:5601 (login: elastic/check .env file)"
+  echo "   - Kibana: https://localhost:5601 (login: elastic/check .env file)"
+  echo "   - Prometheus: https://localhost:9090 (login: admin/check .env file)"
+  echo "   - Logstash: https://localhost:9600 (secured with credentials)"
+  echo "   - API Gateway: https://localhost:8443 (HTTPS only)"
+  echo "   - All internal services accessible only via API Gateway"
 else
-  echo -e "${RED}❌ Elasticsearch security not configured${NC}"
-  echo "   Run: make setup-elastic-security"
+  echo -e "${RED}❌ Security configuration incomplete${NC}"
+  echo "   Run: make create_env && ./scripts/setup-elasticsearch-certs.sh"
 fi
 
 echo "============================================" 

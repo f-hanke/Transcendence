@@ -24,6 +24,9 @@ setup: create_env build-deps
 	mkdir -p grafana/dashboards
 	mkdir -p grafana/provisioning/datasources
 	mkdir -p grafana/provisioning/dashboards
+	@echo "Setting up SSL certificates..."
+	@chmod +x scripts/setup-elasticsearch-certs.sh
+	@./scripts/setup-elasticsearch-certs.sh
 
 # Ensure Kibana system password is properly set
 ensure-kibana-password:
@@ -34,13 +37,27 @@ ensure-kibana-password:
 # Basic Docker Compose operations
 up: setup
 	@echo "Starting core services first..."
-	docker compose up -d --build elasticsearch-setup elasticsearch rabbitmq-service
+	docker compose up -d --build --remove-orphans elasticsearch rabbitmq-service
 	@echo "Waiting for Elasticsearch to be ready..."
 	@echo "Setting kibana_system password..."
 	@$(MAKE) ensure-kibana-password
 	@echo "Starting remaining services including Kibana..."
-	docker compose up -d --build
+	docker compose up -d --build --remove-orphans
 	@echo "All services are ready. Check status with 'make status'"
+	@cat service-info.txt
+
+# Fresh start - complete rebuild without cache (recommended after clean-volumes)
+fresh-start: setup
+	@echo "🔄 Starting fresh with --no-cache rebuild..."
+	@echo "Building core services first..."
+	docker compose build --no-cache elasticsearch rabbitmq-service
+	docker compose up -d elasticsearch rabbitmq-service
+	@echo "Setting kibana_system password..."
+	@$(MAKE) ensure-kibana-password
+	@echo "Building and starting all remaining services..."
+	docker compose build --no-cache
+	docker compose up -d --remove-orphans
+	@echo "✅ Fresh start complete! All services rebuilt and started."
 	@cat service-info.txt
 
 down:
@@ -92,7 +109,7 @@ clean-npm:
 clean-volumes:
 	@echo "⚠️  WARNING: This will delete ALL data volumes!"
 	@echo "Press Ctrl+C to cancel, or Enter to continue..."
-	@read
+	@read -p "" dummy;
 	docker compose down -v
 	docker volume prune -f
 	@echo "All volumes removed!"
@@ -100,7 +117,7 @@ clean-volumes:
 clean-all: clean clean-npm clean-volumes
 	@echo "⚠️  WARNING: This will delete everything including data!"
 	@echo "Press Ctrl+C to cancel, or Enter to continue..."
-	@read
+	@read -p "" dummy;
 	docker system prune -a -f --volumes
 	@echo "Everything cleaned!"
 
@@ -116,9 +133,14 @@ stop:
 
 reset: clean rebuild
 
+# Complete reset - volumes + fresh rebuild (what you probably want!)
+reset-all: clean-volumes fresh-start
+	@echo "🎉 Complete reset finished! Everything rebuilt from scratch."
+
 help:
 	@echo "Docker Operations:"
 	@echo "  up           - Start all services (docker compose up)"
+	@echo "  fresh-start  - Complete rebuild with --no-cache (recommended after clean-volumes)"
 	@echo "  down         - Stop all services (preserving data)"
 	@echo "  restart      - Stop and start all services"
 	@echo "  rebuild      - Rebuild and restart all services"
@@ -147,6 +169,7 @@ help:
 	@echo "Aliases:"
 	@echo "  start/stop   - Aliases for up/down"
 	@echo "  reset        - Clean and rebuild"
+	@echo "  reset-all    - Clean volumes + fresh rebuild (complete reset)"
 	@echo ""
 	@echo "Security Notes:"
 	@echo "  • Run 'make create_env' before first startup"

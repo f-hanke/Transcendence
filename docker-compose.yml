@@ -1,52 +1,5 @@
 services:
   # Setup service to initialize Elasticsearch with security
-  elasticsearch-setup:
-    container_name: elasticsearch-setup
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
-    volumes:
-      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
-    user: "0"
-    command: >
-      bash -c '
-        if [ x${ELASTIC_PASSWORD} == x ]; then
-          echo "Set the ELASTIC_PASSWORD environment variable in the .env file";
-          exit 1;
-        elif [ x${KIBANA_PASSWORD} == x ]; then
-          echo "Set the KIBANA_PASSWORD environment variable in the .env file";
-          exit 1;
-        fi;
-        if [ ! -f config/certs/ca.zip ]; then
-          echo "Creating CA";
-          bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;
-          unzip config/certs/ca.zip -d config/certs;
-        fi;
-        if [ ! -f config/certs/certs.zip ]; then
-          echo "Creating certs";
-          echo -ne \
-          "instances:\n"\
-          "  - name: elasticsearch\n"\
-          "    dns:\n"\
-          "      - elasticsearch\n"\
-          "      - localhost\n"\
-          "    ip:\n"\
-          "      - 127.0.0.1\n"\
-          "  - name: kibana\n"\
-          "    dns:\n"\
-          "      - kibana\n"\
-          "      - localhost\n"\
-          "    ip:\n"\
-          "      - 127.0.0.1\n"\
-          > config/certs/instances.yml;
-          bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;
-          unzip config/certs/certs.zip -d config/certs;
-        fi;
-        echo "Setting file permissions"
-        chown -R root:root config/certs;
-        find . -type d -exec chmod 755 \{\} \;;
-        find . -type f -exec chmod 644 \{\} \;;
-        echo "Certificate setup complete!";
-      '
-
   elasticsearch:
     container_name: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
@@ -83,9 +36,6 @@ services:
       timeout: 10s
       retries: 120
       start_period: 30s
-    depends_on:
-      elasticsearch-setup:
-        condition: service_completed_successfully
 
   kibana:
     container_name: kibana
@@ -155,6 +105,8 @@ services:
       ELASTIC_USER: "elastic"
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
       ELASTIC_HOSTS: "https://elasticsearch:9200"
+      LOGSTASH_HTTP_USER: ${LOGSTASH_HTTP_USER:-logstash}
+      LOGSTASH_HTTP_PASSWORD: ${LOGSTASH_HTTP_PASSWORD:-}
     networks:
       - monitoring-network
     healthcheck:
@@ -172,26 +124,41 @@ services:
     image: prom/prometheus:latest
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./prometheus/init-prometheus.sh:/init-prometheus.sh:ro
+      - ./prometheus/web.yml:/etc/prometheus/web.yml
       - prometheus-data:/prometheus
       - elasticsearch-certs:/etc/prometheus/certs:ro
     ports:
       - "127.0.0.1:9090:9090"
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
-    entrypoint: ["/bin/sh", "/init-prometheus.sh"]
+      - PROMETHEUS_PASSWORD=${PROMETHEUS_PASSWORD:-}
+      - PROMETHEUS_PASSWORD_HASH=${PROMETHEUS_PASSWORD_HASH:-}
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - '/bin/prometheus'
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - |
+        # Create password file for Elasticsearch authentication
+        echo "$${ELASTIC_PASSWORD}" > /etc/prometheus/elastic_password
+        chmod 600 /etc/prometheus/elastic_password
+        
+        # Replace placeholder with actual password hash
+        if [ -n "$${PROMETHEUS_PASSWORD_HASH}" ]; then
+          sed -i "s|PROMETHEUS_PASSWORD_HASH_PLACEHOLDER|$${PROMETHEUS_PASSWORD_HASH}|g" /etc/prometheus/web.yml
+          echo "✅ Prometheus authentication configured"
+        fi
+        
+        # Start Prometheus
+        exec /bin/prometheus \
+          --config.file=/etc/prometheus/prometheus.yml \
+          --web.config.file=/etc/prometheus/web.yml \
+          --storage.tsdb.path=/prometheus \
+          --web.console.libraries=/usr/share/prometheus/console_libraries \
+          --web.console.templates=/usr/share/prometheus/consoles
     networks:
       - monitoring-network
       - rabbitmq-network
     user: "0:0"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      test: ["CMD", "sh", "-c", "wget --no-verbose --tries=1 --spider --no-check-certificate https://localhost:9090/ || true"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -202,17 +169,40 @@ services:
 
   grafana:
     container_name: grafana
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.4.0
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - elasticsearch-certs:/etc/grafana/certs:ro
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/microservices-dashboard.json
+      - PROMETHEUS_PASSWORD=${PROMETHEUS_PASSWORD}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - GF_LIVE_ENABLED=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        # Read CA certificate and set environment variable
+        export CA_CERT_CONTENT="$$(cat /etc/grafana/certs/ca/ca.crt)"
+        
+        # Substitute environment variables in datasource configuration using sed
+        sed -i "s|\$${PROMETHEUS_PASSWORD}|$${PROMETHEUS_PASSWORD}|g" /etc/grafana/provisioning/datasources/datasource.yml
+        sed -i "s|\$${ELASTIC_PASSWORD}|$${ELASTIC_PASSWORD}|g" /etc/grafana/provisioning/datasources/datasource.yml
+        
+        # Debug: Show the substituted file
+        echo "=== Datasource config after substitution ==="
+        cat /etc/grafana/provisioning/datasources/datasource.yml
+        echo "============================================="
+        
+        # Start Grafana
+        exec /run.sh
     depends_on:
       prometheus:
         condition: service_healthy
@@ -269,6 +259,8 @@ services:
       - AUTH_SERVICE_HOST=users-auth
       - SERVICE_NAME=api-gateway
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
+      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -306,6 +298,8 @@ services:
       - NODE_ENV=production
       - SERVICE_NAME=webserver
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
+      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -336,8 +330,12 @@ services:
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET:-}
       - RABBITMQ_HOST=rabbitmq-service
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
       - SERVICE_NAME=users-auth
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
+      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -369,7 +367,12 @@ services:
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=remote-matchmaking
+      - RABBITMQ_HOST=rabbitmq-service
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
+      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -402,7 +405,12 @@ services:
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=game-service
+      - RABBITMQ_HOST=rabbitmq-service
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
+      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
       - monitoring-network
       - rabbitmq-network
@@ -434,7 +442,12 @@ services:
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=chat-service
+      - RABBITMQ_HOST=rabbitmq-service
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
+      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
       - monitoring-network
       - rabbitmq-network
