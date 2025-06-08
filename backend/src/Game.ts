@@ -23,8 +23,12 @@ async function publishMatchResult(message: GameResultTypes.MatchResult) {
   // );
   let connection;
   try {
-		connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
-    console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
+    const rabbitUser = process.env.RABBITMQ_DEFAULT_USER || 'admin';
+    const rabbitPass = process.env.RABBITMQ_DEFAULT_PASS || 'admin';
+    const rabbitHost = process.env.RABBITMQ_HOST || 'rabbitmq-service';
+    const connectionString = `amqp://${rabbitUser}:${rabbitPass}@${rabbitHost}:5672`;
+    connection = await amqp.connect(connectionString);
+    console.log(`✅ Game service connected to RabbitMQ at ${connectionString.replace(rabbitPass, '[REDACTED]')}`);
 	} catch (err) {
 		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
 		connection = await amqp.connect('amqp://localhost');

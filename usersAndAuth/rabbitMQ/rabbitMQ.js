@@ -32,13 +32,36 @@ async function updateUserSimpleMatchRecords(msg) {
 export async function startConsumer() {
     // const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
     let connection;
+    
+    const connectWithRetry = async (retries = 5) => {
+        for (let i = 0; i < retries; i++) {
+            try {
+                const rabbitUser = process.env.RABBITMQ_DEFAULT_USER || 'admin';
+                const rabbitPass = process.env.RABBITMQ_DEFAULT_PASS || 'admin';
+                const rabbitHost = process.env.RABBITMQ_HOST || 'rabbitmq-service';
+                const connectionString = `amqp://${rabbitUser}:${rabbitPass}@${rabbitHost}:5672`;
+                connection = await amqp.connect(connectionString);
+                console.log(`✅ RabbitMQ Consumer connected at ${connectionString.replace(rabbitPass, '[REDACTED]')}`);
+                return connection;
+            }
+            catch (err) {
+                console.warn(`❌ RabbitMQ connection attempt ${i + 1}/${retries} failed:`, err.message);
+                if (i === retries - 1) {
+                    console.error("🚨 All RabbitMQ connection attempts failed. Consumer will not start.");
+                    throw err;
+                }
+                // Wait before retry (exponential backoff)
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+            }
+        }
+    };
+    
     try {
-        connection = await amqp.connect("amqp://admin:admin@rabbitmq-service:5672");
-        console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
+        await connectWithRetry();
     }
     catch (err) {
-        console.warn("Failed to connect to rabbitmq-service, trying localhost...");
-        connection = await amqp.connect("amqp://localhost");
+        console.error("Failed to start RabbitMQ consumer:", err.message);
+        return; // Exit gracefully without crashing the service
     }
     const channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: true });

@@ -4,28 +4,30 @@ MICROSERVICES STACK - SERVICE INFORMATION
 
 MONITORING SERVICES:
 - Elasticsearch: https://localhost:9200 (🔒 SECURED - user: elastic, pass: check .env file)
-- Kibana:        http://localhost:5601 (🔒 LOGIN REQUIRED - user: elastic, pass: check .env file)
-- Prometheus:    http://localhost:9090
+- Kibana:        https://localhost:5601 (🔒 LOGIN REQUIRED - user: elastic, pass: check .env file)
+- Prometheus:    https://localhost:9090 (🔒 SECURED - user: admin, pass: check .env file)
 - Grafana:       http://localhost:3000 (admin/check .env file for GRAFANA_ADMIN_PASSWORD)
-- Logstash:      http://localhost:9600
+- Logstash:      https://localhost:9600 (🔒 SECURED - check .env file for LOGSTASH_HTTP credentials)
 - RabbitMQ:      http://localhost:15672 (check .env file for RABBITMQ_DEFAULT_USER/PASS)
 
 APPLICATION SERVICES:
-- API Gateway:          https://localhost:8443
-- Auth Service:         http://localhost:10004
-- Matchmaking Service(remote):  http://localhost:10002
-- Game Service(backend):         http://localhost:10003
-- Chat Service:         http://localhost:10001
-- Webserver:            http://localhost:10005
-- FrontEnd Service: (to play the game)
-https://localhost:8443
+- API Gateway:          https://localhost:8443 (🔒 HTTPS ONLY)
+- Auth Service:         Internal only (via API Gateway: https://localhost:8443/AUTHENTICATION/)
+- Matchmaking Service:  Internal only (via API Gateway: https://localhost:8443/MATCHMAKING/)
+- Game Service:         Internal only (via API Gateway: https://localhost:8443/GAMESERVICE/)
+- Chat Service:         Internal only (via API Gateway: https://localhost:8443/CHATSERVICE/)
+- Webserver:            Internal only (via API Gateway: https://localhost:8443/)
+- Frontend Service:     https://localhost:8443 (🔒 HTTPS ONLY)
 
 ======================================================
 🔐 SECURITY NOTES:
-- Elasticsearch is now SECURED with TLS and authentication
-- To get passwords: check your .env file for ELASTIC_PASSWORD
-- API access: curl --cacert config/certs/ca/ca.crt -u elastic:PASSWORD https://localhost:9200
-- First time setup automatically generates secure passwords
+- ALL SERVICES now use HTTPS with TLS encryption
+- Elasticsearch requires authentication (user: elastic, password in .env)
+- API Gateway routes all external traffic through HTTPS port 8443
+- Internal services are only accessible via API Gateway for security
+- SSL certificates are automatically generated and managed
+- To get passwords: check your .env file for service credentials
+- Elasticsearch API access: curl --cacert config/certs/ca/ca.crt -u elastic:PASSWORD https://localhost:9200
 ======================================================
 For more details, check the documentation or run:
 $ make status
