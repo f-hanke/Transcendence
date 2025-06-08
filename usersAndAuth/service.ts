@@ -96,7 +96,7 @@ if (monitoringEnabled) {
   logger.info("Metrics and logger initialized.");
 }
 server.register(fastifyJwt, {
-  secret: "supersecret",
+  secret: process.env.JWT_SECRET || "supersecret",
 });
 server.register(cors, { origin: "*" });
 
@@ -702,6 +702,42 @@ server.get<{
   } catch (e) {
     logger.error(e);
     return reply.code(500).send({ reason: AuthErrors.BackendError });
+  }
+});
+
+// Sync all users to chat service - useful after chat service restarts
+server.post<{
+  Reply: {
+    200: { message: string; userCount: number };
+    500: ErrorResponseBody;
+  };
+}>("/api/admin/sync-users", async (request, reply) => {
+  try {
+    const allUsers = (await User.findAll()) as UserType[];
+    logger.info(`Syncing ${allUsers.length} users to chat service...`);
+    
+    for (const user of allUsers) {
+      let smallImageBuffer: Buffer | null = null;
+      if (user.image && user.image.type === 'Buffer') {
+        smallImageBuffer = Buffer.from(user.image.data);
+      }
+      
+      const publication: RabbitMQTypes.UserChange = {
+        id: user.id,
+        displayName: user.display_name,
+        smallImage: smallImageBuffer,
+        language: user.language,
+      };
+      await publishMessage(publication);
+    }
+    
+    return reply.code(200).send({ 
+      message: `Successfully synced ${allUsers.length} users to chat service`,
+      userCount: allUsers.length 
+    });
+  } catch (e) {
+    logger.error("Failed to sync users:", e);
+    return reply.code(500).send({ reason: AuthErrors.BackendError } satisfies ErrorResponseBody);
   }
 });
 

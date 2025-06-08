@@ -40,7 +40,7 @@ const fastify = Fastify({
 });
 
 fastify.register(fastifyJwt, {
-  secret: 'supersecret'
+  secret: process.env.JWT_SECRET || 'supersecret'
 })
 
 
@@ -155,7 +155,7 @@ fastify.get<{
       return reply.code(400).send({ reason: AuthErrors.LackingAuthorizationHeader } satisfies AuthServiceTypes.ErrorResponseBody);
     const token = request.headers.authorization.split(' ')[1];
     if(token.length < 27)
-      reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies AuthServiceTypes.ErrorResponseBody);
+      return reply.code(401).send({ reason: AuthErrors.Unauthorized } satisfies AuthServiceTypes.ErrorResponseBody);
     const decoded = await fastify.jwt.verify(token) as AuthServiceTypes.JwtType;
     reply.code(200).send({ userId: decoded.userId });
   } catch (error) {

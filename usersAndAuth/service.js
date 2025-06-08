@@ -18,8 +18,6 @@ const queue = "auth-service-queue"; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
         logger.error("Trying to publish unknown type");
-    // const connection = await amqp.connect(`amqp://admin:admin@rabbitmq-service:5672`);
-    // const connection = await amqp.connect(`amqp://localhost`);
     let connection;
     try {
         const rabbitUser = process.env.RABBITMQ_DEFAULT_USER || 'admin';
@@ -529,6 +527,33 @@ server.get("/api/users/:inputUserId/tournaments", async (request, reply) => {
 server.setNotFoundHandler((req, res) => {
     res.code(404).send({ route: req.url, method: req.method });
 });
+
+// Sync all users to chat service - useful after chat service restarts
+server.post("/api/admin/sync-users", async (request, reply) => {
+    try {
+        const allUsers = await User.findAll();
+        logger.info(`Syncing ${allUsers.length} users to chat service...`);
+        
+        for (const user of allUsers) {
+            const publication = {
+                id: user.id,
+                displayName: user.display_name,
+                smallImage: user.small_image,
+                language: user.language,
+            };
+            await publishMessage(publication);
+        }
+        
+        return reply.code(200).send({ 
+            message: `Successfully synced ${allUsers.length} users to chat service`,
+            userCount: allUsers.length 
+        });
+    } catch (e) {
+        logger.error("Failed to sync users:", e);
+        return reply.code(500).send({ reason: AuthErrors.BackendError });
+    }
+});
+
 server.listen({
     port: transNetworkSettings.authService.port,
     host: transNetworkSettings.authService.ip,
