@@ -3,11 +3,6 @@ MICROSERVICES STACK - SERVICE INFORMATION
 ======================================================
 
 MONITORING SERVICES:
-- Elasticsearch: https://localhost:9200 (🔒 SECURED - user: elastic, pass: check .env file)
-- Kibana:        https://localhost:5601 (🔒 LOGIN REQUIRED - user: elastic, pass: check .env file)
-- Prometheus:    https://localhost:9090 (🔒 SECURED - user: admin, pass: check .env file)
-- Grafana:       http://localhost:3000 (admin/check .env file for GRAFANA_ADMIN_PASSWORD)
-- Logstash:      https://localhost:9600 (🔒 SECURED - check .env file for LOGSTASH_HTTP credentials)
 - RabbitMQ:      http://localhost:15672 (check .env file for RABBITMQ_DEFAULT_USER/PASS)
 
 APPLICATION SERVICES:
@@ -22,12 +17,9 @@ APPLICATION SERVICES:
 ======================================================
 🔐 SECURITY NOTES:
 - ALL SERVICES now use HTTPS with TLS encryption
-- Elasticsearch requires authentication (user: elastic, password in .env)
 - API Gateway routes all external traffic through HTTPS port 8443
 - Internal services are only accessible via API Gateway for security
-- SSL certificates are automatically generated and managed
 - To get passwords: check your .env file for service credentials
-- Elasticsearch API access: curl --cacert config/certs/ca/ca.crt -u elastic:PASSWORD https://localhost:9200
 ======================================================
 For more details, check the documentation or run:
 $ make status

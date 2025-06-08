@@ -14,39 +14,6 @@ docker ps
 echo "============================================"
 echo "SERVICE HEALTH CHECKS:"
 
-# Function to check Elasticsearch with security
-check_elasticsearch() {
-  local timeout=5
-  
-  # Check if .env file exists and has ELASTIC_PASSWORD
-  if [ -f .env ] && grep -q "ELASTIC_PASSWORD=" .env; then
-    ELASTIC_PASSWORD=$(grep "^ELASTIC_PASSWORD=" .env | cut -d'=' -f2)
-    
-    # Try to connect to secured Elasticsearch
-    if response=$(curl -sk --max-time $timeout --cacert ./config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" https://localhost:9200 2>/dev/null); then
-      if echo "$response" | grep -q "cluster_name"; then
-        echo -e "${GREEN}Elasticsearch: ✅ (https://localhost:9200) - Secured with authentication${NC}"
-        return 0
-      else
-        echo -e "${YELLOW}Elasticsearch: ⚠️ (https://localhost:9200) - Connected but unexpected response${NC}"
-        return 2
-      fi
-    else
-      # Fallback: check if we get the expected "missing authentication credentials" error
-      if http_code=$(curl -sk --max-time $timeout -o /dev/null -w "%{http_code}" https://localhost:9200 2>/dev/null) && [[ $http_code == 401 ]]; then
-        echo -e "${GREEN}Elasticsearch: ✅ (https://localhost:9200) - Security enabled (401 auth required)${NC}"
-        return 0
-      else
-        echo -e "${RED}Elasticsearch: ❌ (https://localhost:9200) - Failed to connect (HTTP: $http_code)${NC}"
-        return 1
-      fi
-    fi
-  else
-    echo -e "${RED}Elasticsearch: ❌ - No .env file or ELASTIC_PASSWORD not found${NC}"
-    return 1
-  fi
-}
-
 # Function to check service health for custom microservices
 check_service() {
   local service_name=$1
@@ -95,44 +62,9 @@ check_service() {
   fi
 }
 
-# Check infrastructure services (third-party)
-check_elasticsearch
-
-# Kibana check - try HTTP first, then HTTPS
-if response=$(curl -s --max-time 5 http://localhost:5601 2>/dev/null) && [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:5601 2>/dev/null) =~ 2[0-9][0-9]|302 ]]; then
-  echo -e "${GREEN}Kibana: ✅ (http://localhost:5601)${NC}"
-elif response=$(curl -sk --max-time 5 https://localhost:5601 2>/dev/null) && [[ $(curl -sk -o /dev/null -w "%{http_code}" https://localhost:5601 2>/dev/null) =~ 2[0-9][0-9]|302 ]]; then
-  echo -e "${GREEN}Kibana: ✅ (https://localhost:5601)${NC}"
-else
-  echo -e "${RED}Kibana: ❌ (http/https://localhost:5601) - Failed to connect${NC}"
-fi
-
-# Prometheus has basic auth with password from .env and uses HTTPS with certs
-if [ -f .env ] && grep -q "PROMETHEUS_PASSWORD=" .env; then
-  PROMETHEUS_PASSWORD=$(grep "^PROMETHEUS_PASSWORD=" .env | cut -d'=' -f2)
-  if http_code=$(curl -sk --max-time 5 -o /dev/null -w "%{http_code}" -u "admin:${PROMETHEUS_PASSWORD}" https://localhost:9090/-/healthy 2>/dev/null) && [[ $http_code =~ 2[0-9][0-9] ]]; then
-    echo -e "${GREEN}Prometheus: ✅ (https://localhost:9090) - Secured with basic auth${NC}"
-  else
-    echo -e "${RED}Prometheus: ❌ (https://localhost:9090) - Failed to connect with basic auth (HTTP: $http_code)${NC}"
-  fi
-else
-  echo -e "${RED}Prometheus: ❌ - No PROMETHEUS_PASSWORD found in .env${NC}"
-fi
-
-check_service "Grafana" "http://localhost:3000" "GET" "" true
 check_service "RabbitMQ" "http://localhost:15672" "GET" "" true
-check_service "logstash" "http://localhost:9600" "GET" "" true
-
 # Check application services (our custom services)
 check_service "API Gateway" "https://localhost:8443/health" "HTTPS"
-
-# Note: Internal services use docker-compose networking
-check_service "Matchmaking Service" "http://localhost:10002/health"
-check_service "Game Service" "http://localhost:10003/health"
-check_service "Chat Service" "http://localhost:10001/health"
-check_service "Auth Service" "http://localhost:10004/health"
-check_service "Webserver" "http://localhost:10005/health"
-check_service "Frontend via Webserver" "http://localhost:10005/index.html" "GET" "" true
 
 echo "============================================"
 echo "API GATEWAY ROUTING CHECKS:"
