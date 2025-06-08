@@ -15,6 +15,19 @@ async function updateUserTournamentRecords(msg) {
         console.error("DB error inserting user tournament records", err);
     }
 }
+async function updateUserSimpleMatchRecords(msg) {
+    console.log("Updating user simple match history db...");
+    if (!gameResultTypeGuards.isMatchResult(msg)) {
+        console.error("Invalid match result message format");
+        return;
+    }
+    try {
+        await GameResultModel.recordNewSimpleMatch(msg);
+    }
+    catch (err) {
+        console.error("DB error inserting user simple match records", err);
+    }
+}
 export async function startConsumer() {
     let connection;
     try {
@@ -35,15 +48,19 @@ export async function startConsumer() {
     channel.consume(tournamentResultQueue, async (msg) => {
         if (msg !== null) {
             const message = JSON.parse(msg.content.toString());
-            console.log('[Consumer] Received tournament result:', message);
-            if (gameResultTypeGuards.isTournamentResult(message)) {
+            console.log('[Consumer] Received:', message);
+            if (gameResultTypeGuards.isTournamentResult(message))
                 await updateUserTournamentRecords(message);
-                channel.ack(msg);
+            else if (gameResultTypeGuards.isMatchResult(message))
+                await updateUserSimpleMatchRecords(message);
+            if (matchmakingTypeGuards.isTournamentNotification(message) || matchmakingTypeGuards.isServerStartTournament(message) || matchmakingTypeGuards.isPlayerLeftSinceTournamentStarted(message)) {
+                console.log("Received TournamentNotification or ServerStartTournament:", message, ", not for usersAndAuth service, nack() it.");
+                channel.nack(msg, false, true);
+                return;
             }
-            else {
-                console.error("Unexpected message type in tournament-results-queue:", message);
-                channel.nack(msg, false, false); // Don't requeue invalid messages
-            }
+            else
+                console.error("Wrong data read from rabbitMQ in usersAndAuth service.");
+            channel.ack(msg);
         }
     });
 }

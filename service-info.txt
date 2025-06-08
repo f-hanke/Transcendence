@@ -15,12 +15,6 @@ APPLICATION SERVICES:
 - Frontend Service:     https://localhost:8443 (🔒 HTTPS ONLY)
 
 ======================================================
-🔐 SECURITY NOTES:
-- ALL SERVICES now use HTTPS with TLS encryption
-- API Gateway routes all external traffic through HTTPS port 8443
-- Internal services are only accessible via API Gateway for security
-- To get passwords: check your .env file for service credentials
-======================================================
 For more details, check the documentation or run:
 $ make status
 ====================================================== 

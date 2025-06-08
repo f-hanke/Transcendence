@@ -76,24 +76,6 @@ check_service "Matchmaking Service via API Gateway" "https://localhost:8443/MATC
 check_service "Game Service via API Gateway" "https://localhost:8443/GAMESERVICE/health" "HTTPS"
 check_service "Chat Service via API Gateway" "https://localhost:8443/CHATSERVICE/health" "HTTPS"
 # check_service "Webserver via API Gateway" "https://localhost:8443/WEBSERVER/health" "HTTPS"
-
-echo "============================================" 
-
-echo "============================================" 
-echo "🔐 SECURITY STATUS:"
-if [ -f .env ] && grep -q "ELASTIC_PASSWORD=" .env; then
-  echo -e "${GREEN}✅ All services are secured with HTTPS${NC}"
-  echo "   - Elasticsearch: https://localhost:9200 (login required)"
-  echo "   - Kibana: https://localhost:5601 (login: elastic/check .env file)"
-  echo "   - Prometheus: https://localhost:9090 (login: admin/check .env file)"
-  echo "   - Logstash: https://localhost:9600 (secured with credentials)"
-  echo "   - API Gateway: https://localhost:8443 (HTTPS only)"
-  echo "   - All internal services accessible only via API Gateway"
-else
-  echo -e "${RED}❌ Security configuration incomplete${NC}"
-  echo "   Run: make create_env && ./scripts/setup-elasticsearch-certs.sh"
-fi
-
 echo "============================================" 
 echo "Check out the frontend at:"
 echo "https://localhost:8443"

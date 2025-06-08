@@ -87,9 +87,10 @@ async function publishTournamentNotification(
 }
 
 async function publishTournamentResult(
-  message: GameResultTypes.TournamentResult
+  message: GameResultTypes.TournamentResult | GameResultTypes.MatchResult
 ) {
-  if (!gameResultTypeGuards.isTournamentResult(message))
+  if (!gameResultTypeGuards.isTournamentResult(message) &&
+      !gameResultTypeGuards.isMatchResult(message))
     logger.error("Trying to publish unknown tournament result type:", message);
   let connection;
   try {
@@ -493,6 +494,7 @@ async function handleMatchResultProcessed(
       matchResult.matchId,
       ", processing as a simple match"
     );
+    publishTournamentResult(matchResult);
     // Raw match results should not be published to matchmaking-service-queue
     // This queue is only for tournament notifications consumed by chat-service
     logger.info(

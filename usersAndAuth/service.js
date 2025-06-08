@@ -57,7 +57,6 @@ const server = fastify({
 server.register(fastifyJwt, {
     secret: process.env.JWT_SECRET || "supersecret",
 });
-console.log("JWT_SECRET:", process.env.JWT_SECRET);
 server.register(cors, { origin: "*" });
 server.get("/ping", async (request, reply) => {
     // the more "automatic" way of fastify handling the entire response
