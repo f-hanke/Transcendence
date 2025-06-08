@@ -32,6 +32,8 @@ export function enableJwtCheck(fastify: FastifyInstance) {
       url.startsWith("/assets/") ||
       url === "/index.css" ||
       url === "/favicon.ico" ||
+      url === "/favicon-16x16.png" ||
+      url === "/favicon-32x32.png" ||
       url === "/" ||
       url === "/loginPage" ||
       url === "/registerPage" ||
