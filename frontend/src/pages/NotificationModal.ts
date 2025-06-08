@@ -37,7 +37,7 @@ class NotificationModal extends HTMLElement {
     if (notificationState.length == 0) return;
     let notificationNode: HTMLElement;
     this.innerHTML = "";
-    const div = createHtmlElementFromString(`<div class="fixed top-0 w-full text-center"></div>`);
+    const div = createHtmlElementFromString(`<div class="fixed top-4 left-1/2 transform -translate-x-1/2 w-full max-w-md text-center z-50"></div>`);
     notificationState.forEach(({id, message}) => {
       notificationNode = this.createNotificationNode(id, message);
       div.appendChild(notificationNode);
@@ -59,8 +59,8 @@ class NotificationModal extends HTMLElement {
   createNotificationNode(id: string, message: string) {
     return createHtmlElementFromString(
     `
-      <div id=${id} class="bg-gray-400 m-2 p-4 rounded-md shadow-lg ">
-        <div class="text-sm font-bold mb-4 text-white">${message}</div>
+      <div id=${id} class="bg-gradient-to-r from-red-500 to-purple-600 m-2 p-4 rounded-lg shadow-xl border border-white/20">
+        <div class="text-sm font-semibold text-white">${message}</div>
       </div>
     `
     );
