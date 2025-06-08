@@ -142,12 +142,17 @@ class UserSettings extends HTMLElement {
         </button>
       </div>
         <div class="flex flex-col mb-4" id="profileImageContainer">
+          <div class="relative w-40 h-40 mx-auto group cursor-pointer" id="profileImageWrapper">
             <img id="profileImage" src="${getImgSrcFromBuffer(imageToRender)}"
-              class=" w-full max-w-xl border border-gray-600  ${classWhenOwnSettings}"
+              class="w-40 h-40 rounded-lg border border-gray-600 object-cover ${classWhenOwnSettings}"
               title="${
                 transStore.languageStore.state.register
                   .clickToChangeProfilePicture
               }"/>
+            <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <span class="text-white text-2xl">✏️</span>
+            </div>
+          </div>
           <input type="file" id="imageUpload" class="hidden"
           accept="image/png, image/jpeg">
       </div>
@@ -202,11 +207,11 @@ class UserSettings extends HTMLElement {
         "#profileImageContainer"
       ) as HTMLDivElement;
 
-      const profileImage = profileImageContainer.querySelector(
-        "#profileImage"
-      ) as HTMLImageElement;
+      const profileImageWrapper = profileImageContainer.querySelector(
+        "#profileImageWrapper"
+      ) as HTMLDivElement;
 
-      profileImage.addEventListener("click", (event) => {
+      profileImageWrapper.addEventListener("click", (event) => {
         event.preventDefault();
         (
           profileImageContainer.querySelector(

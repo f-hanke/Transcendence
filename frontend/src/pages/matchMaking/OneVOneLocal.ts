@@ -72,11 +72,15 @@ class OneVOneLocal extends HTMLElement {
               class="w-full px-4 py-2 mt-1 bg-gray-700 text-white rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
           </div>
           <button id="startGameBtn"
-            class="w-full bg-green-600 text-white font-semibold py-2 rounded-md shadow-md hover:bg-green-700 transition ${
+            class="w-full text-white font-semibold py-2 rounded-md shadow-md transition ${
               transStore.oneVOneLocalStore.get().player2Name === ""
-                ? "hidden"
+                ? "bg-gray-600 cursor-not-allowed opacity-50"
+                : "bg-green-600 hover:bg-green-700"
+            }" ${
+              transStore.oneVOneLocalStore.get().player2Name === ""
+                ? "disabled"
                 : ""
-            }">
+            }>
             ${transStore.languageStore.state.oneVOneLocal.startGame}
           </button>
         </div>
