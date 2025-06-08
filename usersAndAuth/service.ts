@@ -98,6 +98,7 @@ const server = fastify({
 server.register(fastifyJwt, {
   secret: process.env.JWT_SECRET || "supersecret",
 });
+
 server.register(cors, { origin: "*" });
 
 server.get("/ping", async (request, reply) => {

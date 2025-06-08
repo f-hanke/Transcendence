@@ -32,7 +32,7 @@ services:
 
     environment:
       - NODE_ENV=production
-      - JWT_SECRET=${JWT_SECRET:-}
+      - JWT_SECRET
       - WEBSERVER_HOST=webserver
       - AUTH_SERVICE_HOST=users-auth
       - SERVICE_NAME=api-gateway
@@ -90,7 +90,7 @@ services:
       - users-auth-db-data:/app/usersAndAuth/db
     environment:
       - NODE_ENV=production
-      - JWT_SECRET=${JWT_SECRET:-}
+      - JWT_SECRET
       - SERVICE_NAME=users-auth
     networks:
       - rabbitmq-network
@@ -115,7 +115,7 @@ services:
     ports:
       - "10002"
     volumes:
-      - remote-db-data:/app/db_file
+      - remote-db-data:/app/remote/db_file
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=remote-matchmaking
@@ -144,6 +144,7 @@ services:
       - NODE_ENV=production
       - SERVICE_NAME=game-service
     networks:
+      - rabbitmq-network
       - app-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:10003/health"]
@@ -165,11 +166,11 @@ services:
     ports:
       - "10001"
     volumes:
-      - chat-service-db-data:/app/db
+      - chat-service-db-data:/app/chat-service/db
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=chat-service
-      - JWT_SECRET=${JWT_SECRET:-}
+      - JWT_SECRET
     networks:
       - rabbitmq-network
       - app-network
@@ -198,3 +199,4 @@ volumes:
   remote-db-data:
   users-auth-db-data:
   rabbitmq-data:
+

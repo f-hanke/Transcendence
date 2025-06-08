@@ -16,6 +16,11 @@ build-deps:
 	@echo "Building frontend..."
 	npm install --prefix ./frontend
 	npm run build --prefix ./frontend
+	npm run build --prefix ./chat-service
+	npm run build --prefix ./remote
+	npm run build --prefix ./usersAndAuth
+	npm run build --prefix ./webserver
+	npm run build --prefix ./backend
 	@echo "Dependencies built successfully!"
 
 # Setup directories, network, and security

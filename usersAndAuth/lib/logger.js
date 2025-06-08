@@ -21,11 +21,11 @@ if (monitoringEnabled) {
 const winstonLogger = winston.createLogger({
     level: 'info',
     format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
-    defaultMeta: { service: 'webserver', type: 'webserver' },
+    defaultMeta: { service: 'users-auth', type: 'users-auth' },
     transports: transports,
 });
 // Test log on startup
-winstonLogger.info('Webserver logger initialized');
+winstonLogger.info('Users auth service logger initialized');
 // Simple wrapper that just handles multiple arguments
 const logger = {
     info(...args) {
