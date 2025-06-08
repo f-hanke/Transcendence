@@ -1,51 +1,24 @@
-FROM node:20-alpine as shared-builder
-
-WORKDIR /app/shared
-COPY shared/package*.json ./
-RUN npm install
-COPY shared/tsconfig.json ./
-COPY shared/src ./src
-RUN npm run build
-
-FROM node:20-alpine as service-builder
+FROM node:20-alpine
 
 WORKDIR /app/remote
 COPY remote/package*.json ./
 RUN npm install
-
 COPY remote/tsconfig.json ./
 COPY remote/src ./src
 COPY remote/client ./client
 COPY remote/db_file ./db_file
-RUN rm ./db_file/matchmaking_service.db
 
-# Copy the shared package build
-COPY --from=shared-builder /app/shared/dist/ ../shared/dist/
-COPY --from=shared-builder /app/shared/package.json ../shared/
+# Copy the pre-built shared library (built by build_all.sh)
+COPY shared/dist /app/shared/dist
+COPY shared/package.json /app/shared/package.json
 
-# Link the shared package
+# Update the shared library path
 RUN npm install --no-save ../shared
+
+# Build the remote service
 RUN npm run build
-#
-RUN npm run db
 
-FROM node:20-alpine
-
-WORKDIR /app
-COPY --from=service-builder /app/remote/dist ./dist
-COPY --from=service-builder /app/remote/db_file ./db_file
-COPY --from=service-builder /app/remote/node_modules ./node_modules
-COPY --from=service-builder /app/remote/package.json ./
-COPY --from=service-builder /app/remote/client ./client
-
-# Copy the shared module to the final image
-COPY --from=shared-builder /app/shared/dist/ /app/shared/dist/
-COPY --from=shared-builder /app/shared/package.json /app/shared/
-
-# Ensure the shared module is installed in the final image
-RUN npm install --no-save ./shared
-
-# Install wget for health checks
+# Install health check tools
 RUN apk add --no-cache wget
 
 EXPOSE 10002
