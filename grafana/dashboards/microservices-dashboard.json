@@ -66,9 +66,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "avg(rate(http_requests_total[5m])) by (job, route)",
+          "expr": "rate(http_requests_total[5m])",
           "interval": "",
-          "legendFormat": "{{job}} - {{route}}",
+          "legendFormat": "{{job}} - {{method}} {{route}}",
           "refId": "A"
         }
       ],
@@ -92,7 +92,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "reqps",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -187,7 +187,7 @@
       },
       "yaxes": [
         {
-          "format": "s",
+          "format": "short",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -241,7 +241,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -311,15 +311,15 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(rabbitmq_messages_published_total[5m])",
+          "expr": "rabbitmq_queue_messages_ready",
           "interval": "",
-          "legendFormat": "Published - {{queue}}",
+          "legendFormat": "Ready - {{queue}}",
           "refId": "A"
         },
         {
-          "expr": "rate(rabbitmq_messages_consumed_total[5m])",
+          "expr": "rabbitmq_queue_messages_unacked",
           "interval": "",
-          "legendFormat": "Consumed - {{queue}}",
+          "legendFormat": "Unacked - {{queue}}",
           "refId": "B"
         }
       ],
@@ -327,7 +327,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "RabbitMQ Message Rate",
+      "title": "RabbitMQ Queue Messages",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -363,6 +363,67 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 10,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "7.3.7",
+      "targets": [
+        {
+          "expr": "rabbitmq_channel_messages_published_total",
+          "interval": "",
+          "legendFormat": "Messages Published",
+          "refId": "A"
+        },
+        {
+          "expr": "rabbitmq_channel_messages_delivered_total",
+          "interval": "",
+          "legendFormat": "Messages Delivered",
+          "refId": "B"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "RabbitMQ Message Totals",
+      "type": "stat"
     }
   ],
   "refresh": "10s",
@@ -379,6 +440,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "Microservices Dashboard",
-  "uid": "microservices",
-  "version": 1
+  "uid": "microservices-v2",
+  "version": 2
 } 
