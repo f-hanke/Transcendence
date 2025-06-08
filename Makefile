@@ -20,41 +20,21 @@ build-deps:
 
 # Setup directories, network, and security
 setup: create_env build-deps
-	@echo "Creating required directories..."
-	mkdir -p grafana/dashboards
-	mkdir -p grafana/provisioning/datasources
-	mkdir -p grafana/provisioning/dashboards
-	@echo "Setting up SSL certificates..."
-	@chmod +x scripts/setup-elasticsearch-certs.sh
-	@./scripts/setup-elasticsearch-certs.sh
 
 # Ensure Kibana system password is properly set
-ensure-kibana-password:
-	@echo "Ensuring kibana_system password is properly set..."
-	@chmod +x scripts/ensure-kibana-password.sh
-	@./scripts/ensure-kibana-password.sh
+# ensure-kibana-password:
+# 	@echo "Ensuring kibana_system password is properly set..."
+# 	@chmod +x scripts/ensure-kibana-password.sh
+# 	@./scripts/ensure-kibana-password.sh
 
 # Basic Docker Compose operations
 up: setup
-	@echo "Starting core services first..."
-	docker compose up -d --build --remove-orphans elasticsearch rabbitmq-service
-	@echo "Waiting for Elasticsearch to be ready..."
-	@echo "Setting kibana_system password..."
-	@$(MAKE) ensure-kibana-password
-	@echo "Starting remaining services including Kibana..."
 	docker compose up -d --build --remove-orphans
 	@echo "All services are ready. Check status with 'make status'"
 	@cat service-info.txt
 
 # Fresh start - complete rebuild without cache (recommended after clean-volumes)
 fresh-start: setup
-	@echo "🔄 Starting fresh with --no-cache rebuild..."
-	@echo "Building core services first..."
-	docker compose build --no-cache elasticsearch rabbitmq-service
-	docker compose up -d elasticsearch rabbitmq-service
-	@echo "Setting kibana_system password..."
-	@$(MAKE) ensure-kibana-password
-	@echo "Building and starting all remaining services..."
 	docker compose build --no-cache
 	docker compose up -d --remove-orphans
 	@echo "✅ Fresh start complete! All services rebuilt and started."

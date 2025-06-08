@@ -51,10 +51,10 @@ export function enableJwtCheck(fastify: FastifyInstance) {
       url === "/GAMESERVICE/health" ||
       url === "/CHATSERVICE/health" ||
       url === "/health" ||  // API gateway health check
-      url === "/metrics" ||   // Prometheus metrics endpoint
-      url.startsWith("/CHATSERVICE/ws") ||  // Chat WebSocket
-      url.startsWith("/GAMESERVICE/ws") ||  // Game WebSocket  
-      url.startsWith("/MATCHMAKING/ws");    // Matchmaking WebSocket
+      url === "/metrics"    // Prometheus metrics endpoint
+      // url.startsWith("/CHATSERVICE/ws") ||  // Chat WebSocket
+      // url.startsWith("/GAMESERVICE/ws") ||  // Game WebSocket  
+      // url.startsWith("/MATCHMAKING/ws");    // Matchmaking WebSocket
 
     if (!skipAuth) {
       await authMiddleware(req, reply);

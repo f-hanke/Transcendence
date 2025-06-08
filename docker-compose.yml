@@ -1,247 +1,26 @@
 services:
-  # Setup service to initialize Elasticsearch with security
-  elasticsearch:
-    container_name: elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
-    labels:
-      co.elastic.logs/module: elasticsearch
-    volumes:
-      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    ports:
-      - "127.0.0.1:9200:9200"
-    environment:
-      - node.name=elasticsearch
-      - cluster.name=docker-cluster
-      - discovery.type=single-node
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
-      - bootstrap.memory_lock=true
-      - xpack.security.enabled=true
-      - xpack.security.http.ssl.enabled=true
-      - xpack.security.http.ssl.key=certs/elasticsearch/elasticsearch.key
-      - xpack.security.http.ssl.certificate=certs/elasticsearch/elasticsearch.crt
-      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
-      - xpack.security.transport.ssl.enabled=true
-      - xpack.security.transport.ssl.key=certs/elasticsearch/elasticsearch.key
-      - xpack.security.transport.ssl.certificate=certs/elasticsearch/elasticsearch.crt
-      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
-      - xpack.security.transport.ssl.verification_mode=certificate
-      - xpack.license.self_generated.type=${LICENSE:-basic}
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    networks:
-      - monitoring-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'"]
-      interval: 10s
-      timeout: 10s
-      retries: 120
-      start_period: 30s
-
-  kibana:
-    container_name: kibana
-    image: docker.elastic.co/kibana/kibana:8.12.1
-    labels:
-      co.elastic.logs/module: kibana
-    volumes:
-      - elasticsearch-certs:/usr/share/kibana/config/certs
-      - kibana-data:/usr/share/kibana/data
-      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
-      - ./kibana/dashboards:/usr/share/kibana/dashboards:ro
-    ports:
-      - "127.0.0.1:5601:5601"
-    environment:
-      - SERVERNAME=kibana
-      - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
-      - ELASTICSEARCH_USERNAME=kibana_system
-      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD:-}
-      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
-      - XPACK_SECURITY_ENCRYPTIONKEY=${ENCRYPTION_KEY:-}
-      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${ENCRYPTION_KEY:-}
-      - XPACK_REPORTING_ENCRYPTIONKEY=${ENCRYPTION_KEY:-}
-    networks:
-      - monitoring-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 302 Found'"]
-      interval: 10s
-      timeout: 10s
-      retries: 120
-      start_period: 30s
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-
-  kibana-setup:
-    container_name: kibana-setup
-    image: curlimages/curl:latest
-    volumes:
-      - ./kibana/setup/import-dashboards.sh:/import-dashboards.sh:ro
-      - ./kibana/dashboards:/dashboards:ro
-    environment:
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
-    command: ["/bin/sh", "/import-dashboards.sh"]
-    networks:
-      - monitoring-network
-    depends_on:
-      kibana:
-        condition: service_healthy
-
-  logstash:
-    container_name: logstash
-    image: docker.elastic.co/logstash/logstash:8.12.1
-    labels:
-      co.elastic.logs/module: logstash  
-    volumes:
-      - elasticsearch-certs:/usr/share/logstash/certs
-      - ./logstash/pipeline:/usr/share/logstash/pipeline
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
-    ports:
-      - "127.0.0.1:5044:5044"     # Beats input
-      - "127.0.0.1:5000:5000"     # HTTP input (for Winston)
-      - "127.0.0.1:5001:5001"     # TCP input  
-      - "127.0.0.1:5002:5002/udp" # UDP input
-      - "127.0.0.1:9600:9600"     # Logstash monitoring API
-    environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-      ELASTIC_USER: "elastic"
-      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
-      ELASTIC_HOSTS: "https://elasticsearch:9200"
-      LOGSTASH_HTTP_USER: ${LOGSTASH_HTTP_USER:-logstash}
-      LOGSTASH_HTTP_PASSWORD: ${LOGSTASH_HTTP_PASSWORD:-}
-    networks:
-      - monitoring-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9600/?pretty"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-
-  prometheus:
-    container_name: prometheus
-    image: prom/prometheus:latest
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./prometheus/web.yml:/etc/prometheus/web.yml
-      - prometheus-data:/prometheus
-      - elasticsearch-certs:/etc/prometheus/certs:ro
-    ports:
-      - "127.0.0.1:9090:9090"
-    environment:
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
-      - PROMETHEUS_PASSWORD=${PROMETHEUS_PASSWORD:-}
-      - PROMETHEUS_PASSWORD_HASH=${PROMETHEUS_PASSWORD_HASH:-}
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        # Create password file for Elasticsearch authentication
-        echo "$${ELASTIC_PASSWORD}" > /etc/prometheus/elastic_password
-        chmod 600 /etc/prometheus/elastic_password
-        
-        # Replace placeholder with actual password hash
-        if [ -n "$${PROMETHEUS_PASSWORD_HASH}" ]; then
-          sed -i "s|PROMETHEUS_PASSWORD_HASH_PLACEHOLDER|$${PROMETHEUS_PASSWORD_HASH}|g" /etc/prometheus/web.yml
-          echo "✅ Prometheus authentication configured"
-        fi
-        
-        # Start Prometheus
-        exec /bin/prometheus \
-          --config.file=/etc/prometheus/prometheus.yml \
-          --web.config.file=/etc/prometheus/web.yml \
-          --storage.tsdb.path=/prometheus \
-          --web.console.libraries=/usr/share/prometheus/console_libraries \
-          --web.console.templates=/usr/share/prometheus/consoles
-    networks:
-      - monitoring-network
-      - rabbitmq-network
-    user: "0:0"
-    healthcheck:
-      test: ["CMD", "sh", "-c", "wget --no-verbose --tries=1 --spider --no-check-certificate https://localhost:9090/ || true"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-
-  grafana:
-    container_name: grafana
-    image: grafana/grafana:10.4.0
-    ports:
-      - "127.0.0.1:3000:3000"
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-      - elasticsearch-certs:/etc/grafana/certs:ro
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/microservices-dashboard.json
-      - PROMETHEUS_PASSWORD=${PROMETHEUS_PASSWORD}
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - GF_LIVE_ENABLED=false
-      - GF_ANALYTICS_REPORTING_ENABLED=false
-      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        # Read CA certificate and set environment variable
-        export CA_CERT_CONTENT="$$(cat /etc/grafana/certs/ca/ca.crt)"
-        
-        # Substitute environment variables in datasource configuration using sed
-        sed -i "s|\$${PROMETHEUS_PASSWORD}|$${PROMETHEUS_PASSWORD}|g" /etc/grafana/provisioning/datasources/datasource.yml
-        sed -i "s|\$${ELASTIC_PASSWORD}|$${ELASTIC_PASSWORD}|g" /etc/grafana/provisioning/datasources/datasource.yml
-        
-        # Debug: Show the substituted file
-        echo "=== Datasource config after substitution ==="
-        cat /etc/grafana/provisioning/datasources/datasource.yml
-        echo "============================================="
-        
-        # Start Grafana
-        exec /run.sh
-    depends_on:
-      prometheus:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
-    networks:
-      - monitoring-network
-      - rabbitmq-network
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
   rabbitmq-service:
-    container_name: rabbitmq-service
-    image: rabbitmq:3-management
-    ports:
-      - "127.0.0.1:5672:5672"   # RabbitMQ main port
-      - "127.0.0.1:15672:15672" # Management UI
-      - "127.0.0.1:15692:15692" # Prometheus metrics
-    environment:
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
-    volumes:
-      - ./rabbitmq/config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
-      - ./rabbitmq/config/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
-      - ./rabbitmq/config/definitions.json:/etc/rabbitmq/definitions.json:ro
-      - rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - rabbitmq-network
-      - monitoring-network
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+      container_name: rabbitmq-service
+      image: rabbitmq:3-management
+      ports:
+        - "127.0.0.1:5672:5672"   # RabbitMQ main port
+        - "127.0.0.1:15672:15672" # Management UI
+      environment:
+        - RABBITMQ_DEFAULT_USER=admin
+        - RABBITMQ_DEFAULT_PASS=admin
+      volumes:
+        - ./rabbitmq/config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+        - ./rabbitmq/config/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+        - ./rabbitmq/config/definitions.json:/etc/rabbitmq/definitions.json:ro
+        - rabbitmq-data:/var/lib/rabbitmq
+      networks:
+        - rabbitmq-network
+      healthcheck:
+        test: ["CMD", "rabbitmqctl", "status"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+        start_period: 40s
 
   api-gateway:
     container_name: api-gateway
@@ -250,19 +29,14 @@ services:
       dockerfile: apiGateway/Dockerfile
     ports:
       - "8443:8443"  # Only expose HTTPS
-    volumes:
-      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
+
     environment:
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET:-}
       - WEBSERVER_HOST=webserver
       - AUTH_SERVICE_HOST=users-auth
       - SERVICE_NAME=api-gateway
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
-      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
-      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
-      - monitoring-network
       - rabbitmq-network
       - app-network
     healthcheck:
@@ -282,8 +56,6 @@ services:
         condition: service_healthy
       chat-service:
         condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
 
   webserver:
     container_name: webserver
@@ -292,16 +64,10 @@ services:
       dockerfile: webserver/Dockerfile
     ports:
       - "10005"
-    volumes:
-      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=webserver
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
-      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
-      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
-      - monitoring-network
       - rabbitmq-network
       - app-network
     healthcheck:
@@ -310,9 +76,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
     expose:
       - "10005"
 
@@ -325,7 +88,6 @@ services:
       - "10004"
     volumes:
       - users-auth-db-data:/app/usersAndAuth/db
-      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET:-}
@@ -333,11 +95,7 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
       - SERVICE_NAME=users-auth
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
-      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
-      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
-      - monitoring-network
       - rabbitmq-network
       - app-network
     healthcheck:
@@ -348,8 +106,6 @@ services:
       start_period: 10s
     depends_on:
       rabbitmq-service:
-        condition: service_healthy
-      elasticsearch:
         condition: service_healthy
     expose:
       - "10004"
@@ -363,19 +119,10 @@ services:
       - "10002"
     volumes:
       - remote-db-data:/app/db_file
-      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=remote-matchmaking
-      - RABBITMQ_HOST=rabbitmq-service
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
-      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
-      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
-      - monitoring-network
-      - rabbitmq-network
       - app-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:10002/health"]
@@ -385,10 +132,6 @@ services:
       start_period: 10s
     depends_on:
       users-auth:
-        condition: service_healthy
-      rabbitmq-service:
-        condition: service_healthy
-      elasticsearch:
         condition: service_healthy
     expose:
       - "10002"
@@ -400,20 +143,10 @@ services:
       dockerfile: backend/Dockerfile
     ports:
       - "10003"
-    volumes:
-      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=game-service
-      - RABBITMQ_HOST=rabbitmq-service
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
-      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
-      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
-      - monitoring-network
-      - rabbitmq-network
       - app-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:10003/health"]
@@ -423,8 +156,6 @@ services:
       start_period: 10s
     depends_on:
       remote:
-        condition: service_healthy
-      elasticsearch:
         condition: service_healthy
     expose:
       - "10003"
@@ -438,19 +169,11 @@ services:
       - "10001"
     volumes:
       - chat-service-db-data:/app/db
-      - elasticsearch-certs:/usr/share/elasticsearch/config/certs
     environment:
       - NODE_ENV=production
       - SERVICE_NAME=chat-service
-      - RABBITMQ_HOST=rabbitmq-service
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
       - JWT_SECRET=${JWT_SECRET:-}
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
-      - LOGSTASH_HTTP_USER=${LOGSTASH_HTTP_USER:-logstash}
-      - LOGSTASH_HTTP_PASSWORD=${LOGSTASH_HTTP_PASSWORD:-}
     networks:
-      - monitoring-network
       - rabbitmq-network
       - app-network
     healthcheck:
@@ -464,26 +187,17 @@ services:
         condition: service_healthy
       rabbitmq-service:
         condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
     expose:
       - "10001"
 
 networks:
-  monitoring-network:
-    driver: bridge
   rabbitmq-network:
     driver: bridge
   app-network:
     driver: bridge
 
 volumes:
-  elasticsearch-data:
-  prometheus-data:
-  grafana-data:
-  rabbitmq-data:
   chat-service-db-data:
   remote-db-data:
   users-auth-db-data:
-  elasticsearch-certs:
-  kibana-data:
+  rabbitmq-data:
