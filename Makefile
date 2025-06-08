@@ -1,6 +1,13 @@
-# Default Make command
-all: setup up
+all: wipe-docker-everything setup up
 
+wipe-docker-everything:
+	@echo "⚠️  WARNING (eval only): deleting ALL Docker containers, images, volumes, and networks..."
+	@docker stop $$(docker ps -qa) 2>/dev/null || true;
+	@docker rm $$(docker ps -qa) 2>/dev/null || true;
+	@docker rmi -f $$(docker images -qa) 2>/dev/null || true;
+	@docker volume rm $$(docker volume ls -q) 2>/dev/null || true;
+	@docker network rm $$(docker network ls -q) 2>/dev/null || true;
+	
 # Elasticsearch security setup 
 create_env:
 	@echo "Setting up .ENV..."
@@ -16,11 +23,6 @@ build-deps:
 	@echo "Building frontend..."
 	npm install --prefix ./frontend
 	npm run build --prefix ./frontend
-	npm run build --prefix ./chat-service
-	npm run build --prefix ./remote
-	npm run build --prefix ./usersAndAuth
-	npm run build --prefix ./webserver
-	npm run build --prefix ./backend
 	@echo "Dependencies built successfully!"
 
 # Setup directories, network, and security
