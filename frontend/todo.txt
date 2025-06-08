@@ -1,3 +1,0 @@
-- when player leaves tournament and host already opened match, close the match on host side
-- adjust notification when game is over
-- adjust time a notification is shown

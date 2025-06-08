@@ -5,7 +5,6 @@ COPY remote/package*.json ./
 RUN npm install
 COPY remote/tsconfig.json ./
 COPY remote/src ./src
-COPY remote/client ./client
 COPY remote/db_file ./db_file
 
 # Copy the pre-built shared library (built by build_all.sh)
