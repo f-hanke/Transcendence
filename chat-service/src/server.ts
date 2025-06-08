@@ -26,6 +26,7 @@ import { start } from "repl";
 import esClient, { checkElasticsearch } from "./lib/elasticsearch.js";
 import logger from "./lib/logger.js";
 import { setupMetrics } from "./lib/metrics.js";
+import { initializeDatabase } from "./db-init.js";
 
 const fastify = Fastify();
 fastify.register(fastifyWebsocket);
@@ -42,7 +43,7 @@ if (monitoringEnabled) {
   await checkElasticsearch();
   logger.info("Metrics and logger initialized.");
 }
-export const db = new Database("./db/chat_service_db.db");
+export const db = initializeDatabase();
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket[]>();
 
