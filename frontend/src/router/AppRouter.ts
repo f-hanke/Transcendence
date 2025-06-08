@@ -82,19 +82,21 @@ class AppRouter extends HTMLElement {
   async handleRouteChange() {
     const isAuthenticated = await AuthInterface.verify(true);
     if (this.appRouterProtected.curRouteIsProtected()) {
-      ChatInterface.connect();
-      if (transStore.userStore.get().details.fetchNeeded) {
-        const resDisplayNames = await UserInterface.getAllDisplayNames();
-        if (!resDisplayNames.ok) {
-          const msg = `Failed to fetch id to displayNames map!`;
-          console.log(msg);
-        }
-        const resUserDetails = await UserInterface.getAllUserDetails(
-          transStore.userStore.get().details.id
-        );
-        if (!resUserDetails.ok) {
-          const msg = `Failed to fetch user details!`;
-          console.log(msg);
+      if (isAuthenticated.ok) {
+        ChatInterface.connect();
+        if (transStore.userStore.get().details.fetchNeeded) {
+          const resDisplayNames = await UserInterface.getAllDisplayNames();
+          if (!resDisplayNames.ok) {
+            const msg = `Failed to fetch id to displayNames map!`;
+            console.log(msg);
+          }
+          const resUserDetails = await UserInterface.getAllUserDetails(
+            transStore.userStore.get().details.id
+          );
+          if (!resUserDetails.ok) {
+            const msg = `Failed to fetch user details!`;
+            console.log(msg);
+          }
         }
       }
       this.appRouterProtected.handleRouteChange(isAuthenticated.ok);

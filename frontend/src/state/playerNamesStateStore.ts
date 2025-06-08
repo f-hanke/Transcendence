@@ -41,12 +41,20 @@ class PlayerNamesStateStore {
 
   getName(playerId: string) {
     console.log("AUTHORID: ", playerId);
+    
+    // Handle empty, null, or undefined player IDs
+    if (!playerId || playerId.trim() === "") {
+      return "Unknown Player";
+    }
+    
     if (playerId == "0")
       return transStore.languageStore.state.chat.notifications.tournamentBot;
+      
     if (!isDefined(this.state[playerId])) {
-      const msg = `DisplayName is not defined for the requested id!`;
+      const msg = `DisplayName is not defined for the requested id: ${playerId}`;
       console.log(msg);
-      throw new Error(msg);
+      // Return a fallback instead of throwing an error
+      return `Player ${playerId}`;
     }
     return this.state[playerId];
   }
