@@ -44,10 +44,10 @@ fastify.register(fastifyJwt, {
 })
 
 
-setupMetrics(fastify);
-logger.info("Metrics and logger initialized.");
-//keep commented out unless docker is running requires elsasticsearch to be running
-await checkElasticsearch();
+// setupMetrics(fastify);
+// logger.info("Metrics and logger initialized.");
+// //keep commented out unless docker is running requires elsasticsearch to be running
+// await checkElasticsearch();
 
 
 enableJwtCheck(fastify);

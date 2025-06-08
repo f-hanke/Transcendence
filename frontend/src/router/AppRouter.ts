@@ -81,9 +81,8 @@ class AppRouter extends HTMLElement {
 
   async handleRouteChange() {
     // Check if JWT token exists before trying to verify
-    const hasToken = sessionStorage.getItem(AuthInterface.nameJwtInSessionStorage);
-    const isAuthenticated = hasToken ? await AuthInterface.verify(true) : { ok: false };
-    
+    // const hasToken = sessionStorage.getItem(AuthInterface.nameJwtInSessionStorage);
+    const isAuthenticated = await AuthInterface.verify(true);
     if (this.appRouterProtected.curRouteIsProtected()) {
       if (isAuthenticated.ok) {
         ChatInterface.connect();

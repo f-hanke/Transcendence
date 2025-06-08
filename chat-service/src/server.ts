@@ -42,12 +42,12 @@ fastify.get("/health", async () => {
   return { status: "ok" };
 });
 
-if (monitoringEnabled) {
-  setupMetrics(fastify);
-  //keep commented out unless docker is running requires elsasticsearch to be running
-  await checkElasticsearch();
-  logger.info("Metrics and logger initialized.");
-}
+// if (monitoringEnabled) {
+//   setupMetrics(fastify);
+//   //keep commented out unless docker is running requires elsasticsearch to be running
+//   await checkElasticsearch();
+//   logger.info("Metrics and logger initialized.");
+// }
 export const db = initializeDatabase();
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket[]>();

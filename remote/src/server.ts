@@ -30,12 +30,12 @@ const fastify = Fastify();
 fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
 
-if (monitoringEnabled) {
-  setupMetrics(fastify);
-  //keep commented out unless docker is running requires elsasticsearch to be running
-  await checkElasticsearch();
-  logger.info("Metrics and logger initialized.");
-}
+// if (monitoringEnabled) {
+//   setupMetrics(fastify);
+//   //keep commented out unless docker is running requires elsasticsearch to be running
+//   await checkElasticsearch();
+//   logger.info("Metrics and logger initialized.");
+// }
 // Add health check endpoint for Docker
 fastify.get("/health", async () => {
   return { status: "ok" };

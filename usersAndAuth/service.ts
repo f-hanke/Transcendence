@@ -89,12 +89,12 @@ const server = fastify({
   },
 });
 
-if (monitoringEnabled) {
-  setupMetrics(server);
-  //keep commented out unless docker is running requires elsasticsearch to be running
-  await checkElasticsearch();
-  logger.info("Metrics and logger initialized.");
-}
+// if (monitoringEnabled) {
+//   setupMetrics(server);
+//   //keep commented out unless docker is running requires elsasticsearch to be running
+//   await checkElasticsearch();
+//   logger.info("Metrics and logger initialized.");
+// }
 server.register(fastifyJwt, {
   secret: process.env.JWT_SECRET || "supersecret",
 });
