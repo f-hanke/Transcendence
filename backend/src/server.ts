@@ -42,12 +42,12 @@ const clients = new Map(); // clientId → WebSocket
 const clientsGames = new Map<string, string>(); //clientId -> matchId
 const readyClients = new Map<string, ReadyClient>(); // matchId → ReadyClient
 
-if (monitoringEnabled) {
-  setupMetrics(fastify);
-  //keep commented out unless docker is running requires elsasticsearch to be running
-  await checkElasticsearch();
-  logger.info("Metrics and logger initialized.");
-}
+// if (monitoringEnabled) {
+//   setupMetrics(fastify);
+//   //keep commented out unless docker is running requires elsasticsearch to be running
+//   await checkElasticsearch();
+//   logger.info("Metrics and logger initialized.");
+// }
 
 //health check endpoint for Docker
 fastify.get("/health", async () => {

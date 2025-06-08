@@ -30,12 +30,12 @@ const fastify = Fastify();
 fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
 
-if (monitoringEnabled) {
-  setupMetrics(fastify);
-  //keep commented out unless docker is running requires elsasticsearch to be running
-  await checkElasticsearch();
-  logger.info("Metrics and logger initialized.");
-}
+// if (monitoringEnabled) {
+//   setupMetrics(fastify);
+//   //keep commented out unless docker is running requires elsasticsearch to be running
+//   await checkElasticsearch();
+//   logger.info("Metrics and logger initialized.");
+// }
 // Add health check endpoint for Docker
 fastify.get("/health", async () => {
   return { status: "ok" };
@@ -54,38 +54,62 @@ const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket>();
 
 // const queue = 'matchMaking-results';
-const queue = "matchmaking-service-queue";
+const tournamentNotificationQueue = "matchmaking-service-queue"; // for chat-service
+const tournamentResultQueue = "tournament-results-queue"; // for users-auth
 
-async function publishMessage(
-  message:
-    | GameResultTypes.MatchResult
-    | GameResultTypes.TournamentResult
-    | MatchMakingTypes.TournamentNotification
-    | MatchMakingTypes.ServerStartTournament
-    | MatchMakingTypes.PlayerLeftSinceTournamentStarted
+async function publishTournamentNotification(
+  message: MatchMakingTypes.TournamentNotification | MatchMakingTypes.ServerStartTournament | MatchMakingTypes.PlayerLeftSinceTournamentStarted
 ) {
   if (
-    !gameResultTypeGuards.isMatchResult(message) &&
-    !gameResultTypeGuards.isTournamentResult(message) &&
     !matchmakingTypeGuards.isTournamentNotification(message) &&
     !matchmakingTypeGuards.isServerStartTournament(message) &&
     !matchmakingTypeGuards.isPlayerLeftSinceTournamentStarted(message)
   )
-    logger.error("Trying to publish unknown type:", message);
+    logger.error("Trying to publish unknown tournament notification type:", message);
   let connection;
   try {
-    connection = await amqp.connect("amqp://admin:admin@rabbitmq-service:5672");
-    logger.info("Connected to amqp://admin:admin@rabbitmq-service:5672");
+    const rabbitUser = process.env.RABBITMQ_DEFAULT_USER || 'admin';
+    const rabbitPass = process.env.RABBITMQ_DEFAULT_PASS || 'admin';
+    const rabbitHost = process.env.RABBITMQ_HOST || 'rabbitmq-service';
+    const connectionString = `amqp://${rabbitUser}:${rabbitPass}@${rabbitHost}:5672`;
+    connection = await amqp.connect(connectionString);
+    console.log(`✅ Remote service connected to RabbitMQ (notifications) at ${connectionString.replace(rabbitPass, '[REDACTED]')}`);
   } catch (err) {
     logger.warn("Failed to connect to rabbitmq-service, trying localhost...");
     connection = await amqp.connect("amqp://localhost");
   }
   const channel = await connection.createChannel();
 
-  await channel.assertQueue(queue, { durable: true });
+  await channel.assertQueue(tournamentNotificationQueue, { durable: true });
 
-  channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
-  logger.info("[Publisher] Sent:", message);
+  channel.sendToQueue(tournamentNotificationQueue, Buffer.from(JSON.stringify(message)));
+  logger.info("[Publisher] Sent tournament notification:", message);
+}
+
+async function publishTournamentResult(
+  message: GameResultTypes.TournamentResult | GameResultTypes.MatchResult
+) {
+  if (!gameResultTypeGuards.isTournamentResult(message) &&
+      !gameResultTypeGuards.isMatchResult(message))
+    logger.error("Trying to publish unknown tournament result type:", message);
+  let connection;
+  try {
+    const rabbitUser = process.env.RABBITMQ_DEFAULT_USER || 'admin';
+    const rabbitPass = process.env.RABBITMQ_DEFAULT_PASS || 'admin';
+    const rabbitHost = process.env.RABBITMQ_HOST || 'rabbitmq-service';
+    const connectionString = `amqp://${rabbitUser}:${rabbitPass}@${rabbitHost}:5672`;
+    connection = await amqp.connect(connectionString);
+    console.log(`✅ Remote service connected to RabbitMQ (results) at ${connectionString.replace(rabbitPass, '[REDACTED]')}`);
+  } catch (err) {
+    logger.warn("Failed to connect to rabbitmq-service, trying localhost...");
+    connection = await amqp.connect("amqp://localhost");
+  }
+  const channel = await connection.createChannel();
+
+  await channel.assertQueue(tournamentResultQueue, { durable: true });
+
+  channel.sendToQueue(tournamentResultQueue, Buffer.from(JSON.stringify(message)));
+  logger.info("[Publisher] Sent tournament result:", message);
 }
 
 async function handleMatchResultProcessed(
@@ -189,7 +213,7 @@ async function handleMatchResultProcessed(
                   tournamentData: tournamentToHandle,
                 } as MatchMakingTypes.TournamentNotification;
               tournamentToHandle.matchResultBronze = matchBronzeResult;
-              publishMessage(tournamentNotification); // read by chat-service
+              publishTournamentNotification(tournamentNotification); // read by chat-service
               logger.info("Ongoing Tournament updated in DB");
             }
 
@@ -257,7 +281,7 @@ async function handleMatchResultProcessed(
                   tournamentData: tournamentToHandle,
                 } as MatchMakingTypes.TournamentNotification;
               tournamentToHandle.matchResultFinale = matchFinaleResult;
-              publishMessage(tournamentNotification); // read by chat-service
+              publishTournamentNotification(tournamentNotification); // read by chat-service
               await Tournament.updateOngoingTournamentDatabase( matchFinaleResult.player1Score, matchFinaleResult.player2Score, matchFinaleResult.createdAt, matchFinaleResult.matchId );
               logger.info("Ongoing Tournament updated in DB");
             } else {
@@ -320,7 +344,7 @@ async function handleMatchResultProcessed(
                   tournamentData: tournamentToHandle,
                 } as MatchMakingTypes.TournamentNotification;
               tournament.matchResultFinale = matchFinaleResult;
-              publishMessage(tournamentNotification); // read by chat-service
+              publishTournamentNotification(tournamentNotification); // read by chat-service
               await Tournament.updateOngoingTournamentDatabase(
                 matchFinaleResult.player1Score,
                 matchFinaleResult.player2Score,
@@ -364,7 +388,7 @@ async function handleMatchResultProcessed(
                   tournamentData: tournamentToHandle,
                 } as MatchMakingTypes.TournamentNotification;
               tournament.matchResultBronze = matchBronzeResult;
-              publishMessage(tournamentNotification); // read by chat-service
+              publishTournamentNotification(tournamentNotification); // read by chat-service
               await Tournament.updateOngoingTournamentDatabase(
                 matchBronzeResult.player1Score,
                 matchBronzeResult.player2Score,
@@ -429,7 +453,7 @@ async function handleMatchResultProcessed(
           tournamentWithRanking.matchResultFinale as GameResultTypes.MatchResult,
         createdAt: new Date().toISOString(),
       };
-      publishMessage(tournamentToStore); // read by usersAndAuth
+      publishTournamentResult(tournamentToStore); // read by usersAndAuth
       // DONE: delete tournament from matchMaking service's runtime and DB, consult with Steffen when to do it? For now just do it
       await removeTournament(tournamentToHandle);
       logger.info(
@@ -459,7 +483,7 @@ async function handleMatchResultProcessed(
       updateForMatch: matchType,
       tournamentData: tournamentToHandle,
     } as MatchMakingTypes.TournamentNotification;
-    if (!isDuplicateMatchResult) publishMessage(tournamentNotification); // read by chat-service
+    if (!isDuplicateMatchResult) publishTournamentNotification(tournamentNotification); // read by chat-service
     logger.info(
       "Tournament state published to chat-service: ",
       tournamentToHandle
@@ -470,7 +494,9 @@ async function handleMatchResultProcessed(
       matchResult.matchId,
       ", processing as a simple match"
     );
-    publishMessage(matchResult); // read by usersAndAuth
+    publishTournamentResult(matchResult);
+    // Raw match results should not be published to matchmaking-service-queue
+    // This queue is only for tournament notifications consumed by chat-service
     logger.info(
       "Simple Match result processed for matchId: ",
       matchResult.matchId
@@ -775,7 +801,7 @@ async function handleClientJoinTournament(
       type: "startTournament",
       data: correspondingTournament as MatchMakingTypes.TournamentFull,
     } as MatchMakingTypes.ServerStartTournament;
-    publishMessage(serverTournamentStartObj); // pub by MatchMaking, ack by chat-service, nack by usersAndAuth
+    publishTournamentNotification(serverTournamentStartObj); // pub by MatchMaking, ack by chat-service, nack by usersAndAuth
     sendMessageToManyClients(participants, serverTournamentStartObj); // read by frontend
   }
 }
@@ -1003,7 +1029,7 @@ async function handleClientLeaveTournament(
         (tournaments.find(
           (tournament) => tournament.tournamentId === dataJson.data.tournamentId
         ) as MatchMakingTypes.Tournament) || null;
-      publishMessage({
+      publishTournamentNotification({
         playerLeavingId: dataJson.data.playerId,
         tournament: tournamentUpdatedHereToBeSafe,
       } as MatchMakingTypes.PlayerLeftSinceTournamentStarted); // read by chat-service, nack() by usersAndAuth

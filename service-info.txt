@@ -3,23 +3,17 @@ MICROSERVICES STACK - SERVICE INFORMATION
 ======================================================
 
 MONITORING SERVICES:
-- Elasticsearch: http://localhost:9200
-- Kibana:        http://localhost:5601
-- Prometheus:    http://localhost:9090
-- Grafana:       http://localhost:3000 (admin/admin)
-- Logstash:      http://localhost:9600
-- RabbitMQ:      http://localhost:15672 (admin/admin)
+- RabbitMQ:      http://localhost:15672 (check .env file for RABBITMQ_DEFAULT_USER/PASS)
 
 APPLICATION SERVICES:
--some of these wont work as they have no been made to only work on localhost!
-- API Gateway:          https://localhost:8443
-- Auth Service:         http://localhost:10004
-- Matchmaking Service(remote):  http://localhost:10001
-- Game Service(backend):         http://localhost:10002
-- Chat Service:         http://localhost:10003
-- Webserver:            http://localhost:10005
-- FrontEnd Service: (to play the game)
-https://localhost:8443
+- API Gateway:          https://localhost:8443 (🔒 HTTPS ONLY)
+- Auth Service:         Internal only (via API Gateway: https://localhost:8443/AUTHENTICATION/)
+- Matchmaking Service:  Internal only (via API Gateway: https://localhost:8443/MATCHMAKING/)
+- Game Service:         Internal only (via API Gateway: https://localhost:8443/GAMESERVICE/)
+- Chat Service:         Internal only (via API Gateway: https://localhost:8443/CHATSERVICE/)
+- Webserver:            Internal only (via API Gateway: https://localhost:8443/)
+- Frontend Service:     https://localhost:8443 (🔒 HTTPS ONLY)
+
 ======================================================
 For more details, check the documentation or run:
 $ make status

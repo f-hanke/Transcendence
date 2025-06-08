@@ -4,7 +4,7 @@ import {
   matchmakingTypeGuards,
   MatchMakingTypes,
 } from "transcendence";
-import { createHtmlElementFromString } from "../utils/utils";
+import { createHtmlElementFromString, navigateToSite } from "../utils/utils";
 import { ChatInterface } from "../backendInterface/chatInterface";
 import { MatchMakingInterface } from "../backendInterface/matchmakingInterface";
 import { TournamentState } from "../state/tournamentStateTypes";
@@ -139,11 +139,22 @@ class CurrentTournament extends HTMLElement {
       );
     }
     else{
-      this.innerHTML = `<h2>${transStore.languageStore.state.currentTournament.notPartOfAnyTournament}</h2>`
-      // transStore.notificationStore.updateAddNotification({
-      //   id: generateUniqueId(),
-      //   message: transStore.languageStore.state.currentTournament.notPartOfAnyTournament
-      // });
+      this.innerHTML = `
+        <div class="flex flex-col items-center justify-center p-8 bg-gray-800 text-white rounded-lg">
+          <div class="mb-4 text-6xl">🎮</div>
+          <h2 class="text-xl font-bold mb-4 text-center">${transStore.languageStore.state.currentTournament.notPartOfAnyTournament}</h2>
+          <button id="joinTournamentBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2">
+            <span class="text-2xl">▶</span>
+          </button>
+        </div>
+      `;
+      
+      const joinBtn = this.querySelector("#joinTournamentBtn") as HTMLButtonElement;
+      if (joinBtn) {
+        joinBtn.addEventListener("click", () => {
+          navigateToSite("matchmaking");
+        });
+      }
     }
   }
 

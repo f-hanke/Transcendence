@@ -1,6 +1,6 @@
 import { MatchMakingTypes } from "./matchmakingTypes";
 
-export  const monitoringEnabled = true;
+export  const monitoringEnabled = false;
 
 
 function isTypedObject(value: unknown): value is { type: string } {

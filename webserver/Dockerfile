@@ -3,38 +3,23 @@ FROM node:20-alpine
 # Create working directory
 WORKDIR /app
 
-# Build the shared package
-WORKDIR /app/shared
-COPY shared/package*.json ./
-RUN npm install
-COPY shared/tsconfig.json ./
-COPY shared/src ./src
-RUN npm run build
-
-# Build the frontend
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
-# Install the shared package
-RUN npm install --no-save ../shared
-COPY frontend/tsconfig.json ./
-COPY frontend/vite.config.js ./
-COPY frontend/src ./src
-COPY frontend/index.html ./
-COPY frontend/index.css ./
-COPY frontend/postcss.config.js ./
-COPY frontend/tailwind.config.js ./
-RUN npm run build
-
 # Set up and build the webserver
 WORKDIR /app/webserver
 COPY webserver/package*.json ./
 RUN npm install
+
+# Copy pre-built shared package (built by build_all.sh)
+COPY shared/dist /app/shared/dist
+COPY shared/package.json /app/shared/package.json
+
 # Install the shared package
 RUN npm install --no-save ../shared
+
 COPY webserver/tsconfig.json ./
 COPY webserver/src ./src
-# The frontend build is already in the correct location from the frontend build step
+
+# Copy pre-built frontend (built by build_all.sh)
+COPY webserver/distFrontend ./distFrontend
 
 # Build the webserver
 RUN npm run build

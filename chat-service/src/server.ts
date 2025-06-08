@@ -26,25 +26,32 @@ import { start } from "repl";
 import esClient, { checkElasticsearch } from "./lib/elasticsearch.js";
 import logger from "./lib/logger.js";
 import { setupMetrics } from "./lib/metrics.js";
+import { initializeDatabase } from "./db-init.js";
+import fastifyJwt from "@fastify/jwt";
 
 const fastify = Fastify();
 fastify.register(fastifyWebsocket);
 fastify.register(cors, { origin: "*" });
+
+fastify.register(fastifyJwt, {
+  secret: process.env.JWT_SECRET || "supersecret",
+});
 
 // Add health check endpoint for Docker
 fastify.get("/health", async () => {
   return { status: "ok" };
 });
 
-if (monitoringEnabled) {
-  setupMetrics(fastify);
-  //keep commented out unless docker is running requires elsasticsearch to be running
-  await checkElasticsearch();
-  logger.info("Metrics and logger initialized.");
-}
-export const db = new Database("./db/chat_service_db.db");
+// if (monitoringEnabled) {
+//   setupMetrics(fastify);
+//   //keep commented out unless docker is running requires elsasticsearch to be running
+//   await checkElasticsearch();
+//   logger.info("Metrics and logger initialized.");
+// }
+export const db = initializeDatabase();
 const socketToClientId = new Map<WebSocket, string>();
 const clientIdToSocket = new Map<string, WebSocket[]>();
+const socketToAuthorised = new Map<WebSocket, boolean>();
 
 export const messagesArray = {
   en: {
@@ -88,11 +95,9 @@ fastify.get("/chat-history/", async (req: MatchMakingFastifyRequest, reply) => {
 // Update friend status
 fastify.post("/update-friend-request", async (req, reply) => {
   if (!chatServiceTypeGuards.isSendFriendRequestBody(req.body))
-    return reply
-      .status(400)
-      .send({
-        reason: "Body not correct",
-      } satisfies ChatServiceTypes.ErrorResponseBody);
+    return reply.status(400).send({
+      reason: "Body not correct",
+    } satisfies ChatServiceTypes.ErrorResponseBody);
   const { type, authorId, recipientId } = req.body;
 
   logger.info(`Updating friendrequest tpye: ${type}`);
@@ -123,11 +128,9 @@ fastify.post("/update-blocking-status", async (req, reply) => {
   logger.info("trying to block user");
   logger.info(req.body);
   if (!chatServiceTypeGuards.isClientChangeBlockStatus(req.body))
-    return reply
-      .status(400)
-      .send({
-        reason: "Body not correct",
-      } satisfies ChatServiceTypes.ErrorResponseBody);
+    return reply.status(400).send({
+      reason: "Body not correct",
+    } satisfies ChatServiceTypes.ErrorResponseBody);
   const { clientId, recipientId, blockedStatus } = req.body;
 
   try {
@@ -154,11 +157,9 @@ fastify.post("/send-game-invite", async (req, reply) => {
   logger.info("invite to game");
   logger.info(req.body);
   if (!chatServiceTypeGuards.isInviteToPlayRequestBody(req.body))
-    return reply
-      .status(400)
-      .send({
-        reason: "Body not correct",
-      } satisfies ChatServiceTypes.ErrorResponseBody);
+    return reply.status(400).send({
+      reason: "Body not correct",
+    } satisfies ChatServiceTypes.ErrorResponseBody);
   const { authorId, recipientId, date } = req.body;
 
   logger.info(req.body);
@@ -184,18 +185,44 @@ fastify.post("/send-game-invite", async (req, reply) => {
 
 fastify.register(async function (fastify) {
   fastify.get("/ws", { websocket: true }, async (socket, req) => {
-    registerClient(req, socket);
-
-    const testArray = getUsers(socket);
-    logger.info(testArray);
-    socket.send(JSON.stringify(testArray));
-
-    socket.on("message", (message) => {
+    socket.on("message", async (message) => {
       const data = message.toString("utf-8");
       const dataJson = JSON.parse(data);
       logger.info(dataJson);
-      if (chatServiceTypeGuards.isSentMessage(dataJson)) {
-        handleClientSentMessage(dataJson);
+      if (chatServiceTypeGuards.isClientSendAuthMsg(dataJson)) {
+        try {
+          const jwtPayload = await fastify.jwt.verify<{ userId: string }>(
+            dataJson.data.jwt
+          );
+          if (
+            !jwtPayload.userId ||
+            jwtPayload.userId != dataJson.data.clientId
+          ) {
+            sendToClient(dataJson.data.clientId, {
+              type: "serverSendAuthAnswer",
+              data: {
+                authSuccess: false,
+              },
+            });
+          } else {
+            socketToAuthorised.set(socket, true);
+            registerClient(dataJson.data.clientId, socket);
+            const testArray = getUsers(socket);
+            logger.info(testArray);
+            socket.send(JSON.stringify(testArray));
+          }
+        } catch (err) {
+          console.error("Sensitive Route Check error:", err);
+          sendToClient(dataJson.data.clientId, {
+            type: "serverSendAuthAnswer",
+            data: {
+              authSuccess: false,
+            },
+          });
+          return null;
+        }
+      } else if (chatServiceTypeGuards.isSentMessage(dataJson)) {
+        if (socketToAuthorised.get(socket)) handleClientSentMessage(dataJson);
       }
     });
 
@@ -204,6 +231,7 @@ fastify.register(async function (fastify) {
       socketToClientId.delete(socket);
       removeSocketFromClient(clientId, socket);
       updateUserOnlineStatus(clientId, false);
+      socketToAuthorised.delete(socket);
     });
     socket.on("error", (err) => {
       logger.error("WebSocket error:", err);
@@ -211,9 +239,7 @@ fastify.register(async function (fastify) {
   });
 });
 
-function registerClient(req: FastifyRequest, socket: WebSocket) {
-  const clientId = (req.query as { clientId?: string }).clientId;
-  //todo: check if client exists in db
+function registerClient(clientId: string, socket: WebSocket) {
   if (!clientId || clientId == null) {
     logger.info("No clientId provided in query");
     socket.close(1008, "Missing clientId");

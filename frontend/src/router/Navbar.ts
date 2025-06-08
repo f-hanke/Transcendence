@@ -1,5 +1,5 @@
 import { AuthInterface } from "../backendInterface/authInterface";
-import { getImgSrcFromBuffer } from "../utils/utils";
+import { getImgSrcFromBuffer, navigateToSite } from "../utils/utils";
 import { transStore } from "../state/store";
 
 class Navbar extends HTMLElement {
@@ -28,14 +28,16 @@ class Navbar extends HTMLElement {
     this.innerHTML = `
     <div class="bg-gray-800 text-white shadow-lg flex flex-col">
       <div class="p-4 flex flex-col items-center space-x-3 border-b border-gray-700">
-        <img src="${
-          getImgSrcFromBuffer(transStore.userStore.get().details.image)
-        }" alt="Profile" class="h-32 rounded-lg" />
-        <div>
-          <a href="/profile" class="text-lg font-semibold hover:underline">${
-            transStore.userStore.get().details.displayName
-          }</a>
-          <!-- <div class="font-bold"><br><br>ID: '${transStore.userStore.get().details.id}'</div> -->
+        <div id="profileSection" class="text-lg font-semibold text-center hover:underline cursor-pointer">
+          <img src="${
+            getImgSrcFromBuffer(transStore.userStore.get().details.image)
+          }" alt="Profile" class="h-32 rounded-lg" />
+          <div>
+            ${
+              transStore.userStore.get().details.displayName
+            }
+              <!-- <div class="font-bold"><br><br>ID: '${transStore.userStore.get().details.id}'</div> -->
+          </div>
         </div>
       </div>
       <nav class="flex-1 p-4 overflow-y-auto">
@@ -121,6 +123,13 @@ class Navbar extends HTMLElement {
     ) as HTMLButtonElement;
     lopgoutBtn.addEventListener("click", () => {
       AuthInterface.logout();
+    });
+
+    const profileSection = document.querySelector(
+      `#profileSection`
+    ) as HTMLDivElement;
+    profileSection.addEventListener("click", () => {
+      navigateToSite("/");
     });
   }
 }

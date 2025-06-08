@@ -1,21 +1,50 @@
-# Default Make command
-all: setup up
+all: wipe-docker-everything setup up
 
-# Setup directories and network
-setup:
-	@echo "Creating required directories..."
-	mkdir -p grafana/dashboards
-	mkdir -p grafana/provisioning/datasources
-	mkdir -p grafana/provisioning/dashboards
+wipe-docker-everything:
+	@echo "⚠️  WARNING (eval only): deleting ALL Docker containers, images, volumes, and networks..."
+	@docker stop $$(docker ps -qa) 2>/dev/null || true;
+	@docker rm $$(docker ps -qa) 2>/dev/null || true;
+	@docker rmi -f $$(docker images -qa) 2>/dev/null || true;
+	@docker volume rm $$(docker volume ls -q) 2>/dev/null || true;
+	@docker network rm $$(docker network ls -q) 2>/dev/null || true;
+	
+# Elasticsearch security setup 
+create_env:
+	@echo "Setting up .ENV..."
+	@chmod +x scripts/create-env.sh
+	@./scripts/create-env.sh
+
+# Build shared dependencies & frontend
+build-deps:
 	@echo "Building shared dependencies..."
+	@echo "Building shared package..."
 	npm install --prefix ./shared
 	npm run build --prefix ./shared
+	@echo "Building frontend..."
+	npm install --prefix ./frontend
+	npm run build --prefix ./frontend
+	@echo "Dependencies built successfully!"
+
+# Setup directories, network, and security
+setup: create_env build-deps
+
+# Ensure Kibana system password is properly set
+# ensure-kibana-password:
+# 	@echo "Ensuring kibana_system password is properly set..."
+# 	@chmod +x scripts/ensure-kibana-password.sh
+# 	@./scripts/ensure-kibana-password.sh
 
 # Basic Docker Compose operations
 up: setup
-	@echo "Starting all services..."
-	docker compose up -d --build
-	@echo "Services are starting up. Check status with 'make status'"
+	docker compose up -d --build --remove-orphans
+	@echo "All services are ready. Check status with 'make status'"
+	@cat service-info.txt
+
+# Fresh start - complete rebuild without cache (recommended after clean-volumes)
+fresh-start: setup
+	docker compose build --no-cache
+	docker compose up -d --remove-orphans
+	@echo "✅ Fresh start complete! All services rebuilt and started."
 	@cat service-info.txt
 
 down:
@@ -25,46 +54,6 @@ down:
 
 restart: down up
 
-# Individual service management
-start-api-gateway:
-	@echo "Building and starting the api gateway..."
-	docker compose up -d --build api-gateway
-
-start-webserver:
-	@echo "Building and starting the webserver..."
-	docker compose up -d --build webserver
-
-start-users-auth:
-	@echo "Building and starting the users auth service..."
-	docker compose up -d --build users-auth
-
-start-remote:
-	@echo "Building and starting the remote service..."
-	docker compose up -d --build remote
-
-start-game-service:
-	@echo "Building and starting the game service..."
-	docker compose up -d --build game-service
-
-start-chat-service:
-	@echo "Building and starting the chat service..."
-	docker compose up -d --build chat-service
-
-# Frontend development
-start-frontend:
-	@echo "Starting frontend development server..."
-	cd frontend && npm install && npm run dev
-
-build-frontend:
-	@echo "Building frontend for production..."
-	cd shared && npm install && npm run build
-	cd frontend && npm install && npm run build
-
-build-frontend-skip-ts-check:
-	@echo "Building frontend for production (skipping TypeScript checks)..."
-	cd shared && npm install && npm run build
-	cd frontend && npm install && npm run build-skip-ts-check
-
 # Service rebuilding
 rebuild-webserver:
 	@echo "Rebuilding webserver..."
@@ -73,7 +62,7 @@ rebuild-webserver:
 	docker compose build --no-cache webserver
 	docker compose up -d webserver
 
-rebuild: down
+rebuild: down build-deps
 	@echo "Rebuilding all services..."
 	docker compose build --no-cache
 	docker compose up -d
@@ -107,7 +96,7 @@ clean-npm:
 clean-volumes:
 	@echo "⚠️  WARNING: This will delete ALL data volumes!"
 	@echo "Press Ctrl+C to cancel, or Enter to continue..."
-	@read
+	@read -p "" dummy;
 	docker compose down -v
 	docker volume prune -f
 	@echo "All volumes removed!"
@@ -115,7 +104,7 @@ clean-volumes:
 clean-all: clean clean-npm clean-volumes
 	@echo "⚠️  WARNING: This will delete everything including data!"
 	@echo "Press Ctrl+C to cancel, or Enter to continue..."
-	@read
+	@read -p "" dummy;
 	docker system prune -a -f --volumes
 	@echo "Everything cleaned!"
 
@@ -131,39 +120,47 @@ stop:
 
 reset: clean rebuild
 
+# Complete reset - volumes + fresh rebuild (what you probably want!)
+reset-all: clean-volumes fresh-start
+	@echo "🎉 Complete reset finished! Everything rebuilt from scratch."
+
 help:
-	@echo "🐋 Docker Operations:"
+	@echo "Docker Operations:"
 	@echo "  up           - Start all services (docker compose up)"
+	@echo "  fresh-start  - Complete rebuild with --no-cache (recommended after clean-volumes)"
 	@echo "  down         - Stop all services (preserving data)"
 	@echo "  restart      - Stop and start all services"
 	@echo "  rebuild      - Rebuild and restart all services"
 	@echo "  status       - Check status of all services"
 	@echo "  logs         - Follow logs from all services"
 	@echo ""
-	@echo "🔧 Individual Services:"
-	@echo "  start-api-gateway    - Start API gateway"
-	@echo "  start-webserver      - Start webserver"
-	@echo "  start-users-auth     - Start auth service"
-	@echo "  start-remote         - Start remote service"
-	@echo "  start-game-service   - Start game service"
-	@echo "  start-chat-service   - Start chat service"
-	@echo "  rebuild-webserver    - Rebuild webserver"
+	@echo "Build Operations:"
+	@echo "  build-deps   - Build shared dependencies only (required for Docker)"
 	@echo ""
-	@echo "🎨 Frontend:"
-	@echo "  start-frontend       - Start frontend dev server"
-	@echo "  build-frontend       - Build frontend for production"
+	@echo "Security Setup:"
+	@echo "  create_env - Configure Elasticsearch security (run first!)"
+	@echo "  ensure-kibana-password - Ensure kibana_system password is set"
 	@echo ""
-	@echo "🧹 Cleanup (Safe):"
+	@echo "Service Management:"
+	@echo "  rebuild-webserver    - Rebuild webserver only"
+	@echo "  Individual services: docker compose up -d --build SERVICE_NAME"
+	@echo ""
+	@echo "Cleanup (Safe):"
 	@echo "  clean        - Clean containers/images (preserve data)"
 	@echo "  clean-npm    - Clean npm build files"
 	@echo ""
-	@echo "💥 Cleanup (Destructive):"
-	@echo "  clean-volumes - ⚠️  DELETE all data volumes"
-	@echo "  clean-all     - ⚠️  DELETE everything"
+	@echo "Cleanup (Destructive):"
+	@echo "  clean-volumes - DELETE all data volumes"
+	@echo "  clean-all     - DELETE everything"
 	@echo ""
-	@echo "📚 Aliases:"
+	@echo "Aliases:"
 	@echo "  start/stop   - Aliases for up/down"
 	@echo "  reset        - Clean and rebuild"
+	@echo "  reset-all    - Clean volumes + fresh rebuild (complete reset)"
+	@echo ""
+	@echo "Security Notes:"
+	@echo "  • Run 'make create_env' before first startup"
+	@echo "  • Kibana login: username 'elastic', password from .env file"
+	@echo "  • Elasticsearch API requires authentication with certificates"
 
-
-.PHONY: all setup up down restart start stop reset rebuild status logs clean clean-npm clean-volumes clean-all help start-api-gateway start-webserver start-users-auth start-remote start-game-service start-chat-service start-frontend build-frontend build-frontend-skip-ts-check rebuild-webserver
+.PHONY: all setup up down restart start stop reset rebuild status logs clean clean-npm clean-volumes clean-all help rebuild-webserver build-deps

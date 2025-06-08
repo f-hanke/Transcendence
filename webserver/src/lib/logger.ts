@@ -1,4 +1,30 @@
+import { monitoringEnabled } from 'transcendence';
 import winston from 'winston';
+
+const transports: winston.transport[] = [
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.printf(({ timestamp, level, message }) =>
+        `[${timestamp}] ${level.toUpperCase()}: ${message}`
+      )
+    )
+  })
+];
+
+if (monitoringEnabled) {
+  transports.push(new winston.transports.Http({
+    host: 'logstash',
+    port: 5000,
+    path: '/',
+    format: winston.format.json(),
+    auth: {
+      username: process.env.LOGSTASH_HTTP_USER || 'logstash',
+      password: process.env.LOGSTASH_HTTP_PASSWORD || ''
+    },
+    ssl: false
+  }));
+}
 
 const winstonLogger = winston.createLogger({
   level: 'info',
@@ -7,16 +33,7 @@ const winstonLogger = winston.createLogger({
     winston.format.json()
   ),
   defaultMeta: { service: 'webserver', type: 'webserver' },
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.printf(({ timestamp, level, message, service }) =>
-          `[${timestamp}] ${level.toUpperCase()} [${service}]: ${message}`
-        )
-      )
-    })
-  ],
+  transports: transports,
 });
 
 // Test log on startup

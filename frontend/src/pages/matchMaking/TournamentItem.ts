@@ -106,7 +106,7 @@ class TournamentItem extends HTMLElement {
   }
 
   displayEmptySpot(playerIdOrName: string | null) {
-    if (!isDefined(playerIdOrName)) {
+    if (!isDefined(playerIdOrName) || playerIdOrName === "" || playerIdOrName === null) {
       return ">free<";
     }
     return transStore.playerNamesStore.getName(playerIdOrName as string);

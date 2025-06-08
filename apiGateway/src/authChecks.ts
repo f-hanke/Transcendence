@@ -32,6 +32,8 @@ export function enableJwtCheck(fastify: FastifyInstance) {
       url.startsWith("/assets/") ||
       url === "/index.css" ||
       url === "/favicon.ico" ||
+      url === "/favicon-16x16.png" ||
+      url === "/favicon-32x32.png" ||
       url === "/" ||
       url === "/loginPage" ||
       url === "/registerPage" ||
@@ -49,7 +51,10 @@ export function enableJwtCheck(fastify: FastifyInstance) {
       url === "/GAMESERVICE/health" ||
       url === "/CHATSERVICE/health" ||
       url === "/health" ||  // API gateway health check
-      url === "/metrics";   // Prometheus metrics endpoint
+      url === "/metrics";    // Prometheus metrics endpoint
+      // url.startsWith("/CHATSERVICE/ws") ||  // Chat WebSocket
+      // url.startsWith("/GAMESERVICE/ws") ||  // Game WebSocket
+      // url.startsWith("/MATCHMAKING/ws");    // Matchmaking WebSocket
 
     if (!skipAuth) {
       await authMiddleware(req, reply);

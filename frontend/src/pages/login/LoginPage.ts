@@ -51,7 +51,7 @@ class LoginPage extends HTMLElement {
             ${lang.notregistered}
           </button>
 
-          ${testUserConfig
+          <!-- ${testUserConfig
             .map((_, index) => {
               return `
             <button id="loginTestUser${index}" class="w-96 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 my-1">
@@ -59,7 +59,7 @@ class LoginPage extends HTMLElement {
             </button>
             `;
             })
-            .join("")}
+            .join("")} -->
         </div>
         `;
 

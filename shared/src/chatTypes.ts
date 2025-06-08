@@ -4,7 +4,12 @@ declare namespace ChatServiceTypes {
     recipientId: string;
     message: string;
     date: string;
-    type?: "sendGameInvite" | "startTournament" | "playerLeft" | "matchResult" | null;
+    type?:
+      | "sendGameInvite"
+      | "startTournament"
+      | "playerLeft"
+      | "matchResult"
+      | null;
   };
 
   type FriendRequestStatus =
@@ -55,7 +60,9 @@ declare namespace ChatServiceTypes {
     | ServerClientChangedOnlineStatus
     | ServerClientChangedOnlineStatus
     | SentMessage
-    | UpdateFriendRequest;
+    | UpdateFriendRequest
+    | ServerSendAuthAnswer
+    | ClientSendAuthMsg;
 
   type DataServerSendUserList = {
     chatUsers: ChatUser[];
@@ -69,6 +76,21 @@ declare namespace ChatServiceTypes {
   type ServerSendChatHistory = {
     type: "serverSendChatHistory";
     data: Message[];
+  };
+
+  type ServerSendAuthAnswer = {
+    type: "serverSendAuthAnswer";
+    data: {
+      authSuccess: boolean;
+    };
+  };
+
+  type ClientSendAuthMsg = {
+    type: "clientSendAuthMsg";
+    data: {
+      jwt: string;
+      clientId: string;
+    };
   };
 
   type ServerClientChangedOnlineStatus = {
@@ -219,6 +241,31 @@ function isInviteToPlayRequestBody(
   );
 }
 
+function isClientSendAuthMsg(
+  msg: unknown
+): msg is ChatServiceTypes.ClientSendAuthMsg {
+  return (
+    typeof msg === "object" &&
+    msg !== null &&
+    (msg as any).type === "clientSendAuthMsg" &&
+    typeof (msg as any).data === "object" &&
+    (msg as any).data !== null &&
+    typeof (msg as any).data.jwt === "string" &&
+    typeof (msg as any).data.clientId === "string"
+  );
+}
+
+function isServerSendAuthAnswer(msg: unknown): msg is ChatServiceTypes.ServerSendAuthAnswer {
+  return (
+    typeof msg === "object" &&
+    msg !== null &&
+    (msg as any).type === "serverSendAuthAnswer" &&
+    typeof (msg as any).data === "object" &&
+    (msg as any).data !== null &&
+    typeof (msg as any).data.authSuccess === "boolean"
+  );
+}
+
 const chatServiceTypeGuards = {
   isUpdateFriendRequest,
   isSendFriendRequestBody,
@@ -229,6 +276,8 @@ const chatServiceTypeGuards = {
   isServerClientChangedOnlineStatus,
   isClientChangeBlockStatus,
   isInviteToPlayRequestBody,
+  isClientSendAuthMsg,
+  isServerSendAuthAnswer
 } as const;
 
 export { chatServiceTypeGuards };

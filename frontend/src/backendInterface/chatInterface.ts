@@ -244,6 +244,16 @@ class ChatInterface {
         };
 
         this.websocket.onopen = () => {
+          const authHeader: ChatServiceTypes.ClientSendAuthMsg = {
+            type: "clientSendAuthMsg",
+            data: {
+              clientId: transStore.userStore.get().details.id,
+              jwt: sessionStorage.getItem(
+                AuthInterface.nameJwtInSessionStorage
+              ) as string,
+            },
+          };
+          this.sendMessageToServer(authHeader);
           console.log("WebSocket connected successfully!");
           resolve();
         };
@@ -282,7 +292,10 @@ class ChatInterface {
       this.handleServerClientChangedOnlineStatus(dataJson);
     } else if (chatServiceTypeGuards.isUpdateFriendRequest(dataJson)) {
       this.handleServerUpdateFriendRequest(dataJson);
+    } else if (chatServiceTypeGuards.isServerSendAuthAnswer(dataJson)) {
+      this.handleServerSendAuth(dataJson);
     }
+
     // } else if (matchmakingTypeGuards.isServerStartGame(dataJson)) {
     //   this.handleServerStartGame(dataJson);
     // } else if (matchmakingTypeGuards.isServerUpdateOneGame(dataJson)) {
@@ -305,16 +318,31 @@ class ChatInterface {
     const lang = transStore.languageStore.state.chat;
     let msg = "default error";
     if (dataJson.type === "accept")
-      msg = lang.notifications.friendRequestAccepted + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
+      msg =
+        lang.notifications.friendRequestAccepted +
+        " : " +
+        transStore.playerNamesStore.getName(dataJson.recipientId);
     else if (dataJson.type === "declined")
-      msg = lang.notifications.friendRequestDeclined + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
+      msg =
+        lang.notifications.friendRequestDeclined +
+        " : " +
+        transStore.playerNamesStore.getName(dataJson.recipientId);
     else if (dataJson.type === "send")
-      msg = lang.notifications.friendRequestSend + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
+      msg =
+        lang.notifications.friendRequestSend +
+        " : " +
+        transStore.playerNamesStore.getName(dataJson.recipientId);
     else if (dataJson.type === "withdrawn")
-      msg = lang.notifications.friendRequestWithdrawn + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
-    else //type === unfriend
-     msg = lang.notifications.friendRequestUnfriend + ' : ' + transStore.playerNamesStore.getName(dataJson.recipientId);
-
+      msg =
+        lang.notifications.friendRequestWithdrawn +
+        " : " +
+        transStore.playerNamesStore.getName(dataJson.recipientId);
+    //type === unfriend
+    else
+      msg =
+        lang.notifications.friendRequestUnfriend +
+        " : " +
+        transStore.playerNamesStore.getName(dataJson.recipientId);
 
     transStore.notificationStore.updateAddNotification({
       id: generateUniqueId(),
@@ -345,6 +373,10 @@ class ChatInterface {
     colog(dataJson.data.chatUsers);
     transStore.chatUserStore.updateUserListFromArray(dataJson.data.chatUsers);
     // this.requestChatHistory(dataJson.data.chatUsers[0].recipientId);
+  }
+
+  static handleServerSendAuth(dataJson: ChatServiceTypes.ServerSendAuthAnswer) {
+    if (!dataJson.data.authSuccess) AuthInterface.logout();
   }
 
   static handleServerSentMessage(dataJson: ChatServiceTypes.SentMessage) {
@@ -385,12 +417,20 @@ class ChatInterface {
     if (!transStore.chatUserStore.getIsBlocked(authorId)) {
       let tmpMessage = dataJson.data.message;
       if (isMatchResult || isTournamentStart || isPlayerLeft)
-        tmpMessage = renderTournamentNotification(tmpMessage, dataJson.data.type!);
+        tmpMessage = renderTournamentNotification(
+          tmpMessage,
+          dataJson.data.type!
+        );
       else if (isGameInvite)
-        tmpMessage = renderTournamentNotification(tmpMessage, "sendGameInviteNotification");
+        tmpMessage = renderTournamentNotification(
+          tmpMessage,
+          "sendGameInviteNotification"
+        );
       transStore.notificationStore.updateAddNotification({
         id: generateUniqueId(),
-        message: `${transStore.playerNamesStore.getName(authorId)} : ${tmpMessage}`,
+        message: `${transStore.playerNamesStore.getName(
+          authorId
+        )} : ${tmpMessage}`,
       });
     }
     transStore.chatMessageStore.addMessage(authorId, dataJson.data);

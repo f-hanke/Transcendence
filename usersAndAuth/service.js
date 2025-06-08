@@ -10,10 +10,8 @@ import { config } from "./config/config.js";
 import { User } from "./orm/user.js";
 import { GameResultModel } from "./orm/gameResultModel.js";
 import { startConsumer } from "./rabbitMQ/rabbitMQ.js";
-import { setupMetrics } from "./lib/metrics.js";
 import logger from "./lib/logger.js";
-import { checkElasticsearch } from "./lib/elasticsearch.js";
-import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSettings, monitoringEnabled, } from "transcendence";
+import { AuthErrors, authServiceTypeGuards, rabbitMQTypeGuards, transNetworkSettings, } from "transcendence";
 const queue = "auth-service-queue"; // for publishing
 async function publishMessage(message) {
     if (!rabbitMQTypeGuards.isUserChangeBody(message))
@@ -22,8 +20,12 @@ async function publishMessage(message) {
     // const connection = await amqp.connect(`amqp://localhost`);
     let connection;
     try {
-        connection = await amqp.connect("amqp://admin:admin@rabbitmq-service:5672");
-        logger.info("Connected to amqp://admin:admin@rabbitmq-service:5672");
+        const rabbitUser = process.env.RABBITMQ_DEFAULT_USER || 'admin';
+        const rabbitPass = process.env.RABBITMQ_DEFAULT_PASS || 'admin';
+        const rabbitHost = process.env.RABBITMQ_HOST || 'rabbitmq-service';
+        const connectionString = `amqp://${rabbitUser}:${rabbitPass}@${rabbitHost}:5672`;
+        connection = await amqp.connect(connectionString);
+        logger.info(`✅ RabbitMQ Publisher connected at ${connectionString.replace(rabbitPass, '[REDACTED]')}`);
     }
     catch (err) {
         logger.warn("Failed to connect to rabbitmq-service, trying localhost...");
@@ -46,14 +48,14 @@ const server = fastify({
         },
     },
 });
-if (monitoringEnabled) {
-    setupMetrics(server);
-    //keep commented out unless docker is running requires elsasticsearch to be running
-    await checkElasticsearch();
-    logger.info("Metrics and logger initialized.");
-}
+// if (monitoringEnabled) {
+//   setupMetrics(server);
+//   //keep commented out unless docker is running requires elsasticsearch to be running
+//   await checkElasticsearch();
+//   logger.info("Metrics and logger initialized.");
+// }
 server.register(fastifyJwt, {
-    secret: "supersecret",
+    secret: process.env.JWT_SECRET || "supersecret",
 });
 server.register(cors, { origin: "*" });
 server.get("/ping", async (request, reply) => {
@@ -519,6 +521,34 @@ server.get("/api/users/:inputUserId/tournaments", async (request, reply) => {
     }
     catch (e) {
         logger.error(e);
+        return reply.code(500).send({ reason: AuthErrors.BackendError });
+    }
+});
+// Sync all users to chat service - useful after chat service restarts
+server.post("/api/admin/sync-users", async (request, reply) => {
+    try {
+        const allUsers = (await User.findAll());
+        logger.info(`Syncing ${allUsers.length} users to chat service...`);
+        for (const user of allUsers) {
+            let smallImageBuffer = null;
+            if (user.image && user.image.type === 'Buffer') {
+                smallImageBuffer = Buffer.from(user.image.data);
+            }
+            const publication = {
+                id: user.id,
+                displayName: user.display_name,
+                smallImage: smallImageBuffer,
+                language: user.language,
+            };
+            await publishMessage(publication);
+        }
+        return reply.code(200).send({
+            message: `Successfully synced ${allUsers.length} users to chat service`,
+            userCount: allUsers.length
+        });
+    }
+    catch (e) {
+        logger.error("Failed to sync users:", e);
         return reply.code(500).send({ reason: AuthErrors.BackendError });
     }
 });

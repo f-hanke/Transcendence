@@ -17,7 +17,12 @@ if (monitoringEnabled) {
     host: 'logstash',
     port: 5000,
     path: '/',
-    format: winston.format.json()
+    format: winston.format.json(),
+    auth: {
+      username: process.env.LOGSTASH_HTTP_USER || 'logstash',
+      password: process.env.LOGSTASH_HTTP_PASSWORD || ''
+    },
+    ssl: false
   }));
 }
 
@@ -27,9 +32,12 @@ const winstonLogger = winston.createLogger({
     winston.format.timestamp(),
     winston.format.json()
   ),
-  defaultMeta: { service: 'api-gateway', type: 'api-gateway' },
+  defaultMeta: { service: 'game-service', type: 'game-service' },
   transports: transports,
 });
+
+// Test log on startup
+winstonLogger.info('Game service logger initialized');
 
 // Simple wrapper that just handles multiple arguments
 const logger = {

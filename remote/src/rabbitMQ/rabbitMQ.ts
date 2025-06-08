@@ -17,12 +17,16 @@ function updateOngoingTournamentDatabase(msg: GameResultTypes.MatchResult){
 export async function startConsumer(onMessage: (matchResult: GameResultTypes.MatchResult) => void) {
 	let connection;
 	try {
-			connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
-			console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
-		} catch (err) {
-			console.warn('Failed to connect to rabbitmq-service, trying localhost...');
-			connection = await amqp.connect('amqp://localhost');
-		}
+    const rabbitUser = process.env.RABBITMQ_DEFAULT_USER || 'admin';
+    const rabbitPass = process.env.RABBITMQ_DEFAULT_PASS || 'admin';
+    const rabbitHost = process.env.RABBITMQ_HOST || 'rabbitmq-service';
+    const connectionString = `amqp://${rabbitUser}:${rabbitPass}@${rabbitHost}:5672`;
+    connection = await amqp.connect(connectionString);
+    console.log(`✅ Remote RabbitMQ consumer connected at ${connectionString.replace(rabbitPass, '[REDACTED]')}`);
+	} catch (err) {
+		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
+		connection = await amqp.connect('amqp://localhost');
+	}
 	const channel = await connection.createChannel();
 
 	await channel.assertQueue(queue, { durable: true });

@@ -2,20 +2,18 @@ import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import path from "path";
 import { fileURLToPath } from "url";
-import { monitoringEnabled, transNetworkSettings } from "transcendence";
-import { checkElasticsearch } from "./lib/elasticsearch.js";
+import { transNetworkSettings } from "transcendence";
 import logger from "./lib/logger.js";
-import { setupMetrics } from "./lib/metrics.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const fastify = Fastify({ logger: true });
 const distFrontendPath = path.join(__dirname, "../distFrontend");
 logger.info(distFrontendPath);
-if (monitoringEnabled) {
-    setupMetrics(fastify);
-    //keep commented out unless docker is running requires elsasticsearch to be running
-    await checkElasticsearch();
-}
+// if (monitoringEnabled) {
+//   setupMetrics(fastify);
+//   //keep commented out unless docker is running requires elsasticsearch to be running
+//   await checkElasticsearch();
+// }
 logger.info("Metrics and logger initialized.");
 // Health check endpoint for Docker
 fastify.get("/health", async (request, reply) => {

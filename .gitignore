@@ -41,7 +41,7 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
-
+.env
 # NPM & Package Manager
 package-lock.json
 */package-lock.json

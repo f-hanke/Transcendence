@@ -14,11 +14,11 @@ const fastify = Fastify({ logger: true });
 const distFrontendPath = path.join(__dirname, "../distFrontend");
 
 logger.info(distFrontendPath);
-if (monitoringEnabled) {
-  setupMetrics(fastify);
-  //keep commented out unless docker is running requires elsasticsearch to be running
-  await checkElasticsearch();
-}
+// if (monitoringEnabled) {
+//   setupMetrics(fastify);
+//   //keep commented out unless docker is running requires elsasticsearch to be running
+//   await checkElasticsearch();
+// }
 logger.info("Metrics and logger initialized.");
 
 // Health check endpoint for Docker

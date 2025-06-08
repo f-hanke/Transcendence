@@ -1,8 +1,7 @@
 import amqp from 'amqplib';
 import { gameResultTypeGuards } from 'transcendence';
 import { GameResultModel } from '../orm/gameResultModel.js';
-import { matchmakingTypeGuards } from 'transcendence';
-const queue = 'matchmaking-service-queue';
+const tournamentResultQueue = 'tournament-results-queue';
 async function updateUserTournamentRecords(msg) {
     console.log("Updating user tournament records db...");
     if (!gameResultTypeGuards.isTournamentResult(msg)) {
@@ -30,20 +29,23 @@ async function updateUserSimpleMatchRecords(msg) {
     }
 }
 export async function startConsumer() {
-    // const connection = await amqp.connect(`amqp://${process.env.RABBITMQ_HOST || 'localhost'}`);
     let connection;
     try {
-        connection = await amqp.connect("amqp://admin:admin@rabbitmq-service:5672");
-        console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
+        const rabbitUser = process.env.RABBITMQ_DEFAULT_USER || 'admin';
+        const rabbitPass = process.env.RABBITMQ_DEFAULT_PASS || 'admin';
+        const rabbitHost = process.env.RABBITMQ_HOST || 'rabbitmq-service';
+        const connectionString = `amqp://${rabbitUser}:${rabbitPass}@${rabbitHost}:5672`;
+        connection = await amqp.connect(connectionString);
+        console.log(`✅ Users-auth RabbitMQ Consumer connected at ${connectionString.replace(rabbitPass, '[REDACTED]')}`);
     }
     catch (err) {
         console.warn("Failed to connect to rabbitmq-service, trying localhost...");
         connection = await amqp.connect("amqp://localhost");
     }
     const channel = await connection.createChannel();
-    await channel.assertQueue(queue, { durable: true });
-    console.log('[Consumer] Waiting for messages...');
-    channel.consume(queue, async (msg) => {
+    await channel.assertQueue(tournamentResultQueue, { durable: true });
+    console.log('[Consumer] Waiting for tournament results...');
+    channel.consume(tournamentResultQueue, async (msg) => {
         if (msg !== null) {
             const message = JSON.parse(msg.content.toString());
             console.log('[Consumer] Received:', message);
