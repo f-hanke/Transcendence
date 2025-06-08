@@ -1,4 +1,3 @@
-import { colog, testUserConfig } from "transcendence";
 import { AuthInterface } from "../../backendInterface/authInterface";
 import { RegisterState } from "../../state/registerStateTypes";
 import { createHtmlElementFromString, navigateToSite, sanitizeAndCleanInput } from "../../utils/utils";
@@ -69,9 +68,9 @@ class RegisterPage extends HTMLElement {
         <button id="registerGoToLogin" class="w-96 bg-blue-500 text-white p-2 my-8 rounded hover:bg-blue-600">
               ${lang.alreadyRegistered}
         </button>
-        <button id="registerTestUserX" class="w-96 bg-blue-500 text-white p-2 my-8 rounded hover:bg-blue-600">
+        <!-- <button id="registerTestUserX" class="w-96 bg-blue-500 text-white p-2 my-8 rounded hover:bg-blue-600">
               ${lang.testUsers}
-        </button>
+        </button> -->
       </div>
     `;
 
@@ -84,7 +83,7 @@ class RegisterPage extends HTMLElement {
     this.addUpdateStateEventListener("registerEmail", "email");
     this.addUpdateStateEventListener("registerDisplayName", "displayName");
 
-    this.addRegisterTestUser();
+    // this.addRegisterTestUser();
 
     this.msgBox = this.querySelector("#errorMessage") as HTMLDivElement;
   }
@@ -139,20 +138,20 @@ class RegisterPage extends HTMLElement {
     }
   }
 
-  async addRegisterTestUser() {
-    const registerTestUserX = document.querySelector(
-      "#registerTestUserX"
-    ) as HTMLButtonElement;
-    registerTestUserX.addEventListener("click", () => {
-      colog(testUserConfig);
-      testUserConfig.map(async (user) => {
-        colog(user);
-        const res = await AuthInterface.registerClient(user);
-        colog(`${user.displayName}`);
-        colog(res);
-      });
-    });
-  }
+  // async addRegisterTestUser() {
+  //   const registerTestUserX = document.querySelector(
+  //     "#registerTestUserX"
+  //   ) as HTMLButtonElement;
+  //   registerTestUserX.addEventListener("click", () => {
+  //     colog(testUserConfig);
+  //     testUserConfig.map(async (user) => {
+  //       colog(user);
+  //       const res = await AuthInterface.registerClient(user);
+  //       colog(`${user.displayName}`);
+  //       colog(res);
+  //     });
+  //   });
+  // }
 }
 
 customElements.define("register-page", RegisterPage);
