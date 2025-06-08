@@ -29,7 +29,7 @@ echo "Creating certificates directly in Docker volume..."
 
 # Create CA certificate and instance certificates in one go
 docker run --rm \
-    -v "tranrecent_elasticsearch-certs:/usr/share/elasticsearch/config/certs" \
+    -v "transcendence_elasticsearch-certs:/usr/share/elasticsearch/config/certs" \
     --user root \
     docker.elastic.co/elasticsearch/elasticsearch:8.12.1 \
     bash -c '
@@ -81,7 +81,7 @@ EOF
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}🎉 Certificate setup complete!${NC}"
     echo ""
-    echo "📁 Certificates created in Docker volume tranrecent_elasticsearch-certs"
+    echo "📁 Certificates created in Docker volume transcendence_elasticsearch-certs"
     echo "   - ca/ca.crt (Certificate Authority)"
     echo "   - elasticsearch/elasticsearch.crt"
     echo "   - elasticsearch/elasticsearch.key"
