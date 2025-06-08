@@ -21,11 +21,24 @@ function	updateUserDatabase(msg: RabbitMQTypes.UserChange){
 export async function startConsumer() {
 	let connection;
 	try {
-		connection = await amqp.connect('amqp://admin:admin@rabbitmq-service:5672');
-		console.log("Connected to amqp://admin:admin@rabbitmq-service:5672");
+		const rabbitUser = process.env.RABBITMQ_DEFAULT_USER || 'admin';
+		const rabbitPass = process.env.RABBITMQ_DEFAULT_PASS || 'admin';
+		const rabbitHost = process.env.RABBITMQ_HOST || 'rabbitmq-service';
+		const connectionString = `amqp://${rabbitUser}:${rabbitPass}@${rabbitHost}:5672`;
+		console.log(`🔍 Chat service attempting RabbitMQ connection to: ${connectionString.replace(rabbitPass, '[REDACTED]')}`);
+		console.log(`🔍 Using credentials: User=${rabbitUser}, Pass=${rabbitPass ? 'SET' : 'NOT_SET'}, Host=${rabbitHost}`);
+		connection = await amqp.connect(connectionString);
+		console.log(`✅ Chat service connected to RabbitMQ at ${connectionString.replace(rabbitPass, '[REDACTED]')}`);
 	} catch (err) {
+		console.error(`❌ Chat service RabbitMQ connection failed:`, (err as Error).message);
 		console.warn('Failed to connect to rabbitmq-service, trying localhost...');
-		connection = await amqp.connect('amqp://localhost');
+		try {
+			connection = await amqp.connect('amqp://localhost');
+			console.log('✅ Connected to localhost fallback');
+		} catch (err2) {
+			console.error('❌ Localhost fallback also failed:', (err2 as Error).message);
+			throw err2;
+		}
 	}
 
 	const channel = await connection.createChannel();
